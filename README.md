@@ -4,7 +4,7 @@ A command line for knowledge exploration.
 
 ## Dev setup
 
-For MacOS:
+One-time Python setup (this part assumes MacOS):
 
 ```
 # Install pyenv if needed:
@@ -14,11 +14,21 @@ brew install pyenv
 pyenv install 3.12.2
 # Install recent Poetry if needed:
 curl -sSL https://install.python-poetry.org | python3 -
-# Install packages:
-poetry install
+```
+
+API keys:
+
+```
 # Set up API secrets:
 cp secrets/secrets.template.toml secrets/secrets.toml  
 vi secrets/secrets.toml  # Enter API keys
+```
+
+Development and running:
+
+```
+# Install packages:
+poetry install
 # Run:
 poetry run kmd --help
 poetry run kmd transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
