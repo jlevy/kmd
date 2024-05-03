@@ -39,7 +39,6 @@ def _load_secrets():
                 secrets = tomllib.load(f)
                 all_secrets.update(secrets)
         except FileNotFoundError:
-            print(f"Secrets file not found: {path}")
             continue
 
     return all_secrets

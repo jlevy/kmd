@@ -1,16 +1,12 @@
 import logging
 import os
-import tempfile
 from typing import Optional
-from urllib.parse import urlparse, parse_qs
-from pydub import AudioSegment
-import yt_dlp
-from vimeo_downloader import Vimeo
 from strif import atomic_output_file
-
 from kmd.config import MEDIA_CACHE_DIR
-from .audio import deepgram_transcribe_audio, downsample_to_16khz, whisper_transcribe_audio_small
+from .audio import deepgram_transcribe_audio, downsample_to_16khz
 from ..util.web_cache import DirStore
+from .video_youtube import YouTube
+from .video_vimeo import Vimeo
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +16,7 @@ transcribe_audio = deepgram_transcribe_audio
 
 
 class VideoCache(DirStore):
-    """Download and cache audio from YouTube or Vimeo videos and transcripts."""
+    """Download and cache video, audio, and transcripts from videos."""
 
     def __init__(self, root):
         super().__init__(root)
@@ -98,93 +94,34 @@ def video_transcription(url: str, no_cache=False) -> str:
     return _video_cache.transcribe(url, no_cache=no_cache)
 
 
+# List of available video services.
+video_services = [YouTube(), Vimeo()]
+
+
 def video_download(url: str) -> str:
-    """"""
-    return _video_cache.download(url)
+    """Download video from a supported service (like YouTube)."""
+
+    for service in video_services:
+        if service.canonicalize(url):
+            return service.download_audio(url)
+    raise ValueError(f"Unrecognized video URL: {url}")
 
 
-def canonical_youtube_url(url):
-    parsed_url = urlparse(url)
+def canonicalize_video_url(url: str) -> Optional[str]:
+    """Return the canonical form of a video URL from a supported service (like YouTube)."""
 
-    if parsed_url.hostname == "youtu.be":
-        video_id = parsed_url.path[1:]
-    elif parsed_url.hostname in ("www.youtube.com", "youtube.com"):
-        query = parse_qs(parsed_url.query)
-        video_id = query.get("v", [""])[0]
-    else:
-        return None
-    if not video_id:
-        return None
-
-    return f"https://www.youtube.com/watch?v={video_id}"
+    for service in video_services:
+        canonical_url = service.canonicalize(url)
+        if canonical_url:
+            return canonical_url
+    return None
 
 
-def youtube_download_audio(url: str, target_dir: Optional[str] = None) -> str:
-    """Download and convert to mp3. yt_dlp seems like the best library for this."""
+def download_video_mp3(url: str) -> str:
+    """Download the audio component of a video as an MP3."""
 
-    temp_dir = target_dir or tempfile.mkdtemp()
-    ydl_opts = {
-        "format": "bestaudio/best",
-        "outtmpl": os.path.join(temp_dir, "audio.%(id)s.%(ext)s"),
-        "postprocessors": [
-            {
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "mp3",
-                "preferredquality": "192",
-            }
-        ],
-    }
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(url, download=True)
-        audio_file_path = ydl.prepare_filename(info_dict)
-
-    # yt_dlp returns the .webm file, so this is the converted .mp3.
-    mp3_path = os.path.splitext(audio_file_path)[0] + ".mp3"
-    return mp3_path
-
-
-def canonical_vimeo_url(url):
-    parsed_url = urlparse(url)
-
-    if parsed_url.hostname == "vimeo.com":
-        video_id = parsed_url.path[1:]
-    else:
-        return None
-    if not video_id:
-        return None
-
-    return f"https://vimeo.com/{video_id}"
-
-
-def vimeo_download_audio(url: str) -> str:
-    """Download and convert to mp3."""
-
-    temp_dir = tempfile.mkdtemp()
-
-    v = Vimeo(url)
-    stream = v.streams[0]  # Pick the worst.
-    video_path = stream.download(download_directory=temp_dir, filename="video.mp4", mute=True)
-
-    mp3_path = os.path.join(temp_dir, "extracted_audio.mp3")
-    log.info("Extracting audio from Vimeo video %s at %s to %s", url, video_path, mp3_path)
-    audio = AudioSegment.from_file(video_path, format="mp4")
-    audio.export(mp3_path, format="mp3")
-
-    return mp3_path
-
-
-def canonicalize_video_url(url: str):
-    return canonical_youtube_url(url) or canonical_vimeo_url(url)
-
-
-def download_video_mp3(url: str):
-    youtube_url = canonical_youtube_url(url)
-    if youtube_url:
-        return youtube_download_audio(url)
-
-    vimeo_url = canonical_vimeo_url(url)
-    if vimeo_url:
-        return vimeo_download_audio(vimeo_url)
-
-    raise ValueError("Unrecognized video URL: %s" % url)
+    for service in video_services:
+        canonical_url = service.canonicalize(url)
+        if canonical_url:
+            return service.download_audio(url)
+    raise ValueError(f"Unrecognized video URL: {url}")

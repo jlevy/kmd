@@ -24,7 +24,8 @@ def download_url(
     auth=None,
     headers=None,
 ):
-    """Download given file, optionally with progress bar.
+    """
+    Download given file, optionally with progress bar.
 
     Output file is created atomically. Content stored as binary, without
     any character decoding.

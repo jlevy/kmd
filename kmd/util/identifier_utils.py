@@ -1,4 +1,5 @@
-"""Some tools for string identifiers.
+"""
+Some tools for string identifiers.
 
 Note we prefer base 36 as it's shorter and friendlier than base64 or
 hex, and is case insensitive so suitable for filesystem use.
@@ -15,7 +16,8 @@ _NON_ALPHANUM_CHARS = re.compile("[^a-z0-9]+", re.IGNORECASE)
 
 
 def clean_alphanum(string, max_length=128):
-    """Convert a string to a clean, readable identifier that includes the
+    """
+    Convert a string to a clean, readable identifier that includes the
     (first) alphanumeric characters of the given string.
 
     This mapping is for readability only, and so can easily have
@@ -40,7 +42,9 @@ def clean_alphanum_hash(string, max_length=128, max_hash_len=None):
 
 
 def base36_encode(n):
-    """Base 36 encode an integer."""
+    """
+    Base 36 encode an integer.
+    """
 
     chars = "0123456789abcdefghijklmnopqrstuvwxyz"
     encoded = ""
@@ -53,8 +57,10 @@ def base36_encode(n):
 
 
 def hash_string_base36(string, algorithm="sha1"):
-    """Hash string and return in base 36, which is good for short, friendly
-    identifiers."""
+    """
+    Hash string and return in base 36, which is good for short, friendly
+    identifiers.
+    """
 
     h = hashlib.new(algorithm)
     h.update(string.encode("utf8"))
