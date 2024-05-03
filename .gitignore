@@ -1,3 +1,11 @@
+cache/
+
+# Ignore everything in the secrets directory except the template.
+secrets/*
+!secrets/secrets.template.toml
+
+# GitHub's generic Python .gitignore:
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
