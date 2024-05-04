@@ -1,4 +1,5 @@
 cache/
+workspace/
 
 # Ignore everything in the secrets directory except the template.
 secrets/*

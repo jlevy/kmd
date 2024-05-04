@@ -12,7 +12,7 @@ ROOT = dirname(dirname(abspath(__file__)))
 
 MEDIA_CACHE_DIR = f"{ROOT}/cache/media"
 
-WORKSPACE_DIR = "."
+WORKSPACE_DIR = "./workspace"
 
 
 @cached(cache={})
