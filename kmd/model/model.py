@@ -2,6 +2,7 @@ from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 import enum
 from typing import Optional, Set
+import inflect
 
 from slugify import slugify
 
@@ -17,25 +18,22 @@ class Action:
 
 
 class ItemTypeEnum(enum.Enum):
-    """Kinds of Items. Value is unique folder name, which is the plural of the item type."""
+    """Kinds of Items."""
 
-    note = "notes"
-    question = "questions"
-    concept = "concepts"
-    answer = "answers"
-    resource = "resources"
-    description = "descriptions"
+    note = "note"
+    question = "question"
+    concept = "concept"
+    answer = "answer"
+    resource = "resource"
+
+
+_inflect = inflect.engine()
+
+type_to_folder = {name: _inflect.plural(name) for name, _value in ItemTypeEnum.__members__.items()}  # type: ignore
 
 
 def item_type_to_folder(item_type: ItemTypeEnum) -> str:
-    return item_type.value
-
-
-def folder_to_item_type(folder: str) -> ItemTypeEnum:
-    for item_type in ItemTypeEnum:
-        if item_type.value == folder:
-            return item_type
-    raise ValueError(f"Unknown item type folder: {folder}")
+    return type_to_folder[item_type.name]
 
 
 class ResourceTypeEnum(enum.Enum):
@@ -58,7 +56,7 @@ class Item:
     description: Optional[str] = None
     body: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.now)
-    modified_at: Optional[datetime] = None
+    modified_at: datetime = field(default_factory=datetime.now)
 
     def update_modified_at(self):
         self.modified_at = datetime.now()
@@ -93,11 +91,10 @@ class Item:
                 return new_slug
             i += 1
 
+    def copy_with(self, **kwargs) -> "Item":
+        """Copy item with the given field updates."""
 
-def copy_with(item: Item, **kwargs) -> Item:
-    """Copy item with the given field updates."""
-
-    new_item = replace(item, **kwargs)
-    new_item.created_at = datetime.now()
-    new_item.modified_at = datetime.now()
-    return new_item
+        new_item = replace(self, **kwargs)
+        new_item.created_at = datetime.now()
+        new_item.modified_at = datetime.now()
+        return new_item

@@ -1,10 +1,41 @@
+import os
 from pathlib import Path
-from os.path import dirname
+from typing import Tuple
 from kmd.config import WORKSPACE_DIR
-from kmd.model.model import Item, folder_to_item_type, item_type_to_folder
+from kmd.file_storage.file_types import file_ext_for
+from kmd.model.model import Item, ItemTypeEnum, item_type_to_folder
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 
 base_dir = Path(WORKSPACE_DIR)
+
+
+def _filename_for(item: Item) -> str:
+    # FIXME: Get from list of files and cache.
+    taken_slugs = set()
+
+    name = item.unique_slug(taken_slugs)
+    type = item.type.value
+    ext = file_ext_for(item).value
+
+    # Suffix files with both item type and a suitable file extension.
+    return name + "." + type + "." + ext
+
+
+def _parse_filename(filename: str) -> Tuple[str, str, str]:
+    parts = filename.rsplit(".", 2)
+    if len(parts) != 3:
+        raise ValueError(
+            f"Filename does not match file store convention (name.type.ext): {filename}"
+        )
+    return parts[0], parts[1], parts[2]
+
+
+def _type_from_filename(filename: str) -> ItemTypeEnum:
+    _name, item_type, _ext = _parse_filename(filename)
+    try:
+        return ItemTypeEnum[item_type]
+    except KeyError:
+        raise ValueError(f"Unknown item type: {item_type}")
 
 
 class FileStore:
@@ -13,16 +44,22 @@ class FileStore:
 
     def save(self, item: Item) -> str:
         folder_path = Path(item_type_to_folder(item.type))
-        # FIXME: Get from list of files and cache.
-        taken_slugs = set()
-        # FIXME: Handle other convenient suffixes in file_types.py.
-        store_path = (folder_path / item.unique_slug(taken_slugs)).with_suffix(".md")
-        fmf_write(self.base_dir / store_path, item.body_text(), item.metadata())
+
+        filename = _filename_for(item)
+        store_path = folder_path / filename
+        full_path = self.base_dir / store_path
+        fmf_write(full_path, item.body_text(), item.metadata())
+
+        # Set actual file creation and modification times if available.
+        if item.created_at:
+            created_time = item.created_at.timestamp()
+            modified_time = item.modified_at.timestamp() if item.modified_at else created_time
+            os.utime(full_path, (created_time, modified_time))
+
         return str(store_path)
 
     def load(self, path: str) -> Item:
-        folder_name = dirname(path)
-        item_type = folder_to_item_type(folder_name)
+        item_type = _type_from_filename(path)
         body, metadata = fmf_read(self.base_dir / path)
         if not metadata:
             raise ValueError(f"No metadata found in {path}")

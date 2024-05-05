@@ -3,7 +3,7 @@ from enum import Enum
 import logging
 from kmd.actions.action_lib import ActionResult
 from kmd.apis.openai import openai_completion
-from kmd.model.model import Action, Item, copy_with
+from kmd.model.model import Action, Item
 from kmd import config
 
 log = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ def run_llm_action(action: Action, item: Item) -> ActionResult:
 
     log.info("Running action %s on item %s", action.name, item)
 
-    output_item = copy_with(item, body=None)
+    output_item = item.copy_with(body=None)
 
     llm_input = action.template.format(body=item.body)
     llm_output = openai_completion(
