@@ -9,8 +9,7 @@ class FileExt(enum.Enum):
     pdf = "pdf"
     txt = "txt"
     md = "md"
-    html = "html"
-    url = "url"
+    webpage = "webpage"
 
 
 def file_ext_for(item: Item) -> FileExt:
@@ -23,5 +22,8 @@ def file_ext_for(item: Item) -> FileExt:
     ]:
         return FileExt.md
     if item_type == ItemTypeEnum.resource:
-        return FileExt.url
+        if item.body:
+            return FileExt.txt
+        else:
+            return FileExt.webpage
     raise ValueError(f"Unknown item type: {item_type}")

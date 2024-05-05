@@ -42,9 +42,7 @@ class VideoCache(DirStore):
                 raise ValueError("No audio file found for: %s" % url)
             downsampled_audio_file = self.path_for(url, suffix=".16k.mp3")
             log.info(
-                "Downsampling YouTube audio: %s -> %s",
-                full_audio_file,
-                downsampled_audio_file,
+                "Downsampling YouTube audio: %s -> %s", full_audio_file, downsampled_audio_file
             )
             downsample_to_16khz(full_audio_file, downsampled_audio_file)
         return downsampled_audio_file
@@ -63,7 +61,7 @@ class VideoCache(DirStore):
                 log.info("Audio of video in cache: %s: %s", url, full_audio_file)
                 return full_audio_file
         log.info("Downloading audio of video: %s", url)
-        mp3_path = download_video_mp3(url)
+        mp3_path = _download_audio_with_service(url)
         full_audio_file = self.path_for(url, suffix=".mp3")
         os.rename(mp3_path, full_audio_file)
         self._do_downsample(url)
@@ -88,23 +86,28 @@ class VideoCache(DirStore):
 _video_cache = VideoCache(MEDIA_CACHE_DIR)
 
 
+def _download_audio_with_service(url: str) -> str:
+    for service in video_services:
+        canonical_url = service.canonicalize(url)
+        if canonical_url:
+            return service.download_audio(url)
+    raise ValueError(f"Unrecognized video URL: {url}")
+
+
 def video_transcription(url: str, no_cache=False) -> str:
-    """Transcribe a YouTube video. If no_cache is True, force fresh download."""
+    """Transcribe a video, saving in cache. If no_cache is True, force fresh download."""
 
     return _video_cache.transcribe(url, no_cache=no_cache)
 
 
+def video_download_audio(url: str, no_cache=False) -> str:
+    """Download audio of a video, saving in cache. If no_cache is True, force fresh download."""
+
+    return _video_cache.download(url, no_cache=no_cache)
+
+
 # List of available video services.
 video_services = [YouTube(), Vimeo()]
-
-
-def video_download(url: str) -> str:
-    """Download video from a supported service (like YouTube)."""
-
-    for service in video_services:
-        if service.canonicalize(url):
-            return service.download_audio(url)
-    raise ValueError(f"Unrecognized video URL: {url}")
 
 
 def canonicalize_video_url(url: str) -> Optional[str]:
@@ -115,13 +118,3 @@ def canonicalize_video_url(url: str) -> Optional[str]:
         if canonical_url:
             return canonical_url
     return None
-
-
-def download_video_mp3(url: str) -> str:
-    """Download the audio component of a video as an MP3."""
-
-    for service in video_services:
-        canonical_url = service.canonicalize(url)
-        if canonical_url:
-            return service.download_audio(url)
-    raise ValueError(f"Unrecognized video URL: {url}")

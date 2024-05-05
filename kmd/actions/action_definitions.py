@@ -1,7 +1,12 @@
 from textwrap import dedent
-from kmd.actions.action_lib import ActionInput, ActionResult
+from kmd.actions.action_lib import ActionInput, ActionResult, CrawlAction
 from kmd.actions.llm_actions import LLM, LLMAction
 from kmd.actions.registry import register_action
+
+
+@register_action
+def fetch_page(items: ActionInput) -> ActionResult:
+    return CrawlAction().run(items)
 
 
 @register_action

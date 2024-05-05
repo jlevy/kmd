@@ -23,9 +23,11 @@ class LLMAction(Action):
         return run_llm_action(self, item)
 
 
-def run_llm_action(action: Action, item: Item) -> ActionResult:
+def run_llm_action(action: LLMAction, item: Item) -> ActionResult:
     if not item.body:
         raise ValueError("LLM actions expect a body")
+    if not action.model or not action.system_message or not action.template:
+        raise ValueError("LLM actions expect a model, system_message, and template")
 
     config.api_setup()
 

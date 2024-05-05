@@ -11,10 +11,10 @@ from slugify import slugify
 class Action:
     name: str
     description: str
-    model: str
-    system_message: str
-    template: str
     implementation: str = "builtin"
+    model: Optional[str] = None
+    template: Optional[str] = None
+    system_message: Optional[str] = None
 
 
 class ItemTypeEnum(enum.Enum):

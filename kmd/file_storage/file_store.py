@@ -58,11 +58,11 @@ class FileStore:
 
         return str(store_path)
 
-    def load(self, path: str) -> Item:
-        item_type = _type_from_filename(path)
-        body, metadata = fmf_read(self.base_dir / path)
+    def load(self, store_path: str) -> Item:
+        item_type = _type_from_filename(store_path)
+        body, metadata = fmf_read(self.base_dir / store_path)
         if not metadata:
-            raise ValueError(f"No metadata found in {path}")
+            raise ValueError(f"No metadata found in {store_path}")
 
         other_metadata = {
             key: value for key, value in metadata.items() if key not in ["body", "type"]
