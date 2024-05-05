@@ -1,9 +1,10 @@
 import typer
+from kmd.actions.action_lib import ActionResult
 from kmd.actions.registry import load_all_actions
 from kmd.media.video import video_download, video_transcription
 import kmd.config as config
-from kmd.model.items import Item, ItemTypeEnum
-from kmd.workspace.file_store import load_item, save_item
+from kmd.model.model import Item, ItemTypeEnum
+from kmd.file_storage.file_store import load_item, save_item
 
 app = typer.Typer()
 
@@ -39,9 +40,10 @@ def action(action_name: str, path: str):
     actions = load_all_actions()
     action = actions[action_name]
     item = load_item(path)
-    output_item = action([item])
-    saved_path = save_item(output_item)
-    print(f"Saved output to: {saved_path}")
+    action_result: ActionResult = action([item])
+    for output_item in action_result:
+        saved_path = save_item(output_item)
+        print(f"Saved output to: {saved_path}")
 
 
 if __name__ == "__main__":

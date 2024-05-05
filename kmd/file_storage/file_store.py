@@ -1,8 +1,8 @@
 from pathlib import Path
 from os.path import dirname
 from kmd.config import WORKSPACE_DIR
-from kmd.model.items import Item, folder_to_item_type, item_type_to_folder
-from kmd.workspace.frontmatter_format import fmf_read, fmf_write
+from kmd.model.model import Item, folder_to_item_type, item_type_to_folder
+from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 
 base_dir = Path(WORKSPACE_DIR)
 

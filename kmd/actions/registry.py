@@ -2,16 +2,16 @@ import logging
 from typing import Callable, Dict, List
 
 from cachetools import cached
+from kmd.actions.action_lib import ActionInput, ActionResult
 
-from kmd.actions.actions import Action
-from kmd.model.items import Item
+from kmd.model.model import Item
 
 log = logging.getLogger(__name__)
 
 _action_functions = []
 
 
-def register_action(function: Callable[[List[Item]], Item]):
+def register_action(function: Callable[[ActionInput], ActionResult]):
     """
     Annotation to make it easy to register a function that implements an action.
     """
@@ -21,9 +21,9 @@ def register_action(function: Callable[[List[Item]], Item]):
 
 
 @cached({})
-def load_all_actions() -> Dict[str, Callable[[List[Item]], Item]]:
+def load_all_actions() -> Dict[str, Callable[[ActionInput], ActionResult]]:
     # Import to register the actions.
-    import kmd.actions.action_definitions
+    import kmd.actions.action_definitions  # noqa
 
     action_functions_map = {}
     for f in _action_functions:

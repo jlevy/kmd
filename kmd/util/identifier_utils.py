@@ -10,12 +10,10 @@ hex, and is case insensitive so suitable for filesystem use.
 import hashlib
 import re
 
-import regex
-
 _NON_ALPHANUM_CHARS = re.compile("[^a-z0-9]+", re.IGNORECASE)
 
 
-def clean_alphanum(string, max_length=128):
+def clean_alphanum(string, max_length=None):
     """
     Convert a string to a clean, readable identifier that includes the
     (first) alphanumeric characters of the given string.
@@ -26,8 +24,9 @@ def clean_alphanum(string, max_length=128):
     return _NON_ALPHANUM_CHARS.sub("_", string)[:max_length]
 
 
-def clean_alphanum_hash(string, max_length=128, max_hash_len=None):
-    """Convert a string to a clean, readable identifier that includes the
+def clean_alphanum_hash(string, max_length=64, max_hash_len=None):
+    """
+    Convert a string to a clean, readable identifier that includes the
     (first) alphanumeric characters of the given string.
 
     This includes a SHA1 hash so collisions are unlikely.
@@ -65,7 +64,3 @@ def hash_string_base36(string, algorithm="sha1"):
     h = hashlib.new(algorithm)
     h.update(string.encode("utf8"))
     return base36_encode(int.from_bytes(h.digest(), byteorder="big"))
-
-
-def slugify_string(string):
-    return regex.sub("[^a-z0-9]+", "-", string.lower())

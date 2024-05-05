@@ -1,0 +1,42 @@
+from dataclasses import dataclass
+from enum import Enum
+import logging
+from kmd.actions.action_lib import ActionResult
+from kmd.apis.openai import openai_completion
+from kmd.model.model import Action, Item, copy_with
+from kmd import config
+
+log = logging.getLogger(__name__)
+
+# TODO: Handle more services and models.
+
+
+class LLM(Enum):
+    gpt_3_5_turbo_16k_0613 = "gpt-3.5-turbo-16k-0613"
+
+
+@dataclass
+class LLMAction(Action):
+    implementation: str = "llm"
+
+    def run(self, item: Item) -> ActionResult:
+        return run_llm_action(self, item)
+
+
+def run_llm_action(action: Action, item: Item) -> ActionResult:
+    if not item.body:
+        raise ValueError("LLM actions expect a body")
+
+    config.api_setup()
+
+    log.info("Running action %s on item %s", action.name, item)
+
+    output_item = copy_with(item, body=None)
+
+    llm_input = action.template.format(body=item.body)
+    llm_output = openai_completion(
+        action.model, system_message=action.system_message, user_message=llm_input
+    )
+
+    output_item.body = llm_output
+    return [output_item]

@@ -6,6 +6,16 @@ from typing import Optional, Set
 from slugify import slugify
 
 
+@dataclass
+class Action:
+    name: str
+    description: str
+    model: str
+    system_message: str
+    template: str
+    implementation: str = "builtin"
+
+
 class ItemTypeEnum(enum.Enum):
     """Kinds of Items. Value is unique folder name, which is the plural of the item type."""
 
