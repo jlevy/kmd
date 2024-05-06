@@ -2,6 +2,7 @@ import typer
 from kmd.actions.action_definitions import fetch_page
 from kmd.actions.action_lib import ActionResult
 from kmd.actions.registry import load_all_actions
+from kmd.media.url import canonicalize_url
 from kmd.media.video import video_download_audio, video_transcription
 import kmd.config as config
 from kmd.model.model import Item, ItemTypeEnum
@@ -16,9 +17,9 @@ def download(url: str):
     Download web page or video.
     """
 
-    item = Item(ItemTypeEnum.resource, url=url)
-    saved_path = save_item(item)
-    print(f"Saved URL to: {saved_path}")
+    item = Item(ItemTypeEnum.resource, url=canonicalize_url(url))
+    saved_url = save_item(item)
+    print(f"Saved URL to: {saved_url}")
 
     try:
         # First try as video.
@@ -37,6 +38,7 @@ def transcribe(url: str):
     Download and transcribe video from YouTube or Vimeo
     """
 
+    download(url)
     transcription = video_transcription(url)
     item = Item(ItemTypeEnum.note, body=transcription)
     saved_path = save_item(item)
