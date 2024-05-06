@@ -1,6 +1,6 @@
 import enum
 
-from kmd.model.model import Item, ItemTypeEnum
+from kmd.model.model import Item, ItemType
 
 
 class FileExt(enum.Enum):
@@ -15,13 +15,13 @@ class FileExt(enum.Enum):
 def file_ext_for(item: Item) -> FileExt:
     item_type = item.type
     if item_type in [
-        ItemTypeEnum.note,
-        ItemTypeEnum.question,
-        ItemTypeEnum.concept,
-        ItemTypeEnum.answer,
+        ItemType.note,
+        ItemType.question,
+        ItemType.concept,
+        ItemType.answer,
     ]:
         return FileExt.md
-    if item_type == ItemTypeEnum.resource:
+    if item_type == ItemType.resource:
         if item.body:
             return FileExt.txt
         else:

@@ -1,9 +1,10 @@
 import os
 from pathlib import Path
-from typing import Tuple
+import textwrap
+from typing import Optional, Tuple
 from kmd.config import WORKSPACE_DIR
 from kmd.file_storage.file_types import file_ext_for
-from kmd.model.model import Item, ItemTypeEnum, item_type_to_folder
+from kmd.model.model import Format, Item, ItemType, item_type_to_folder
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 
 base_dir = Path(WORKSPACE_DIR)
@@ -30,12 +31,28 @@ def _parse_filename(filename: str) -> Tuple[str, str, str]:
     return parts[0], parts[1], parts[2]
 
 
-def _type_from_filename(filename: str) -> ItemTypeEnum:
+def _type_from_filename(filename: str) -> ItemType:
     _name, item_type, _ext = _parse_filename(filename)
     try:
-        return ItemTypeEnum[item_type]
+        return ItemType[item_type]
     except KeyError:
         raise ValueError(f"Unknown item type: {item_type}")
+
+
+def _format_text(text: str, format: Optional[Format] = None, width=80) -> str:
+    """
+    When saving clean text of a known format, wrap it for readability.
+    """
+    if format == Format.plaintext:
+        paragraphs = text.split("\n\n")
+        wrapped_paragraphs = [
+            textwrap.fill(p, width=width, break_long_words=False, replace_whitespace=False)
+            for p in paragraphs
+        ]
+        return "\n\n".join(wrapped_paragraphs)
+    # TODO: Add cleaner canonicalization/wrapping for Markdown.
+    else:
+        return text
 
 
 class FileStore:
@@ -48,7 +65,8 @@ class FileStore:
         filename = _filename_for(item)
         store_path = folder_path / filename
         full_path = self.base_dir / store_path
-        fmf_write(full_path, item.body_text(), item.metadata())
+        formatted_body = _format_text(item.body_text(), item.format)
+        fmf_write(full_path, formatted_body, item.metadata())
 
         # Set actual file creation and modification times if available.
         if item.created_at:

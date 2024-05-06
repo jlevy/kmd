@@ -1,6 +1,6 @@
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
-import enum
+from enum import Enum
 from typing import Optional, Set
 import inflect
 
@@ -17,7 +17,7 @@ class Action:
     system_message: Optional[str] = None
 
 
-class ItemTypeEnum(enum.Enum):
+class ItemType(Enum):
     """Kinds of Items."""
 
     note = "note"
@@ -29,18 +29,18 @@ class ItemTypeEnum(enum.Enum):
 
 _inflect = inflect.engine()
 
-type_to_folder = {name: _inflect.plural(name) for name, _value in ItemTypeEnum.__members__.items()}  # type: ignore
+type_to_folder = {name: _inflect.plural(name) for name, _value in ItemType.__members__.items()}  # type: ignore
 
 
-def item_type_to_folder(item_type: ItemTypeEnum) -> str:
+def item_type_to_folder(item_type: ItemType) -> str:
     return type_to_folder[item_type.name]
 
 
-class ResourceTypeEnum(enum.Enum):
-    web_page = "web_page"
+class Format(Enum):
     url = "url"
-    video = "video"
-    audio = "audio"
+    html = "html"
+    markdown = "markdown"
+    plaintext = "plaintext"
 
 
 @dataclass
@@ -50,11 +50,12 @@ class Item:
     as a database record.
     """
 
-    type: ItemTypeEnum
+    type: ItemType
     title: Optional[str] = None
     url: Optional[str] = None
     description: Optional[str] = None
     body: Optional[str] = None
+    format: Optional[Format] = None
     created_at: datetime = field(default_factory=datetime.now)
     modified_at: datetime = field(default_factory=datetime.now)
 
@@ -66,12 +67,17 @@ class Item:
             raise ValueError(f"Expected body for item: {self}")
 
     def metadata(self) -> dict:
-        """Metadata is all non-None fields except the body."""
+        """
+        Metadata is all non-None fields except the body, in easy-to-serialize form.
+        """
         item_dict = asdict(self)
         item_dict = {k: v for k, v in item_dict.items() if v is not None and k != "body"}
-        # Keep type as a string.
-        if item_dict.get("type"):
-            item_dict["type"] = item_dict["type"].name
+
+        # Keep enum values as strings for simplicity with serialization to YAML.
+        for field in ["type", "format"]:
+            if item_dict.get(field):
+                item_dict[field] = item_dict[field].name
+
         return item_dict
 
     def body_text(self) -> str:
