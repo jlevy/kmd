@@ -1,25 +1,19 @@
+import logging
 import os
 from pathlib import Path
 import textwrap
 from typing import Optional, Tuple
+
+from slugify import slugify
 from kmd.config import WORKSPACE_DIR
 from kmd.file_storage.file_types import file_ext_for
 from kmd.model.model import Format, Item, ItemType, item_type_to_folder
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
+from kmd.util.uniquifier import Uniquifier
 
 base_dir = Path(WORKSPACE_DIR)
 
-
-def _filename_for(item: Item) -> str:
-    # FIXME: Get from list of files and cache.
-    taken_slugs = set()
-
-    name = item.unique_slug(taken_slugs)
-    type = item.type.value
-    ext = file_ext_for(item).value
-
-    # Suffix files with both item type and a suitable file extension.
-    return name + "." + type + "." + ext
+log = logging.getLogger(__name__)
 
 
 def _parse_filename(filename: str) -> Tuple[str, str, str]:
@@ -28,7 +22,8 @@ def _parse_filename(filename: str) -> Tuple[str, str, str]:
         raise ValueError(
             f"Filename does not match file store convention (name.type.ext): {filename}"
         )
-    return parts[0], parts[1], parts[2]
+    name, item_type, ext = parts
+    return name, item_type, ext
 
 
 def _type_from_filename(filename: str) -> ItemType:
@@ -56,19 +51,52 @@ def _format_text(text: str, format: Optional[Format] = None, width=80) -> str:
 
 
 class FileStore:
+    """
+    Store items on the filesystem, using a simple convention for filenames and folders.
+    """
+
     def __init__(self, base_dir: Path):
         self.base_dir = base_dir
+        self.uniquifier = Uniquifier()
+        self._initialize_uniquifier()
+
+        log.info(f"Using file store in {base_dir} ({len(self.uniquifier)} items)")
+
+    def _initialize_uniquifier(self):
+        for _root, _dirs, files in os.walk(self.base_dir):
+            for file in files:
+                try:
+                    name, item_type, _ext = _parse_filename(file)
+                except ValueError:
+                    log.info(f"Skipping file with invalid name: {file}")
+                    continue
+                self.uniquifier.uniquify(name, item_type)
+
+    def _filename_for(self, item: Item) -> str:
+        """Get a good filename for this item that is unique."""
+
+        name = item.default_title()
+        slug = slugify(name, max_length=50, separator="_")
+
+        # Get a unique name per item type.
+        unique_slug = self.uniquifier.uniquify(slug, item.type.value)
+
+        type = item.type.value
+        ext = file_ext_for(item).value
+
+        # Suffix files with both item type and a suitable file extension.
+        return f"{unique_slug}.{type}.{ext}"
 
     def save(self, item: Item) -> str:
         folder_path = Path(item_type_to_folder(item.type))
 
-        filename = _filename_for(item)
+        filename = self._filename_for(item)
         store_path = folder_path / filename
         full_path = self.base_dir / store_path
         formatted_body = _format_text(item.body_text(), item.format)
         fmf_write(full_path, formatted_body, item.metadata())
 
-        # Set actual file creation and modification times if available.
+        # Set filesystem file creation and modification times as well.
         if item.created_at:
             created_time = item.created_at.timestamp()
             modified_time = item.modified_at.timestamp() if item.modified_at else created_time

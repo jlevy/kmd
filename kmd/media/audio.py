@@ -83,14 +83,14 @@ def deepgram_transcribe_audio(audio_file_path: str) -> str:
     options = PrerecordedOptions(model="nova-2", smart_format=True, diarize=True)
     response = deepgram.listen.prerecorded.v("1").transcribe_file(payload, options, timeout=600)
 
-    diarized_segments = deepgram_diarized_segments(response)
+    diarized_segments = _deepgram_diarized_segments(response)
     log.info("Diarized response: %s", diarized_segments)
 
     formatted_segments = format_speaker_segments(diarized_segments)
     return formatted_segments
 
 
-def deepgram_diarized_segments(data, confidence_threshold=0.3) -> List[SpeakerSegment]:
+def _deepgram_diarized_segments(data, confidence_threshold=0.3) -> List[SpeakerSegment]:
     """Process Deepgram diarized results into text segments per speaker."""
 
     speaker_segments = []
@@ -163,6 +163,7 @@ def deepgram_diarized_segments(data, confidence_threshold=0.3) -> List[SpeakerSe
 
 def format_speaker_segments(speaker_segments: List[SpeakerSegment]) -> str:
     """Format speaker segments for display."""
+
     lines = []
     for segment in speaker_segments:
         lines.append(f"SPEAKER {segment.speaker}:\n{segment.speaker_text}")

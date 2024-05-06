@@ -5,7 +5,7 @@ Note we prefer base 36 as it's shorter and friendlier than base64 or
 hex, and is case insensitive so suitable for filesystem use.
 """
 
-# TODO: Consider moving these to strif lib, which has some other related tools.
+# TODO: These are now in https://github.com/jlevy/strif so can test and remove this file.
 
 import hashlib
 import re

@@ -1,10 +1,11 @@
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Set
-import inflect
+import re
+from typing import Optional
 
-from slugify import slugify
+import inflect
+from strif import abbreviate_str
 
 
 @dataclass
@@ -13,6 +14,7 @@ class Action:
     description: str
     implementation: str = "builtin"
     model: Optional[str] = None
+    title_template: Optional[str] = None
     template: Optional[str] = None
     system_message: Optional[str] = None
 
@@ -80,22 +82,12 @@ class Item:
 
         return item_dict
 
+    def default_title(self) -> str:
+        full_title = self.title or self.url or self.description or self.body or "untitled"
+        return re.sub(r"\s+", " ", abbreviate_str(full_title, max_len=100)).strip()
+
     def body_text(self) -> str:
         return self.body or ""
-
-    def unique_slug(self, taken_slugs: Set[str] = set()) -> str:
-        """Return a unique slug for this item."""
-
-        title = self.title or self.url or self.description or self.body or "untitled"
-        slug = slugify(title, max_length=50, separator="_")
-        if slug not in taken_slugs:
-            return slug
-        i = 1
-        while True:
-            new_slug = f"{slug}_{i}"
-            if new_slug not in taken_slugs:
-                return new_slug
-            i += 1
 
     def copy_with(self, **kwargs) -> "Item":
         """Copy item with the given field updates."""

@@ -3,7 +3,7 @@ from enum import Enum
 import logging
 from kmd.actions.action_lib import ActionResult
 from kmd.apis.openai import openai_completion
-from kmd.model.model import Action, Item
+from kmd.model.model import Action, Format, Item
 from kmd import config
 
 log = logging.getLogger(__name__)
@@ -41,4 +41,8 @@ def run_llm_action(action: LLMAction, item: Item) -> ActionResult:
     )
 
     output_item.body = llm_output
+    if action.title_template:
+        output_item.title = action.title_template.format(title=item.default_title())
+    output_item.format = Format.markdown
+
     return [output_item]

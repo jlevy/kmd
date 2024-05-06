@@ -12,7 +12,7 @@ def fetch_page(items: ActionInput) -> ActionResult:
 @register_action
 def proofread(items: ActionInput) -> ActionResult:
     return LLMAction(
-        name="Edit: Proofread and Correct",
+        name="Proofread and Correct",
         description="Proofread text, only fixing spelling, punctuation, and grammar.",
         model=LLM.gpt_3_5_turbo_16k_0613.value,
         system_message=dedent(
@@ -21,6 +21,7 @@ def proofread(items: ActionInput) -> ActionResult:
             You give exactly the results requested without additional commentary.
             """
         ),
+        title_template="{title} (proofread)",
         template=dedent(
             """
             Proofread the following text according to these rules:
@@ -45,7 +46,7 @@ def proofread(items: ActionInput) -> ActionResult:
 @register_action
 def break_into_paragraphs(items: ActionInput) -> ActionResult:
     return LLMAction(
-        name="Edit: Break into Paragraphs",
+        name="Break into Paragraphs",
         description="Reformat text as paragraphs.",
         model=LLM.gpt_3_5_turbo_16k_0613.value,
         system_message=dedent(
@@ -54,6 +55,7 @@ def break_into_paragraphs(items: ActionInput) -> ActionResult:
             You give exactly the results requested without additional commentary.
             """
         ),
+        title_template="{title} (in paragraphs)",
         template=dedent(
             """
             Format this text according to these rules:
@@ -76,7 +78,7 @@ def break_into_paragraphs(items: ActionInput) -> ActionResult:
 @register_action
 def summarize_as_bullets(items: ActionInput) -> ActionResult:
     return LLMAction(
-        name="Summarize: Bullet Points",
+        name="Summarize as Bullet Points",
         description="Summarize text as bullet points.",
         model=LLM.gpt_3_5_turbo_16k_0613.value,
         system_message=dedent(
@@ -85,6 +87,7 @@ def summarize_as_bullets(items: ActionInput) -> ActionResult:
             You give exactly the results requested without additional commentary.
             """
         ),
+        title_template="Summary of {title}",
         template=dedent(
             """
             Summarize the following text as a list of concise bullet points, each one or two sentences long.
