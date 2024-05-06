@@ -1,5 +1,9 @@
 """
-Read and write files with Jekyll-style YAML frontmatter, to support metadata on text files.
+Frontmatter format: Read and write files with YAML frontmatter, to support metadata on text files.
+
+Frontmatter can be either enclosed in `---` delimiters, as with Jekyll, or between
+`<!---` and `--->` delimiters for convenience in text or HTML files. These markers must be
+alone on their lines.
 """
 
 from pathlib import Path
@@ -7,8 +11,6 @@ from typing import Tuple, Optional, Dict
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
 from strif import atomic_output_file
-
-# TODO: Add support for HTML-compatible frontmatter, using <!--- and --->.
 
 
 def fmf_write(file_path: Path | str, content: str, metadata: Optional[Dict]) -> None:
@@ -45,15 +47,23 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
         raise IOError(f"Error reading file {file_path}: {e}")
 
     if not lines:
-        return "", None
+        raise ValueError(f"File is empty: {file_path}")
 
     metadata_lines = []
-    in_metadata = lines[0].strip() == "---"
+    first_line = lines[0].strip()
+    in_metadata = False
+    end_pattern = "---"
+    if first_line == "---":
+        in_metadata = True
+    elif first_line == "<!---":
+        in_metadata = True
+        end_pattern = "--->"
+
     start_index = 1 if in_metadata else 0
 
     for i in range(start_index, len(lines)):
         line = lines[i]
-        if line.strip() == "---" and in_metadata:
+        if line.strip() == end_pattern and in_metadata:
             try:
                 metadata = yaml.load("".join(metadata_lines))
             except YAMLError as e:

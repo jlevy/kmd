@@ -104,3 +104,36 @@ def summarize_as_bullets(items: ActionInput) -> ActionResult:
             """
         ),
     ).run(items[0])
+
+
+@register_action
+def extract_concepts(items: ActionInput) -> ActionResult:
+    return LLMAction(
+        name="Extract Concepts",
+        description="Extract key concepts from text.",
+        model=LLM.gpt_3_5_turbo_16k_0613.value,
+        system_message=dedent(
+            """
+            You are a careful and precise editor.
+            You give exactly the results requested without additional commentary.
+            """
+        ),
+        title_template="Concepts from {title}",
+        template=dedent(
+            """
+            You are collecting concepts for the glossary of a book.
+            Identify and list any concepts from the following text
+            Only include unusual or technical terms or names of companies or people.
+            Do not include common concepts or general ideas.
+            Each concept should be a single word or noun phrase.
+            Write them as an itemized list of bullet points in Markdown format, with each word or
+            phrase in Title Case.
+
+            Input text:
+
+            {body}
+
+            Concepts:
+            """
+        ),
+    ).run(items[0])
