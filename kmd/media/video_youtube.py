@@ -14,7 +14,7 @@ class YouTube(VideoService):
         parsed_url = urlparse(url)
         if parsed_url.hostname == "youtu.be":
             video_id = parsed_url.path[1:]
-        elif parsed_url.hostname in ("www.youtube.com", "youtube.com"):
+        elif parsed_url.hostname in ("www.youtube.com", "youtube.com", "m.youtube.com"):
             query = parse_qs(parsed_url.query)
             video_id = query.get("v", [""])[0]
         else:

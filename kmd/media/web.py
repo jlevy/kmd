@@ -7,6 +7,8 @@ from strif import abbreviate_str
 import requests
 import justext
 
+from kmd.media.video import canonicalize_video_url
+
 log = logging.getLogger(__name__)
 
 
@@ -17,7 +19,7 @@ class CrawlError(ValueError):
 class PageType(enum.Enum):
     html = 1
     pdf = 2
-    youtube = 3
+    video = 3
 
     def as_str(self) -> str:
         return self.name
@@ -25,14 +27,10 @@ class PageType(enum.Enum):
     # TODO: Use mimetime as well.
     @classmethod
     def from_url(cls, url: str) -> "PageType":
+        if canonicalize_video_url(url):
+            return cls.video
         if url.endswith(".pdf"):
             return cls.pdf
-        if (
-            url.startswith("https://www.youtube.com/")
-            or url.startswith("https://m.youtube.com/")
-            or url.startswith("https://youtu.be/")
-        ):
-            return cls.youtube
         return cls.html
 
 
@@ -94,6 +92,7 @@ def fetch_extract(url: str) -> PageData:
 
     # TODO: Consider a JS-enabled headless browser so it works on more sites.
     # Example: https://www.inc.com/atish-davda/5-questions-you-should-ask-before-taking-a-start-up-job-offer.html
+    # TODO: Use the DirCache to save raw HTML content in disk cache.
     response = fetch(url)
     return _extract_page_data_from_html(url, response.content)
 

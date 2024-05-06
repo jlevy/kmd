@@ -7,11 +7,11 @@ import os
 from os import path
 import time
 from enum import Enum
-from urllib.parse import urlsplit, urlunsplit
 import requests
 import strif
 from .download_url import download_url, user_agent_headers
 from .identifier_utils import clean_alphanum_hash
+from .url_utils import normalize_url
 
 log = logging.getLogger(__name__)
 
@@ -94,21 +94,6 @@ def read_mtime(path):
 TIMEOUT = 30
 
 
-def normalize_url(url):
-    """
-    Minimal URL normalization. Mainly to deal with fragments/sections of
-    larger pages.
-
-    TODO: It'd be preferable to remove this step and actually extract the part of the page at the anchor/fragment,
-    but for now we fetch/use the whole page.
-    """
-    scheme, netloc, path, query, fragment = urlsplit(url)
-    normalized_url = urlunsplit((scheme, netloc, path, query, None))
-    if url != normalized_url:
-        log.info("Normalized URL: %s -> %s" % (url, normalized_url))
-    return normalized_url
-
-
 class WebCacheMode(Enum):
     LIVE = 1
     TEST = 2
@@ -125,6 +110,10 @@ class WebCache(DirStore):
 
     Fetch timestamp is modification time on file. Thread safe since file creation is atomic.
     """
+
+    # TODO: We don't fully handle fragments/sections of larger pages. It'd be preferable to extract
+    # the part of the page at the anchor/fragment, but for now we ignore fragments and fetch/use
+    # the whole page.
 
     ALWAYS = 0
     NEVER = -1
