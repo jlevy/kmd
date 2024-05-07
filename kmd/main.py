@@ -6,7 +6,7 @@ from kmd.media.url import canonicalize_url
 from kmd.media.video import video_download_audio, video_transcription
 import kmd.config as config
 from kmd.model.model import Format, Item, ItemType
-from kmd.file_storage.file_store import load_item, save_item
+from kmd.file_storage.file_store import workspace
 
 app = typer.Typer()
 
@@ -18,7 +18,7 @@ def download(url: str):
     """
 
     item = Item(ItemType.resource, url=canonicalize_url(url), format=Format.url)
-    saved_url = save_item(item)
+    saved_url = workspace.save(item)
     print(f"Saved URL to: {saved_url}")
 
     try:
@@ -28,7 +28,7 @@ def download(url: str):
     except ValueError as e:
         # If not a video, download as a web page.
         result = fetch_page([item])
-        saved_page = save_item(result[0])
+        saved_page = workspace.save(result[0])
         print(f"Saved page to: {saved_page}")
 
 
@@ -41,7 +41,7 @@ def transcribe(url: str):
     download(url)
     transcription = video_transcription(url)
     item = Item(ItemType.note, body=transcription, format=Format.plaintext)
-    saved_path = save_item(item)
+    saved_path = workspace.save(item)
     print(f"Saved transcription to: {saved_path}")
 
 
@@ -53,10 +53,10 @@ def action(action_name: str, path: str):
 
     actions = load_all_actions()
     action = actions[action_name]
-    item = load_item(path)
+    item = workspace.load(path)
     action_result: ActionResult = action([item])
     for output_item in action_result:
-        saved_path = save_item(output_item)
+        saved_path = workspace.save(output_item)
         print(f"Saved output to: {saved_path}")
 
 

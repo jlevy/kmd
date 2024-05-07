@@ -3,17 +3,26 @@ import os
 from pathlib import Path
 import textwrap
 from typing import Optional, Tuple
+from os.path import join
+import inflect
 
 from slugify import slugify
+from strif import copyfile_atomic
 from kmd.config import WORKSPACE_DIR
-from kmd.file_storage.file_types import file_ext_for
-from kmd.model.model import Format, Item, ItemType, item_type_to_folder
+from kmd.model.model import Format, Item, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.util.uniquifier import Uniquifier
 
-base_dir = Path(WORKSPACE_DIR)
 
 log = logging.getLogger(__name__)
+
+# For folder names, note -> notes, question -> questions, etc.
+_inflect = inflect.engine()
+_type_to_folder = {name: _inflect.plural(name) for name, _value in ItemType.__members__.items()}  # type: ignore
+
+
+def item_type_to_folder(item_type: ItemType) -> str:
+    return _type_to_folder[item_type.name]
 
 
 def _parse_filename(filename: str) -> Tuple[str, str, str]:
@@ -73,28 +82,40 @@ class FileStore:
                 self.uniquifier.uniquify(name, item_type)
 
     def _filename_for(self, item: Item) -> str:
-        """Get a good filename for this item that is unique."""
+        """Get a suitable filename for this item that is close to the slugified title yet also unique."""
 
-        name = item.default_title()
-        slug = slugify(name, max_length=50, separator="_")
+        title = item.get_title()
+        slug = slugify(title, max_length=64, separator="_")
 
         # Get a unique name per item type.
         unique_slug = self.uniquifier.uniquify(slug, item.type.value)
 
         type = item.type.value
-        ext = file_ext_for(item).value
+        ext = item.get_file_ext().value
 
         # Suffix files with both item type and a suitable file extension.
         return f"{unique_slug}.{type}.{ext}"
 
-    def save(self, item: Item) -> str:
-        folder_path = Path(item_type_to_folder(item.type))
+    def path_for(self, item: Item) -> Tuple[str, str]:
+        """Return (base_dir, store_path) for an item, which may or may not exist."""
 
+        folder_path = Path(item_type_to_folder(item.type))
         filename = self._filename_for(item)
         store_path = folder_path / filename
-        full_path = self.base_dir / store_path
-        formatted_body = _format_text(item.body_text(), item.format)
-        fmf_write(full_path, formatted_body, item.metadata())
+        return str(self.base_dir), str(store_path)
+
+    def save(self, item: Item) -> str:
+        base_dir, store_path = self.path_for(item)
+        full_path = join(base_dir, store_path)
+
+        # Binary or large files must be referenced by path.
+        if item.external_path:
+            copyfile_atomic(item.external_path, full_path)
+        else:
+            if item.is_binary:
+                raise ValueError(f"Binary Items should be saved externally: {item}")
+            formatted_body = _format_text(item.body_text(), item.format)
+            fmf_write(full_path, formatted_body, item.metadata())
 
         # Set filesystem file creation and modification times as well.
         if item.created_at:
@@ -117,12 +138,5 @@ class FileStore:
         return Item(type=item_type, body=body, **other_metadata)
 
 
-_file_store = FileStore(base_dir)
-
-
-def load_item(store_path: str) -> Item:
-    return _file_store.load(store_path)
-
-
-def save_item(item: Item) -> str:
-    return _file_store.save(item)
+# TODO: May want to have a settable current workspace directory but for now it's fixed.
+workspace = FileStore(Path(WORKSPACE_DIR))

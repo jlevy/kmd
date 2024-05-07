@@ -33,7 +33,7 @@ def fmf_write(file_path: Path | str, content: str, metadata: Optional[Dict]) -> 
 
 def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
     """
-    Read text content (typically Markdown) from a file with associated YAML metadata
+    Read text content (typically Markdown) from a file with optional YAML metadata
     in Jekyll-style frontmatter format.
     """
     yaml = YAML()

@@ -42,7 +42,7 @@ def run_llm_action(action: LLMAction, item: Item) -> ActionResult:
 
     output_item.body = llm_output
     if action.title_template:
-        output_item.title = action.title_template.format(title=item.default_title())
+        output_item.title = action.title_template.format(title=item.get_title())
     output_item.format = Format.markdown
 
     return [output_item]

@@ -1,12 +1,20 @@
 from textwrap import dedent
-from kmd.actions.action_lib import ActionInput, ActionResult, CrawlAction
+from kmd.actions.action_lib import ActionInput, ActionResult, CrawlAction, CreatePDFAction
 from kmd.actions.llm_actions import LLM, LLMAction
 from kmd.actions.registry import register_action
+
+
+# FIXME: This approach won't reveal metadata well. Change these to classes but create them with functions.
 
 
 @register_action
 def fetch_page(items: ActionInput) -> ActionResult:
     return CrawlAction().run(items)
+
+
+@register_action
+def create_pdf(items: ActionInput) -> ActionResult:
+    return CreatePDFAction().run(items)
 
 
 @register_action

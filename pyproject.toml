@@ -25,6 +25,8 @@ inflect = "^7.2.1"
 justext = "^3.0.0"
 lxml-html-clean = "^0.1.1"
 cssselect = "^1.2.0"
+weasyprint = "^62.1"
+jinja2 = "^3.1.4"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"

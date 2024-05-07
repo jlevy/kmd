@@ -164,7 +164,11 @@ def _deepgram_diarized_segments(data, confidence_threshold=0.3) -> List[SpeakerS
 def format_speaker_segments(speaker_segments: List[SpeakerSegment]) -> str:
     """Format speaker segments for display."""
 
-    lines = []
-    for segment in speaker_segments:
-        lines.append(f"SPEAKER {segment.speaker}:\n{segment.speaker_text}")
-    return "\n\n".join(lines)
+    speakers = set(segment.speaker for segment in speaker_segments)
+    if len(speakers) > 1:
+        lines = []
+        for segment in speaker_segments:
+            lines.append(f"SPEAKER {segment.speaker}:\n{segment.speaker_text}")
+        return "\n\n".join(lines)
+    else:
+        return "\n\n".join(segment.speaker_text for segment in speaker_segments)
