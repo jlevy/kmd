@@ -2,10 +2,13 @@ import os
 from os.path import dirname, abspath
 import tomllib
 import logging
+from logging import INFO, WARNING, Formatter
 import sys
 import openai
 from cachetools import cached
 from assertpy import assert_that
+
+APP_NAME = "kmd"
 
 # Presume this file is in the main Python source folder, and use the parent folder as the root.
 ROOT = dirname(dirname(abspath(__file__)))
@@ -18,15 +21,25 @@ WORKSPACE_DIR = "./workspace"
 @cached(cache={})
 def setup():
     """One-time setup of essential keys, directories, and configs. Idempotent."""
+
     _logging_setup()
     api_setup()
 
 
 def _logging_setup():
-    log_format = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
-    log_level = logging.INFO
+    # Verbose logging to file, important logging to console.
+    file_handler = logging.FileHandler(f"{APP_NAME}.log")
+    file_handler.setLevel(INFO)
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(WARNING)
 
-    logging.basicConfig(level=log_level, format=log_format, stream=sys.stdout)
+    file_handler.setFormatter(Formatter("%(asctime)s %(levelname).4s %(name)s - %(message)s"))
+    console_handler.setFormatter(Formatter("%(levelname)s: %(message)s"))
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(INFO)
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(console_handler)
 
 
 @cached(cache={})
@@ -51,7 +64,7 @@ def get_secret(name):
     if name in all_secrets:
         return all_secrets[name]
     else:
-        raise KeyError(f"Secret '{name}' not found in the loaded secrets.")
+        raise KeyError(f"Secret '{name}' not found in the loaded secrets")
 
 
 @cached(cache={})
