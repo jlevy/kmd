@@ -1,13 +1,11 @@
 import logging
-
 from rich.syntax import Syntax
 from rich.traceback import Traceback
 
 from textual.app import App, ComposeResult
-from textual.widgets import Static
-from textual.containers import VerticalScroll, Container
+from textual.containers import Container, VerticalScroll
 from textual.reactive import var
-from textual.widgets import DirectoryTree, Footer, Header, Static
+from textual.widgets import DirectoryTree, Footer, Header, Static, Markdown
 
 from kmd.config import WORKSPACE_DIR
 
@@ -17,6 +15,7 @@ log = logging.getLogger(__name__)
 class WorkspaceBrowser(App):
     """Browse files in the workspace."""
 
+    CSS_PATH = "workspace_browser.tcss"
     BINDINGS = [
         ("f", "toggle_files", "Toggle Files"),
         ("v", "toggle_content", "Toggle Content View"),
@@ -26,18 +25,14 @@ class WorkspaceBrowser(App):
     path = WORKSPACE_DIR
 
     show_tree = var(True)
-
-    def watch_show_tree(self, show_tree: bool) -> None:
-        """Called when show_tree is modified."""
-
-        self.set_class(show_tree, "-show-tree")
+    show_content = var(False)
 
     def compose(self) -> ComposeResult:
         """Compose our UI."""
 
-        yield Header()
+        # yield Header()
         with Container():
-            yield DirectoryTree(self.path, id="tree-view")
+            yield DirectoryTree("./workspace", id="tree-view")
             with VerticalScroll(id="content-view"):
                 yield Static(id="content", expand=True)
         yield Footer()
@@ -50,6 +45,7 @@ class WorkspaceBrowser(App):
 
         event.stop()
         content_view = self.query_one("#content", Static)
+
         try:
             syntax = Syntax.from_path(
                 str(event.path),
@@ -61,15 +57,34 @@ class WorkspaceBrowser(App):
         except UnicodeDecodeError:
             log.info("Ignoring UnicodeDecodeError on binary file: %s", event.path)
         except Exception:
-            log.exception("Error reading file: %s", event.path)
             content_view.update(Traceback(theme="github-dark", width=None))
             self.sub_title = "ERROR"
         else:
             content_view.update(syntax)
+            self.show_content = True
             self.query_one("#content-view").scroll_home(animate=False)
             self.sub_title = str(event.path)
+
+    def watch_show_tree(self, show_tree: bool) -> None:
+        """Called when show_tree is modified."""
+
+        self.set_class(show_tree, "-show-tree")
+
+    def watch_show_content(self, show_content: bool) -> None:
+        """Called when show_content is modified."""
+
+        self.set_class(show_content, "-show-content")
 
     def action_toggle_files(self) -> None:
         """Called in response to key binding."""
 
         self.show_tree = not self.show_tree
+
+    def action_toggle_content(self) -> None:
+        """Called in response to key binding."""
+
+        self.show_content = not self.show_content
+
+
+if __name__ == "__main__":
+    WorkspaceBrowser().run()

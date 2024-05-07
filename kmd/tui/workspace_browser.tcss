@@ -20,8 +20,13 @@ WorkspaceBrowser.-show-tree #tree-view {
 }
 
 #content-view {
+    display: none;
     overflow: auto scroll;
     min-width: 100%;
+}
+
+WorkspaceBrowser.-show-content #content-view {
+    display: block;
 }
 
 #content {
