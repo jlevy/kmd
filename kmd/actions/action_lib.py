@@ -59,5 +59,4 @@ class CreatePDFAction(Action):
         )
 
         pdf_item.external_path = full_pdf_path
-        workspace.save(pdf_item)
         return [pdf_item]

@@ -139,6 +139,11 @@ class Item:
             raise ValueError(f"Cannot infer file extension for Item: {self}")
         return inferred_ext
 
+    def get_full_suffix(self) -> str:
+        """Get the full file extension suffix for this item."""
+
+        return f"{self.type.value}.{self.get_file_ext().value}"
+
     def body_text(self) -> str:
         if self.is_binary:
             raise ValueError("Cannot get text content of a binary Item")

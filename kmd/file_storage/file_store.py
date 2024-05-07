@@ -4,6 +4,7 @@ from pathlib import Path
 import textwrap
 from typing import Optional, Tuple
 from os.path import join
+from os import path
 import inflect
 
 from slugify import slugify
@@ -69,17 +70,17 @@ class FileStore:
         self.uniquifier = Uniquifier()
         self._initialize_uniquifier()
 
-        log.info(f"Using file store in {base_dir} ({len(self.uniquifier)} items)")
+        log.info("Using file store in %s (%s items)", base_dir, len(self.uniquifier))
 
     def _initialize_uniquifier(self):
         for _root, _dirs, files in os.walk(self.base_dir):
             for file in files:
                 try:
-                    name, item_type, _ext = _parse_filename(file)
+                    name, item_type, ext = _parse_filename(file)
                 except ValueError:
-                    log.info(f"Skipping file with invalid name: {file}")
+                    log.info("Skipping file with invalid name: %s", file)
                     continue
-                self.uniquifier.uniquify(name, item_type)
+                self.uniquifier.uniquify(name, f"{item_type}.{ext}")
 
     def _filename_for(self, item: Item) -> str:
         """Get a suitable filename for this item that is close to the slugified title yet also unique."""
@@ -88,7 +89,7 @@ class FileStore:
         slug = slugify(title, max_length=64, separator="_")
 
         # Get a unique name per item type.
-        unique_slug = self.uniquifier.uniquify(slug, item.type.value)
+        unique_slug = self.uniquifier.uniquify(slug, item.get_full_suffix())
 
         type = item.type.value
         ext = item.get_file_ext().value
@@ -105,10 +106,21 @@ class FileStore:
         return str(self.base_dir), str(store_path)
 
     def save(self, item: Item) -> str:
+        # Binary or large files must be referenced by path.
+        # If external file alrady exists, the file is alrady saved (without metadata).
+        if (
+            item.external_path
+            and path.exists(item.external_path)
+            and path.commonpath([self.base_dir, item.external_path]) == str(self.base_dir)
+        ):
+            log.info("External file already saved: %s", item.external_path)
+            store_path = path.relpath(item.external_path, self.base_dir)
+            return store_path
+
+        # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
         base_dir, store_path = self.path_for(item)
         full_path = join(base_dir, store_path)
 
-        # Binary or large files must be referenced by path.
         if item.external_path:
             copyfile_atomic(item.external_path, full_path)
         else:

@@ -168,7 +168,7 @@ def format_speaker_segments(speaker_segments: List[SpeakerSegment]) -> str:
     if len(speakers) > 1:
         lines = []
         for segment in speaker_segments:
-            lines.append(f"SPEAKER {segment.speaker}:\n{segment.speaker_text}")
+            lines.append(f"**SPEAKER {segment.speaker}:**\n{segment.speaker_text}")
         return "\n\n".join(lines)
     else:
         return "\n\n".join(segment.speaker_text for segment in speaker_segments)

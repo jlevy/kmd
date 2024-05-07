@@ -17,7 +17,8 @@ def download(url: str):
     Download web page or video.
     """
 
-    item = Item(ItemType.resource, url=canonicalize_url(url), format=Format.url)
+    url = canonicalize_url(url)
+    item = Item(ItemType.resource, url=url, format=Format.url)
     saved_url = workspace.save(item)
     print(f"Saved URL to: {saved_url}")
 
@@ -38,6 +39,7 @@ def transcribe(url: str):
     Download and transcribe video from YouTube or Vimeo
     """
 
+    url = canonicalize_url(url)
     download(url)
     transcription = video_transcription(url)
     item = Item(ItemType.note, body=transcription, format=Format.plaintext)
