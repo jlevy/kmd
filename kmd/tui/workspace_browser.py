@@ -8,6 +8,7 @@ from textual.reactive import var
 from textual.widgets import DirectoryTree, Footer, Header, Static, Markdown
 
 from kmd.config import WORKSPACE_DIR
+from kmd.file_storage.frontmatter_format import fmf_read
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +35,8 @@ class WorkspaceBrowser(App):
         with Container():
             yield DirectoryTree("./workspace", id="tree-view")
             with VerticalScroll(id="content-view"):
-                yield Static(id="content", expand=True)
+                yield Static(id="file-text", expand=True)
+                yield Markdown(id="file-markdown")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -44,25 +46,39 @@ class WorkspaceBrowser(App):
         """Called when the user click a file in the directory tree."""
 
         event.stop()
-        content_view = self.query_one("#content", Static)
+
+        text_view = self.query_one("#file-text", Static)
+        markdown_view = self.query_one("#file-markdown", Markdown)
+
+        is_markdown = event.path.suffix == ".md"
+
+        text_syntax = ""
+        markdown = ""
 
         try:
-            syntax = Syntax.from_path(
-                str(event.path),
-                line_numbers=False,
-                word_wrap=False,
-                indent_guides=True,
-                theme="github-dark",
-            )
+            if is_markdown:
+                markdown, _metadata = fmf_read(event.path)
+            else:
+                text_syntax = Syntax.from_path(
+                    str(event.path),
+                    line_numbers=False,
+                    word_wrap=False,
+                    indent_guides=True,
+                    theme="github-dark",
+                )
         except UnicodeDecodeError:
             log.info("Ignoring UnicodeDecodeError on binary file: %s", event.path)
         except Exception:
-            content_view.update(Traceback(theme="github-dark", width=None))
+            text_view.update(Traceback(theme="github-dark", width=None))
             self.sub_title = "ERROR"
         else:
-            content_view.update(syntax)
+            text_view.update(text_syntax)
+            self.query_one("#file-text").scroll_home(animate=False)
+
+            markdown_view.update(markdown)
+            self.query_one("#file-markdown").scroll_home(animate=False)
+
             self.show_content = True
-            self.query_one("#content-view").scroll_home(animate=False)
             self.sub_title = str(event.path)
 
     def watch_show_tree(self, show_tree: bool) -> None:
