@@ -8,6 +8,7 @@ import requests
 import justext
 
 from kmd.media.video import canonicalize_video_url
+from kmd.util.url_utils import Url
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class PageType(enum.Enum):
 
     # TODO: Use mimetime as well.
     @classmethod
-    def from_url(cls, url: str) -> "PageType":
+    def from_url(cls, url: Url) -> "PageType":
         if canonicalize_video_url(url):
             return cls.video
         if url.endswith(".pdf"):
@@ -39,7 +40,7 @@ class PageData:
 
     def __init__(
         self,
-        url: str,
+        url: Url,
         type: PageType = PageType.html,
         title: Optional[str] = None,
         description: Optional[str] = None,
@@ -76,7 +77,7 @@ def guess_text_content_type(content: str) -> ContentType:
 USER_AGENT = "Mozilla/5.0"
 
 
-def fetch(url: str) -> requests.Response:
+def fetch(url: Url) -> requests.Response:
     response = requests.get(url, headers={"User-Agent": USER_AGENT})
     log.info("Fetched: %s (%s bytes): %s", response.status_code, len(response.content), url)
     if response.status_code != 200:
@@ -85,7 +86,7 @@ def fetch(url: str) -> requests.Response:
 
 
 @cached(cache=TTLCache(maxsize=100, ttl=600))
-def fetch_extract(url: str) -> PageData:
+def fetch_extract(url: Url) -> PageData:
     """
     Fetches a URL and extracts the title, description, and content.
     """
@@ -97,7 +98,7 @@ def fetch_extract(url: str) -> PageData:
     return _extract_page_data_from_html(url, response.content)
 
 
-def _extract_page_data_from_html(url: str, raw_html: bytes) -> PageData:
+def _extract_page_data_from_html(url: Url, raw_html: bytes) -> PageData:
     dom, paragraphs = _justext_custom(raw_html, justext.get_stoplist("English"))
     # Extract title and description.
     title = None
@@ -188,5 +189,5 @@ if __name__ == "__main__":
 
     for url in sample_urls:
         print(f"URL: {url}")
-        print(fetch_extract(url))
+        print(fetch_extract(Url(url)))
         print()

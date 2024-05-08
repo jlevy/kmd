@@ -1,20 +1,33 @@
 from textwrap import dedent
-from kmd.actions.action_lib import ActionInput, ActionResult, CrawlAction, CreatePDFAction
+from kmd.actions.action_lib import (
+    ActionInput,
+    ActionResult,
+    FetchPageAction,
+    CreatePDFAction,
+    TranscribeVideoAction,
+)
 from kmd.actions.llm_actions import LLM, LLMAction
 from kmd.actions.registry import register_action
 
 
-# FIXME: This approach won't reveal metadata well. Change these to classes but create them with functions.
+# FIXME: This approach won't reveal metadata well.
+# Change these to classes but create them with functions when convenient
+# (@register_action and @register_action_function)
 
 
 @register_action
 def fetch_page(items: ActionInput) -> ActionResult:
-    return CrawlAction().run(items)
+    return FetchPageAction().run(items)
 
 
 @register_action
 def create_pdf(items: ActionInput) -> ActionResult:
     return CreatePDFAction().run(items)
+
+
+@register_action
+def transcribe_video(items: ActionInput) -> ActionResult:
+    return TranscribeVideoAction().run(items)
 
 
 @register_action

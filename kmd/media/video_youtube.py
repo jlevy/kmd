@@ -4,13 +4,15 @@ import os
 from typing import Optional
 from urllib.parse import urlparse, parse_qs
 import yt_dlp
+
+from kmd.util.url_utils import Url
 from .media_services import VideoService
 
 log = logging.getLogger(__name__)
 
 
 class YouTube(VideoService):
-    def canonicalize(self, url: str) -> Optional[str]:
+    def canonicalize(self, url: Url) -> Optional[Url]:
         parsed_url = urlparse(url)
         if parsed_url.hostname == "youtu.be":
             video_id = parsed_url.path[1:]
@@ -21,9 +23,9 @@ class YouTube(VideoService):
             return None
         if not video_id:
             return None
-        return f"https://www.youtube.com/watch?v={video_id}"
+        return Url(f"https://www.youtube.com/watch?v={video_id}")
 
-    def download_audio(self, url: str, target_dir: Optional[str] = None) -> str:
+    def download_audio(self, url: Url, target_dir: Optional[str] = None) -> str:
         """Download and convert to mp3 using yt_dlp, which seems like the best library for this."""
 
         temp_dir = target_dir or tempfile.mkdtemp()

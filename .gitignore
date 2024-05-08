@@ -2,6 +2,9 @@ cache/
 workspace/
 trash/
 
+# Dev convenience convention: Temporarily rename a file to stop tracking it.
+stash.*
+
 # Ignore everything in the secrets directory except the template.
 secrets/*
 !secrets/secrets.template.toml

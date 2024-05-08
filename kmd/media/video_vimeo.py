@@ -7,12 +7,13 @@ from pydub import AudioSegment
 from vimeo_downloader import Vimeo as VimeoDownloader
 
 from kmd.media.media_services import VideoService
+from kmd.util.url_utils import Url
 
 log = logging.getLogger(__name__)
 
 
 class Vimeo(VideoService):
-    def canonicalize(self, url: str) -> Optional[str]:
+    def canonicalize(self, url: Url) -> Optional[str]:
         parsed_url = urlparse(url)
         if parsed_url.hostname == "vimeo.com":
             video_id = parsed_url.path[1:]
@@ -22,7 +23,7 @@ class Vimeo(VideoService):
         else:
             return None
 
-    def download_audio(self, url: str) -> str:
+    def download_audio(self, url: Url) -> str:
         temp_dir = tempfile.mkdtemp()
         v = VimeoDownloader(url)
         stream = v.streams[0]  # Pick the worst quality for smaller file size.

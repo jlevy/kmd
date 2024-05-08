@@ -84,7 +84,7 @@ def deepgram_transcribe_audio(audio_file_path: str) -> str:
     response = deepgram.listen.prerecorded.v("1").transcribe_file(payload, options, timeout=600)
 
     diarized_segments = _deepgram_diarized_segments(response)
-    log.info("Diarized response: %s", diarized_segments)
+    log.debug("Diarized response: %s", diarized_segments)
 
     formatted_segments = format_speaker_segments(diarized_segments)
     return formatted_segments

@@ -4,7 +4,9 @@ import logging
 from kmd.actions.action_lib import ActionResult
 from kmd.apis.openai import openai_completion
 from kmd.model.model import Action, Format, Item
+from kmd.file_storage.file_store import workspace
 from kmd import config
+
 
 log = logging.getLogger(__name__)
 
@@ -44,5 +46,7 @@ def run_llm_action(action: LLMAction, item: Item) -> ActionResult:
     if action.title_template:
         output_item.title = action.title_template.format(title=item.get_title())
     output_item.format = Format.markdown
+
+    workspace.save(output_item)
 
     return [output_item]

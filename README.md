@@ -37,9 +37,11 @@ Try it out!
 
 ```
 # Transcribe a video and summarize it.
-poetry run kmd transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
-poetry run kmd action fetch_page resources/https_www_youtube_com_watch_v_xrqnwomofiy.resource.webpage
+poetry run kmd action fetch_page 'https://www.investopedia.com/terms/r/risktolerance.asp'
+poetry run kmd action transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
+poetry run kmd action break_into_paragraphs notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
 poetry run kmd action summarize_as_bullets notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
+poetry run kmd action create_pdf notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.md
 ```
 
 Or use shell for development and testing:

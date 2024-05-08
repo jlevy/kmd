@@ -10,9 +10,12 @@ import inflect
 from slugify import slugify
 from strif import copyfile_atomic
 from kmd.config import WORKSPACE_DIR
+from kmd.model.url import canonicalize_url
+from kmd.model.locators import Locator, StorePath
 from kmd.model.model import Format, Item, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.util.uniquifier import Uniquifier
+from kmd.util.url_utils import Url, is_url
 
 
 log = logging.getLogger(__name__)
@@ -97,15 +100,15 @@ class FileStore:
         # Suffix files with both item type and a suitable file extension.
         return f"{unique_slug}.{type}.{ext}"
 
-    def path_for(self, item: Item) -> Tuple[str, str]:
+    def path_for(self, item: Item) -> Tuple[str, StorePath]:
         """Return (base_dir, store_path) for an item, which may or may not exist."""
 
         folder_path = Path(item_type_to_folder(item.type))
         filename = self._filename_for(item)
         store_path = folder_path / filename
-        return str(self.base_dir), str(store_path)
+        return str(self.base_dir), StorePath(str(store_path))
 
-    def save(self, item: Item) -> str:
+    def save(self, item: Item) -> StorePath:
         # Binary or large files must be referenced by path.
         # If external file alrady exists, the file is alrady saved (without metadata).
         if (
@@ -114,30 +117,30 @@ class FileStore:
             and path.commonpath([self.base_dir, item.external_path]) == str(self.base_dir)
         ):
             log.info("External file already saved: %s", item.external_path)
-            store_path = path.relpath(item.external_path, self.base_dir)
-            return store_path
-
-        # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
-        base_dir, store_path = self.path_for(item)
-        full_path = join(base_dir, store_path)
-
-        if item.external_path:
-            copyfile_atomic(item.external_path, full_path)
+            store_path = StorePath(path.relpath(item.external_path, self.base_dir))
         else:
-            if item.is_binary:
-                raise ValueError(f"Binary Items should be saved externally: {item}")
-            formatted_body = _format_text(item.body_text(), item.format)
-            fmf_write(full_path, formatted_body, item.metadata())
+            # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
+            base_dir, store_path = self.path_for(item)
+            full_path = join(base_dir, store_path)
 
-        # Set filesystem file creation and modification times as well.
-        if item.created_at:
-            created_time = item.created_at.timestamp()
-            modified_time = item.modified_at.timestamp() if item.modified_at else created_time
-            os.utime(full_path, (created_time, modified_time))
+            if item.external_path:
+                copyfile_atomic(item.external_path, full_path)
+            else:
+                if item.is_binary:
+                    raise ValueError(f"Binary Items should be external files: {item}")
+                formatted_body = _format_text(item.body_text(), item.format)
+                fmf_write(full_path, formatted_body, item.metadata())
 
-        return str(store_path)
+            # Set filesystem file creation and modification times as well.
+            if item.created_at:
+                created_time = item.created_at.timestamp()
+                modified_time = item.modified_at.timestamp() if item.modified_at else created_time
+                os.utime(full_path, (created_time, modified_time))
 
-    def load(self, store_path: str) -> Item:
+        log.warn("Saved %s: %s", item.type.value, store_path)
+        return store_path
+
+    def load(self, store_path: StorePath) -> Item:
         item_type = _type_from_filename(store_path)
         body, metadata = fmf_read(self.base_dir / store_path)
         if not metadata:
@@ -152,3 +155,15 @@ class FileStore:
 
 # TODO: May want to have a settable current workspace directory but for now it's fixed.
 workspace = FileStore(Path(WORKSPACE_DIR))
+
+
+def locate_in_store(locator: Locator) -> Item:
+    if is_url(locator):
+        url = canonicalize_url(Url(locator))
+        item = Item(ItemType.resource, url=url, format=Format.url)
+        store_path = workspace.save(item)
+        log.warn("Saved url: %s", store_path)
+    else:
+        item = workspace.load(StorePath(locator))
+
+    return item

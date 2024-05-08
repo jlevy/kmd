@@ -33,8 +33,9 @@ def _logging_setup():
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(WARNING)
 
-    file_handler.setFormatter(Formatter("%(asctime)s %(levelname).4s %(name)s - %(message)s"))
-    console_handler.setFormatter(Formatter("%(levelname)s: %(message)s"))
+    file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
+    # TODO: Add colors!
+    console_handler.setFormatter(Formatter("%(message)s"))
 
     root_logger = logging.getLogger()
     root_logger.setLevel(INFO)

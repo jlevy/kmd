@@ -6,6 +6,8 @@ from typing import Optional
 
 from strif import abbreviate_str
 
+from kmd.util.url_utils import Url
+
 
 @dataclass
 class Action:
@@ -26,6 +28,7 @@ class ItemType(Enum):
     concept = "concept"
     answer = "answer"
     resource = "resource"
+    export = "export"
 
 
 class Format(Enum):
@@ -77,7 +80,7 @@ class Item:
 
     type: ItemType
     title: Optional[str] = None
-    url: Optional[str] = None
+    url: Optional[Url] = None
     description: Optional[str] = None
     format: Optional[Format] = None
     file_ext: Optional[FileExt] = None

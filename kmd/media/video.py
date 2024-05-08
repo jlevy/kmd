@@ -1,8 +1,10 @@
 import logging
 import os
-from typing import Optional
+from typing import List, Optional
 from strif import atomic_output_file
 from kmd.config import MEDIA_CACHE_DIR
+from kmd.media.media_services import VideoService
+from kmd.util.url_utils import Url
 from .audio import deepgram_transcribe_audio, downsample_to_16khz
 from ..util.web_cache import DirStore
 from .video_youtube import YouTube
@@ -15,19 +17,26 @@ log = logging.getLogger(__name__)
 transcribe_audio = deepgram_transcribe_audio
 
 
+SUFFIX_16KMP3 = ".16k.mp3"
+SUFFIX_MP3 = ".full.mp3"
+SUFFIX_TRANSCRIPT = ".transcript.txt"
+
+
 class VideoCache(DirStore):
     """Download and cache video, audio, and transcripts from videos."""
 
     def __init__(self, root):
         super().__init__(root)
 
-    def _write_transcript(self, url: str, content: str) -> None:
-        with atomic_output_file(self.path_for(url, suffix=".txt")) as temp_output:
+    def _write_transcript(self, url: Url, content: str) -> None:
+        transcript_path = self.path_for(url, suffix=SUFFIX_TRANSCRIPT)
+        with atomic_output_file(transcript_path) as temp_output:
             with open(temp_output, "w") as f:
                 f.write(content)
+        log.warn("Transcript saved to cache: %s", transcript_path)
 
     def _read_transcript(self, url) -> Optional[str]:
-        transcript_file = self.find(url, suffix=".txt")
+        transcript_file = self.find(url, suffix=SUFFIX_TRANSCRIPT)
         if transcript_file:
             log.info("Video transcript in cache: %s: %s", url, transcript_file)
             with open(transcript_file, "r") as f:
@@ -35,12 +44,12 @@ class VideoCache(DirStore):
         return None
 
     def _do_downsample(self, url):
-        downsampled_audio_file = self.find(url, suffix=".16k.mp3")
+        downsampled_audio_file = self.find(url, suffix=SUFFIX_16KMP3)
         if not downsampled_audio_file:
-            full_audio_file = self.find(url, suffix=".mp3")
+            full_audio_file = self.find(url, suffix=SUFFIX_MP3)
             if not full_audio_file:
                 raise ValueError("No audio file found for: %s" % url)
-            downsampled_audio_file = self.path_for(url, suffix=".16k.mp3")
+            downsampled_audio_file = self.path_for(url, suffix=SUFFIX_16KMP3)
             log.info(
                 "Downsampling YouTube audio: %s -> %s", full_audio_file, downsampled_audio_file
             )
@@ -56,16 +65,19 @@ class VideoCache(DirStore):
 
     def download(self, url, no_cache=False) -> str:
         if not no_cache:
-            full_audio_file = self.find(url, suffix=".mp3")
+            full_audio_file = self.find(url, suffix=SUFFIX_MP3)
             if full_audio_file:
                 log.info("Audio of video in cache: %s: %s", url, full_audio_file)
                 return full_audio_file
         log.info("Downloading audio of video: %s", url)
         mp3_path = _download_audio_with_service(url)
-        full_audio_file = self.path_for(url, suffix=".mp3")
-        os.rename(mp3_path, full_audio_file)
+        full_audio_path = self.path_for(url, suffix=SUFFIX_MP3)
+        os.rename(mp3_path, full_audio_path)
         self._do_downsample(url)
-        return full_audio_file
+
+        log.warn("Downloaded video and saved audio to: %s", full_audio_path)
+
+        return full_audio_path
 
     def transcribe(self, url, no_cache=False) -> str:
         url = canonicalize_video_url(url)
@@ -86,7 +98,7 @@ class VideoCache(DirStore):
 _video_cache = VideoCache(MEDIA_CACHE_DIR)
 
 
-def _download_audio_with_service(url: str) -> str:
+def _download_audio_with_service(url: Url) -> str:
     for service in video_services:
         canonical_url = service.canonicalize(url)
         if canonical_url:
@@ -94,23 +106,23 @@ def _download_audio_with_service(url: str) -> str:
     raise ValueError(f"Unrecognized video URL: {url}")
 
 
-def video_transcription(url: str, no_cache=False) -> str:
+def video_transcription(url: Url, no_cache=False) -> str:
     """Transcribe a video, saving in cache. If no_cache is True, force fresh download."""
 
     return _video_cache.transcribe(url, no_cache=no_cache)
 
 
-def video_download_audio(url: str, no_cache=False) -> str:
+def video_download_audio(url: Url, no_cache=False) -> str:
     """Download audio of a video, saving in cache. If no_cache is True, force fresh download."""
 
     return _video_cache.download(url, no_cache=no_cache)
 
 
 # List of available video services.
-video_services = [YouTube(), Vimeo()]
+video_services: List[VideoService] = [YouTube(), Vimeo()]
 
 
-def canonicalize_video_url(url: str) -> Optional[str]:
+def canonicalize_video_url(url: Url) -> Optional[Url]:
     """Return the canonical form of a video URL from a supported service (like YouTube)."""
 
     for service in video_services:

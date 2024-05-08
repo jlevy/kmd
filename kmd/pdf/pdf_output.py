@@ -4,7 +4,7 @@ from weasyprint import HTML
 from marko import Markdown
 from typing import Optional
 from pathlib import Path
-
+from strif import atomic_output_file
 from kmd.config import APP_NAME
 
 
@@ -40,4 +40,5 @@ def markdown_to_pdf(
 
     # Create PDF.
     weasy_html = HTML(string=rendered_html)
-    weasy_html.write_pdf(output_file_path)
+    with atomic_output_file(output_file_path, make_parents=True) as temp_file_path:
+        weasy_html.write_pdf(temp_file_path)
