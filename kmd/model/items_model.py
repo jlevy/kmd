@@ -9,17 +9,6 @@ from strif import abbreviate_str
 from kmd.util.url_utils import Url
 
 
-@dataclass
-class Action:
-    name: str
-    description: str
-    implementation: str = "builtin"
-    model: Optional[str] = None
-    title_template: Optional[str] = None
-    template: Optional[str] = None
-    system_message: Optional[str] = None
-
-
 class ItemType(Enum):
     """Kinds of items."""
 

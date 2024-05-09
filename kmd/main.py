@@ -5,13 +5,14 @@ kmd: A command line for knowledge exploration.
 import atexit
 import logging
 import sys
+from textwrap import indent
 from typer import Typer
+from kmd.actions.registry import load_all_actions
 
 import kmd.config as config
 from kmd.config import APP_NAME
 from kmd.file_storage.file_store import locate_in_store
 from kmd.tui import tui
-from kmd.actions.registry import load_all_actions
 
 
 app = Typer(help=__doc__)
@@ -30,6 +31,17 @@ atexit.register(log_exit)
 
 
 @app.command()
+def list_actions():
+    """
+    List all available actions.
+    """
+
+    actions = load_all_actions()
+    for action in actions.values():
+        print(f"{action.name} - {action.friendly_name}:\n{indent(action.description, prefix="    ")}\n")
+
+
+@app.command()
 def action(action_name: str, locator: str):
     """
     Perform an action on the given item.
@@ -40,7 +52,8 @@ def action(action_name: str, locator: str):
 
     item = locate_in_store(locator)
 
-    action([item])
+    # TODO: Handle multiple input items.
+    action.run([item])
 
 
 @app.command()

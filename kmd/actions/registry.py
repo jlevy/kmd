@@ -1,36 +1,61 @@
 import logging
-from typing import Callable, Dict, List
+from typing import Dict, Type
 
 from cachetools import cached
-from kmd.actions.action_lib import ActionInput, ActionResult
+from kmd.actions.llm_actions import LLMAction
 
-from kmd.model.model import Item
+from kmd.model.actions_model import Action
+
 
 log = logging.getLogger(__name__)
 
-_action_functions = []
+_actions = []
 
 
-def register_action(function: Callable[[ActionInput], ActionResult]):
+def register_action(cls: Type[Action]):
     """
-    Annotation to make it easy to register a function that implements an action.
+    Annotation to register an action.
     """
 
-    _action_functions.append(function)
-    return function
+    # Validate the action instance.
+    if not issubclass(cls, Action):
+        raise TypeError(f"Registered class {cls.__name__} must be a subclass of Action")
+
+    _actions.append(cls)
+    return cls
+
+
+def register_llm_action(
+    name, friendly_name, description, model, system_message, title_template, template
+):
+    """
+    Convenience method to register an LLM action.
+    """
+
+    @register_action
+    class CustomLLMAction(LLMAction):
+        def __init__(self):
+            super().__init__(
+                name,
+                friendly_name,
+                description,
+                model=model,
+                system_message=system_message,
+                title_template=title_template,
+                template=template,
+            )
+
+    return CustomLLMAction
 
 
 @cached({})
-def load_all_actions() -> Dict[str, Callable[[ActionInput], ActionResult]]:
+def load_all_actions() -> Dict[str, Action]:
     # Import to register the actions.
     import kmd.actions.action_definitions  # noqa
 
-    action_functions_map = {}
-    for f in _action_functions:
-        action_functions_map[f.__name__] = f
-
-    if not action_functions_map:
-        raise ValueError("No actions registered.")
-
-    log.info("Registered actions: %s", action_functions_map.keys())
-    return action_functions_map
+    actions_map = {}
+    for cls in _actions:
+        action = cls()
+        actions_map[action.name] = action
+    log.info("Registered actions: %s", list(actions_map.keys()))
+    return actions_map

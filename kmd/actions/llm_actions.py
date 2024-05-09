@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from kmd.actions.action_lib import ActionResult
 from kmd.apis.openai import openai_completion
-from kmd.model.model import Action, Format, Item
+from kmd.model.actions_model import Action, ActionInput, ActionResult
+from kmd.model.items_model import Format, Item
 from kmd.file_storage.file_store import workspace
 from kmd import config
 
@@ -21,11 +21,14 @@ class LLM(Enum):
 class LLMAction(Action):
     implementation: str = "llm"
 
-    def run(self, item: Item) -> ActionResult:
-        return run_llm_action(self, item)
+    def run(self, items: ActionInput) -> ActionResult:
+        return _run_llm_action(self, items)
 
 
-def run_llm_action(action: LLMAction, item: Item) -> ActionResult:
+def _run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
+    # TODO: Handle multiple input items?
+    item = items[0]
+
     if not item.body:
         raise ValueError("LLM actions expect a body")
     if not action.model or not action.system_message or not action.template:

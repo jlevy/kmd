@@ -44,9 +44,14 @@ poetry run kmd action summarize_as_bullets notes/the_weighted_pull_up_is_one_of_
 poetry run kmd action create_pdf notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.md
 ```
 
-Or use shell for development and testing:
+Other useful testing and development commands:
 
 ```
+# Run pytests:
+poetry run pytest
+poetry run pytest -s kmd/commands/command_parser.py
+
+# Run from shell:
 poetry shell
 python kmd/main.py --help
 ```

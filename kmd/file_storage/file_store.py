@@ -12,7 +12,7 @@ from strif import copyfile_atomic
 from kmd.config import WORKSPACE_DIR
 from kmd.model.url import canonicalize_url
 from kmd.model.locators import Locator, StorePath
-from kmd.model.model import Format, Item, ItemType
+from kmd.model.items_model import Format, Item, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url_utils import Url, is_url

@@ -29,9 +29,11 @@ weasyprint = "^62.1"
 jinja2 = "^3.1.4"
 textual = "^0.58.1"
 textual-dev = "^1.5.1"
+lark-parser = "^0.12.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
+pytest = "^8.2.0"
 
 [build-system]
 requires = ["poetry-core"]
