@@ -13,40 +13,6 @@ from kmd.file_storage.frontmatter_format import fmf_read
 
 log = logging.getLogger(__name__)
 
-# TODO: Autocomplete
-# from kmd.actions.registry import load_all_actions
-# from .autocomplete import AutoComplete, DropdownItem, Dropdown, InputState
-
-# commands = [(name, "") for (name, action) in load_all_actions().items()]
-
-# dropdown_items = [DropdownItem(command, "", description) for command, description in commands]
-
-
-# def command_completions(input_state: InputState) -> list[DropdownItem]:
-#     items = []
-
-#     # Match on first word only for now.
-#     if len(input_state.value.split()) != 1:
-#         return items
-
-#     lookup_str = input_state.value.lower()
-
-#     for command, description in commands:
-#         items.append(
-#             DropdownItem(
-#                 command,
-#                 "",
-#                 Text(description, style="#c595ed"),
-#             )
-#         )
-
-#     # Only keep items that contain the Input value as a substring
-#     matches = [c for c in items if lookup_str in c.main.plain.lower()]
-#     # Favour items that start with the Input value, pull them to the top
-#     ordered = sorted(matches, key=lambda v: v.main.plain.startswith(lookup_str))
-
-#     return ordered
-
 
 class WorkspaceBrowser(App):
     """UI to run commands and see workspace files."""

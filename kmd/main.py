@@ -3,6 +3,7 @@ kmd: A command line for knowledge exploration.
 """
 
 import atexit
+from functools import wraps
 import logging
 import sys
 from textwrap import indent
@@ -14,8 +15,16 @@ from kmd.config import APP_NAME
 from kmd.file_storage.file_store import locate_in_store
 from kmd.tui import tui
 
+# XXX Dumb hack to avoid pytest errors with Typer.
+_is_pytest = 'pytest' in sys.modules
+class _DummyTyper:
+    def __call__(self, *args, **kwargs):
+        pass
+    def command(self, *args, **kwargs):
+        return wraps
 
-app = Typer(help=__doc__)
+app = Typer(help=__doc__) if not _is_pytest else _DummyTyper()
+
 
 app_error = None
 
@@ -27,7 +36,6 @@ def log_exit():
         log.info("----- exit (success) -----")
 
 
-atexit.register(log_exit)
 
 
 @app.command()
@@ -64,8 +72,10 @@ def ui():
     tui.run()
 
 
-if __name__ == "__main__" or __name__.endswith(".main"):
+if __name__ == "__main__" or __name__.endswith(".main") and not _is_pytest:
     config.setup()
+
+    atexit.register(log_exit)
 
     log = logging.getLogger(__name__)
     log.info("----- start -----")

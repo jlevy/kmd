@@ -30,35 +30,31 @@ First time running:
 # Install packages:
 poetry install
 # Check it works:
-poetry run kmd --help
+poetry run kmd
 ```
 
 Try it out!
 
 ```
+# Enter shell.
+poetry shell
+
 # Transcribe a video and summarize it.
-poetry run kmd action fetch_page 'https://www.investopedia.com/terms/r/risktolerance.asp'
-poetry run kmd action transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
-poetry run kmd action break_into_paragraphs notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
-poetry run kmd action summarize_as_bullets notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
-poetry run kmd action create_pdf notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.md
+kmd action fetch_page 'https://www.investopedia.com/terms/r/risktolerance.asp'
+kmd action transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
+kmd action break_into_paragraphs notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
+kmd action summarize_as_bullets notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
+kmd action create_pdf notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.md
 ```
 
-Other useful testing and development commands:
+Other useful devlopment tasks:
 
 ```
 # Run pytests:
-poetry run pytest
-poetry run pytest -s kmd/commands/command_parser.py
+pytest
+pytest -s kmd/commands/command_parser.py
 
-# Run from shell:
-poetry shell
-python kmd/main.py --help
-```
-
-Install globally in current user's Python environment (so you can use `kmd` anywhere):
-
-```
+# To install globally in current user's Python environment (so you can use `kmd` anywhere):
 poetry build
 pip install --user dist/kmd-0.1.0-py3-none-any.whl 
 ```

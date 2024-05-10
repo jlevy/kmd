@@ -30,6 +30,7 @@ jinja2 = "^3.1.4"
 textual = "^0.58.1"
 textual-dev = "^1.5.1"
 lark-parser = "^0.12.0"
+xonsh = {extras = ["full"], version = "^0.16.0"}
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
@@ -44,3 +45,12 @@ kmd = "kmd.main:app"
 
 [tool.black]
 line-length = 100
+
+[tool.pytest.ini_options]
+python_files = ["*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+testpaths = [
+    "kmd",
+    "tests",
+]
