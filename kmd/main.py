@@ -7,7 +7,10 @@ from functools import wraps
 import logging
 import sys
 from textwrap import indent
+from typing import List, Tuple
+import typer
 from typer import Typer
+from typing_extensions import Annotated
 from kmd.actions.registry import load_all_actions
 
 import kmd.config as config
@@ -15,13 +18,17 @@ from kmd.config import APP_NAME
 from kmd.file_storage.file_store import locate_in_store
 from kmd.tui import tui
 
+_is_pytest = "pytest" in sys.modules
+
+
 # XXX Dumb hack to avoid pytest errors with Typer.
-_is_pytest = 'pytest' in sys.modules
 class _DummyTyper:
     def __call__(self, *args, **kwargs):
         pass
+
     def command(self, *args, **kwargs):
         return wraps
+
 
 app = Typer(help=__doc__) if not _is_pytest else _DummyTyper()
 
@@ -36,9 +43,7 @@ def log_exit():
         log.info("----- exit (success) -----")
 
 
-
-
-@app.command()
+@app.command("list_actions")
 def list_actions():
     """
     List all available actions.
@@ -46,11 +51,23 @@ def list_actions():
 
     actions = load_all_actions()
     for action in actions.values():
-        print(f"{action.name} - {action.friendly_name}:\n{indent(action.description, prefix="    ")}\n")
+        print(
+            f"{action.name} - {action.friendly_name}:\n{indent(action.description, prefix="    ")}\n"
+        )
+
+
+def _complete_action_names(incomplete: str) -> List[Tuple[str, str]]:
+    actions = load_all_actions()
+    return [(action.name, action.friendly_name) for action in actions.values() if action.name.startswith(incomplete)]
 
 
 @app.command()
-def action(action_name: str, locator: str):
+def action(
+    action_name: Annotated[
+        str, typer.Argument(autocompletion=_complete_action_names)
+    ],
+    locator: str,
+):
     """
     Perform an action on the given item.
     """
@@ -72,7 +89,7 @@ def ui():
     tui.run()
 
 
-if __name__ == "__main__" or __name__.endswith(".main") and not _is_pytest:
+if (__name__ == "__main__" or __name__.endswith(".main")) and not _is_pytest:
     config.setup()
 
     atexit.register(log_exit)
