@@ -26,13 +26,15 @@ class LLMAction(Action):
 
 
 def _run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
-    # TODO: Handle multiple input items?
+    # For now LLM actions only support one input.
+    if not items or len(items) != 1:
+        raise ValueError(f"LLM actions expect a single item as input: {action.name} on {items}")
     item = items[0]
 
     if not item.body:
-        raise ValueError("LLM actions expect a body")
+        raise ValueError(f"LLM actions expect a body: {action.name} on {item}")
     if not action.model or not action.system_message or not action.template:
-        raise ValueError("LLM actions expect a model, system_message, and template")
+        raise ValueError(f"LLM actions expect a model, system_message, and template: {action.name}")
 
     config.api_setup()
 

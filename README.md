@@ -29,11 +29,13 @@ First time running:
 ```
 # Install packages:
 poetry install
+# Convenience to set up xonsh:
+poetry run xonsh_install_kmd
 # Check it works:
 poetry run kmd
 ```
 
-Try it out!
+Basic usage:
 
 ```
 # Enter shell.
@@ -45,6 +47,16 @@ kmd action transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
 kmd action break_into_paragraphs notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
 kmd action summarize_as_bullets notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
 kmd action create_pdf notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.md
+```
+
+But it's easier to use in [xonsh](https://xon.sh/):
+
+```
+# Run xonsh with kmd activated:
+poetry run xonsh
+
+# Now invoke actions directly!
+fetch_page 'https://www.investopedia.com/terms/r/risktolerance.asp'
 ```
 
 Other useful devlopment tasks:

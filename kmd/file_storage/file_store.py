@@ -137,7 +137,7 @@ class FileStore:
                 modified_time = item.modified_at.timestamp() if item.modified_at else created_time
                 os.utime(full_path, (created_time, modified_time))
 
-        log.warn("Saved %s: %s", item.type.value, store_path)
+        log.warning("Saved %s: %s", item.type.value, store_path)
         return store_path
 
     def load(self, store_path: StorePath) -> Item:
@@ -162,7 +162,7 @@ def locate_in_store(locator: Locator) -> Item:
         url = canonicalize_url(Url(locator))
         item = Item(ItemType.resource, url=url, format=Format.url)
         store_path = workspace.save(item)
-        log.warn("Saved url: %s", store_path)
+        log.warning("Saved url: %s", store_path)
     else:
         item = workspace.load(StorePath(locator))
 

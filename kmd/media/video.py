@@ -33,7 +33,7 @@ class VideoCache(DirStore):
         with atomic_output_file(transcript_path) as temp_output:
             with open(temp_output, "w") as f:
                 f.write(content)
-        log.warn("Transcript saved to cache: %s", transcript_path)
+        log.warning("Transcript saved to cache: %s", transcript_path)
 
     def _read_transcript(self, url) -> Optional[str]:
         transcript_file = self.find(url, suffix=SUFFIX_TRANSCRIPT)
@@ -75,7 +75,7 @@ class VideoCache(DirStore):
         os.rename(mp3_path, full_audio_path)
         self._do_downsample(url)
 
-        log.warn("Downloaded video and saved audio to: %s", full_audio_path)
+        log.warning("Downloaded video and saved audio to: %s", full_audio_path)
 
         return full_audio_path
 

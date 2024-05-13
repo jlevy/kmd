@@ -1,4 +1,5 @@
 import os
+import warnings
 from os.path import dirname, abspath
 import tomllib
 import logging
@@ -23,10 +24,13 @@ def setup():
     """One-time setup of essential keys, directories, and configs. Idempotent."""
 
     _logging_setup()
+
     api_setup()
 
 
 def _logging_setup():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+
     # Verbose logging to file, important logging to console.
     file_handler = logging.FileHandler(f"{APP_NAME}.log")
     file_handler.setLevel(INFO)

@@ -11,12 +11,13 @@ from typing import List, Tuple
 import typer
 from typer import Typer
 from typing_extensions import Annotated
+from kmd.actions.actions import run_action
 from kmd.actions.registry import load_all_actions
 
 import kmd.config as config
 from kmd.config import APP_NAME
-from kmd.file_storage.file_store import locate_in_store
 from kmd.tui import tui
+from kmd.commands import commands
 
 _is_pytest = "pytest" in sys.modules
 
@@ -49,36 +50,29 @@ def list_actions():
     List all available actions.
     """
 
-    actions = load_all_actions()
-    for action in actions.values():
-        print(
-            f"{action.name} - {action.friendly_name}:\n{indent(action.description, prefix="    ")}\n"
-        )
+    commands.list_actions()
 
 
 def _complete_action_names(incomplete: str) -> List[Tuple[str, str]]:
     actions = load_all_actions()
-    return [(action.name, action.friendly_name) for action in actions.values() if action.name.startswith(incomplete)]
+    return [
+        (action.name, action.friendly_name)
+        for action in actions.values()
+        if action.name.startswith(incomplete)
+    ]
 
 
 @app.command()
 def action(
-    action_name: Annotated[
-        str, typer.Argument(autocompletion=_complete_action_names)
-    ],
+    action_name: Annotated[str, typer.Argument(autocompletion=_complete_action_names)],
     locator: str,
 ):
     """
     Perform an action on the given item.
     """
 
-    actions = load_all_actions()
-    action = actions[action_name]
-
-    item = locate_in_store(locator)
-
     # TODO: Handle multiple input items.
-    action.run([item])
+    run_action(action_name, locator)
 
 
 @app.command()

@@ -42,6 +42,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 kmd = "kmd.main:app"
+xonsh_install_kmd = "xonsh_install_kmd:install"
 
 [tool.black]
 line-length = 100
