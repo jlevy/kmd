@@ -4,14 +4,17 @@ A command line for knowledge exploration.
 
 ## Dev setup
 
-One-time Python setup (this part assumes MacOS):
+One-time Python and other dependency setup (this part assumes MacOS):
 
 ```
 # Install pyenv if needed:
 brew update
 brew install pyenv
-# Install recent Python if needed:
-pyenv install 3.12.2
+# Install ffmpeg if needed:
+brew install ffmpeg
+# Ensure you are in the source directory (where .python-version is)
+# and install recent Python if needed:
+pyenv install
 # Install recent Poetry if needed:
 curl -sSL https://install.python-poetry.org | python3 -
 ```
@@ -49,17 +52,17 @@ kmd action summarize_as_bullets notes/the_weighted_pull_up_is_one_of_the_most_ef
 kmd action create_pdf notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.md
 ```
 
-But it's easier to use in [xonsh](https://xon.sh/):
+Recommended usage: Use as a shell, via [xonsh](https://xon.sh/):
 
 ```
-# Run xonsh with kmd activated:
-poetry run xonsh
+# Run kmd within the xonsh shell:
+poetry run kmdsh
 
 # Now invoke actions directly!
 fetch_page 'https://www.investopedia.com/terms/r/risktolerance.asp'
 ```
 
-Other useful devlopment tasks:
+Other useful dev tasks:
 
 ```
 # Run pytests:

@@ -22,27 +22,30 @@ actions = load_all_actions()
 kmd_aliases = {}
 
 
-class KmdAction:
+class CallableAction:
     def __init__(self, action: Action):
         self.action = action
 
     def __call__(self, args):
-        print(f"Running KmdAction: {self.action.name} {args}")
         return run_action(self.action, *args)
 
     def __repr__(self):
-        return f"<KmdAction {self.action.name}>"
+        return f"CallableAction({repr(self.action)})"
 
 
 # Load all actions as xonsh commands.
 for action in actions.values():
-    kmd_aliases[action.name] = KmdAction(action)
+    kmd_aliases[action.name] = CallableAction(action)
 
 kmd_aliases["list_actions"] = commands.list_actions
 
 aliases.update(kmd_aliases)  # type: ignore
 
-print("\nkmd loaded. Use `list_actions` for available actions.\n")
+print(
+    "\n🄺\nkmd is loaded.\n"
+    "Use `list_actions` for available kmd actions.\n"
+    "Use `xonfig tutorial` for xonsh help and `help()` for Python help.\n"
+)
 
 
 # TODO: Completion for actions, e.g. known URLs, resource titles, concepts, etc.
