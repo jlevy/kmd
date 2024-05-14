@@ -81,7 +81,11 @@ class Item:
     external_path: Optional[str] = None
     is_binary: bool = False
 
+    # Optional additional metadata.
+    extra: Optional[dict] = None
+
     NON_METADATA_FIELDS = ["file_ext", "body", "external_path", "is_binary"]
+    OPTIONAL_FIELDS = ["extra"]
 
     def update_modified_at(self):
         self.modified_at = datetime.now()
@@ -93,6 +97,7 @@ class Item:
     def metadata(self) -> dict:
         """
         Metadata is all relevant non-None fields in easy-to-serialize form.
+        Optional fields are omitted unless they are set.
         """
         item_dict = asdict(self)
         item_dict = {
@@ -100,6 +105,9 @@ class Item:
             for k, v in item_dict.items()
             if v is not None and k not in self.NON_METADATA_FIELDS
         }
+        for field in self.OPTIONAL_FIELDS:
+            if field in item_dict and field is None:
+                del item_dict[field]
 
         # Keep enum values as strings for simplicity with serialization to YAML.
         for field in ["type", "format"]:

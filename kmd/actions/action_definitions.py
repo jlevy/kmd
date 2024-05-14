@@ -1,9 +1,12 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 import logging
 from os.path import join
+from pprint import pprint
 from textwrap import dedent
+from typing import Any, Dict, List
 
-from kmd.actions.llm_actions import LLM, LLMAction
+from kmd.actions.llm_actions import LLM
+from kmd.media.video import youtube
 from kmd.actions.registry import register_action, register_llm_action
 from kmd.actions.registry import register_action
 from kmd.file_storage.file_store import workspace
@@ -12,12 +15,13 @@ from kmd.media.video import video_transcription
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.pdf.pdf_output import markdown_to_pdf
+from kmd.util.url_utils import Url
 
 log = logging.getLogger(__name__)
 
 
 @register_action
-class FetchPageAction(Action):
+class FetchPage(Action):
     def __init__(self):
         super().__init__(
             name="fetch_page",
@@ -40,8 +44,71 @@ class FetchPageAction(Action):
         return [item]
 
 
+@dataclass
+class YoutubeVideoMeta:
+    id: str
+    url: str
+    title: str
+    description: str
+    thumbnails: List[Dict]
+    view_count: int
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "YoutubeVideoMeta":
+        try:
+            field_names = {f.name for f in fields(cls)}
+            filtered_data = {k: v for k, v in data.items() if k in field_names}
+            return cls(**filtered_data)
+        except TypeError as e:
+            print(pprint(data))
+            raise ValueError(f"Invalid data for YoutubeVideoMeta: {data}")
+
+
 @register_action
-class TranscribeVideoAction(Action):
+class ListChannelVideos(Action):
+    def __init__(self):
+        super().__init__(
+            name="list_channel_videos",
+            friendly_name="List Channel Videos",
+            description="Get the URL of every video in the given channel. YouTube only for now.",
+        )
+
+    def run(self, items: ActionInput) -> ActionResult:
+        item = items[0]
+        url = item.url
+        if not url:
+            raise ValueError("Item must have a URL")
+
+        result_raw = youtube.list_channel_videos(url)
+
+        video_meta_list = []
+        for page in result_raw:
+            video_meta_list.extend(YoutubeVideoMeta.from_dict(info) for info in page["entries"])
+        log.warning("Found %d videos in channel %s", len(video_meta_list), url)
+
+        items = []
+        for info in video_meta_list:
+            item = Item(
+                ItemType.resource,
+                format=Format.url,
+                url=Url(info.url),
+                title=info.title,
+                description=info.description,
+                extra={
+                    "id": info.id,
+                    "thumbnails": info.thumbnails,
+                    "view_count": info.view_count,
+                },
+            )
+
+            workspace.save(item)
+            items.append(item)
+
+        return items
+
+
+@register_action
+class TranscribeVideo(Action):
     def __init__(self):
         super().__init__(
             name="transcribe_video",
@@ -64,7 +131,7 @@ class TranscribeVideoAction(Action):
 
 
 @register_action
-class CreatePDFAction(Action):
+class CreatePDF(Action):
     def __init__(self):
         super().__init__(
             name="create_pdf",

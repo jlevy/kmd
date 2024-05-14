@@ -119,7 +119,9 @@ def video_download_audio(url: Url, no_cache=False) -> str:
 
 
 # List of available video services.
-video_services: List[VideoService] = [YouTube(), Vimeo()]
+youtube = YouTube()
+vimeo = Vimeo()
+video_services: List[VideoService] = [youtube, vimeo]
 
 
 def canonicalize_video_url(url: Url) -> Optional[Url]:
