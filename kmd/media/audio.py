@@ -1,7 +1,6 @@
 import logging
-from collections import namedtuple
 from os.path import getsize
-from typing import List
+from typing import List, NamedTuple, Optional, Tuple
 from openai import OpenAI
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource, ClientOptionsFromEnv
 from pydub import AudioSegment
@@ -59,9 +58,12 @@ def whisper_transcribe_audio_small(audio_file_path: str) -> str:
     return text
 
 
-SpeakerSegment = namedtuple(
-    "SpeakerSegment", ["speaker_text", "start", "end", "speaker", "average_confidence"]
-)
+class SpeakerSegment(NamedTuple):
+    words: List[Tuple[float, str]]
+    start: float
+    end: float
+    speaker: int
+    average_confidence: float
 
 
 def deepgram_transcribe_audio(audio_file_path: str) -> str:
@@ -94,17 +96,20 @@ def _deepgram_diarized_segments(data, confidence_threshold=0.3) -> List[SpeakerS
     """Process Deepgram diarized results into text segments per speaker."""
 
     speaker_segments = []
-    current_speaker = None
+    current_speaker = 0
     current_text = []
     current_confidences = []
-    segment_start = None
-    segment_end = None
+    segment_start = 0.0
+    segment_end = 0.0
 
-    for word_info in data["results"]["channels"][0]["alternatives"][0]["words"]:
+    word_info_list = data["results"]["channels"][0]["alternatives"][0]["words"]
+
+    for word_info in word_info_list:
         word_confidence = word_info["confidence"]
         word_speaker = word_info["speaker"]
-        word_start = word_info["start"]
-        word_end = word_info["end"]
+        word_start = float(word_info["start"])
+        word_end = float(word_info["end"])
+        punctuated_word = word_info["punctuated_word"]
 
         previous_confidence = current_confidences[-1] if current_confidences else 0
         confidence_dropped = word_confidence < confidence_threshold * previous_confidence
@@ -113,7 +118,7 @@ def _deepgram_diarized_segments(data, confidence_threshold=0.3) -> List[SpeakerS
                 "Speaker confidence dropped from %s to %s for '%s'",
                 previous_confidence,
                 word_confidence,
-                word_info["punctuated_word"],
+                punctuated_word,
             )
 
         # Start a new segment at the start, when the speaker changes, or when confidence drops significantly.
@@ -127,7 +132,7 @@ def _deepgram_diarized_segments(data, confidence_threshold=0.3) -> List[SpeakerS
             )
             speaker_segments.append(
                 SpeakerSegment(
-                    speaker_text=" ".join(current_text),
+                    words=current_text,
                     start=segment_start,
                     end=segment_end,
                     speaker=current_speaker,
@@ -141,7 +146,7 @@ def _deepgram_diarized_segments(data, confidence_threshold=0.3) -> List[SpeakerS
             segment_start = word_start
 
         # Append current word to the segment.
-        current_text.append(word_info["punctuated_word"])
+        current_text.append((word_start, punctuated_word))
         current_confidences.append(word_confidence)
         segment_end = word_end
 
@@ -150,7 +155,7 @@ def _deepgram_diarized_segments(data, confidence_threshold=0.3) -> List[SpeakerS
         average_confidence = sum(current_confidences) / len(current_confidences)
         speaker_segments.append(
             SpeakerSegment(
-                speaker_text=" ".join(current_text),
+                words=current_text,
                 start=segment_start,
                 end=segment_end,
                 speaker=current_speaker,
@@ -161,6 +166,45 @@ def _deepgram_diarized_segments(data, confidence_threshold=0.3) -> List[SpeakerS
     return speaker_segments
 
 
+def _is_new_sentence(word: str, next_word: Optional[str]) -> bool:
+    return (
+        (word.endswith(".") or word.endswith("?") or word.endswith("!"))
+        and next_word is not None
+        and next_word[0].isupper()
+    )
+
+
+def _format_words(words: List[Tuple[float, str]], include_sentence_timestamps=True) -> str:
+    """Format words with timestamps added in spans."""
+
+    if not words:
+        return ""
+
+    sentences = []
+    current_sentence = []
+    for i, (timestamp, word) in enumerate(words):
+        current_sentence.append(word)
+        next_word = words[i + 1][1] if i + 1 < len(words) else None
+        if _is_new_sentence(word, next_word):
+            sentences.append((timestamp, current_sentence))
+            current_sentence = []
+
+    if current_sentence:
+        sentences.append((words[-1][0], current_sentence))
+
+    formatted_text = []
+    for timestamp, sentence in sentences:
+        formatted_sentence = " ".join(sentence)
+        if include_sentence_timestamps:
+            formatted_text.append(
+                f'<span data-timestamp="{timestamp:.2f}">{formatted_sentence}</span>'
+            )
+        else:
+            formatted_text.append(formatted_sentence)
+
+    return "\n".join(formatted_text)
+
+
 def format_speaker_segments(speaker_segments: List[SpeakerSegment]) -> str:
     """Format speaker segments for display."""
 
@@ -168,7 +212,7 @@ def format_speaker_segments(speaker_segments: List[SpeakerSegment]) -> str:
     if len(speakers) > 1:
         lines = []
         for segment in speaker_segments:
-            lines.append(f"**SPEAKER {segment.speaker}:**\n{segment.speaker_text}")
+            lines.append(f"**SPEAKER {segment.speaker}:**\n{_format_words(segment.words)}")
         return "\n\n".join(lines)
     else:
-        return "\n\n".join(segment.speaker_text for segment in speaker_segments)
+        return "\n\n".join(_format_words(segment.words) for segment in speaker_segments)
