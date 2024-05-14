@@ -29,6 +29,19 @@ class Format(Enum):
     plaintext = "plaintext"
     pdf = "pdf"
 
+    @classmethod
+    def from_file_ext(cls, file_ext: str) -> "Format":
+        file_ext_to_format = {
+            FileExt.webpage.value: Format.html,
+            FileExt.md.value: Format.markdown,
+            FileExt.txt.value: Format.plaintext,
+            FileExt.pdf.value: Format.pdf,
+        }
+        return file_ext_to_format[file_ext]
+
+    def is_binary(self) -> bool:
+        return self in [Format.pdf]
+
     def __str__(self):
         return self.name
 
@@ -77,14 +90,19 @@ class Item:
     created_at: datetime = field(default_factory=datetime.now)
     modified_at: datetime = field(default_factory=datetime.now)
 
+    # Content of the item.
+    # Text items are in body. Large or binary items may be stored externally.
     body: Optional[str] = None
     external_path: Optional[str] = None
     is_binary: bool = False
 
+    # Path to the item in the store, if it has been saved.
+    store_path: Optional[str] = None
+
     # Optional additional metadata.
     extra: Optional[dict] = None
 
-    NON_METADATA_FIELDS = ["file_ext", "body", "external_path", "is_binary"]
+    NON_METADATA_FIELDS = ["file_ext", "body", "external_path", "is_binary", "store_path"]
     OPTIONAL_FIELDS = ["extra"]
 
     def update_modified_at(self):

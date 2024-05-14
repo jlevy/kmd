@@ -42,6 +42,23 @@ class Uniquifier:
 
         return unique_name
 
+    def add(self, name: str, group: str = "") -> None:
+        """
+        Add a name to the uniquifier.
+        """
+
+        self.keys.add(Key(name, group))
+
+    def add_new(self, name: str, group: str = "") -> None:
+        """
+        Add a name to the uniquifier, confirming it is not already present.
+        """
+
+        if Key(name, group) in self.keys:
+            raise ValueError(f"Name is already in uniquifier: {name}")
+
+        self.keys.add(Key(name, group))
+
     def __len__(self) -> int:
         return len(self.keys)
 

@@ -8,8 +8,6 @@ log = logging.getLogger(__name__)
 
 
 def run_action(action: str | Action, *args: str) -> ActionResult:
-    log.warning(f"Running action: %r", action)
-
     if not isinstance(action, Action):
         actions = load_all_actions()
         action = actions[action]

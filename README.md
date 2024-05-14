@@ -10,11 +10,14 @@ One-time Python and other dependency setup (this part assumes MacOS):
 # Install pyenv if needed:
 brew update
 brew install pyenv
+
 # Install ffmpeg if needed:
 brew install ffmpeg
+
 # Ensure you are in the source directory (where .python-version is)
 # and install recent Python if needed:
 pyenv install
+
 # Install recent Poetry if needed:
 curl -sSL https://install.python-poetry.org | python3 -
 ```
@@ -45,11 +48,7 @@ Basic usage:
 poetry shell
 
 # Transcribe a video and summarize it.
-kmd action fetch_page 'https://www.investopedia.com/terms/r/risktolerance.asp'
 kmd action transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
-kmd action break_into_paragraphs notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
-kmd action summarize_as_bullets notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
-kmd action create_pdf notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.md
 ```
 
 Recommended usage: Use as a shell, via [xonsh](https://xon.sh/):
@@ -60,6 +59,10 @@ poetry run kmdsh
 
 # Now invoke actions directly!
 fetch_page 'https://www.investopedia.com/terms/r/risktolerance.asp'
+transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
+break_into_paragraphs notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
+summarize_as_bullets notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
+create_pdf notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.md
 ```
 
 Other useful dev tasks:

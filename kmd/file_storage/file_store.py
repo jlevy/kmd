@@ -12,7 +12,7 @@ from strif import copyfile_atomic
 from kmd.config import WORKSPACE_DIR
 from kmd.model.url import canonicalize_url
 from kmd.model.locators import Locator, StorePath
-from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url_utils import Url, is_url
@@ -30,7 +30,7 @@ def item_type_to_folder(item_type: ItemType) -> str:
 
 
 def _parse_filename(filename: str) -> Tuple[str, str, str]:
-    parts = filename.rsplit(".", 2)
+    parts = path.basename(filename).rsplit(".", 2)
     if len(parts) != 3:
         raise ValueError(
             f"Filename does not match file store convention (name.type.ext): {filename}"
@@ -39,12 +39,12 @@ def _parse_filename(filename: str) -> Tuple[str, str, str]:
     return name, item_type, ext
 
 
-def _type_from_filename(filename: str) -> ItemType:
-    _name, item_type, _ext = _parse_filename(filename)
+def _parse_check_filename(filename: str) -> Tuple[str, ItemType, Format, FileExt]:
+    name, item_type, ext = _parse_filename(filename)
     try:
-        return ItemType[item_type]
+        return name, ItemType[item_type], Format.from_file_ext(ext), FileExt[ext]
     except KeyError:
-        raise ValueError(f"Unknown item type: {item_type}")
+        raise ValueError(f"Unknown type or extension for file: {filename}")
 
 
 def _format_text(text: str, format: Optional[Format] = None, width=80) -> str:
@@ -58,7 +58,7 @@ def _format_text(text: str, format: Optional[Format] = None, width=80) -> str:
             for p in paragraphs
         ]
         return "\n\n".join(wrapped_paragraphs)
-    # TODO: Add cleaner canonicalization/wrapping for Markdown.
+    # TODO: Add cleaner canonicalization/wrapping for Markdown. Also Flowmark?
     else:
         return text
 
@@ -71,23 +71,41 @@ class FileStore:
     def __init__(self, base_dir: Path):
         self.base_dir = base_dir
         self.uniquifier = Uniquifier()
-        self._initialize_uniquifier()
+        self.url_map = {}
+        self._initialize_index()
 
         log.info("Using file store in %s (%s items)", base_dir, len(self.uniquifier))
 
-    def _initialize_uniquifier(self):
-        for _root, _dirs, files in os.walk(self.base_dir):
-            for file in files:
-                try:
-                    name, item_type, ext = _parse_filename(file)
-                except ValueError:
-                    log.info("Skipping file with invalid name: %s", file)
-                    continue
-                self.uniquifier.uniquify(name, f"{item_type}.{ext}")
+    def _initialize_index(self):
+        for root, _dirnames, filenames in os.walk(self.base_dir):
+            for filename in filenames:
+                store_path = StorePath(path.relpath(join(root, filename), self.base_dir))
+                self._index_item(store_path)
+        log.info(
+            "File store has %s items and %s URLs",
+            len(self.uniquifier),
+            len(self.url_map),
+        )
 
-    def _filename_for(self, item: Item) -> str:
-        """Get a suitable filename for this item that is close to the slugified title yet also unique."""
+    def _index_item(self, store_path: StorePath):
+        """
+        Update metadata index with a new item.
+        """
+        try:
+            name, item_type, _format, file_ext = _parse_check_filename(store_path)
+        except ValueError:
+            log.warn("Skipping file with invalid name: %s", store_path)
+            return
+        self.uniquifier.add(name, f"{item_type.name}.{file_ext.name}")
 
+        item = self.load(store_path)
+        if item.url:
+            self.url_map[item.url] = store_path
+
+    def _new_filename_for(self, item: Item) -> str:
+        """
+        Get a suitable filename for this item that is close to the slugified title yet also unique.
+        """
         title = item.get_title()
         slug = slugify(title, max_length=64, separator="_")
 
@@ -101,16 +119,27 @@ class FileStore:
         return f"{unique_slug}.{type}.{ext}"
 
     def path_for(self, item: Item) -> Tuple[str, StorePath]:
-        """Return (base_dir, store_path) for an item, which may or may not exist."""
-
-        folder_path = Path(item_type_to_folder(item.type))
-        filename = self._filename_for(item)
-        store_path = folder_path / filename
+        """
+        Return (base_dir, store_path) for an item, which may or may not exist.
+        """
+        if item.store_path:
+            store_path = item.store_path
+        elif item.url and item.url in self.url_map:
+            # If the item is a URL and we've already saved it, use the same store path.
+            store_path = self.url_map[item.url]
+            log.info("URL already saved: %s holds %s", store_path, item.url)
+        else:
+            folder_path = Path(item_type_to_folder(item.type))
+            filename = self._new_filename_for(item)
+            store_path = folder_path / filename
         return str(self.base_dir), StorePath(str(store_path))
 
     def save(self, item: Item) -> StorePath:
-        # Binary or large files must be referenced by path.
-        # If external file alrady exists, the file is alrady saved (without metadata).
+        """
+        Save the item. Uses the store_path if it's already set or generates a new one.
+        Updates item.store_path.
+        """
+        # If external file alrady exists within the workspace, the file is alrady saved (without metadata).
         if (
             item.external_path
             and path.exists(item.external_path)
@@ -119,9 +148,11 @@ class FileStore:
             log.info("External file already saved: %s", item.external_path)
             store_path = StorePath(path.relpath(item.external_path, self.base_dir))
         else:
+
             # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
             base_dir, store_path = self.path_for(item)
             full_path = join(base_dir, store_path)
+            log.info("Saving item to %s: %s", full_path, item)
 
             if item.external_path:
                 copyfile_atomic(item.external_path, full_path)
@@ -137,20 +168,31 @@ class FileStore:
                 modified_time = item.modified_at.timestamp() if item.modified_at else created_time
                 os.utime(full_path, (created_time, modified_time))
 
+        item.store_path = store_path
+        self._index_item(store_path)
+
         log.warning("Saved %s: %s", item.type.value, store_path)
         return store_path
 
     def load(self, store_path: StorePath) -> Item:
-        item_type = _type_from_filename(store_path)
-        body, metadata = fmf_read(self.base_dir / store_path)
-        if not metadata:
-            raise ValueError(f"No metadata found in {store_path}")
+        _name, item_type, format, file_ext = _parse_check_filename(store_path)
+        if format.is_binary():
+            return Item(
+                type=item_type,
+                external_path=str(self.base_dir / store_path),
+                format=format,
+                file_ext=file_ext,
+            )
+        else:
+            body, metadata = fmf_read(self.base_dir / store_path)
+            if not metadata:
+                raise ValueError(f"No metadata found in {store_path}")
 
-        other_metadata = {
-            key: value for key, value in metadata.items() if key not in ["body", "type"]
-        }
+            other_metadata = {
+                key: value for key, value in metadata.items() if key not in ["body", "type"]
+            }
 
-        return Item(type=item_type, body=body, **other_metadata)
+            return Item(type=item_type, body=body, **other_metadata)
 
 
 # TODO: May want to have a settable current workspace directory but for now it's fixed.
@@ -167,3 +209,21 @@ def locate_in_store(locator: Locator) -> Item:
         item = workspace.load(StorePath(locator))
 
     return item
+
+
+#
+# Tests
+
+
+def test_parse_filename():
+    import pytest
+
+    filename = "foo/bar/test_file.type.ext"
+    name, item_type, ext = _parse_filename(filename)
+    assert name == "test_file"
+    assert item_type == "type"
+    assert ext == "ext"
+
+    filename = "missing_type.ext"
+    with pytest.raises(ValueError):
+        _parse_filename(filename)
