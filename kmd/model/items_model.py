@@ -118,8 +118,12 @@ class Item:
         Optional fields are omitted unless they are set.
         """
         item_dict = asdict(self)
+
+        def serialize(v):
+            return v.value if isinstance(v, Enum) else v
+
         item_dict = {
-            k: v
+            k: serialize(v)  # Convert enums to strings for serialization.
             for k, v in item_dict.items()
             if v is not None and k not in self.NON_METADATA_FIELDS
         }

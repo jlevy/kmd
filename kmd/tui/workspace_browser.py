@@ -6,9 +6,9 @@ from textual.app import App, ComposeResult
 from textual.containers import Container, VerticalScroll, Vertical, Horizontal
 from textual.reactive import var
 from textual.widgets import DirectoryTree, Footer, Static, Markdown, Input, Footer, Label
+from kmd.config import current_workspace_dir
 
 
-from kmd.config import WORKSPACE_DIR
 from kmd.file_storage.frontmatter_format import fmf_read
 
 log = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class WorkspaceBrowser(App):
         ("q", "quit", "Quit"),
     ]
 
-    path = WORKSPACE_DIR
+    path = current_workspace_dir()
 
     show_tree = var(True)
     show_content = var(False)

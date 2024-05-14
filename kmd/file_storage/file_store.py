@@ -2,14 +2,15 @@ import logging
 import os
 from pathlib import Path
 import textwrap
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 from os.path import join
 from os import path
 import inflect
+from ruamel import yaml
 
 from slugify import slugify
-from strif import copyfile_atomic
-from kmd.config import WORKSPACE_DIR
+from strif import copyfile_atomic, atomic_output_file
+from kmd.config import current_workspace_dir
 from kmd.model.url import canonicalize_url
 from kmd.model.locators import Locator, StorePath
 from kmd.model.items_model import FileExt, Format, Item, ItemType
@@ -63,6 +64,25 @@ def _format_text(text: str, format: Optional[Format] = None, width=80) -> str:
         return text
 
 
+class PersistedYaml:
+    """
+    Maintain a value (such as a dictionary or list of strings) as a YAML file.
+    """
+
+    def __init__(self, filename: str, value: Any):
+        self.filename = filename
+        self.value = value
+
+    def read(self) -> Any:
+        with open(self.filename, "r") as f:
+            return yaml.safe_load(f)
+
+    def set(self, value: Any):
+        self.value = value
+        with atomic_output_file(self.filename) as f:
+            yaml.dump(self.value, f)
+
+
 class FileStore:
     """
     Store items on the filesystem, using a simple convention for filenames and folders.
@@ -73,19 +93,13 @@ class FileStore:
         self.uniquifier = Uniquifier()
         self.url_map = {}
         self._initialize_index()
-
-        log.info("Using file store in %s (%s items)", base_dir, len(self.uniquifier))
+        self.selection = PersistedYaml(join(base_dir, "selection.yaml"), [])
 
     def _initialize_index(self):
         for root, _dirnames, filenames in os.walk(self.base_dir):
             for filename in filenames:
                 store_path = StorePath(path.relpath(join(root, filename), self.base_dir))
                 self._index_item(store_path)
-        log.info(
-            "File store has %s items and %s URLs",
-            len(self.uniquifier),
-            len(self.url_map),
-        )
 
     def _index_item(self, store_path: StorePath):
         """
@@ -194,12 +208,27 @@ class FileStore:
 
             return Item(type=item_type, body=body, **other_metadata)
 
+    def set_selection(self, selection: list[StorePath]):
+        self.selection.set(selection)
 
-# TODO: May want to have a settable current workspace directory but for now it's fixed.
-workspace = FileStore(Path(WORKSPACE_DIR))
+
+def show_workspace_info() -> None:
+    workspace = current_workspace()
+    log.warning(
+        "Using workspace at %s (%s items)",
+        path.abspath(workspace.base_dir),
+        len(workspace.uniquifier),
+    )
+    # TODO: Log more info (optionally in longer form with paging).
+
+
+def current_workspace() -> FileStore:
+    return FileStore(current_workspace_dir())
 
 
 def locate_in_store(locator: Locator) -> Item:
+    workspace = current_workspace()
+
     if is_url(locator):
         url = canonicalize_url(Url(locator))
         item = Item(ItemType.resource, url=url, format=Format.url)

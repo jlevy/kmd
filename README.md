@@ -58,11 +58,12 @@ Recommended usage: Use as a shell, via [xonsh](https://xon.sh/):
 poetry run kmdsh
 
 # Now invoke actions directly!
-fetch_page 'https://www.investopedia.com/terms/r/risktolerance.asp'
-transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
+fetch_page https://www.investopedia.com/terms/r/risktolerance.asp
+transcribe_video https://www.youtube.com/watch?v=XRQnWomofIY
 break_into_paragraphs notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
 summarize_as_bullets notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
 create_pdf notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.md
+list_channel_videos https://www.youtube.com/@Kboges
 ```
 
 Other useful dev tasks:

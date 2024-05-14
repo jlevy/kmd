@@ -1,6 +1,7 @@
 import os
+from pathlib import Path
 import warnings
-from os.path import dirname, abspath
+from os.path import dirname, abspath, basename
 import tomllib
 import logging
 from logging import INFO, WARNING, Formatter
@@ -15,8 +16,6 @@ APP_NAME = "kmd"
 ROOT = dirname(dirname(abspath(__file__)))
 
 MEDIA_CACHE_DIR = f"{ROOT}/cache/media"
-
-WORKSPACE_DIR = "./workspace"
 
 
 @cached(cache={})
@@ -86,3 +85,24 @@ def api_setup():
         secret_deepgram, "Deepgram secret not found in secrets.toml"
     ).is_not_none().is_not_empty()
     os.environ["DEEPGRAM_API_KEY"] = secret_deepgram
+
+
+WS_SUFFIX = ".ws"
+DEFAULT_WS = f"current{WS_SUFFIX}"
+
+
+def current_workspace_dir() -> Path:
+    """
+    Get the current workspace directory, which is cwd we are in a workspace (named of the form
+    `some_name.ws`) or else use `current.ws`.
+    """
+
+    parent_dir = basename(os.getcwd())
+
+    if parent_dir.endswith(WS_SUFFIX):
+        ws_dir = "."
+    else:
+        ws_dir = DEFAULT_WS
+        os.makedirs(ws_dir, exist_ok=True)
+
+    return Path(ws_dir)

@@ -38,7 +38,7 @@ class VideoCache(DirStore):
     def _read_transcript(self, url) -> Optional[str]:
         transcript_file = self.find(url, suffix=SUFFIX_TRANSCRIPT)
         if transcript_file:
-            log.info("Video transcript in cache: %s: %s", url, transcript_file)
+            log.warning("Video transcript in cache: %s: %s", url, transcript_file)
             with open(transcript_file, "r") as f:
                 return f.read()
         return None
@@ -50,7 +50,7 @@ class VideoCache(DirStore):
             if not full_audio_file:
                 raise ValueError("No audio file found for: %s" % url)
             downsampled_audio_file = self.path_for(url, suffix=SUFFIX_16KMP3)
-            log.info(
+            log.warning(
                 "Downsampling YouTube audio: %s -> %s", full_audio_file, downsampled_audio_file
             )
             downsample_to_16khz(full_audio_file, downsampled_audio_file)
@@ -58,7 +58,7 @@ class VideoCache(DirStore):
 
     def _do_transcription(self, url):
         downsampled_audio_file = self._do_downsample(url)
-        log.info("Transcribing audio for video: %s -> %s", url, downsampled_audio_file)
+        log.warning("Transcribing audio for video: %s -> %s", url, downsampled_audio_file)
         transcript = transcribe_audio(downsampled_audio_file)
         self._write_transcript(url, transcript)
         return transcript
@@ -67,9 +67,9 @@ class VideoCache(DirStore):
         if not no_cache:
             full_audio_file = self.find(url, suffix=SUFFIX_MP3)
             if full_audio_file:
-                log.info("Audio of video in cache: %s: %s", url, full_audio_file)
+                log.warning("Audio of video in cache: %s: %s", url, full_audio_file)
                 return full_audio_file
-        log.info("Downloading audio of video: %s", url)
+        log.warning("Downloading audio of video: %s", url)
         mp3_path = _download_audio_with_service(url)
         full_audio_path = self.path_for(url, suffix=SUFFIX_MP3)
         os.rename(mp3_path, full_audio_path)

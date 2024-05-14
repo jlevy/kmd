@@ -8,18 +8,14 @@ import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+from kmd.config import setup
+from kmd.file_storage.file_store import show_workspace_info
 from kmd.actions.actions import run_action
 from kmd.actions.registry import load_all_actions
 from kmd.commands import commands
-from kmd.config import setup
 from kmd.model.actions_model import Action
 
-
 setup()
-
-actions = load_all_actions()
-
-kmd_aliases = {}
 
 
 class CallableAction:
@@ -33,19 +29,35 @@ class CallableAction:
         return f"CallableAction({repr(self.action)})"
 
 
-# Load all actions as xonsh commands.
-for action in actions.values():
-    kmd_aliases[action.name] = CallableAction(action)
+def initialize():
 
-kmd_aliases["list_actions"] = commands.list_actions
+    actions = load_all_actions()
 
-aliases.update(kmd_aliases)  # type: ignore
+    kmd_aliases = {}
+
+    # Load all actions as xonsh commands.
+    for action in actions.values():
+        kmd_aliases[action.name] = CallableAction(action)
+
+    # Additional commmands
+    kmd_aliases["kmd_help"] = commands.kmd_help
+
+    for func in commands.all_commands():
+        kmd_aliases[func.__name__] = func
+
+    aliases.update(kmd_aliases)  # type: ignore
+
 
 print(
-    "\n🄺\nkmd is loaded.\n"
-    "Use `list_actions` for available kmd actions.\n"
+    "\n🄺\nWelcome to the kmd shell.\n"
+    "Use `kmd_help` for available kmd commands and actions.\n"
     "Use `xonfig tutorial` for xonsh help and `help()` for Python help.\n"
 )
+
+initialize()
+
+show_workspace_info()
+print()
 
 
 # TODO: Completion for actions, e.g. known URLs, resource titles, concepts, etc.

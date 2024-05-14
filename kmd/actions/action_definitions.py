@@ -9,7 +9,7 @@ from kmd.actions.llm_actions import LLM
 from kmd.media.video import youtube
 from kmd.actions.registry import register_action, register_llm_action
 from kmd.actions.registry import register_action
-from kmd.file_storage.file_store import workspace
+from kmd.file_storage.file_store import current_workspace
 from kmd.media import web
 from kmd.media.video import video_transcription
 from kmd.model.actions_model import Action, ActionInput, ActionResult
@@ -39,7 +39,7 @@ class FetchPage(Action):
         item.body = page_data.content
 
         # TODO: Archive old item, indicate this replaces it.
-        workspace.save(item)
+        current_workspace().save(item)
 
         return [item]
 
@@ -101,7 +101,7 @@ class ListChannelVideos(Action):
                 },
             )
 
-            workspace.save(item)
+            current_workspace().save(item)
             items.append(item)
 
         return items
@@ -125,7 +125,7 @@ class TranscribeVideo(Action):
         transcription = video_transcription(url)
 
         item = Item(ItemType.note, body=transcription, format=Format.plaintext)
-        workspace.save(item)
+        current_workspace().save(item)
 
         return [item]
 
@@ -146,7 +146,7 @@ class CreatePDF(Action):
             raise ValueError("Item must have a body")
 
         pdf_item = item.copy_with(type=ItemType.export, format=Format.pdf)
-        base_dir, pdf_path = workspace.path_for(pdf_item)
+        base_dir, pdf_path = current_workspace().path_for(pdf_item)
         full_pdf_path = join(base_dir, pdf_path)
 
         # Add directly to the store.
@@ -157,7 +157,7 @@ class CreatePDF(Action):
             description=item.description,
         )
         pdf_item.external_path = full_pdf_path
-        workspace.save(pdf_item)
+        current_workspace().save(item)
 
         return [pdf_item]
 

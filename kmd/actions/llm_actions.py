@@ -3,8 +3,8 @@ from enum import Enum
 import logging
 from kmd.apis.openai import openai_completion
 from kmd.model.actions_model import Action, ActionInput, ActionResult
-from kmd.model.items_model import Format, Item
-from kmd.file_storage.file_store import workspace
+from kmd.model.items_model import Format
+from kmd.file_storage.file_store import current_workspace
 from kmd import config
 
 
@@ -52,6 +52,6 @@ def _run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
         output_item.title = action.title_template.format(title=item.get_title())
     output_item.format = Format.markdown
 
-    workspace.save(output_item)
+    current_workspace().save(output_item)
 
     return [output_item]
