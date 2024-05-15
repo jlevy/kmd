@@ -6,6 +6,7 @@ from typing import Any, Optional, Tuple
 from os.path import join
 from os import path
 import inflect
+from ruamel.yaml import YAML
 from ruamel import yaml
 
 from slugify import slugify
@@ -80,7 +81,9 @@ class PersistedYaml:
     def set(self, value: Any):
         self.value = value
         with atomic_output_file(self.filename) as f:
-            yaml.dump(self.value, f)
+            yaml = YAML()
+            with open(f, "w") as f:
+                yaml.dump(self.value, f)
 
 
 class FileStore:
@@ -108,7 +111,7 @@ class FileStore:
         try:
             name, item_type, _format, file_ext = _parse_check_filename(store_path)
         except ValueError:
-            log.warn("Skipping file with invalid name: %s", store_path)
+            log.info("Skipping file with invalid name: %s", store_path)
             return
         self.uniquifier.add(name, f"{item_type.name}.{file_ext.name}")
 
@@ -226,7 +229,11 @@ def current_workspace() -> FileStore:
     return FileStore(current_workspace_dir())
 
 
-def locate_in_store(locator: Locator) -> Item:
+def ensure_saved(locator: Locator) -> Item:
+    """
+    Ensure that the URL or Item is saved to the workspace.
+    """
+
     workspace = current_workspace()
 
     if is_url(locator):

@@ -1,6 +1,7 @@
 import logging
 import os
 from textwrap import indent
+from typing import List
 from kmd.config import WS_SUFFIX
 from kmd.file_storage.file_store import show_workspace_info
 
@@ -37,11 +38,15 @@ def kmd_help():
 
 
 @register_command
-def new_workspace(workspace_name: str) -> str:
+def new_workspace(args: List[str]) -> None:
     """
     Create a new workspace.
     """
 
+    if len(args) != 1:
+        raise ValueError("usage: new_workspace <workspace_name>")
+    
+    workspace_name = args[0]
     if not workspace_name.endswith(WS_SUFFIX):
         workspace_name = f"{workspace_name}{WS_SUFFIX}"
 
@@ -51,7 +56,6 @@ def new_workspace(workspace_name: str) -> str:
 
     # TODO: Change cwd within xonsh.
 
-    return workspace_name
 
 
 @register_command

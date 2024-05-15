@@ -57,9 +57,14 @@ Recommended usage: Use as a shell, via [xonsh](https://xon.sh/):
 # Run kmd within the xonsh shell:
 poetry run kmdsh
 
+# Set up a workspace to test things out:
+new_workspace fitness
+cd workspace.ws
+
 # Now invoke actions directly!
-fetch_page https://www.investopedia.com/terms/r/risktolerance.asp
-transcribe_video https://www.youtube.com/watch?v=XRQnWomofIY
+fetch_page 'https://thisappwillgiveyouabs.com/'
+transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
+transcribe_video 'https://www.youtube.com/watch?v=uUd7LleJuqM'
 break_into_paragraphs notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
 summarize_as_bullets notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
 create_pdf notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.md

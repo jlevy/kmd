@@ -23,7 +23,8 @@ class CallableAction:
         self.action = action
 
     def __call__(self, args):
-        return run_action(self.action, *args)
+        run_action(self.action, *args)
+        # We don't return the result to keep the shell output clean.
 
     def __repr__(self):
         return f"CallableAction({repr(self.action)})"
