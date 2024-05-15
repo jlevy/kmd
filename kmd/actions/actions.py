@@ -1,7 +1,8 @@
 import logging
 from typing import List, cast
 from kmd.actions.registry import load_all_actions
-from kmd.file_storage.file_store import NoSelectionError, current_workspace, ensure_saved
+from kmd.file_storage.file_store import NoSelectionError
+from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.model.actions_model import Action, ActionResult
 from kmd.model.locators import StorePath
 from kmd.util.text_formatting import format_lines

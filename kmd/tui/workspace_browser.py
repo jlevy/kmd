@@ -6,10 +6,10 @@ from textual.app import App, ComposeResult
 from textual.containers import Container, VerticalScroll, Vertical, Horizontal
 from textual.reactive import var
 from textual.widgets import DirectoryTree, Footer, Static, Markdown, Input, Footer, Label
-from kmd.config import current_workspace_dir
 
 
 from kmd.file_storage.frontmatter_format import fmf_read
+from kmd.file_storage.workspaces import current_workspace_dir
 
 log = logging.getLogger(__name__)
 

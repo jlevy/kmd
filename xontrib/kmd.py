@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from kmd.config import setup
-from kmd.file_storage.file_store import show_workspace_info
+from kmd.file_storage.workspaces import show_workspace_info
 from kmd.actions.actions import run_action
 from kmd.actions.registry import load_all_actions
 from kmd.commands import commands
@@ -65,7 +65,12 @@ print(
 
 initialize()
 
-show_workspace_info()
+try:
+    show_workspace_info()
+except ValueError as e:
+    print(
+        "The current directory is not a workspace. Create or switch to a workspace with the `workspace` command."
+    )
 print()
 
 

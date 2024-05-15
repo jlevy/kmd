@@ -9,13 +9,10 @@ from os import path
 from ruamel.yaml import YAML
 from slugify import slugify
 from strif import copyfile_atomic, atomic_output_file
-from kmd.config import current_workspace_dir
-from kmd.model.url import canonicalize_url
-from kmd.model.locators import Locator, StorePath
+from kmd.model.locators import StorePath
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.util.uniquifier import Uniquifier
-from kmd.util.url_utils import Url, is_url
 from kmd.util.text_formatting import plural
 
 
@@ -222,38 +219,6 @@ class FileStore:
             return self.selection.read()
         except OSError:
             raise NoSelectionError()
-
-
-def show_workspace_info() -> None:
-    workspace = current_workspace()
-    log.warning(
-        "Using workspace at %s (%s items)",
-        path.abspath(workspace.base_dir),
-        len(workspace.uniquifier),
-    )
-    # TODO: Log more info (optionally in longer form with paging).
-
-
-def current_workspace() -> FileStore:
-    return FileStore(current_workspace_dir())
-
-
-def ensure_saved(locator: Locator) -> Item:
-    """
-    Ensure that the URL or Item is saved to the workspace.
-    """
-
-    workspace = current_workspace()
-
-    if is_url(locator):
-        url = canonicalize_url(Url(locator))
-        item = Item(ItemType.resource, url=url, format=Format.url)
-        store_path = workspace.save(item)
-        log.warning("Saved url: %s", store_path)
-    else:
-        item = workspace.load(StorePath(locator))
-
-    return item
 
 
 #

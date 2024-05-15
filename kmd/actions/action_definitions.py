@@ -6,10 +6,10 @@ from textwrap import dedent
 from typing import Any, Dict, List
 
 from kmd.actions.llm_actions import LLM
+from kmd.file_storage.workspaces import current_workspace
 from kmd.media.video import youtube
 from kmd.actions.registry import register_action, register_llm_action
 from kmd.actions.registry import register_action
-from kmd.file_storage.file_store import current_workspace
 from kmd.media import web
 from kmd.media.video import video_transcription
 from kmd.model.actions_model import Action, ActionInput, ActionResult

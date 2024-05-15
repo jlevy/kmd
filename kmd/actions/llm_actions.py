@@ -4,7 +4,7 @@ import logging
 from kmd.apis.openai import openai_completion
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.model.items_model import Format
-from kmd.file_storage.file_store import current_workspace
+from kmd.file_storage.workspaces import current_workspace
 from kmd import config
 
 
