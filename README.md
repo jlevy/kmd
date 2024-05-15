@@ -58,8 +58,7 @@ Recommended usage: Use as a shell, via [xonsh](https://xon.sh/):
 poetry run kmdsh
 
 # Set up a workspace to test things out:
-new_workspace fitness
-cd workspace.ws
+workspace fitness
 
 # Now invoke actions directly!
 fetch_page 'https://thisappwillgiveyouabs.com/'
