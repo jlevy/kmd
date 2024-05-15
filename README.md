@@ -63,11 +63,13 @@ cd workspace.ws
 
 # Now invoke actions directly!
 fetch_page 'https://thisappwillgiveyouabs.com/'
+# A short transcription:
 transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
+# A transcription with multiple speakers:
 transcribe_video 'https://www.youtube.com/watch?v=uUd7LleJuqM'
-break_into_paragraphs notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
-summarize_as_bullets notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.txt
-create_pdf notes/the_weighted_pull_up_is_one_of_the_most_effective_upper_body_exe.note.md
+break_into_paragraphs
+summarize_as_bullets
+create_pdf
 list_channel_videos https://www.youtube.com/@Kboges
 ```
 

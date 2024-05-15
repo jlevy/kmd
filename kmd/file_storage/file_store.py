@@ -5,10 +5,8 @@ import textwrap
 from typing import Any, Optional, Tuple
 from os.path import join
 from os import path
-import inflect
-from ruamel.yaml import YAML
-from ruamel import yaml
 
+from ruamel.yaml import YAML
 from slugify import slugify
 from strif import copyfile_atomic, atomic_output_file
 from kmd.config import current_workspace_dir
@@ -18,13 +16,13 @@ from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url_utils import Url, is_url
+from kmd.util.text_formatting import plural
 
 
 log = logging.getLogger(__name__)
 
 # For folder names, note -> notes, question -> questions, etc.
-_inflect = inflect.engine()
-_type_to_folder = {name: _inflect.plural(name) for name, _value in ItemType.__members__.items()}  # type: ignore
+_type_to_folder = {name: plural(name) for name, _value in ItemType.__members__.items()}
 
 
 def item_type_to_folder(item_type: ItemType) -> str:
@@ -75,8 +73,9 @@ class PersistedYaml:
         self.value = value
 
     def read(self) -> Any:
+        yaml = YAML(typ="safe", pure=True)
         with open(self.filename, "r") as f:
-            return yaml.safe_load(f)
+            return yaml.load(f)
 
     def set(self, value: Any):
         self.value = value
@@ -84,6 +83,10 @@ class PersistedYaml:
             yaml = YAML()
             with open(f, "w") as f:
                 yaml.dump(self.value, f)
+
+
+class NoSelectionError(RuntimeError):
+    pass
 
 
 class FileStore:
@@ -213,6 +216,12 @@ class FileStore:
 
     def set_selection(self, selection: list[StorePath]):
         self.selection.set(selection)
+
+    def get_selection(self) -> list[StorePath]:
+        try:
+            return self.selection.read()
+        except OSError:
+            raise NoSelectionError()
 
 
 def show_workspace_info() -> None:

@@ -1,9 +1,10 @@
 import logging
 import os
 from textwrap import indent
-from typing import Callable, List
+from typing import Callable, List, Optional
 from kmd.config import WS_SUFFIX
 from kmd.file_storage.file_store import show_workspace_info
+from kmd.util.text_formatting import format_lines, plural
 
 log = logging.getLogger(__name__)
 
@@ -28,15 +29,17 @@ def kmd_help() -> None:
     from kmd.actions.registry import load_all_actions
 
     print("\nAvailable kmd commands:\n")
+
+    def format_doc(doc: Optional[str]) -> str:
+        return indent(doc.strip(), prefix="    ") if doc else ""
+
     for command in _commands:
-        print(f"{command.__name__}:\n{indent(command.__doc__.strip(), prefix='    ')}\n")
+        print(f"{command.__name__}:\n{format_doc(command.__doc__)}\n")
 
     print("\nAvailable kmd actions:\n")
     actions = load_all_actions()
     for action in actions.values():
-        print(
-            f"{action.name}:\n{indent(action.description, prefix="    ")}\n"
-        )
+        print(f"{action.name}:\n{indent(action.description, prefix="    ")}\n")
 
 
 @register_command
@@ -56,8 +59,28 @@ def new_workspace(workspace_name: str) -> None:
 
 
 @register_command
-def show_workspace() -> None:
+def workspace() -> None:
     """
-    Show the current workspace.
+    Show info on the current workspace.
     """
     show_workspace_info()
+
+
+@register_command
+def selection() -> None:
+    """
+    Show the current selection.
+    """
+    from kmd.file_storage.file_store import current_workspace
+
+    workspace = current_workspace()
+    selection = workspace.get_selection()
+    if not selection:
+        log.warning("No selection.")
+    else:
+        log.warning(
+            "Selected %s %s:\n%s",
+            len(selection),
+            plural("item", len(selection)),
+            format_lines(selection),
+        )

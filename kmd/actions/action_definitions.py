@@ -124,7 +124,7 @@ class TranscribeVideo(Action):
 
         transcription = video_transcription(url)
 
-        item = Item(ItemType.note, body=transcription, format=Format.plaintext)
+        item = Item(ItemType.note, body=transcription, format=Format.markdown)
         current_workspace().save(item)
 
         return [item]
