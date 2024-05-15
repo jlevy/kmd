@@ -1,10 +1,10 @@
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from enum import Enum
-import re
 from typing import Optional
 
 from strif import abbreviate_str
+from kmd.util.text_formatting import clean_title
 
 from kmd.util.url_utils import Url
 
@@ -147,7 +147,7 @@ class Item:
             or (not self.is_binary and self.body)
             or UNTITLED
         )
-        return re.sub(r"\s+", " ", abbreviate_str(full_title, max_len=100)).strip()
+        return clean_title(abbreviate_str(full_title, max_len=100, indicator="…"))
 
     def get_file_ext(self) -> FileExt:
         """Get or infer file extension."""
