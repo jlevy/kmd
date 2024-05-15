@@ -4,6 +4,7 @@ Xonsh extension for kmd.
 This should make use of kmd much easier as it makes all actions available as xonsh commands.
 """
 
+from typing import Callable, List
 import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -43,8 +44,15 @@ def initialize():
     # Additional commmands
     kmd_aliases["kmd_help"] = commands.kmd_help
 
+    def xonsh_command_for(func: Callable):
+        def command(args: List[str]):
+            func(*args)
+
+        command.__doc__ = func.__doc__
+        return command
+
     for func in commands.all_commands():
-        kmd_aliases[func.__name__] = func
+        kmd_aliases[func.__name__] = xonsh_command_for(func)
 
     aliases.update(kmd_aliases)  # type: ignore
 

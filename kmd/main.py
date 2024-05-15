@@ -6,7 +6,6 @@ import atexit
 from functools import wraps
 import logging
 import sys
-from textwrap import indent
 from typing import List, Tuple
 import typer
 from typer import Typer
@@ -37,42 +36,42 @@ app = Typer(help=__doc__) if not _is_pytest else _DummyTyper()
 app_error = None
 
 
-def log_exit():
+def _log_start():
+    log.info("----- start -----")
+    log.info("%s invoked: %s", APP_NAME, " ".join(sys.argv))
+
+
+def _log_exit():
     if app_error:
         log.error("----- ! exit with error: %s", app_error)
     else:
         log.info("----- exit (success) -----")
 
 
-@app.command("list_actions")
-def list_actions():
+@app.command("kmd_help")
+def kmd_help():
     """
     List all available actions.
     """
+    commands.kmd_help()
 
-    commands.list_actions()
 
+def _register_commands(app: Typer):
+    command_funcs = commands.all_commands()
+    for func in command_funcs:
+        app.command(func.__name__)(func)
 
-def _complete_action_names(incomplete: str) -> List[Tuple[str, str]]:
     actions = load_all_actions()
-    return [
-        (action.name, action.friendly_name)
-        for action in actions.values()
-        if action.name.startswith(incomplete)
-    ]
+    for action_name, action in actions.items():
 
+        def dynamic_command(action_name, action):
+            def command(locator: str):
+                run_action(action_name, locator)
 
-@app.command()
-def action(
-    action_name: Annotated[str, typer.Argument(autocompletion=_complete_action_names)],
-    locator: str,
-):
-    """
-    Perform an action on the given item.
-    """
+            command.__doc__ = f"Action: {action.description}"
+            return command
 
-    # TODO: Handle multiple input items.
-    run_action(action_name, locator)
+        app.command(action_name)(dynamic_command(action_name, action))
 
 
 @app.command()
@@ -86,11 +85,13 @@ def ui():
 if (__name__ == "__main__" or __name__.endswith(".main")) and not _is_pytest:
     config.setup()
 
-    atexit.register(log_exit)
+    atexit.register(_log_exit)
 
     log = logging.getLogger(__name__)
-    log.info("----- start -----")
-    log.info("%s invoked: %s", APP_NAME, " ".join(sys.argv))
+    _log_start()
+
+    if isinstance(app, Typer):
+        _register_commands(app)
 
     if len(sys.argv) == 1:
         app(prog_name=APP_NAME, args=["--help"])

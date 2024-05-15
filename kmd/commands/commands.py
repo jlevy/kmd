@@ -1,25 +1,27 @@
 import logging
 import os
 from textwrap import indent
-from typing import List
+from typing import Callable, List
 from kmd.config import WS_SUFFIX
 from kmd.file_storage.file_store import show_workspace_info
 
 log = logging.getLogger(__name__)
 
 
-_commands = []
+_commands: List[Callable] = []
 
 
 def register_command(func):
     _commands.append(func)
     return func
 
+
 def all_commands():
     return _commands
 
+
 @register_command
-def kmd_help():
+def kmd_help() -> None:
     """
     kmd help. Lists all available actions.
     """
@@ -33,20 +35,16 @@ def kmd_help():
     actions = load_all_actions()
     for action in actions.values():
         print(
-            f"{action.name} - {action.friendly_name}:\n{indent(action.description, prefix="    ")}\n"
+            f"{action.name}:\n{indent(action.description, prefix="    ")}\n"
         )
 
 
 @register_command
-def new_workspace(args: List[str]) -> None:
+def new_workspace(workspace_name: str) -> None:
     """
     Create a new workspace.
     """
 
-    if len(args) != 1:
-        raise ValueError("usage: new_workspace <workspace_name>")
-    
-    workspace_name = args[0]
     if not workspace_name.endswith(WS_SUFFIX):
         workspace_name = f"{workspace_name}{WS_SUFFIX}"
 
@@ -57,9 +55,8 @@ def new_workspace(args: List[str]) -> None:
     # TODO: Change cwd within xonsh.
 
 
-
 @register_command
-def show_workspace():
+def show_workspace() -> None:
     """
     Show the current workspace.
     """
