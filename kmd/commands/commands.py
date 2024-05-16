@@ -87,6 +87,7 @@ def show(path: Optional[str] = None) -> None:
             raise ValueError("No selection")
         view_file(selection[0])
 
+
 @register_command
 def archive(path: StorePath) -> None:
     """
@@ -95,10 +96,11 @@ def archive(path: StorePath) -> None:
     current_workspace().archive(path)
     log.warning("Archived %s", path)
 
+
 @register_command
 def unarchive(path: StorePath) -> None:
     """
     Unarchive the item at the given path.
     """
-    current_workspace().unarchive(path)
-    log.warning("Unarchived %s", path)
+    store_path = current_workspace().unarchive(path)
+    log.warning("Unarchived %s", store_path)

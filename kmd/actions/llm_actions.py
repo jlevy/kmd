@@ -54,4 +54,4 @@ def _run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
 
     current_workspace().save(output_item)
 
-    return [output_item]
+    return ActionResult([output_item])

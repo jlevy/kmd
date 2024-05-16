@@ -34,14 +34,15 @@ class FetchPage(Action):
         if not item.url:
             raise ValueError("Item must have a URL")
         page_data = web.fetch_extract(item.url)
-        item.title = page_data.title
-        item.description = page_data.description
-        item.body = page_data.content
 
-        # TODO: Archive old item, indicate this replaces it.
-        current_workspace().save(item)
+        fetched_item = item.copy_with(
+            title=page_data.title, description=page_data.description, body=page_data.content
+        )
 
-        return [item]
+        # TODO: This replaces any identically titled item. Should we archive the old one to be safe?
+        current_workspace().save(fetched_item)
+
+        return ActionResult([item], replaces_input=True)
 
 
 @dataclass
@@ -104,7 +105,7 @@ class ListChannelVideos(Action):
             current_workspace().save(item)
             items.append(item)
 
-        return items
+        return ActionResult(items)
 
 
 @register_action
@@ -127,7 +128,7 @@ class TranscribeVideo(Action):
         item = Item(ItemType.note, body=transcription, format=Format.markdown)
         current_workspace().save(item)
 
-        return [item]
+        return ActionResult([item])
 
 
 @register_action
@@ -159,7 +160,7 @@ class CreatePDF(Action):
         pdf_item.external_path = full_pdf_path
         current_workspace().save(pdf_item)
 
-        return [pdf_item]
+        return ActionResult([pdf_item])
 
 
 register_llm_action(

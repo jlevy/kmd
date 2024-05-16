@@ -45,14 +45,21 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
 
     # Ensure any items that are not saved are already in the workspace and get the corresponding items.
     # This looks up any URLs.
-    items = [ensure_saved(arg) for arg in args]
+    input_items = [ensure_saved(arg) for arg in args]
 
-    result = action.run(items)
-    log.warning(f"Action %s completed with %s items", action_name, len(result))
+    result = action.run(input_items)
+    log.warning(f"Action %s completed with %s items", action_name, len(result.items))
 
-    store_paths = [StorePath(assert_not_none(item.store_path)) for item in result]
+    result_store_paths = [StorePath(assert_not_none(item.store_path)) for item in result.items]
+    current_workspace().set_selection(result_store_paths)
 
-    current_workspace().set_selection(store_paths)
+    # If there is a hint that the action replaces the input, archive any inputs that are not in the result.
+    if result.replaces_input and input_items:
+        for item in input_items:
+            input_store_path = StorePath(assert_not_none(item.store_path))
+            if input_store_path not in result_store_paths:
+                current_workspace().archive(input_store_path)
+                log.warning("Archived input item: %s", input_store_path)
 
     commands.selection()
 

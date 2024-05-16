@@ -17,7 +17,14 @@ ANY_ARGS = ExpectedArgs(0, None)
 
 # For now these are simple but we will want to support other hints or output data in the future.
 ActionInput = List[Item]
-ActionResult = List[Item]
+
+
+@dataclass
+class ActionResult:
+    items: List[Item]
+
+    # If True, a hint to archive the input items.
+    replaces_input: bool = False
 
 
 @dataclass

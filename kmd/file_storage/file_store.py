@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import textwrap
 from typing import Any, Optional, Tuple
-from os.path import join
+from os.path import join, relpath, commonpath
 from os import path
 
 from ruamel.yaml import YAML
@@ -105,6 +105,9 @@ class NoSelectionError(RuntimeError):
     pass
 
 
+ARCHIVE_DIR = ".archive"
+
+
 class FileStore:
     """
     Store items on the filesystem, using a simple convention for filenames and folders.
@@ -115,7 +118,7 @@ class FileStore:
         self.uniquifier = Uniquifier()
         self.url_map = {}
         self._initialize_index()
-        self.archive_dir = join(self.base_dir, "archive")
+        self.archive_dir = join(self.base_dir, ARCHIVE_DIR)
         os.makedirs(self.archive_dir, exist_ok=True)
         self.selection = PersistedYaml(join(base_dir, "selection.yaml"), [])
 
@@ -223,6 +226,7 @@ class FileStore:
                 external_path=str(self.base_dir / store_path),
                 format=format,
                 file_ext=file_ext,
+                store_path=store_path,
             )
         else:
             body, metadata = fmf_read(self.base_dir / store_path)
@@ -233,28 +237,30 @@ class FileStore:
                 key: value for key, value in metadata.items() if key not in ["body", "type"]
             }
 
-            return Item(type=item_type, body=body, **other_metadata)
+            return Item(type=item_type, body=body, **other_metadata, store_path=store_path)
 
     def _remove_references(self, store_path: StorePath):
         self.selection.remove(store_path)
 
-    def archive(self, store_path: StorePath):
+    def archive(self, store_path: StorePath) -> StorePath:
+        archive_path = join(self.archive_dir, store_path)
         move_file(
             join(self.base_dir, store_path),
-            join(self.archive_dir, store_path),
+            archive_path,
         )
         self._remove_references(store_path)
+        return StorePath(join(ARCHIVE_DIR, store_path))
 
     def unarchive(self, store_path: StorePath):
         # Handle store_paths with or without the archive dir prefix.
-        if os.path.commonpath([self.archive_dir, store_path]) == self.archive_dir:
-            target_path = store_path
-        else:
-            target_path = join(self.base_dir, store_path)
+        if commonpath([ARCHIVE_DIR, store_path]) == ARCHIVE_DIR:
+            store_path = StorePath(relpath(store_path, ARCHIVE_DIR))
+        original_path = join(self.base_dir, store_path)
         move_file(
             join(self.archive_dir, store_path),
-            target_path,
+            original_path,
         )
+        return StorePath(store_path)
 
     def set_selection(self, selection: list[StorePath]):
         self.selection.set(selection)
