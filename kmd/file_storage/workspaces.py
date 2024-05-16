@@ -19,7 +19,7 @@ WS_SUFFIX = ".ws"
 
 
 def canon_workspace_name(name: str) -> Tuple[str, str]:
-    name = name.strip()
+    name = name.strip("/ ")
     workspace_name = name.removesuffix(WS_SUFFIX)
     workspace_dir = name if name.endswith(WS_SUFFIX) else f"{name}{WS_SUFFIX}"
     return workspace_name, workspace_dir

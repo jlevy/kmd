@@ -157,7 +157,7 @@ class CreatePDF(Action):
             description=item.description,
         )
         pdf_item.external_path = full_pdf_path
-        current_workspace().save(item)
+        current_workspace().save(pdf_item)
 
         return [pdf_item]
 

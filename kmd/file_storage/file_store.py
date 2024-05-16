@@ -12,6 +12,7 @@ from strif import copyfile_atomic, atomic_output_file
 from kmd.model.locators import StorePath
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
+from kmd.util.file_utils import move_file
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.text_formatting import plural
 
@@ -81,6 +82,24 @@ class PersistedYaml:
             with open(f, "w") as f:
                 yaml.dump(self.value, f)
 
+    def remove(self, target: Any):
+        """
+        Remove all occurrences of the target value from the data structure.
+        """
+
+        def remove_value(data: Any, target: Any) -> Any:
+            if isinstance(data, dict):
+                return {k: remove_value(v, target) for k, v in data.items() if v != target}
+            elif isinstance(data, list):
+                return [remove_value(item, target) for item in data if item != target]
+            elif data == target:
+                return None
+            else:
+                return data
+
+        self.value = remove_value(self.value, target)
+        self.set(self.value)
+
 
 class NoSelectionError(RuntimeError):
     pass
@@ -96,6 +115,8 @@ class FileStore:
         self.uniquifier = Uniquifier()
         self.url_map = {}
         self._initialize_index()
+        self.archive_dir = join(self.base_dir, "archive")
+        os.makedirs(self.archive_dir, exist_ok=True)
         self.selection = PersistedYaml(join(base_dir, "selection.yaml"), [])
 
     def _initialize_index(self):
@@ -192,6 +213,9 @@ class FileStore:
         return store_path
 
     def load(self, store_path: StorePath) -> Item:
+        """
+        Load item at the given path.
+        """
         _name, item_type, format, file_ext = _parse_check_filename(store_path)
         if format.is_binary():
             return Item(
@@ -210,6 +234,27 @@ class FileStore:
             }
 
             return Item(type=item_type, body=body, **other_metadata)
+
+    def _remove_references(self, store_path: StorePath):
+        self.selection.remove(store_path)
+
+    def archive(self, store_path: StorePath):
+        move_file(
+            join(self.base_dir, store_path),
+            join(self.archive_dir, store_path),
+        )
+        self._remove_references(store_path)
+
+    def unarchive(self, store_path: StorePath):
+        # Handle store_paths with or without the archive dir prefix.
+        if os.path.commonpath([self.archive_dir, store_path]) == self.archive_dir:
+            target_path = store_path
+        else:
+            target_path = join(self.base_dir, store_path)
+        move_file(
+            join(self.archive_dir, store_path),
+            target_path,
+        )
 
     def set_selection(self, selection: list[StorePath]):
         self.selection.set(selection)

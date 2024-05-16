@@ -3,6 +3,7 @@ import os
 from textwrap import indent
 from typing import Callable, List, Optional
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info
+from kmd.model.locators import StorePath
 from kmd.util.view_file import view_file
 from kmd.util.text_formatting import format_lines, plural
 
@@ -40,9 +41,6 @@ def kmd_help() -> None:
     actions = load_all_actions()
     for action in actions.values():
         print(f"{action.name}:\n{indent(action.description, prefix="    ")}\n")
-
-
-
 
 
 @register_command
@@ -88,3 +86,19 @@ def show(path: Optional[str] = None) -> None:
         if not selection:
             raise ValueError("No selection")
         view_file(selection[0])
+
+@register_command
+def archive(path: StorePath) -> None:
+    """
+    Archive the item at the given path.
+    """
+    current_workspace().archive(path)
+    log.warning("Archived %s", path)
+
+@register_command
+def unarchive(path: StorePath) -> None:
+    """
+    Unarchive the item at the given path.
+    """
+    current_workspace().unarchive(path)
+    log.warning("Unarchived %s", path)
