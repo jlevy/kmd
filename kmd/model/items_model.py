@@ -76,8 +76,8 @@ UNTITLED = "Untitled"
 @dataclass
 class Item:
     """
-    An item that we may operate on. Could be one of various types, and may be persisted on disk or
-    as a database record.
+    An Item is any piece of information we may wish to save or perform operations on, such as
+    a text document, PDF or other resource, URL, etc.
     """
 
     type: ItemType

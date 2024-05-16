@@ -106,6 +106,7 @@ class NoSelectionError(RuntimeError):
 
 
 ARCHIVE_DIR = ".archive"
+SETTINGS_DIR = ".settings"
 
 
 class FileStore:
@@ -118,9 +119,13 @@ class FileStore:
         self.uniquifier = Uniquifier()
         self.url_map = {}
         self._initialize_index()
+
         self.archive_dir = join(self.base_dir, ARCHIVE_DIR)
         os.makedirs(self.archive_dir, exist_ok=True)
-        self.selection = PersistedYaml(join(base_dir, "selection.yaml"), [])
+        self.settings_dir = join(self.base_dir, SETTINGS_DIR)
+        os.makedirs(self.settings_dir, exist_ok=True)
+
+        self.selection = PersistedYaml(join(self.settings_dir, "selection.yaml"), [])
 
     def _initialize_index(self):
         for root, _dirnames, filenames in os.walk(self.base_dir):
