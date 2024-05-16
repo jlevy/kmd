@@ -15,20 +15,22 @@ from kmd.util.url_utils import Url, is_url
 
 log = logging.getLogger(__name__)
 
-WS_SUFFIX = ".ws"
+
+# Suffix used to identify knowledge base directories.
+KB_SUFFIX = ".kb"
 
 
 def canon_workspace_name(name: str) -> Tuple[str, str]:
     name = name.strip("/ ")
-    workspace_name = name.removesuffix(WS_SUFFIX)
-    workspace_dir = name if name.endswith(WS_SUFFIX) else f"{name}{WS_SUFFIX}"
+    workspace_name = name.removesuffix(KB_SUFFIX)
+    workspace_dir = name if name.endswith(KB_SUFFIX) else f"{name}{KB_SUFFIX}"
     return workspace_name, workspace_dir
 
 
 def validate_workspace_dir(base_dir: Path | str) -> None:
-    if not str(base_dir).endswith(WS_SUFFIX):
+    if not str(base_dir).endswith(KB_SUFFIX):
         raise ValueError(
-            f"Directory `{base_dir}` is not a workspace (should end in .ws; create one with the `workspace` command)"
+            f"Directory `{base_dir}` is not a workspace (should end in .kb; create one with the `workspace` command)"
         )
 
 

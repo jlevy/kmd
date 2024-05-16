@@ -2,7 +2,7 @@ cache/
 trash/
 
 workspace/
-*.ws/
+*.kb/
 
 # Dev convenience convention: Temporarily rename a file to stop tracking it.
 stash.*
