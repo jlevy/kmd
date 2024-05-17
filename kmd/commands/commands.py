@@ -1,7 +1,11 @@
 import logging
 import os
-from textwrap import indent
+import re
+import textwrap
 from typing import Callable, List, Optional
+from rich import print as rprint
+from rich.text import Text
+
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info
 from kmd.model.locators import StorePath
 from kmd.util.view_file import view_file
@@ -29,18 +33,22 @@ def kmd_help() -> None:
     """
     from kmd.actions.registry import load_all_actions
 
-    print("\nAvailable kmd commands:\n")
+    rprint(Text("\nAvailable kmd commands:\n", style="bright_green"))
 
-    def format_doc(doc: Optional[str]) -> str:
-        return indent(doc.strip(), prefix="    ") if doc else ""
+    def format_doc(name: str, doc: str) -> Text:
+        wrapped = textwrap.fill(doc, width=70, initial_indent="", subsequent_indent="    ")
+        return Text.assemble((name, "bright_blue"), (": ", "bright_blue"), (wrapped, "default"))
 
     for command in _commands:
-        print(f"{command.__name__}:\n{format_doc(command.__doc__)}\n")
+        doc = command.__doc__ if command.__doc__ else ""
+        rprint(format_doc(command.__name__, doc.strip()))
+        rprint()
 
-    print("\nAvailable kmd actions:\n")
+    rprint(Text("\nAvailable kmd actions:\n", style="bright_green"))
     actions = load_all_actions()
     for action in actions.values():
-        print(f"{action.name}:\n{indent(action.description, prefix="    ")}\n")
+        rprint(format_doc(action.name, action.description))
+        rprint()
 
 
 @register_command
@@ -49,6 +57,10 @@ def workspace(workspace_name: Optional[str] = None) -> None:
     Show info on the current workspace.
     """
     if workspace_name:
+        if not re.match(r"^\w+$", workspace_name):
+            raise ValueError(
+                "Use an alphanumeric name (no spaces or special characters) for the workspace"
+            )
         ws_name, ws_dir = canon_workspace_name(workspace_name)
         os.makedirs(ws_dir, exist_ok=True)
         os.chdir(ws_dir)
@@ -57,9 +69,9 @@ def workspace(workspace_name: Optional[str] = None) -> None:
 
 
 @register_command
-def selection() -> None:
+def select() -> None:
     """
-    Show the current selection.
+    Get or show the current selection.
     """
 
     selection = current_workspace().get_selection()

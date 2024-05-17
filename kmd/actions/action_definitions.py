@@ -12,7 +12,7 @@ from kmd.actions.registry import register_action, register_llm_action
 from kmd.actions.registry import register_action
 from kmd.media import web
 from kmd.media.video import video_transcription
-from kmd.model.actions_model import Action, ActionInput, ActionResult
+from kmd.model.actions_model import MULTIPLE_ARGS, Action, ActionInput, ActionResult
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.pdf.pdf_output import markdown_to_pdf
 from kmd.util.url_utils import Url
@@ -115,20 +115,24 @@ class TranscribeVideo(Action):
             name="transcribe_video",
             friendly_name="Transcribe Video",
             description="Download and transcribe audio from a video.",
+            expected_args=MULTIPLE_ARGS,
         )
 
     def run(self, items: ActionInput) -> ActionResult:
-        item = items[0]
-        url = item.url
-        if not url:
-            raise ValueError("Item must have a URL")
+        result_items = []
+        for item in items:
+            url = item.url
+            if not url:
+                raise ValueError("Item must have a URL")
 
-        transcription = video_transcription(url)
+            transcription = video_transcription(url)
 
-        item = Item(ItemType.note, body=transcription, format=Format.markdown)
-        current_workspace().save(item)
+            item = Item(ItemType.note, body=transcription, format=Format.markdown)
+            current_workspace().save(item)
 
-        return ActionResult([item])
+            result_items.append(item)
+
+        return ActionResult(result_items)
 
 
 @register_action

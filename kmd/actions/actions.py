@@ -61,6 +61,6 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
                 current_workspace().archive(input_store_path)
                 log.warning("Archived input item: %s", input_store_path)
 
-    commands.selection()
+    commands.select()
 
     return result
