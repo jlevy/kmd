@@ -13,7 +13,7 @@ from kmd.actions.registry import register_action
 from kmd.media import web
 from kmd.media.video import video_transcription
 from kmd.model.actions_model import MULTIPLE_ARGS, Action, ActionInput, ActionResult
-from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.pdf.pdf_output import markdown_to_pdf
 from kmd.util.url_utils import Url
 
@@ -150,7 +150,7 @@ class CreatePDF(Action):
         if not item.body:
             raise ValueError("Item must have a body")
 
-        pdf_item = item.copy_with(type=ItemType.export, format=Format.pdf)
+        pdf_item = item.copy_with(type=ItemType.export, format=Format.pdf, file_ext=FileExt.pdf)
         base_dir, pdf_path = current_workspace().path_for(pdf_item)
         full_pdf_path = join(base_dir, pdf_path)
 

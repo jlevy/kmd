@@ -194,7 +194,6 @@ class FileStore:
             log.info("External file already saved: %s", item.external_path)
             store_path = StorePath(path.relpath(item.external_path, self.base_dir))
         else:
-
             # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
             base_dir, store_path = self.path_for(item)
             full_path = join(base_dir, store_path)

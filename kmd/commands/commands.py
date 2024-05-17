@@ -57,11 +57,11 @@ def workspace(workspace_name: Optional[str] = None) -> None:
     Show info on the current workspace.
     """
     if workspace_name:
-        if not re.match(r"^\w+$", workspace_name):
+        ws_name, ws_dir = canon_workspace_name(workspace_name)
+        if not re.match(r"^\w+$", ws_name):
             raise ValueError(
                 "Use an alphanumeric name (no spaces or special characters) for the workspace"
             )
-        ws_name, ws_dir = canon_workspace_name(workspace_name)
         os.makedirs(ws_dir, exist_ok=True)
         os.chdir(ws_dir)
         log.warning("Changed to workspace: %s", ws_name)

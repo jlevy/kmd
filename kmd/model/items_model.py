@@ -175,6 +175,8 @@ class Item:
         """Copy item with the given field updates."""
 
         new_item = replace(self, **kwargs)
+        # New should not have a store_path until it is saved.
+        new_item.store_path = None
         new_item.created_at = datetime.now()
         new_item.modified_at = datetime.now()
         return new_item

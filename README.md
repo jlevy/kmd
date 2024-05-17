@@ -68,6 +68,8 @@ fetch_page 'https://thisappwillgiveyouabs.com/'
 transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
 # A transcription with multiple speakers:
 transcribe_video 'https://www.youtube.com/watch?v=uUd7LleJuqM'
+# Now manipulate that transcription (note we are using the outputs of each previous command,
+# which are auto-selected as input to each next command):
 break_into_paragraphs
 summarize_as_bullets
 create_pdf

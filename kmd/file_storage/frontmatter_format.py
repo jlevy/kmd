@@ -33,7 +33,7 @@ def fmf_write(file_path: Path | str, content: str, metadata: Optional[Dict]) -> 
 
 def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
     """
-    Read text content (typically Markdown) from a file with optional YAML metadata
+    Read UTF-8 text content (typically Markdown) from a file with optional YAML metadata
     in Jekyll-style frontmatter format.
     """
     yaml = YAML()
@@ -43,6 +43,8 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
     try:
         with open(file_path, "r") as f:
             lines = f.readlines()
+    except UnicodeDecodeError as e:
+        raise ValueError(f"File not a text file: {file_path}: {e}")
     except IOError as e:
         raise IOError(f"Error reading file {file_path}: {e}")
 
