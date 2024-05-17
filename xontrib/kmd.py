@@ -4,17 +4,21 @@ Xonsh extension for kmd.
 This should make use of kmd much easier as it makes all actions available as xonsh commands.
 """
 
-from typing import Callable, List
 import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+from typing import Callable, List
+from rich import print as rprint
+from rich.text import Text
+from xonsh import xontribs
 from kmd.config import setup
 from kmd.file_storage.workspaces import show_workspace_info
 from kmd.actions.actions import run_action
 from kmd.actions.registry import load_all_actions
 from kmd.commands import commands
 from kmd.model.actions_model import Action
+
 
 setup()
 
@@ -56,11 +60,21 @@ def initialize():
 
     aliases.update(kmd_aliases)  # type: ignore
 
+    def reload() -> None:
+        xontribs.xontribs_reload(["kmd"])
 
-print(
-    "\n🄺\nWelcome to the kmd shell.\n"
-    "Use `kmd_help` for available kmd commands and actions.\n"
-    "Use `xonfig tutorial` for xonsh help and `help()` for Python help.\n"
+    aliases["reload"] = reload  # type: ignore
+
+
+rprint(
+    Text.assemble(
+        ("\n🄺\n", "bright_blue"),
+        ("\nWelcome to the kmd shell.\n", "bright_green"),
+        (
+            "\nUse `kmd_help` for available kmd commands and actions.\n"
+            "Use `xonfig tutorial` for xonsh help and `help()` for Python help.\n"
+        ),
+    )
 )
 
 initialize()

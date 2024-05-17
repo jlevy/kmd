@@ -26,6 +26,10 @@ def all_commands():
     return _commands
 
 
+def command_output(message: str, *args):
+    rprint(Text(message % args, "yellow"))
+
+
 @register_command
 def kmd_help() -> None:
     """
@@ -64,7 +68,7 @@ def workspace(workspace_name: Optional[str] = None) -> None:
             )
         os.makedirs(ws_dir, exist_ok=True)
         os.chdir(ws_dir)
-        log.warning("Changed to workspace: %s", ws_name)
+        command_output("Changed to workspace: %s", ws_name)
     show_workspace_info()
 
 
@@ -76,9 +80,9 @@ def select() -> None:
 
     selection = current_workspace().get_selection()
     if not selection:
-        log.warning("No selection.")
+        command_output("No selection.")
     else:
-        log.warning(
+        command_output(
             "Selected %s %s:\n%s",
             len(selection),
             plural("item", len(selection)),
@@ -107,7 +111,7 @@ def archive(path: StorePath) -> None:
     Archive the item at the given path.
     """
     current_workspace().archive(path)
-    log.warning("Archived %s", path)
+    command_output("Archived %s", path)
 
 
 @register_command
@@ -116,4 +120,4 @@ def unarchive(path: StorePath) -> None:
     Unarchive the item at the given path.
     """
     store_path = current_workspace().unarchive(path)
-    log.warning("Unarchived %s", store_path)
+    command_output("Unarchived %s", store_path)
