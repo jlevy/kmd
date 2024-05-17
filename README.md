@@ -20,6 +20,8 @@ pyenv install
 
 # Install recent Poetry if needed:
 curl -sSL https://install.python-poetry.org | python3 -
+# Plugin to help with upgrades:
+poetry self add poetry-plugin-up
 ```
 
 One-time API key setup:
@@ -78,6 +80,9 @@ Other useful dev tasks:
 # Run pytests:
 pytest
 pytest -s kmd/commands/command_parser.py
+
+# Upgrade packages:
+poetry up
 
 # To install globally in current user's Python environment (so you can use `kmd` anywhere):
 poetry build
