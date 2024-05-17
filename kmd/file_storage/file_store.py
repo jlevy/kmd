@@ -9,6 +9,7 @@ from os import path
 from ruamel.yaml import YAML
 from slugify import slugify
 from strif import copyfile_atomic, atomic_output_file
+from kmd.file_storage.filenames import parse_filename
 from kmd.model.locators import StorePath
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
@@ -27,18 +28,8 @@ def item_type_to_folder(item_type: ItemType) -> str:
     return _type_to_folder[item_type.name]
 
 
-def _parse_filename(filename: str) -> Tuple[str, str, str]:
-    parts = path.basename(filename).rsplit(".", 2)
-    if len(parts) != 3:
-        raise ValueError(
-            f"Filename does not match file store convention (name.type.ext): {filename}"
-        )
-    name, item_type, ext = parts
-    return name, item_type, ext
-
-
 def _parse_check_filename(filename: str) -> Tuple[str, ItemType, Format, FileExt]:
-    name, item_type, ext = _parse_filename(filename)
+    dirname, name, item_type, ext = parse_filename(filename, expect_type_ext=True)
     try:
         return name, ItemType[item_type], Format.from_file_ext(ext), FileExt[ext]
     except KeyError:
@@ -224,7 +215,7 @@ class FileStore:
         Load item at the given path.
         """
         _name, item_type, format, file_ext = _parse_check_filename(store_path)
-        if format.is_binary():
+        if not format.is_text():
             return Item(
                 type=item_type,
                 external_path=str(self.base_dir / store_path),
@@ -274,21 +265,3 @@ class FileStore:
             return self.selection.read()
         except OSError:
             raise NoSelectionError()
-
-
-#
-# Tests
-
-
-def test_parse_filename():
-    import pytest
-
-    filename = "foo/bar/test_file.type.ext"
-    name, item_type, ext = _parse_filename(filename)
-    assert name == "test_file"
-    assert item_type == "type"
-    assert ext == "ext"
-
-    filename = "missing_type.ext"
-    with pytest.raises(ValueError):
-        _parse_filename(filename)

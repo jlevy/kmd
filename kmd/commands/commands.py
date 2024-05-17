@@ -5,10 +5,10 @@ import textwrap
 from typing import Callable, List, Optional
 from rich import print as rprint
 from rich.text import Text
+from kmd.commands.local_file_tools import open_platform_specific
 
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info
 from kmd.model.locators import StorePath
-from kmd.util.view_file import view_file
 from kmd.util.text_formatting import format_lines, plural
 
 log = logging.getLogger(__name__)
@@ -91,13 +91,14 @@ def show(path: Optional[str] = None) -> None:
     """
     Show the contents of a file.
     """
+
     if path:
-        view_file(path)
+        open_platform_specific(path)
     else:
         selection = current_workspace().get_selection()
         if not selection:
             raise ValueError("No selection")
-        view_file(selection[0])
+        open_platform_specific(selection[0])
 
 
 @register_command

@@ -21,7 +21,9 @@ class ItemType(Enum):
 
 
 class Format(Enum):
-    """Format of the data in this item."""
+    """
+    Format of the data in this item. This is the body data (not the file or metadata format).
+    """
 
     url = "url"
     html = "html"
@@ -39,15 +41,17 @@ class Format(Enum):
         }
         return file_ext_to_format[file_ext]
 
-    def is_binary(self) -> bool:
-        return self in [Format.pdf]
+    def is_text(self) -> bool:
+        return self not in [Format.pdf]
 
     def __str__(self):
         return self.name
 
 
 class FileExt(Enum):
-    """File type extensions for items."""
+    """
+    File type extensions for items.
+    """
 
     pdf = "pdf"
     txt = "txt"
@@ -65,6 +69,10 @@ class FileExt(Enum):
         }
 
         return format_to_file_ext.get(str(format), None)
+
+    @classmethod
+    def is_text(cls, file_ext: str) -> bool:
+        return file_ext in [cls.txt.value, cls.md.value, cls.webpage.value]
 
     def __str__(self):
         return self.name
