@@ -161,10 +161,10 @@ class FileStore:
         """
         if item.store_path:
             store_path = item.store_path
-        elif item.url and item.url in self.url_map:
+        elif item.url and item.format == Format.url and item.url in self.url_map:
             # If the item is a URL and we've already saved it, use the same store path.
             store_path = self.url_map[item.url]
-            log.info("URL already saved: %s holds %s", store_path, item.url)
+            log.warning("URL already saved: %s holds %s", store_path, item.url)
         else:
             folder_path = Path(item_type_to_folder(item.type))
             filename = self._new_filename_for(item)

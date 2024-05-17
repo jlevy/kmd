@@ -134,7 +134,6 @@ class TranscribeVideo(Action):
                 format=Format.markdown,
                 file_ext=FileExt.md,
             )
-            log.warning("Transcribed video %s to %s", url, result_title)
             current_workspace().save(result_item)
 
             result_items.append(result_item)

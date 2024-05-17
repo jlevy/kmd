@@ -1,5 +1,6 @@
 import logging
 from typing import List, cast
+from strif import abbreviate_str
 from kmd.actions.registry import load_all_actions
 from kmd.file_storage.file_store import NoSelectionError
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
@@ -41,7 +42,11 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
     # Ensure we have the right number of args.
     action.validate_args(args)
 
-    log.warning(f"Running action: %s %s", action_name, " ".join(repr(arg) for arg in args))
+    log.warning(
+        f"Running action: %s %s",
+        action_name,
+        abbreviate_str(" ".join(repr(arg) for arg in args), max_len=200),
+    )
 
     # Ensure any items that are not saved are already in the workspace and get the corresponding items.
     # This looks up any URLs.
