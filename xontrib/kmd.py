@@ -60,8 +60,10 @@ def initialize():
 
     aliases.update(kmd_aliases)  # type: ignore
 
+    # Conveniene to reload module.
+    # TODO: Doesn't seem to reload modified Python?
     def reload() -> None:
-        xontribs.xontribs_reload(["kmd"])
+        xontribs.xontribs_reload(["kmd"], verbose=True)
 
     aliases["reload"] = reload  # type: ignore
 

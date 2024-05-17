@@ -3,6 +3,8 @@ import os
 import re
 import textwrap
 from typing import Callable, List, Optional
+from datetime import datetime
+import humanize
 from rich import print as rprint
 from rich.text import Text
 from kmd.commands.local_file_tools import open_platform_specific
@@ -26,8 +28,8 @@ def all_commands():
     return _commands
 
 
-def command_output(message: str, *args):
-    rprint(Text(message % args, "yellow"))
+def command_output(message: str, *args, color="yellow"):
+    rprint(Text(message % args, color))
 
 
 @register_command
@@ -121,3 +123,44 @@ def unarchive(path: StorePath) -> None:
     """
     store_path = current_workspace().unarchive(path)
     command_output("Unarchived %s", store_path)
+
+
+@register_command
+def files(path: Optional[str] = None, full: Optional[bool] = True) -> None:
+    """
+    List all files in a directory or workspace.
+    """
+    base_dir = path or str(current_workspace().base_dir)
+    folder_tally = {}
+
+    print(f"Listing files in {base_dir}")
+    for dirname, dirnames, filenames in os.walk(base_dir):
+        # TODO: Better sort options.
+        dirnames.sort()
+        filenames.sort()
+
+        folder_tally[dirname] = len(filenames)
+        tally = f" - {len(filenames)} files" if len(filenames) > 0 else ""
+        dirname_rel = os.path.relpath(dirname, base_dir)
+
+        if dirname_rel.startswith("."):
+            continue
+
+        command_output(f"{dirname_rel}{tally}", color="bright_blue")
+        if full:
+            for file in filenames:
+                if file.startswith("."):
+                    continue
+
+                full_path = os.path.join(dirname, file)
+                file_size = humanize.naturalsize(os.path.getsize(full_path))
+                file_mod_time = datetime.fromtimestamp(os.path.getmtime(full_path)).isoformat()
+                file_mod_time = file_mod_time.split(".", 1)[0]
+                file_rel = os.path.relpath(file, base_dir)
+                if file_rel.startswith("."):
+                    continue
+
+                command_output("  %-10s %s  %s" % (file_size, file_mod_time, file_rel))
+
+    total_items = sum(folder_tally.values())
+    command_output(f"\n{total_items} items total in {len(folder_tally)} folders")

@@ -33,6 +33,7 @@ lark-parser = "^0.12.0"
 xonsh = {extras = ["full"], version = "^0.16.0"}
 pygments = "^2.18.0"
 
+humanize = "^4.9.0"
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
 pytest = "^8.2.0"

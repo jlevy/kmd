@@ -126,11 +126,18 @@ class TranscribeVideo(Action):
                 raise ValueError("Item must have a URL")
 
             transcription = video_transcription(url)
+            result_title = f"{item.title} (transcription)"
+            result_item = item.copy_with(
+                type=ItemType.note,
+                title=result_title,
+                body=transcription,
+                format=Format.markdown,
+                file_ext=FileExt.md,
+            )
+            log.warning("Transcribed video %s to %s", url, result_title)
+            current_workspace().save(result_item)
 
-            item = Item(ItemType.note, body=transcription, format=Format.markdown)
-            current_workspace().save(item)
-
-            result_items.append(item)
+            result_items.append(result_item)
 
         return ActionResult(result_items)
 
