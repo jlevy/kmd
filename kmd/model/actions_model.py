@@ -14,7 +14,7 @@ class ExpectedArgs:
 ONE_ARG = ExpectedArgs(1, 1)
 NO_ARGS = ExpectedArgs(0, 0)
 ANY_ARGS = ExpectedArgs(0, None)
-MULTIPLE_ARGS = ExpectedArgs(1, None)
+ONE_OR_MORE_ARGS = ExpectedArgs(1, None)
 
 # For now these are simple but we will want to support other hints or output data in the future.
 ActionInput = List[Item]

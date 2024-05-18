@@ -163,4 +163,6 @@ def files(path: Optional[str] = None, full: Optional[bool] = True) -> None:
                 command_output("  %-10s %s  %s" % (file_size, file_mod_time, file_rel))
 
     total_items = sum(folder_tally.values())
-    command_output(f"\n{total_items} items total in {len(folder_tally)} folders")
+    command_output(
+        f"\n{total_items} items total in {len(folder_tally)} folders", color="bright_blue"
+    )

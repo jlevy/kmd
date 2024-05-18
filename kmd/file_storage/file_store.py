@@ -6,14 +6,15 @@ from typing import Any, Optional, Tuple
 from os.path import join, relpath, commonpath
 from os import path
 
-from ruamel.yaml import YAML
 from slugify import slugify
-from strif import copyfile_atomic, atomic_output_file
+from strif import copyfile_atomic
 from kmd.file_storage.filenames import parse_filename
+from kmd.file_storage.yaml_util import read_yaml_file, write_yaml_file
 from kmd.model.locators import StorePath
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.util.file_utils import move_file
+from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.text_formatting import plural
 
@@ -28,12 +29,23 @@ def item_type_to_folder(item_type: ItemType) -> str:
     return _type_to_folder[item_type.name]
 
 
-def _parse_check_filename(filename: str) -> Tuple[str, ItemType, Format, FileExt]:
+def _parse_check_filename(filename: str) -> Tuple[str, ItemType, FileExt]:
     dirname, name, item_type, ext = parse_filename(filename, expect_type_ext=True)
     try:
-        return name, ItemType[item_type], Format.from_file_ext(ext), FileExt[ext]
-    except KeyError:
-        raise ValueError(f"Unknown type or extension for file: {filename}")
+        return name, ItemType[item_type], FileExt[ext]
+    except KeyError as e:
+        raise ValueError(f"Unknown type or extension for file: {filename}: {e}")
+
+
+def _format_from_ext(file_ext: FileExt) -> Optional[Format]:
+    file_ext_to_format = {
+        FileExt.html: Format.html,
+        FileExt.md: Format.markdown,
+        FileExt.txt: Format.plaintext,
+        FileExt.pdf: Format.pdf,
+        FileExt.yml: None,  # We will need to look at a YAML file to determine format.
+    }
+    return file_ext_to_format[file_ext]
 
 
 def _format_text(text: str, format: Optional[Format] = None, width=80) -> str:
@@ -62,16 +74,10 @@ class PersistedYaml:
         self.value = value
 
     def read(self) -> Any:
-        yaml = YAML(typ="safe", pure=True)
-        with open(self.filename, "r") as f:
-            return yaml.load(f)
+        return read_yaml_file(self.filename)
 
     def set(self, value: Any):
-        self.value = value
-        with atomic_output_file(self.filename) as f:
-            yaml = YAML()
-            with open(f, "w") as f:
-                yaml.dump(self.value, f)
+        write_yaml_file(self.filename, value)
 
     def remove(self, target: Any):
         """
@@ -129,7 +135,7 @@ class FileStore:
         Update metadata index with a new item.
         """
         try:
-            name, item_type, _format, file_ext = _parse_check_filename(store_path)
+            name, item_type, file_ext = _parse_check_filename(store_path)
         except ValueError:
             log.info("Skipping file with invalid name: %s", store_path)
             return
@@ -155,9 +161,10 @@ class FileStore:
         # Suffix files with both item type and a suitable file extension.
         return f"{unique_slug}.{type}.{ext}"
 
-    def path_for(self, item: Item) -> Tuple[str, StorePath]:
+    def find_path_for(self, item: Item) -> Tuple[str, StorePath]:
         """
-        Return (base_dir, store_path) for an item, which may or may not exist.
+        Return (base_dir, store_path) for an item. Store path may or may not already exist, depending
+        on whether store_path is already set on the item or the same item has been saved before.
         """
         if item.store_path:
             store_path = item.store_path
@@ -186,7 +193,7 @@ class FileStore:
             store_path = StorePath(path.relpath(item.external_path, self.base_dir))
         else:
             # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
-            base_dir, store_path = self.path_for(item)
+            base_dir, store_path = self.find_path_for(item)
             full_path = join(base_dir, store_path)
             log.info("Saving item to %s: %s", full_path, item)
 
@@ -214,25 +221,28 @@ class FileStore:
         """
         Load item at the given path.
         """
-        _name, item_type, format, file_ext = _parse_check_filename(store_path)
-        if not format.is_text():
-            return Item(
-                type=item_type,
-                external_path=str(self.base_dir / store_path),
-                format=format,
-                file_ext=file_ext,
-                store_path=store_path,
-            )
-        else:
+        _name, item_type, file_ext = _parse_check_filename(store_path)
+        format = _format_from_ext(file_ext)
+        if FileExt.is_text(file_ext):
+            # This is a known text format or a YAML file, so we can read the whole thing.
             body, metadata = fmf_read(self.base_dir / store_path)
             if not metadata:
-                raise ValueError(f"No metadata found in {store_path}")
+                raise ValueError(f"No metadata found in file: {store_path}")
 
             other_metadata = {
                 key: value for key, value in metadata.items() if key not in ["body", "type"]
             }
 
             return Item(type=item_type, body=body, **other_metadata, store_path=store_path)
+        else:
+            # This is a PDF or other binary file, so we just return the metadata.
+            return Item(
+                type=item_type,
+                external_path=str(self.base_dir / store_path),
+                format=not_none(format),
+                file_ext=file_ext,
+                store_path=store_path,
+            )
 
     def _remove_references(self, store_path: StorePath):
         self.selection.remove(store_path)

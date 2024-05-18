@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 from os.path import basename
-from typing import Tuple
+from typing import Optional, Tuple
 import logging
 from pathlib import Path
 from typing import Tuple
@@ -42,6 +42,18 @@ def current_workspace_dir() -> Path:
     parent_dir = basename(cwd)
     validate_workspace_dir(parent_dir)
     return cwd
+
+
+def current_workspace_name() -> Optional[str]:
+    """
+    Get the name of the current workspace (name.kb) or None if not in a .kb directory.
+    """
+    workspace_name = None
+    try:
+        workspace_name = current_workspace_dir().name
+    except ValueError:
+        pass
+    return workspace_name
 
 
 def current_workspace() -> FileStore:

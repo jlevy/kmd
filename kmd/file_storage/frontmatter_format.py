@@ -8,9 +8,9 @@ alone on their lines.
 
 from pathlib import Path
 from typing import Tuple, Optional, Dict
-from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
 from strif import atomic_output_file
+from kmd.file_storage.yaml_util import read_yaml_string, write_yaml
 
 
 def fmf_write(file_path: Path | str, content: str, metadata: Optional[Dict]) -> None:
@@ -18,14 +18,11 @@ def fmf_write(file_path: Path | str, content: str, metadata: Optional[Dict]) -> 
     Write the given Markdown content to a file, with associated YAML metadata, in
     Jekyll-style frontmatter format.
     """
-
-    yaml = YAML()
-
     with atomic_output_file(file_path, make_parents=True) as temp_output:
         with open(temp_output, "w") as f:
             if metadata:
                 f.write("---\n")
-                yaml.dump(metadata, f)
+                write_yaml(metadata, f)
                 f.write("---\n")
 
             f.write(content)
@@ -36,7 +33,6 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
     Read UTF-8 text content (typically Markdown) from a file with optional YAML metadata
     in Jekyll-style frontmatter format.
     """
-    yaml = YAML()
     metadata = None
     content = []
 
@@ -67,7 +63,7 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
         line = lines[i]
         if line.strip() == end_pattern and in_metadata:
             try:
-                metadata = yaml.load("".join(metadata_lines))
+                metadata = read_yaml_string("".join(metadata_lines))
             except YAMLError as e:
                 raise ValueError(f"Error parsing YAML metadata on {file_path}: {e}")
             in_metadata = False

@@ -7,12 +7,12 @@ from typing import Any, Dict, List
 
 from kmd.actions.llm_actions import LLM
 from kmd.file_storage.workspaces import current_workspace
-from kmd.media.video import youtube
+from kmd.media.video import video_download_audio, youtube
 from kmd.actions.registry import register_action, register_llm_action
 from kmd.actions.registry import register_action
 from kmd.media import web
 from kmd.media.video import video_transcription
-from kmd.model.actions_model import MULTIPLE_ARGS, Action, ActionInput, ActionResult
+from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.pdf.pdf_output import markdown_to_pdf
 from kmd.util.url_utils import Url
@@ -35,7 +35,7 @@ class FetchPage(Action):
             raise ValueError("Item must have a URL")
         page_data = web.fetch_extract(item.url)
 
-        fetched_item = item.copy_with(
+        fetched_item = item.new_copy_with(
             title=page_data.title, description=page_data.description, body=page_data.content
         )
 
@@ -79,6 +79,8 @@ class ListChannelVideos(Action):
         url = item.url
         if not url:
             raise ValueError("Item must have a URL")
+        if not youtube.canonicalize(url):
+            raise ValueError("Only YouTube download currently supported")
 
         result_raw = youtube.list_channel_videos(url)
 
@@ -89,6 +91,10 @@ class ListChannelVideos(Action):
 
         items = []
         for info in video_meta_list:
+            if not youtube.canonicalize(info.url):
+                log.warning("Skipping non-recognized video URL: %s", info.url)
+                continue
+
             item = Item(
                 ItemType.resource,
                 format=Format.url,
@@ -96,9 +102,11 @@ class ListChannelVideos(Action):
                 title=info.title,
                 description=info.description,
                 extra={
-                    "id": info.id,
-                    "thumbnails": info.thumbnails,
-                    "view_count": info.view_count,
+                    "youtube_metadata": {
+                        "id": info.id,
+                        "thumbnails": info.thumbnails,
+                        "view_count": info.view_count,
+                    }
                 },
             )
 
@@ -109,13 +117,38 @@ class ListChannelVideos(Action):
 
 
 @register_action
+class DownloadVideo(Action):
+    def __init__(self):
+        super().__init__(
+            name="download_video",
+            friendly_name="Download Video",
+            description="Download and extract audio from a video. Only saves to media cache; does not create new items.",
+            expected_args=ONE_OR_MORE_ARGS,
+        )
+
+    def run(self, items: ActionInput) -> ActionResult:
+        result_items = []
+        for item in items:
+            url = item.url
+            if not url:
+                raise ValueError("Item must have a URL")
+
+            video_download_audio(url)
+
+            # Actually return the same item since the video is actually saved to cache.
+            result_items.append(item)
+
+        return ActionResult(result_items)
+
+
+@register_action
 class TranscribeVideo(Action):
     def __init__(self):
         super().__init__(
             name="transcribe_video",
             friendly_name="Transcribe Video",
             description="Download and transcribe audio from a video.",
-            expected_args=MULTIPLE_ARGS,
+            expected_args=ONE_OR_MORE_ARGS,
         )
 
     def run(self, items: ActionInput) -> ActionResult:
@@ -127,7 +160,7 @@ class TranscribeVideo(Action):
 
             transcription = video_transcription(url)
             result_title = f"{item.title} (transcription)"
-            result_item = item.copy_with(
+            result_item = item.new_copy_with(
                 type=ItemType.note,
                 title=result_title,
                 body=transcription,
@@ -156,8 +189,8 @@ class CreatePDF(Action):
         if not item.body:
             raise ValueError("Item must have a body")
 
-        pdf_item = item.copy_with(type=ItemType.export, format=Format.pdf, file_ext=FileExt.pdf)
-        base_dir, pdf_path = current_workspace().path_for(pdf_item)
+        pdf_item = item.new_copy_with(type=ItemType.export, format=Format.pdf, file_ext=FileExt.pdf)
+        base_dir, pdf_path = current_workspace().find_path_for(pdf_item)
         full_pdf_path = join(base_dir, pdf_path)
 
         # Add directly to the store.

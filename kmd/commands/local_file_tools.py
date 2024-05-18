@@ -1,3 +1,7 @@
+"""
+Platform-specific file handling utilities.
+"""
+
 import os
 import subprocess
 import sys
@@ -46,7 +50,7 @@ def open_platform_specific(file_or_url: str):
         file = file_or_url
         mime_type, file_size, num_lines = file_info(file)
         _dirname, _name, _item_type, ext = parse_filename(file)
-        if FileExt.is_text(ext) or mime_type and mime_type.startswith("text"):
+        if FileExt(ext).is_text() or mime_type and mime_type.startswith("text"):
             view_file(file, use_less=num_lines > 40 or file_size > 20 * 1024)
         else:
             _native_open(file)

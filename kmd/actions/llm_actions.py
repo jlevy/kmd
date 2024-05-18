@@ -40,7 +40,7 @@ def _run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
 
     log.info("Running action %s on item %s", action.name, item)
 
-    output_item = item.copy_with(body=None)
+    output_item = item.new_copy_with(body=None)
 
     llm_input = action.template.format(body=item.body)
     llm_output = openai_completion(

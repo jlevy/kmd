@@ -23,7 +23,9 @@ SUFFIX_TRANSCRIPT = ".transcript.txt"
 
 
 class VideoCache(DirStore):
-    """Download and cache video, audio, and transcripts from videos."""
+    """
+    Download and cache video, audio, and transcripts from videos.
+    """
 
     def __init__(self, root):
         super().__init__(root)
@@ -125,8 +127,9 @@ video_services: List[VideoService] = [youtube, vimeo]
 
 
 def canonicalize_video_url(url: Url) -> Optional[Url]:
-    """Return the canonical form of a video URL from a supported service (like YouTube)."""
-
+    """
+    Return the canonical form of a video URL from a supported service (like YouTube).
+    """
     for service in video_services:
         canonical_url = service.canonicalize(url)
         if canonical_url:

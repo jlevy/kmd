@@ -1,3 +1,7 @@
+"""
+The data model for Items and their file formats.
+"""
+
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from enum import Enum
@@ -22,7 +26,7 @@ class ItemType(Enum):
 
 class Format(Enum):
     """
-    Format of the data in this item. This is the body data (not the file or metadata format).
+    Format of the data in this item. This is the body data format (or "url" for a URL resource).
     """
 
     url = "url"
@@ -30,16 +34,6 @@ class Format(Enum):
     markdown = "markdown"
     plaintext = "plaintext"
     pdf = "pdf"
-
-    @classmethod
-    def from_file_ext(cls, file_ext: str) -> "Format":
-        file_ext_to_format = {
-            FileExt.webpage.value: Format.html,
-            FileExt.md.value: Format.markdown,
-            FileExt.txt.value: Format.plaintext,
-            FileExt.pdf.value: Format.pdf,
-        }
-        return file_ext_to_format[file_ext]
 
     def is_text(self) -> bool:
         return self not in [Format.pdf]
@@ -56,23 +50,26 @@ class FileExt(Enum):
     pdf = "pdf"
     txt = "txt"
     md = "md"
-    webpage = "webpage"
+    yml = "yml"
+    html = "html"
+
+    def is_text(self) -> bool:
+        return self in [self.txt, self.md, self.yml, self.html]
 
     @classmethod
-    def from_format(cls, format: str | Format) -> Optional["FileExt"]:
+    def for_format(cls, format: str | Format) -> Optional["FileExt"]:
+        """
+        Infer the file extension for a given format.
+        """
         format_to_file_ext = {
-            Format.html.value: FileExt.webpage,
-            Format.url.value: FileExt.webpage,
+            Format.html.value: FileExt.html,
+            Format.url.value: FileExt.yml,
             Format.markdown.value: FileExt.md,
             Format.plaintext.value: FileExt.txt,
             Format.pdf.value: FileExt.pdf,
         }
 
         return format_to_file_ext.get(str(format), None)
-
-    @classmethod
-    def is_text(cls, file_ext: str) -> bool:
-        return file_ext in [cls.txt.value, cls.md.value, cls.webpage.value]
 
     def __str__(self):
         return self.name
@@ -147,7 +144,9 @@ class Item:
         return item_dict
 
     def get_title(self) -> str:
-        """Get or infer title."""
+        """
+        Get or infer title.
+        """
         full_title = (
             self.title
             or self.url
@@ -158,19 +157,22 @@ class Item:
         return clean_title(abbreviate_str(full_title, max_len=100, indicator="…"))
 
     def get_file_ext(self) -> FileExt:
-        """Get or infer file extension."""
-
+        """
+        Get or infer file extension.
+        """
         if self.file_ext:
             return self.file_ext
         if self.is_binary and not self.file_ext:
             raise ValueError(f"Binary Items must have a file extension: {self}")
-        inferred_ext = self.format and FileExt.from_format(self.format)
+        inferred_ext = self.format and FileExt.for_format(self.format)
         if not inferred_ext:
             raise ValueError(f"Cannot infer file extension for Item: {self}")
         return inferred_ext
 
     def get_full_suffix(self) -> str:
-        """Get the full file extension suffix for this item."""
+        """
+        Get the full file extension suffix (e.g. "note.md") for this item.
+        """
 
         return f"{self.type.value}.{self.get_file_ext().value}"
 
@@ -179,11 +181,12 @@ class Item:
             raise ValueError("Cannot get text content of a binary Item")
         return self.body or ""
 
-    def copy_with(self, **kwargs) -> "Item":
-        """Copy item with the given field updates."""
+    def new_copy_with(self, **kwargs) -> "Item":
+        """
+        Copy item with the given field updates. Resets store_path and updates timestamps.
+        """
 
         new_item = replace(self, **kwargs)
-        # New should not have a store_path until it is saved.
         new_item.store_path = None
         new_item.created_at = datetime.now()
         new_item.modified_at = datetime.now()
