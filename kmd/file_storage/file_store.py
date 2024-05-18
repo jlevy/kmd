@@ -275,3 +275,9 @@ class FileStore:
             return self.selection.read()
         except OSError:
             raise NoSelectionError()
+
+    def unselect(self, unselect_paths: list[StorePath]):
+        current_selection = self.get_selection()
+        new_selection = [path for path in current_selection if path not in unselect_paths]
+        self.set_selection(new_selection)
+        return new_selection

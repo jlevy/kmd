@@ -42,12 +42,13 @@ def kmd_help() -> None:
     rprint(Text("\nAvailable kmd commands:\n", style="bright_green"))
 
     def format_doc(name: str, doc: str) -> Text:
+        doc = textwrap.dedent(doc).strip()
         wrapped = textwrap.fill(doc, width=70, initial_indent="", subsequent_indent="    ")
         return Text.assemble((name, "bright_blue"), (": ", "bright_blue"), (wrapped, "default"))
 
     for command in _commands:
         doc = command.__doc__ if command.__doc__ else ""
-        rprint(format_doc(command.__name__, doc.strip()))
+        rprint(format_doc(command.__name__, doc))
         rprint()
 
     rprint(Text("\nAvailable kmd actions:\n", style="bright_green"))
@@ -75,12 +76,16 @@ def workspace(workspace_name: Optional[str] = None) -> None:
 
 
 @register_command
-def select() -> None:
+def select(*paths: str) -> None:
     """
     Get or show the current selection.
     """
-
-    selection = current_workspace().get_selection()
+    if paths:
+        store_paths = [StorePath(path) for path in paths]
+        current_workspace().set_selection(store_paths)
+        selection = store_paths
+    else:
+        selection = current_workspace().get_selection()
     if not selection:
         command_output("No selection.")
     else:
@@ -90,6 +95,25 @@ def select() -> None:
             plural("item", len(selection)),
             format_lines(selection),
         )
+
+
+@register_command
+def unselect(*paths: str) -> None:
+    """
+    Remove items from the current selection. Handy if you've selected some items and
+    wish to unselect a few of them.
+    """
+    if not paths:
+        raise ValueError("No paths provided to unselect")
+    previous_selection = current_workspace().get_selection()
+    new_selection = current_workspace().unselect([StorePath(path) for path in paths])
+    command_output(
+        "Unselected %s %s, %s now selected:\n%s",
+        len(previous_selection) - len(new_selection),
+        plural("item", len(previous_selection) - len(new_selection)),
+        len(new_selection),
+        format_lines(new_selection),
+    )
 
 
 @register_command

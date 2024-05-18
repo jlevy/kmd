@@ -60,7 +60,7 @@ class VideoCache(DirStore):
 
     def _do_transcription(self, url):
         downsampled_audio_file = self._do_downsample(url)
-        log.warning("Transcribing audio for video: %s -> %s", url, downsampled_audio_file)
+        log.warning("Transcribing audio for video: %s: %s", url, downsampled_audio_file)
         transcript = transcribe_audio(downsampled_audio_file)
         self._write_transcript(url, transcript)
         return transcript
