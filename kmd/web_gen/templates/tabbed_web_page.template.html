@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap");
+
+      :root {
+        --color-primary: #6da47a;
+        --color-secondary: #6b7280;
+        --color-hover: #d1d5db;
+        --color-bg: #f3f4f6;
+        --color-text: #111827;
+      }
+
+      body {
+        font-family: "Source Serif 4", serif;
+        color: var(--color-text);
+      }
+      h1,
+      h2 {
+        font-family: "Archivo Narrow", sans-serif;
+        font-weight: 300;
+        margin-bottom: 1rem;
+      }
+
+      .tab-button {
+        font-family: "Archivo Narrow", sans-serif;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 0.25rem 1rem;
+        border-bottom-width: 2px;
+        outline: none;
+      }
+      .tab-button-active {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+      }
+      .tab-button-inactive {
+        color: var(--color-secondary);
+        border-color: transparent;
+      }
+      .tab-button-inactive:hover {
+        border-color: var(--color-hover);
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="p-6 bg-gray-100">
+    <div class="container mx-auto bg-white p-8 shadow-lg">
+      <h1 class="text-center text-4xl mb-4">{{ title }}</h1>
+      <div>
+        <!-- Navigation Tabs -->
+        <nav class="flex justify-left space-x-4 mb-4">
+          {% for tab in tabs %}
+          <button
+            class="tab-button {% if loop.first %}tab-button-active{% else %}tab-button-inactive{% endif %}"
+            onclick="showTab('{{ tab.id }}', this)"
+          >
+            {{ tab.label }}
+          </button>
+          {% endfor %}
+        </nav>
+        <div class="tab-content mt-8">
+          <!-- Tab Content -->
+          {% for tab in tabs %}
+          <div
+            id="{{ tab.id }}"
+            class="tab-pane {% if not loop.first %}hidden{% endif %}"
+          >
+            <h2 class="text-2xl font-bold">{{ tab.label }}</h2>
+            <p>{{ tab.content }}</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function showTab(tabId, element) {
+        document.querySelectorAll(".tab-pane").forEach((tab) => {
+          tab.classList.add("hidden");
+        });
+        document.getElementById(tabId).classList.remove("hidden");
+        document.querySelectorAll(".tab-button").forEach((btn) => {
+          btn.classList.remove("tab-button-active");
+          btn.classList.add("tab-button-inactive");
+        });
+        element.classList.add("tab-button-active");
+        element.classList.remove("tab-button-inactive");
+      }
+    </script>
+  </body>
+</html>
