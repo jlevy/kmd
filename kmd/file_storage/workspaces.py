@@ -27,21 +27,20 @@ def canon_workspace_name(name: str) -> Tuple[str, str]:
     return workspace_name, workspace_dir
 
 
-def validate_workspace_dir(base_dir: Path | str) -> None:
-    if not str(base_dir).endswith(KB_SUFFIX):
-        raise ValueError(
-            f"Directory `{base_dir}` is not a workspace (should end in .kb; create one with the `workspace` command)"
-        )
-
-
 def current_workspace_dir() -> Path:
     """
     Get the current workspace directory.
     """
     cwd = Path(".").absolute()
-    parent_dir = basename(cwd)
-    validate_workspace_dir(parent_dir)
-    return cwd
+    path = cwd
+    while path != Path("/"):
+        if str(path).endswith(KB_SUFFIX):
+            return path
+        path = path.parent
+
+    raise ValueError(
+        f"No workspace found in `{cwd}`. A workspace directory should end in .kb; create one with the `workspace` command)"
+    )
 
 
 def current_workspace_name() -> Optional[str]:

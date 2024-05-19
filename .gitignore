@@ -1,5 +1,6 @@
 cache/
 trash/
+tmp/
 
 workspace/
 *.kb/

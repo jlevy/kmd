@@ -38,6 +38,20 @@ class Format(Enum):
     def is_text(self) -> bool:
         return self not in [Format.pdf]
 
+    @classmethod
+    def for_file_ext(cls, file_ext: "FileExt") -> Optional["Format"]:
+        """
+        Infer the format for a given file extension. Doesn't work for .yml since that could be
+        various formats.
+        """
+        ext_to_format = {
+            FileExt.html.value: Format.html,
+            FileExt.md.value: Format.markdown,
+            FileExt.txt.value: Format.plaintext,
+            FileExt.pdf.value: Format.pdf,
+        }
+        return ext_to_format.get(file_ext.value, None)
+
     def __str__(self):
         return self.name
 

@@ -17,6 +17,7 @@ from kmd.util.file_utils import move_file
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.text_formatting import plural
+from kmd.util.url_utils import Url, is_url
 
 
 log = logging.getLogger(__name__)
@@ -243,6 +244,42 @@ class FileStore:
                 file_ext=file_ext,
                 store_path=store_path,
             )
+
+    def add_resource(self, file_path_or_url: str) -> StorePath:
+        """
+        Add a resource from a file or URL.
+        """
+
+        if is_url(file_path_or_url):
+            url = Url(file_path_or_url)
+            item = Item(ItemType.resource, url=url, format=Format.url)
+            # TODO: Also fetch the title and description as a follow-on action.
+            return self.save(item)
+        else:
+            file_path = file_path_or_url
+            try:
+                _dirname, name, _item_type, ext_str = parse_filename(file_path)
+                file_ext = FileExt(ext_str)
+            except ValueError:
+                raise ValueError(
+                    f"Unknown extension for file: {file_path} (known types are {FileExt.__members__})"
+                )
+            format = Format.for_file_ext(file_ext)
+            if not format:
+                raise ValueError(f"Unknown format for file: {file_path}")
+
+            with open(file_path, "r") as file:
+                body = file.read()
+
+            new_item = Item(
+                type=ItemType.resource,
+                title=name,
+                file_ext=file_ext,
+                format=format,
+                body=body,
+            )
+            saved_store_path = self.save(new_item)
+            return saved_store_path
 
     def _remove_references(self, store_path: StorePath):
         self.selection.remove(store_path)

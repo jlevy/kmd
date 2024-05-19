@@ -8,7 +8,9 @@ from strif import atomic_output_file
 
 
 def _new_yaml() -> YAML:
-    return YAML(typ="safe")
+    yaml = YAML(typ="safe")
+    yaml.default_flow_style = False  # Block style dictionaries.
+    return yaml
 
 
 def read_yaml_string(yaml_string: str) -> Any:

@@ -132,6 +132,18 @@ def show(path: Optional[str] = None) -> None:
 
 
 @register_command
+def add_resource(*files_or_urls: str) -> None:
+    """
+    Add a file or URL resource to the workspace.
+    """
+    if not files_or_urls:
+        raise ValueError("No files or URLs provided to import")
+    for file_or_url in files_or_urls:
+        store_path = current_workspace().add_resource(file_or_url)
+        command_output("Imported %s to %s", file_or_url, store_path)
+
+
+@register_command
 def archive(path: StorePath) -> None:
     """
     Archive the item at the given path.
