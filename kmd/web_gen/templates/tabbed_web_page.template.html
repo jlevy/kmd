@@ -4,17 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ title }}</title>
+
     <link
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Varta:wght@300..700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap");
-      @import url("https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap");
-      @import url("https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap");
-
       :root {
-        --color-primary: #6da47a;
+        --color-primary: #70a68c;
         --color-secondary: #6b7280;
         --color-hover: #d1d5db;
         --color-bg: #f3f4f6;
@@ -22,19 +25,40 @@
       }
 
       body {
-        font-family: "Source Serif 4", serif;
+        font-family: "PT Serif", serif;
         color: var(--color-text);
       }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: "Varta", sans-serif;
+      }
+
       h1,
       h2 {
-        font-family: "Archivo Narrow", sans-serif;
-        font-weight: 300;
+        font-weight: 400;
         margin-bottom: 1rem;
       }
 
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+      }
+
+      h3 {
+        font-size: 1.25rem;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
       .tab-button {
-        font-family: "Archivo Narrow", sans-serif;
-        font-weight: 500;
+        font-family: "Varta", sans-serif;
+        font-weight: 400;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         padding: 0.25rem 1rem;
@@ -79,7 +103,7 @@
             id="{{ tab.id }}"
             class="tab-pane {% if not loop.first %}hidden{% endif %}"
           >
-            <h2 class="text-2xl font-bold">{{ tab.label }}</h2>
+            <h2 class="text-2xl">{{ tab.label }}</h2>
             <p>{{ tab.content }}</p>
           </div>
           {% endfor %}
