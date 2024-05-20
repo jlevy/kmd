@@ -1,5 +1,5 @@
 import sys
-from kmd import config
+from kmd.config.setup import setup
 from kmd.tui.workspace_browser import WorkspaceBrowser
 
 
@@ -8,5 +8,5 @@ def run():
 
 
 if __name__ == "__main__" and not "pytest" in sys.modules:
-    config.setup()
+    setup()
     run()

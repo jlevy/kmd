@@ -3,15 +3,13 @@ kmd: A command line for knowledge exploration.
 """
 
 import atexit
-from functools import wraps
 import logging
 import sys
 from typer import Typer
 from kmd.actions.actions import run_action
 from kmd.actions.registry import load_all_actions
-
-import kmd.config as config
-from kmd.config import APP_NAME
+from kmd.config.setup import setup
+from kmd.config.settings import APP_NAME
 from kmd.tui import tui
 from kmd.commands import commands
 
@@ -67,7 +65,7 @@ if not "pytest" in sys.modules:
         tui.run()
 
     if __name__ == "__main__" or __name__.endswith(".main"):
-        config.setup()
+        setup()
 
         atexit.register(_log_exit)
 

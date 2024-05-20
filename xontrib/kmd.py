@@ -12,7 +12,7 @@ from typing import Callable, List
 from rich import print as rprint
 from rich.text import Text
 from xonsh import xontribs
-from kmd.config import setup
+from kmd.config.setup import setup
 from kmd.file_storage.workspaces import show_workspace_info
 from kmd.actions.actions import run_action
 from kmd.actions.registry import load_all_actions

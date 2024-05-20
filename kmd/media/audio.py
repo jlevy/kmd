@@ -6,7 +6,7 @@ from deepgram import DeepgramClient, PrerecordedOptions, FileSource, ClientOptio
 from pydub import AudioSegment
 from strif import atomic_output_file
 
-from kmd import config
+from kmd.config import setup
 
 
 log = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ def deepgram_transcribe_audio(audio_file_path: str) -> str:
     size = getsize(audio_file_path)
     log.info("Transcribing via Deepgram: %s (size %s)", audio_file_path, size)
 
-    config.api_setup()
+    setup.api_setup()
     deepgram = DeepgramClient("", ClientOptionsFromEnv())
 
     with open(audio_file_path, "rb") as audio_file:

@@ -5,7 +5,7 @@ from kmd.apis.openai import openai_completion
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.model.items_model import Format
 from kmd.file_storage.workspaces import current_workspace
-from kmd import config
+from kmd.config import setup
 
 
 log = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ def _run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
     if not action.model or not action.system_message or not action.template:
         raise ValueError(f"LLM actions expect a model, system_message, and template: {action.name}")
 
-    config.api_setup()
+    setup.api_setup()
 
     log.info("Running action %s on item %s", action.name, item)
 

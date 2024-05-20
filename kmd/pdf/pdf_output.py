@@ -5,7 +5,7 @@ from marko import Markdown
 from typing import Optional
 from pathlib import Path
 from strif import atomic_output_file
-from kmd.config import APP_NAME
+from kmd.config.settings import APP_NAME
 
 
 def markdown_to_pdf(

@@ -2,7 +2,7 @@ import logging
 import os
 from typing import List, Optional
 from strif import atomic_output_file
-from kmd.config import MEDIA_CACHE_DIR
+from kmd.config.settings import MEDIA_CACHE_DIR
 from kmd.media.media_services import VideoService
 from kmd.util.url_utils import Url
 from .audio import deepgram_transcribe_audio, downsample_to_16khz

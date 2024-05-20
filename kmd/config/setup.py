@@ -1,48 +1,20 @@
 import os
-import warnings
-from os.path import dirname, abspath
 import tomllib
-import logging
-from logging import INFO, WARNING, Formatter
-import sys
 import openai
 from cachetools import cached
 from assertpy import assert_that
 
-APP_NAME = "kmd"
-
-# Presume this file is in the main Python source folder, and use the parent folder as the root.
-ROOT = dirname(dirname(abspath(__file__)))
-
-MEDIA_CACHE_DIR = f"{ROOT}/cache/media"
+from kmd.config.logging import logging_setup
+from kmd.config.settings import ROOT
 
 
 @cached(cache={})
 def setup():
     """One-time setup of essential keys, directories, and configs. Idempotent."""
 
-    _logging_setup()
+    logging_setup()
 
     api_setup()
-
-
-def _logging_setup():
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-    # Verbose logging to file, important logging to console.
-    file_handler = logging.FileHandler(f"{APP_NAME}.log")
-    file_handler.setLevel(INFO)
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(WARNING)
-
-    file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
-    # TODO: Add colors!
-    console_handler.setFormatter(Formatter("%(message)s"))
-
-    root_logger = logging.getLogger()
-    root_logger.setLevel(INFO)
-    root_logger.addHandler(file_handler)
-    root_logger.addHandler(console_handler)
 
 
 @cached(cache={})
