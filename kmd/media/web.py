@@ -36,7 +36,9 @@ class PageType(enum.Enum):
 
 
 class PageData:
-    """Data about a page, including URL, title and optionally description and extracted content."""
+    """
+    Data about a page, including URL, title and optionally description and extracted content.
+    """
 
     def __init__(
         self,
@@ -63,7 +65,9 @@ class ContentType(enum.Enum):
 
 
 def guess_text_content_type(content: str) -> ContentType:
-    """Simple best-effort guess at content type."""
+    """
+    Simple best-effort guess at content type.
+    """
 
     if re.search(r"<html>|<body>|<head>|<div>|<p>", content, re.IGNORECASE | re.MULTILINE):
         return ContentType.html

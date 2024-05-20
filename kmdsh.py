@@ -7,8 +7,6 @@ from os.path import expanduser
 from xonsh.main import main as xonsh_main
 
 
-xontrib_command = "xontrib load kmd"
-
 xonshrc_init_script = """
 # Auto-load of kmd and kmd prompt setup:
 xontrib load kmd
@@ -23,6 +21,8 @@ $PROMPT = _xonsh_prompt
 # End of kmd setup.
 """
 
+xontrib_command = xonshrc_init_script.splitlines()[1].strip()
+
 xonshrc_path = expanduser("~/.xonshrc")
 
 
@@ -30,7 +30,7 @@ def is_xontrib_installed(file_path):
     try:
         with open(file_path, "r") as file:
             for line in file:
-                if xontrib_command.strip() == line.strip():
+                if xontrib_command == line.strip():
                     return True
     except FileNotFoundError:
         return False
@@ -41,7 +41,6 @@ def install_to_xonsh():
     """
     Script to add kmd xontrib to the .xonshrc file.
     """
-
     # Append the command to the file if not already present.
     if not is_xontrib_installed(xonshrc_path):
         with open(xonshrc_path, "a") as file:

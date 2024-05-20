@@ -998,22 +998,6 @@ files = [
 lxml = {version = ">=4.4.2", extras = ["html-clean"]}
 
 [[package]]
-name = "lark-parser"
-version = "0.12.0"
-description = "a modern parsing library"
-optional = false
-python-versions = "*"
-files = [
-    {file = "lark-parser-0.12.0.tar.gz", hash = "sha256:15967db1f1214013dca65b1180745047b9be457d73da224fcda3d9dd4e96a138"},
-    {file = "lark_parser-0.12.0-py2.py3-none-any.whl", hash = "sha256:0eaf30cb5ba787fe404d73a7d6e61df97b21d5a63ac26c5008c78a494373c675"},
-]
-
-[package.extras]
-atomic-cache = ["atomicwrites"]
-nearley = ["js2py"]
-regex = ["regex"]
-
-[[package]]
 name = "linkify-it-py"
 version = "2.0.3"
 description = "Links recognition library with FULL unicode support."
@@ -3011,4 +2995,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "85af37920b4cae0cc083c94c5ebd739ae95716bb27a017ab631cde7b90cf3fbf"
+content-hash = "02c1a74c75f4465f85715e06eb66a0800d9261d61cbd9bd4eca47ab961251421"

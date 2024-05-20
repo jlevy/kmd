@@ -1,5 +1,6 @@
 cache/
 trash/
+stash/
 tmp/
 
 workspace/
@@ -8,9 +9,9 @@ workspace/
 # Dev convenience convention: Temporarily rename a file to stop tracking it.
 stash.*
 
-# Ignore everything in the secrets directory except the template.
-secrets/*
-!secrets/secrets.template.toml
+# Ignore secrets file except for the template.
+secrets.toml
+!secrets.template.toml
 
 # GitHub's generic Python .gitignore:
 

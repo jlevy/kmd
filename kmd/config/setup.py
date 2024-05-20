@@ -1,11 +1,11 @@
 import os
+from pathlib import Path
 import tomllib
 import openai
 from cachetools import cached
 from assertpy import assert_that
 
 from kmd.config.logging import logging_setup
-from kmd.config.settings import ROOT
 
 
 @cached(cache={})
@@ -17,11 +17,24 @@ def setup():
     api_setup()
 
 
+# Look for API key secrets in these files.
+SECRETS_FILE = "secrets.toml"
+SECRETS_RC_FILE = "~/.secrets.toml"
+
+
 @cached(cache={})
 def _load_secrets():
-    paths = ["secrets.toml", f"{ROOT}/secrets/secrets.toml"]
+    secrets_paths = []
+
+    path = Path(".").absolute()
+    while path != Path("/"):
+        secrets_paths.append(path / SECRETS_FILE)
+        path = path.parent
+
+    secrets_paths.append(Path(SECRETS_RC_FILE).expanduser())
+
     all_secrets = {}
-    for path in reversed(paths):
+    for path in secrets_paths:
         try:
             with open(path, "rb") as f:
                 secrets = tomllib.load(f)
@@ -29,6 +42,14 @@ def _load_secrets():
         except FileNotFoundError:
             continue
 
+    if not all_secrets:
+        from kmd.config.logging import get_logger
+
+        log = get_logger(__name__)
+        log.error(
+            "Could not find secrets file in %s",
+            ", ".join(str(p) for p in secrets_paths),
+        )
     return all_secrets
 
 
