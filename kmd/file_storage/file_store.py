@@ -13,6 +13,7 @@ from kmd.file_storage.yaml_util import read_yaml_file, write_yaml_file
 from kmd.model.locators import StorePath
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
+from kmd.model.url import canonicalize_url
 from kmd.util.file_utils import move_file
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
@@ -198,13 +199,25 @@ class FileStore:
             full_path = join(base_dir, store_path)
             log.info("Saving item to %s: %s", full_path, item)
 
-            if item.external_path:
-                copyfile_atomic(item.external_path, full_path)
-            else:
-                if item.is_binary:
-                    raise ValueError(f"Binary Items should be external files: {item}")
-                formatted_body = _format_text(item.body_text(), item.format)
-                fmf_write(full_path, formatted_body, item.metadata())
+            # If we're overwriting an existing file, archive it first.
+            if path.exists(full_path):
+                try:
+                    self.archive(store_path)
+                except Exception as e:
+                    log.warning("Error archiving existing file: %s", e)
+
+            # Now save the new item.
+            try:
+                if item.external_path:
+                    copyfile_atomic(item.external_path, full_path)
+                else:
+                    if item.is_binary:
+                        raise ValueError(f"Binary Items should be external files: {item}")
+                    formatted_body = _format_text(item.body_text(), item.format)
+                    fmf_write(full_path, formatted_body, item.metadata())
+            except IOError as e:
+                log.error("Error saving item: %s", e)
+                self.unarchive(store_path)
 
             # Set filesystem file creation and modification times as well.
             if item.created_at:
@@ -249,9 +262,8 @@ class FileStore:
         """
         Add a resource from a file or URL.
         """
-
         if is_url(file_path_or_url):
-            url = Url(file_path_or_url)
+            url = canonicalize_url(Url(file_path_or_url))
             item = Item(ItemType.resource, url=url, format=Format.url)
             # TODO: Also fetch the title and description as a follow-on action.
             return self.save(item)
@@ -285,6 +297,9 @@ class FileStore:
         self.selection.remove(store_path)
 
     def archive(self, store_path: StorePath) -> StorePath:
+        """
+        Archive the item by moving it into the archive directory.
+        """
         archive_path = join(self.archive_dir, store_path)
         move_file(
             join(self.base_dir, store_path),
@@ -294,7 +309,10 @@ class FileStore:
         return StorePath(join(ARCHIVE_DIR, store_path))
 
     def unarchive(self, store_path: StorePath):
-        # Handle store_paths with or without the archive dir prefix.
+        """
+        Unarchive the item by moving back out of the archive directory.
+        Path may be with or without the archive dir prefix.
+        """
         if commonpath([ARCHIVE_DIR, store_path]) == ARCHIVE_DIR:
             store_path = StorePath(relpath(store_path, ARCHIVE_DIR))
         original_path = join(self.base_dir, store_path)
