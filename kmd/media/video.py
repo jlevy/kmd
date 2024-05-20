@@ -1,7 +1,7 @@
 import os
 from typing import List, Optional
 from strif import atomic_output_file
-from kmd.config.settings import MEDIA_CACHE_DIR
+from kmd.config.settings import media_cache_dir
 from kmd.media.media_services import VideoService
 from kmd.util.url_utils import Url
 from .audio import deepgram_transcribe_audio, downsample_to_16khz
@@ -96,7 +96,7 @@ class VideoCache(DirStore):
             raise ValueError("No transcript found for: %s" % url)
 
 
-_video_cache = VideoCache(MEDIA_CACHE_DIR)
+_video_cache = VideoCache(media_cache_dir())
 
 
 def _download_audio_with_service(url: Url) -> str:
