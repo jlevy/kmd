@@ -1,5 +1,4 @@
 import enum
-import logging
 import re
 from typing import Optional
 from cachetools import TTLCache, cached
@@ -9,8 +8,9 @@ import justext
 
 from kmd.media.video import canonicalize_video_url
 from kmd.util.url_utils import Url
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 class CrawlError(ValueError):

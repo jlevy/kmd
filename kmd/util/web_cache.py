@@ -2,7 +2,6 @@
 Storage and caching of downloaded and processed web pages.
 """
 
-import logging
 import os
 from os import path
 import time
@@ -12,8 +11,9 @@ import strif
 from .download_url import download_url, user_agent_headers
 from .identifier_utils import clean_alphanum_hash
 from .url_utils import normalize_url
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 def aws_cli(*cmd):

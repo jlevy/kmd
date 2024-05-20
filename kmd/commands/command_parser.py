@@ -1,12 +1,12 @@
 from collections import namedtuple
 from dataclasses import dataclass
-import logging
-from typing import Dict, List, NewType
+from typing import Dict, List
 from lark import Lark, Token, Transformer, v_args
 
 from kmd.util.url_utils import Url
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 @dataclass

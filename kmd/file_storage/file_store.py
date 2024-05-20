@@ -1,4 +1,3 @@
-import logging
 import os
 from pathlib import Path
 import textwrap
@@ -19,9 +18,9 @@ from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.text_formatting import plural
 from kmd.util.url_utils import Url, is_url
+from kmd.config.logging import get_logger
 
-
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 # For folder names, note -> notes, question -> questions, etc.
 _type_to_folder = {name: plural(name) for name, _value in ItemType.__members__.items()}

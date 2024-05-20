@@ -1,5 +1,4 @@
 from dataclasses import dataclass, fields
-import logging
 from os.path import join
 from pprint import pprint
 from textwrap import dedent
@@ -17,8 +16,9 @@ from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.pdf.pdf_output import markdown_to_pdf
 from kmd.util.type_utils import not_none
 from kmd.util.url_utils import Url
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 @register_action

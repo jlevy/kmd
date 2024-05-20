@@ -3,7 +3,6 @@ kmd: A command line for knowledge exploration.
 """
 
 import atexit
-import logging
 import sys
 from typer import Typer
 from kmd.actions.actions import run_action
@@ -12,6 +11,7 @@ from kmd.config.setup import setup
 from kmd.config.settings import APP_NAME
 from kmd.tui import tui
 from kmd.commands import commands
+from kmd.config.logging import get_logger
 
 
 def _log_start():
@@ -69,7 +69,7 @@ if not "pytest" in sys.modules:
 
         atexit.register(_log_exit)
 
-        log = logging.getLogger(__name__)
+        log = get_logger(__name__)
         _log_start()
 
         if isinstance(app, Typer):

@@ -1,4 +1,3 @@
-import logging
 import os
 from typing import List, Optional
 from strif import atomic_output_file
@@ -9,9 +8,9 @@ from .audio import deepgram_transcribe_audio, downsample_to_16khz
 from ..util.web_cache import DirStore
 from .video_youtube import YouTube
 from .video_vimeo import Vimeo
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
-
+log = get_logger(__name__)
 
 # transcribe_audio = whisper_transcribe_audio_small
 transcribe_audio = deepgram_transcribe_audio

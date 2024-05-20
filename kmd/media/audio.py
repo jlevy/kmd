@@ -1,4 +1,3 @@
-import logging
 from os.path import getsize
 from typing import List, NamedTuple, Optional, Tuple
 from openai import OpenAI
@@ -7,9 +6,9 @@ from pydub import AudioSegment
 from strif import atomic_output_file
 
 from kmd.config import setup
+from kmd.config.logging import get_logger
 
-
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 def downsample_to_16khz(audio_file_path: str, downsampled_out_path: str) -> None:

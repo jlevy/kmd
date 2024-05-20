@@ -1,12 +1,11 @@
-import logging
 from typing import Dict, Type
 
 from cachetools import cached
 from kmd.actions.llm_actions import LLMAction
 from kmd.model.actions_model import Action
+from kmd.config.logging import get_logger
 
-
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 _actions = []
 

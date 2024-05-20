@@ -1,11 +1,11 @@
 import contextlib
-import logging
 from urllib.parse import urlparse
 
 import requests
 from strif import atomic_output_file, copyfile_atomic
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 # Some sites block python user agent.
 USER_AGENT_MOZILLA_MAC = "Mozilla/5.0 (Compatible, Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"

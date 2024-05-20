@@ -1,8 +1,8 @@
-import logging
 from typing import NewType
 from urllib.parse import urlsplit, urlunsplit
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 Url = NewType("Url", str)
 

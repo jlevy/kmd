@@ -1,5 +1,4 @@
 import tempfile
-import logging
 import os
 from typing import Optional
 from urllib.parse import urlparse
@@ -8,8 +7,9 @@ from vimeo_downloader import Vimeo as VimeoDownloader
 
 from kmd.media.media_services import VideoService
 from kmd.util.url_utils import Url
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 class Vimeo(VideoService):

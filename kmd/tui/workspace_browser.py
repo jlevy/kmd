@@ -1,4 +1,3 @@
-import logging
 import sys
 from rich.syntax import Syntax
 from rich.traceback import Traceback
@@ -11,8 +10,9 @@ from textual.widgets import DirectoryTree, Footer, Static, Markdown, Input, Foot
 
 from kmd.file_storage.frontmatter_format import fmf_read
 from kmd.file_storage.workspaces import current_workspace_dir
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 class WorkspaceBrowser(App):

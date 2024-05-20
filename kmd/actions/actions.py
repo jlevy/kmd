@@ -1,4 +1,3 @@
-import logging
 from typing import List, cast
 from strif import abbreviate_str
 from kmd.actions.registry import load_all_actions
@@ -9,8 +8,9 @@ from kmd.model.locators import StorePath
 from kmd.util.text_formatting import format_lines
 from kmd.util.type_utils import not_none
 from kmd.commands import commands
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 def collect_args(*args: str) -> List[str]:

@@ -1,4 +1,3 @@
-import logging
 import re
 import tempfile
 import os
@@ -8,8 +7,9 @@ import yt_dlp
 
 from kmd.util.url_utils import Url
 from .media_services import VideoService
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 VIDEO_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{11}$")

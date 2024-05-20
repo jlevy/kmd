@@ -1,6 +1,4 @@
-import logging
 from pathlib import Path
-from os.path import basename
 from typing import Optional, Tuple
 import logging
 from pathlib import Path
@@ -12,8 +10,9 @@ from kmd.model.url import canonicalize_url
 from kmd.model.locators import Locator, StorePath
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.util.url_utils import Url, is_url
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 # Suffix used to identify knowledge base directories.

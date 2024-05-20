@@ -1,10 +1,10 @@
-import logging
 from typing import List
 import marko
 from marko.inline import Link
 from marko.block import ListItem, Heading
+from kmd.config.logging import get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 def _tree_links(element, include_internal=False):
