@@ -35,14 +35,14 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
     # Collect args from the provided args or otherwise the current selection.
     args = collect_args(*provided_args)
     if provided_args:
-        log.warning(f"Using provided args:\n%s", format_lines(provided_args))
+        log.message(f"Using provided args:\n%s", format_lines(provided_args))
     elif args:
-        log.warning(f"Using selection:\n%s", format_lines(args))
+        log.message(f"Using selection:\n%s", format_lines(args))
 
     # Ensure we have the right number of args.
     action.validate_args(args)
 
-    log.warning(
+    log.message(
         f"Running action: %s %s",
         action_name,
         abbreviate_str(" ".join(repr(arg) for arg in args), max_len=200),
@@ -54,7 +54,7 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
 
     # Run the action.
     result = action.run(input_items)
-    log.warning(f"Action %s completed with %s items", action_name, len(result.items))
+    log.message(f"Action %s completed with %s items", action_name, len(result.items))
 
     # Select the result items.
     result_store_paths = [StorePath(not_none(item.store_path)) for item in result.items]
@@ -66,7 +66,7 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
             input_store_path = StorePath(not_none(item.store_path))
             if input_store_path not in result_store_paths:
                 current_workspace().archive(input_store_path)
-                log.warning("Archived input item: %s", input_store_path)
+                log.message("Archived input item: %s", input_store_path)
 
     # Show the current selection.
     commands.select()

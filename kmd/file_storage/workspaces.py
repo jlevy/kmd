@@ -63,7 +63,7 @@ def current_workspace() -> FileStore:
 
 def show_workspace_info() -> None:
     workspace = current_workspace()
-    log.warning(
+    log.message(
         "Using workspace at %s (%s items)",
         path.abspath(workspace.base_dir),
         len(workspace.uniquifier),
@@ -82,7 +82,7 @@ def ensure_saved(locator: Locator) -> Item:
         url = canonicalize_url(Url(locator))
         item = Item(ItemType.resource, url=url, format=Format.url)
         store_path = workspace.save(item)
-        log.warning("Saved url: %s", store_path)
+        log.message("Saved url: %s", store_path)
     else:
         item = workspace.load(StorePath(locator))
 

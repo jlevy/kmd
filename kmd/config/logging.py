@@ -27,10 +27,10 @@ def logging_setup():
 
 class CustomLogger:
     """
-    Custom logger that lets messages be indicated separately.
+    Custom logger simply to be clearer about user messages vs info/warning.
     """
 
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.logger = logging.getLogger(name)
 
     def message(self, *args, **kwargs):

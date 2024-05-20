@@ -90,7 +90,7 @@ class ListChannelVideos(Action):
         video_meta_list = []
         for page in result_raw:
             video_meta_list.extend(YoutubeVideoMeta.from_dict(info) for info in page["entries"])
-        log.warning("Found %d videos in channel %s", len(video_meta_list), url)
+        log.message("Found %d videos in channel %s", len(video_meta_list), url)
 
         result_items = []
         for info in video_meta_list:
