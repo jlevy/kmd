@@ -1,4 +1,5 @@
 import logging
+import sys
 from rich.syntax import Syntax
 from rich.traceback import Traceback
 
@@ -25,10 +26,13 @@ class WorkspaceBrowser(App):
         ("q", "quit", "Quit"),
     ]
 
-    path = current_workspace_dir()
+    def __init__(self) -> None:
+        super().__init__()
 
-    show_tree = var(True)
-    show_content = var(False)
+        self.path = current_workspace_dir()
+
+        self.show_tree = var(True)
+        self.show_content = var(False)
 
     def compose(self) -> ComposeResult:
         """Compose our UI."""
@@ -119,5 +123,5 @@ class WorkspaceBrowser(App):
         self.show_content = not self.show_content
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" and not "pytest" in sys.modules:
     WorkspaceBrowser().run()

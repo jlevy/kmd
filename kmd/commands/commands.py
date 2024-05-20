@@ -138,9 +138,14 @@ def add_resource(*files_or_urls: str) -> None:
     """
     if not files_or_urls:
         raise ValueError("No files or URLs provided to import")
-    for file_or_url in files_or_urls:
-        store_path = current_workspace().add_resource(file_or_url)
-        command_output("Imported %s to %s", file_or_url, store_path)
+    store_paths = [current_workspace().add_resource(r) for r in files_or_urls]
+    command_output(
+        "Imported %s %s:\n%s",
+        len(store_paths),
+        plural("item", len(store_paths)),
+        format_lines(store_paths),
+    )
+    select(*store_paths)
 
 
 @register_command

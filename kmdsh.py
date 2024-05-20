@@ -17,8 +17,8 @@ def _xonsh_prompt():
    from kmd.file_storage.workspaces import current_workspace_name
    name = current_workspace_name()
    workspace_str = "{BOLD_GREEN}" + name if name else "{BOLD_YELLOW}(no workspace)"
-   return '%s {BOLD_YELLOW}{prompt_end}{RESET} ' % workspace_str
-
+   return '%s {BOLD_GREEN}❯{RESET} ' % workspace_str
+   
 $PROMPT = _xonsh_prompt
 # End of kmd setup.
 """

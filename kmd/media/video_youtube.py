@@ -84,3 +84,23 @@ class YouTube(VideoService):
         else:
             log.warning("No videos found in the channel.")
             return []
+
+
+# Tests
+#
+
+
+def test_canonicalize_youtube():
+    youtube = YouTube()
+
+    assert youtube.canonicalize(Url("https://youtu.be/12345678901")) == Url(
+        "https://www.youtube.com/watch?v=12345678901"
+    )
+    assert youtube.canonicalize(Url("https://www.youtube.com/watch?v=12345678901")) == Url(
+        "https://www.youtube.com/watch?v=12345678901"
+    )
+    assert youtube.canonicalize(
+        Url(
+            "https://www.youtube.com/watch?v=_5y0AalUDh4&list=PL9XbNw3iJu1zKJRyV3Jz3rqlFV1XJfvNv&index=12"
+        )
+    ) == Url("https://www.youtube.com/watch?v=_5y0AalUDh4")

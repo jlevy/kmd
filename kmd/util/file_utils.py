@@ -1,6 +1,5 @@
 from pathlib import Path
 import shutil
-from typing import Optional
 from strif import move_to_backup
 
 
