@@ -15,6 +15,7 @@ from kmd.media.video import video_transcription
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.pdf.pdf_output import markdown_to_pdf
+from kmd.util.type_utils import not_none
 from kmd.util.url_utils import Url
 
 log = logging.getLogger(__name__)
@@ -27,22 +28,24 @@ class FetchPage(Action):
             name="fetch_page",
             friendly_name="Fetch Page Details",
             description="Fetches the title, description, and body of a web page.",
+            expected_args=ONE_OR_MORE_ARGS,
         )
 
     def run(self, items: ActionInput) -> ActionResult:
-        item = items[0]
-        if not item.url:
-            raise ValueError("Item must have a URL")
-        page_data = web.fetch_extract(item.url)
+        for item in items:
+            if not item.url:
+                raise ValueError(f"Item must have a URL: {item}")
 
-        fetched_item = item.new_copy_with(
-            title=page_data.title, description=page_data.description, body=page_data.content
-        )
+        result_items = []
+        for item in items:
+            page_data = web.fetch_extract(not_none(item.url))
+            fetched_item = item.new_copy_with(
+                title=page_data.title, description=page_data.description, body=page_data.content
+            )
+            current_workspace().save(fetched_item)
+            result_items.append(fetched_item)
 
-        # TODO: This replaces any identically titled item. Should we archive the old one to be safe?
-        current_workspace().save(fetched_item)
-
-        return ActionResult([item], replaces_input=True)
+        return ActionResult(result_items, replaces_input=True)
 
 
 @dataclass
@@ -89,7 +92,7 @@ class ListChannelVideos(Action):
             video_meta_list.extend(YoutubeVideoMeta.from_dict(info) for info in page["entries"])
         log.warning("Found %d videos in channel %s", len(video_meta_list), url)
 
-        items = []
+        result_items = []
         for info in video_meta_list:
             if not youtube.canonicalize(info.url):
                 log.warning("Skipping non-recognized video URL: %s", info.url)
@@ -111,9 +114,9 @@ class ListChannelVideos(Action):
             )
 
             current_workspace().save(item)
-            items.append(item)
+            result_items.append(item)
 
-        return ActionResult(items)
+        return ActionResult(result_items)
 
 
 @register_action

@@ -52,9 +52,11 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
     # This looks up any URLs.
     input_items = [ensure_saved(arg) for arg in args]
 
+    # Run the action.
     result = action.run(input_items)
     log.warning(f"Action %s completed with %s items", action_name, len(result.items))
 
+    # Select the result items.
     result_store_paths = [StorePath(not_none(item.store_path)) for item in result.items]
     current_workspace().set_selection(result_store_paths)
 
@@ -66,6 +68,7 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
                 current_workspace().archive(input_store_path)
                 log.warning("Archived input item: %s", input_store_path)
 
+    # Show the current selection.
     commands.select()
 
     return result

@@ -201,6 +201,7 @@ def files(path: Optional[str] = None, full: Optional[bool] = True) -> None:
                 if file_rel.startswith("."):
                     continue
 
+                # TODO: Show actual lines and words of body text as well as size with wc. Indicate if body is empty.
                 command_output("  %-10s %s  %s" % (file_size, file_mod_time, file_rel))
 
     total_items = sum(folder_tally.values())
