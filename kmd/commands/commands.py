@@ -25,7 +25,7 @@ def register_command(func):
 
 
 def all_commands():
-    return _commands
+    return sorted(_commands, key=lambda cmd: cmd.__name__)
 
 
 def command_output(message: str, *args, color="yellow"):
@@ -46,7 +46,7 @@ def kmd_help() -> None:
         wrapped = textwrap.fill(doc, width=70, initial_indent="", subsequent_indent="    ")
         return Text.assemble((name, "bright_blue"), (": ", "bright_blue"), (wrapped, "default"))
 
-    for command in _commands:
+    for command in all_commands():
         doc = command.__doc__ if command.__doc__ else ""
         rprint(format_doc(command.__name__, doc))
         rprint()

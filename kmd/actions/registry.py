@@ -14,7 +14,6 @@ def register_action(cls: Type[Action]):
     """
     Annotation to register an action.
     """
-
     # Validate the action instance.
     if not issubclass(cls, Action):
         raise TypeError(f"Registered class {cls.__name__} must be a subclass of Action")
@@ -55,5 +54,7 @@ def load_all_actions() -> Dict[str, Action]:
     for cls in _actions:
         action = cls()
         actions_map[action.name] = action
+
+    actions_map = dict(sorted(actions_map.items()))
     log.info("Registered actions: %s", list(actions_map.keys()))
     return actions_map
