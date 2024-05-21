@@ -4,8 +4,8 @@ import tomllib
 import openai
 from cachetools import cached
 from assertpy import assert_that
-
 from kmd.config.logger import logging_setup
+from kmd.config.settings import find_in_cwd_or_parents
 
 
 @cached(cache={})
@@ -26,21 +26,20 @@ SECRETS_RC_FILE = "~/.secrets.toml"
 def _load_secrets():
     secrets_paths = []
 
-    path = Path(".").absolute()
-    while path != Path("/"):
-        secrets_paths.append(path / SECRETS_FILE)
-        path = path.parent
+    cwd_secrets = find_in_cwd_or_parents(SECRETS_FILE)
+    home_secrets = Path(SECRETS_RC_FILE).expanduser()
 
-    secrets_paths.append(Path(SECRETS_RC_FILE).expanduser())
+    if home_secrets.exists():
+        secrets_paths.append(home_secrets)
+    if cwd_secrets:
+        secrets_paths.append(cwd_secrets)
 
+    # Merge secrets in cwd or parents with the one in the home directory.
     all_secrets = {}
     for path in secrets_paths:
-        try:
-            with open(path, "rb") as f:
-                secrets = tomllib.load(f)
-                all_secrets.update(secrets)
-        except FileNotFoundError:
-            continue
+        with open(path, "rb") as f:
+            secrets = tomllib.load(f)
+            all_secrets.update(secrets)
 
     if not all_secrets:
         from kmd.config.logger import get_logger
