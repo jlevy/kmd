@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Tuple, Optional, Dict
 from ruamel.yaml.error import YAMLError
 from strif import atomic_output_file
-from kmd.file_storage.yaml_util import read_yaml_string, write_yaml
+from kmd.file_storage.yaml_util import from_yaml_string, write_yaml
 
 
 def fmf_write(file_path: Path | str, content: str, metadata: Optional[Dict]) -> None:
@@ -63,7 +63,7 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
         line = lines[i]
         if line.strip() == end_pattern and in_metadata:
             try:
-                metadata = read_yaml_string("".join(metadata_lines))
+                metadata = from_yaml_string("".join(metadata_lines))
             except YAMLError as e:
                 raise ValueError(f"Error parsing YAML metadata on {file_path}: {e}")
             in_metadata = False

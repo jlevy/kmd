@@ -78,7 +78,7 @@ class PersistedYaml:
         return read_yaml_file(self.filename)
 
     def set(self, value: Any):
-        write_yaml_file(self.filename, value)
+        write_yaml_file(value, self.filename)
 
     def remove(self, target: Any):
         """

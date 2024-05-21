@@ -13,7 +13,7 @@ def _new_yaml() -> YAML:
     return yaml
 
 
-def read_yaml_string(yaml_string: str) -> Any:
+def from_yaml_string(yaml_string: str) -> Any:
     """
     Read a YAML string into a Python object.
     """
@@ -28,6 +28,13 @@ def read_yaml_file(filename: str) -> Any:
         return _new_yaml().load(f)
 
 
+def to_yaml_string(value: Any) -> str:
+    """
+    Convert a Python object to a YAML string.
+    """
+    return _new_yaml().dump(value)
+
+
 def write_yaml(value: Any, stream: TextIO):
     """
     Write a Python object to a YAML stream.
@@ -35,7 +42,7 @@ def write_yaml(value: Any, stream: TextIO):
     _new_yaml().dump(value, stream)
 
 
-def write_yaml_file(filename: str, value: Any):
+def write_yaml_file(value: Any, filename: str):
     """
     Atomic write of the given value to the YAML file.
     """
