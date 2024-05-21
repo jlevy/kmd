@@ -7,6 +7,13 @@ from kmd.config.logger import get_logger
 log = get_logger(__name__)
 
 
+def markdown_to_html(markdown: str) -> str:
+    """
+    Convert Markdown to HTML.
+    """
+    return marko.convert(markdown)
+
+
 def _tree_links(element, include_internal=False):
     links = []
 

@@ -9,10 +9,12 @@ from typing import Tuple
 import mimetypes
 import webbrowser
 from xonsh.platform import ON_WINDOWS, ON_DARWIN, ON_LINUX
+from kmd.config.logger import get_logger
 from kmd.file_storage.filenames import parse_filename
 from kmd.model.items_model import FileExt
+from kmd.util.url import is_url
 
-from kmd.util.url_utils import is_url
+log = get_logger(__name__)
 
 
 def file_info(
@@ -33,6 +35,7 @@ def file_info(
 
 
 def _native_open(filename: str):
+    log.message("Opening file: %s", filename)
     if ON_DARWIN:
         subprocess.run(["open", filename])
     elif ON_LINUX:
@@ -45,6 +48,9 @@ def _native_open(filename: str):
 
 def open_platform_specific(file_or_url: str):
     if is_url(file_or_url) or file_or_url.endswith(".html"):
+        if not is_url(file_or_url):
+            file_or_url = f"file://{os.path.abspath(file_or_url)}"
+        log.message("Opening URL in browser: %s", file_or_url)
         webbrowser.open(file_or_url)
     elif os.path.isfile(file_or_url):
         file = file_or_url

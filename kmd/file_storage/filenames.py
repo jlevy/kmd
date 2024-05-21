@@ -28,8 +28,7 @@ def parse_filename(filename: str, expect_type_ext=False) -> Tuple[str, str, str,
     return dirname, name, item_type, ext
 
 
-#
-# Tests
+## Tests
 
 
 def test_parse_filename():

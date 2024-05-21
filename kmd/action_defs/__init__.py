@@ -1,15 +1,11 @@
 import importlib
-
-MODULES = [
-    "export_actions",
-    "llm_actions",
-    "media_actions",
-]
+import pkgutil
 
 
 def import_all_actions():
     """
     Explicit import so all actions go into registry.
     """
-    for module in MODULES:
-        importlib.import_module("." + module, __name__)
+    current_package = __name__
+    for _, module_name, _ in pkgutil.iter_modules(path=__path__):
+        importlib.import_module(f".{module_name}", current_package)

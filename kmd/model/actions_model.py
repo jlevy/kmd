@@ -1,3 +1,7 @@
+"""
+The model for Actions and other types associated with actions.
+"""
+
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import List, Optional

@@ -1,3 +1,4 @@
+import html
 from textwrap import indent
 from typing import Any, Iterable, Optional
 from inflect import engine
@@ -11,7 +12,22 @@ def plural(word: str, count: Optional[int] = None) -> str:
 
 
 def format_lines(values: Iterable[Any], prefix="    ") -> str:
+    """
+    Simple indented or prefixed formatting of values one per line.
+    """
     return indent("\n".join(str(value) for value in values), prefix)
+
+
+def plaintext_to_html(text):
+    """
+    Convert plaintext to HTML, also handling newlines and whitespace.
+    """
+    return (
+        html.escape(text)
+        .replace("\n", "<br>")
+        .replace("\t", "&nbsp;" * 4)
+        .replace("  ", "&nbsp;&nbsp;")
+    )
 
 
 def clean_title(text: str) -> str:
@@ -38,8 +54,14 @@ def abbreviate_on_words(text: str, max_len: int, indicator: str = "…") -> str:
     return _trim_trailing_punctuation(" ".join(words)) + indicator
 
 
-# Tests
-#
+## Tests
+
+
+def test_plaintext_to_html():
+    assert plaintext_to_html("Hello, World!") == "Hello, World!"
+    assert plaintext_to_html("Hello\n  World!") == "Hello<br>&nbsp;&nbsp;World!"
+    assert plaintext_to_html("Hello\tWorld!") == "Hello&nbsp;&nbsp;&nbsp;&nbsp;World!"
+    assert plaintext_to_html("<Hello, World!>") == "&lt;Hello, World!&gt;"
 
 
 def test_clean_title():

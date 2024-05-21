@@ -4,8 +4,7 @@ import os
 from typing import Optional, List, Dict
 from urllib.parse import urlparse, parse_qs
 import yt_dlp
-
-from kmd.util.url_utils import Url
+from kmd.util.url import Url
 from .media_services import VideoService
 from kmd.config.logger import get_logger
 
@@ -86,8 +85,7 @@ class YouTube(VideoService):
             return []
 
 
-# Tests
-#
+## Tests
 
 
 def test_canonicalize_youtube():

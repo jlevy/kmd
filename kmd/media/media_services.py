@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
-
-from kmd.util.url_utils import Url
+from kmd.util.url import Url
 
 
 class VideoService(ABC):

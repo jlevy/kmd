@@ -5,9 +5,8 @@ from cachetools import TTLCache, cached
 from strif import abbreviate_str
 import requests
 import justext
-
 from kmd.media.video import canonicalize_video_url
-from kmd.util.url_utils import Url
+from kmd.util.url import Url
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)

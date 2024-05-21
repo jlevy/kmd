@@ -17,7 +17,8 @@
     />
     <style>
       :root {
-        --color-primary: #79bbc5;
+        --color-primary: #488189;
+        --color-primary-light: #79bbc5;
         --color-secondary: #6b7280;
         --color-hover: #d1d5db;
         --color-bg: #f3f4f6;
@@ -67,7 +68,7 @@
       }
       .tab-button-active {
         color: var(--color-primary);
-        border-color: var(--color-primary);
+        border-color: var(--color-primary-light);
       }
       .tab-button-inactive {
         color: var(--color-secondary);
@@ -104,7 +105,7 @@
             class="tab-pane {% if not loop.first %}hidden{% endif %}"
           >
             <h2 class="text-2xl">{{ tab.label }}</h2>
-            <p>{{ tab.content }}</p>
+            <p>{{ tab.content_html | safe }}</p>
           </div>
           {% endfor %}
         </div>

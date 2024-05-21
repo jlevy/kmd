@@ -5,7 +5,7 @@ from kmd.file_storage.file_store import NoSelectionError
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.model.actions_model import Action, ActionResult
 from kmd.model.locators import StorePath
-from kmd.util.text_formatting import format_lines
+from kmd.text_formats.text_formatting import format_lines
 from kmd.util.type_utils import not_none
 from kmd.commands import commands
 from kmd.config.logger import get_logger
@@ -54,6 +54,12 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
 
     # Run the action.
     result = action.run(input_items)
+
+    # TODO: Consider moving save here, not within the action.
+    for item in result.items:
+        if not item.store_path:
+            raise ValueError(f"Result Item should have a store path (forgot to save?): {item}")
+
     log.message(f"Action %s completed with %s items", action_name, len(result.items))
 
     # Select the result items.

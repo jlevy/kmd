@@ -1,15 +1,13 @@
 from pathlib import Path
 from typing import Optional, Tuple
-import logging
 from pathlib import Path
 from typing import Tuple
 from os import path
-
 from kmd.file_storage.file_store import FileStore
-from kmd.model.url import canonicalize_url
 from kmd.model.locators import Locator, StorePath
 from kmd.model.items_model import Format, Item, ItemType
-from kmd.util.url_utils import Url, is_url
+from kmd.model.url_canon import canonicalize_url
+from kmd.util.url import Url, is_url
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)

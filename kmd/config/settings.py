@@ -6,6 +6,7 @@ from cachetools import cached
 APP_NAME = "kmd"
 
 
+# FIXME: Rename cache to kmd_cache and walk up dir heirarchy to find cache dir.
 @cached(cache={})
 def media_cache_dir():
     """

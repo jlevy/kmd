@@ -6,12 +6,11 @@ from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
-
 from strif import abbreviate_str
 from kmd.file_storage.yaml_util import from_yaml_string
-from kmd.util.text_formatting import abbreviate_on_words, clean_title
-
-from kmd.util.url_utils import Url
+from kmd.text_formats.markdown_util import markdown_to_html
+from kmd.text_formats.text_formatting import abbreviate_on_words, clean_title, plaintext_to_html
+from kmd.util.url import Url
 
 
 class ItemType(Enum):
@@ -186,8 +185,8 @@ class Item:
             raise ValueError(f"Item is not a config: {self}")
         if not self.body:
             raise ValueError(f"Config item has no body: {self}")
-        if not self.format == Format.yaml:
-            raise ValueError(f"Config item is not YAML: {self}")
+        if self.format != Format.yaml.value:
+            raise ValueError(f"Config item is not YAML: {self.format}: {self}")
         return from_yaml_string(self.body)
 
     def get_file_ext(self) -> FileExt:
@@ -214,6 +213,16 @@ class Item:
         if self.is_binary:
             raise ValueError("Cannot get text content of a binary Item")
         return self.body or ""
+
+    def body_as_html(self) -> str:
+        if str(self.format) == str(Format.html):
+            return self.body_text()
+        elif str(self.format) == str(Format.plaintext):
+            return plaintext_to_html(self.body_text())
+        elif str(self.format) == str(Format.markdown):
+            return markdown_to_html(self.body_text())
+
+        raise ValueError(f"Cannot convert item of type {self.format} to HTML: {self}")
 
     def new_copy_with(self, **kwargs) -> "Item":
         """

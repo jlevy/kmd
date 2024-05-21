@@ -1,6 +1,6 @@
 from typing import NewType
 
-from kmd.util.url_utils import Url
+from kmd.util.url import Url
 
 
 # Mostly for readability and light type checking.

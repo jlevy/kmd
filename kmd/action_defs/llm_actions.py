@@ -1,5 +1,4 @@
 from textwrap import dedent
-
 from kmd.actions.llm_action import LLM
 from kmd.actions.action_registry import register_llm_action
 from kmd.config.logger import get_logger

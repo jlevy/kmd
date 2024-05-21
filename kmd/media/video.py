@@ -3,11 +3,11 @@ from typing import List, Optional
 from strif import atomic_output_file
 from kmd.config.settings import media_cache_dir
 from kmd.media.media_services import VideoService
-from kmd.util.url_utils import Url
-from .audio import deepgram_transcribe_audio, downsample_to_16khz
-from ..util.web_cache import DirStore
-from .video_youtube import YouTube
-from .video_vimeo import Vimeo
+from kmd.util.url import Url
+from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
+from kmd.media.video_youtube import YouTube
+from kmd.media.video_vimeo import Vimeo
+from kmd.util.web_cache import DirStore
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)

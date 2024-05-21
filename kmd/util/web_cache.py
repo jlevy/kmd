@@ -8,9 +8,9 @@ import time
 from enum import Enum
 import requests
 import strif
-from .download_url import download_url, user_agent_headers
-from .identifier_utils import clean_alphanum_hash
-from .url_utils import normalize_url
+from kmd.util.download_url import download_url, user_agent_headers
+from kmd.util.identifier_utils import clean_alphanum_hash
+from kmd.util.url import normalize_url
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)

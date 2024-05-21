@@ -10,7 +10,7 @@ from kmd.commands.local_file_tools import open_platform_specific
 
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info
 from kmd.model.locators import StorePath
-from kmd.util.text_formatting import format_lines, plural
+from kmd.text_formats.text_formatting import format_lines, plural
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)

@@ -1,8 +1,10 @@
 import os
 from dataclasses import asdict, dataclass
 from typing import List, Optional
+from kmd.file_storage.workspaces import current_workspace
 from kmd.file_storage.yaml_util import read_yaml_file, to_yaml_string, write_yaml_file
 from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.locators import StorePath
 from kmd.util.type_utils import as_dataclass, not_none
 from kmd.web_gen.template_render import render_web_template
 
@@ -11,7 +13,7 @@ from kmd.web_gen.template_render import render_web_template
 class TabInfo:
     label: str
     id: Optional[str] = None
-    content: Optional[str] = None
+    content_html: Optional[str] = None
     store_path: Optional[str] = None
 
 
@@ -49,16 +51,24 @@ def configure_web_page(title: str, items: List[Item]) -> Item:
     return config_item
 
 
+def _load_tab_content(config: TabbedWebPage):
+    """
+    Load the content for each tab.
+    """
+    for tab in config.tabs:
+        html = current_workspace().load(StorePath(not_none(tab.store_path))).body_as_html()
+        tab.content_html = html
+
+
 def generate_web_page(config_item: Item) -> str:
     """
     Generate a web page using the supplied config.
     """
     config = config_item.read_as_config()
-    config = asdict(as_dataclass(config, TabbedWebPage))  # Check the format.
-    return render_web_template(
-        "tabbed_web_page.template.html",
-        config,
-    )
+    tabbed_web_page = as_dataclass(config, TabbedWebPage)  # Checks the format.
+
+    _load_tab_content(tabbed_web_page)
+    return render_web_template("tabbed_web_page.template.html", asdict(tabbed_web_page))
 
 
 ## Tests
@@ -69,10 +79,11 @@ def test_render():
         title="An Elegant Web Page",
         tabs=[
             TabInfo(
-                label="Home", content="Welcome to the home page! confirming <HTML escaping works>"
+                label="Home <escaped HTML chars>",
+                content_html="Welcome to the home page! confirming <b>this is HTML</b>",
             ),
-            TabInfo(label="Profile", content="This is the profile page."),
-            TabInfo(label="Contact", content="This is the contact page."),
+            TabInfo(label="Profile", content_html="This is the profile page."),
+            TabInfo(label="Contact", content_html="This is the contact page."),
         ],
     )
 
@@ -93,4 +104,5 @@ def test_render():
     print("Rendered tabbed web_page to tmp/web_page.html")
 
     lines = open("tmp/web_page.html", "r").readlines()
-    assert any("&lt;HTML escaping works&gt;" in line for line in lines)
+    assert any("Home &lt;escaped HTML chars&gt;" in line for line in lines)
+    assert any("<b>this is HTML</b>" in line for line in lines)

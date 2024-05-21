@@ -12,12 +12,13 @@ from kmd.file_storage.yaml_util import read_yaml_file, write_yaml_file
 from kmd.model.locators import StorePath
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
-from kmd.model.url import canonicalize_url
+from kmd.model.url_canon import canonicalize_url
+from kmd.text_formats.text_wrapping import wrap_text
 from kmd.util.file_utils import move_file
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
-from kmd.util.text_formatting import plural
-from kmd.util.url_utils import Url, is_url
+from kmd.text_formats.text_formatting import plural
+from kmd.util.url import Url, is_url
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
@@ -47,22 +48,6 @@ def _format_from_ext(file_ext: FileExt) -> Optional[Format]:
         FileExt.yml: None,  # We will need to look at a YAML file to determine format.
     }
     return file_ext_to_format[file_ext]
-
-
-def _format_text(text: str, format: Optional[Format] = None, width=80) -> str:
-    """
-    When saving clean text of a known format, wrap it for readability.
-    """
-    if format == Format.plaintext:
-        paragraphs = text.split("\n\n")
-        wrapped_paragraphs = [
-            textwrap.fill(p, width=width, break_long_words=False, replace_whitespace=False)
-            for p in paragraphs
-        ]
-        return "\n\n".join(wrapped_paragraphs)
-    # TODO: Add cleaner canonicalization/wrapping for Markdown. Also Flowmark?
-    else:
-        return text
 
 
 class PersistedYaml:
@@ -212,8 +197,10 @@ class FileStore:
                 else:
                     if item.is_binary:
                         raise ValueError(f"Binary Items should be external files: {item}")
-                    formatted_body = _format_text(item.body_text(), item.format)
-                    fmf_write(full_path, formatted_body, item.metadata())
+
+                    formatted_body = wrap_text(item.body_text(), item.format)
+                    is_html = str(item.format) == str(Format.html)
+                    fmf_write(full_path, formatted_body, item.metadata(), is_html=is_html)
             except IOError as e:
                 log.error("Error saving item: %s", e)
                 self.unarchive(store_path)
