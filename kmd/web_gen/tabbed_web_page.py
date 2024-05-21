@@ -1,10 +1,10 @@
-from dataclasses import asdict, dataclass
 import os
+from dataclasses import asdict, dataclass
 from typing import List, Optional
-from strif import atomic_output_file
-from kmd.file_storage.yaml_util import read_yaml_file, write_yaml
-from kmd.util.type_utils import as_dataclass
-from kmd.web_gen.template_writer import render_template
+from kmd.file_storage.yaml_util import read_yaml_file, to_yaml_string, write_yaml_file
+from kmd.model.items_model import Format, Item, ItemType
+from kmd.util.type_utils import as_dataclass, not_none
+from kmd.web_gen.template_render import render_web_template
 
 
 @dataclass
@@ -21,28 +21,46 @@ class TabbedWebPage:
     tabs: List[TabInfo]
 
 
-def template_config(title: str, tabs: List[TabInfo]):
+def _fill_in_ids(tabs: List[TabInfo]):
     for i, tab in enumerate(tabs):
         if not tab.id:
             tab.id = f"tab_{i}"
-    return {
-        "title": title,
-        "tabs": tabs,
-    }
 
 
-def render(web_page_info: TabbedWebPage, output_path: str):
-    render_template(
-        "tabbed_web_page.template.html",
-        output_path,
-        template_config(web_page_info.title, web_page_info.tabs),
+def configure_web_page(title: str, items: List[Item]) -> Item:
+    """
+    Get an item with the config for a tabbed web page.
+    """
+    for item in items:
+        if not item.store_path:
+            raise ValueError(f"Item has no store_path: {item}")
+
+    tabs = [TabInfo(label=item.get_title(max_len=20), store_path=item.store_path) for item in items]
+    _fill_in_ids(tabs)
+    config = TabbedWebPage(title=title, tabs=tabs)
+
+    config_item = Item(
+        title=f"Config for {title}",
+        type=ItemType.config,
+        format=Format.yaml,
+        body=to_yaml_string(asdict(config)),
     )
 
+    return config_item
 
-def write_config(config: TabbedWebPage, output_path: str):
-    with atomic_output_file(output_path) as f:
-        with open(f, "w") as f:
-            write_yaml(asdict(config), f)
+
+def generate_web_page(config_item: Item) -> str:
+    """
+    Generate a web page using the supplied config.
+    """
+    if config_item.type != ItemType.config:
+        raise ValueError(f"Expected a config item, got: {config_item}")
+    config = read_yaml_file(not_none(config_item.store_path))
+    config = asdict(as_dataclass(config, TabbedWebPage))  # Check the format.
+    return render_web_template(
+        "tabbed_web_page.template.html",
+        config,
+    )
 
 
 ## Tests
@@ -61,13 +79,20 @@ def test_render():
     )
 
     os.makedirs("tmp", exist_ok=True)
-    write_config(config, "tmp/web_page_config.yaml")
+    write_yaml_file(asdict(config), "tmp/web_page_config.yaml")
     print("Wrote config to tmp/web_page_config.yaml")
 
     # Check config reads correctly.
     new_config = as_dataclass(read_yaml_file("tmp/web_page_config.yaml"), TabbedWebPage)
+    assert new_config == config
 
-    render(new_config, "tmp/web_page.html")
+    html = render_web_template(
+        "tabbed_web_page.template.html",
+        asdict(config),
+    )
+    with open("tmp/web_page.html", "w") as f:
+        f.write(html)
+
     print("Rendered tabbed web_page to tmp/web_page.html")
 
     lines = open("tmp/web_page.html", "r").readlines()

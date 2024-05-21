@@ -11,12 +11,13 @@ from kmd.actions.registry import register_action, register_llm_action
 from kmd.actions.registry import register_action
 from kmd.media import web
 from kmd.media.video import video_transcription
-from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
+from kmd.model.actions_model import ONE_OR_MORE_ARGS, ONE_ARG, Action, ActionInput, ActionResult
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.pdf.pdf_output import markdown_to_pdf
 from kmd.util.type_utils import not_none
 from kmd.util.url_utils import Url
 from kmd.config.logging import get_logger
+from kmd.web_gen.tabbed_web_page import configure_web_page
 
 log = get_logger(__name__)
 
@@ -178,19 +179,46 @@ class TranscribeVideo(Action):
 
 
 @register_action
+class ConfigureWebPage(Action):
+    def __init__(self):
+        super().__init__(
+            name="configure_web_page",
+            friendly_name="Configure a Web Page",
+            description="Set up a web page config with tabs for each page of content. Uses first item as the page title.",
+            expected_args=ONE_OR_MORE_ARGS,
+        )
+
+    def run(self, items: ActionInput) -> ActionResult:
+        for item in items:
+            if not item.body:
+                raise ValueError(f"Item must have a body: {item}")
+
+        # Determine item title etc from first item.
+        first_item = items[0]
+        title = first_item.get_title()
+        config_item = configure_web_page(title, items)
+        current_workspace().save(config_item)
+
+        return ActionResult([config_item])
+
+
+# TODO: class GenerateWebPage(Action):
+
+
+@register_action
 class CreatePDF(Action):
     def __init__(self):
         super().__init__(
             name="create_pdf",
             friendly_name="Create PDF",
             description="Create a PDF from text or Markdown.",
+            expected_args=ONE_ARG,
         )
 
     def run(self, items: ActionInput) -> ActionResult:
-        # TODO: Support concatenating multiple items into a single PDF (have to handle titles sensibly).
         item = items[0]
         if not item.body:
-            raise ValueError("Item must have a body")
+            raise ValueError(f"Item must have a body: {item}")
 
         pdf_item = item.new_copy_with(type=ItemType.export, format=Format.pdf, file_ext=FileExt.pdf)
         base_dir, pdf_path = current_workspace().find_path_for(pdf_item)

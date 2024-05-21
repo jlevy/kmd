@@ -5,10 +5,11 @@ The data model for Items and their file formats.
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 from strif import abbreviate_str
-from kmd.util.text_formatting import clean_title
+from kmd.file_storage.yaml_util import from_yaml_string
+from kmd.util.text_formatting import abbreviate_on_words, clean_title
 
 from kmd.util.url_utils import Url
 
@@ -21,6 +22,7 @@ class ItemType(Enum):
     concept = "concept"
     answer = "answer"
     resource = "resource"
+    config = "config"
     export = "export"
 
 
@@ -34,6 +36,7 @@ class Format(Enum):
     markdown = "markdown"
     plaintext = "plaintext"
     pdf = "pdf"
+    yaml = "yaml"
 
     def is_text(self) -> bool:
         return self not in [Format.pdf]
@@ -81,6 +84,7 @@ class FileExt(Enum):
             Format.markdown.value: FileExt.md,
             Format.plaintext.value: FileExt.txt,
             Format.pdf.value: FileExt.pdf,
+            Format.yaml.value: FileExt.yml,
         }
 
         return format_to_file_ext.get(str(format), None)
@@ -157,7 +161,7 @@ class Item:
 
         return item_dict
 
-    def get_title(self) -> str:
+    def get_title(self, max_len: int = 100) -> str:
         """
         Get or infer title.
         """
@@ -168,7 +172,23 @@ class Item:
             or (not self.is_binary and self.body)
             or UNTITLED
         )
-        return clean_title(abbreviate_str(full_title, max_len=100, indicator="…"))
+        return clean_title(
+            abbreviate_on_words(
+                abbreviate_str(full_title, max_len=max_len + 2, indicator="…"), max_len=max_len
+            )
+        )
+
+    def get_config(self) -> Any:
+        """
+        Parse YAML from a config item.
+        """
+        if not self.type == ItemType.config:
+            raise ValueError(f"Item is not a config: {self}")
+        if not self.body:
+            raise ValueError(f"Config item has no body: {self}")
+        if not self.format == Format.yaml:
+            raise ValueError(f"Config item is not YAML: {self}")
+        return from_yaml_string(self.body)
 
     def get_file_ext(self) -> FileExt:
         """

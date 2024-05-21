@@ -2,6 +2,7 @@
 YAML file storage.
 """
 
+from io import StringIO
 from typing import Any, TextIO
 from ruamel.yaml import YAML
 from strif import atomic_output_file
@@ -32,7 +33,9 @@ def to_yaml_string(value: Any) -> str:
     """
     Convert a Python object to a YAML string.
     """
-    return _new_yaml().dump(value)
+    stream = StringIO()
+    _new_yaml().dump(value, stream)
+    return stream.getvalue()
 
 
 def write_yaml(value: Any, stream: TextIO):

@@ -22,7 +22,7 @@ def clean_title(text: str) -> str:
     return regex.sub(r"[^\p{L}\p{N},./:;'!?/@%&()+“”‘’…–—-]+", " ", text).strip()
 
 
-def abbreviate_on_words(text: str, max_len: int, indicator: str = "...") -> str:
+def abbreviate_on_words(text: str, max_len: int, indicator: str = "…") -> str:
     """
     Abbreviate text to a maximum length, breaking on whole words.
     """
@@ -48,9 +48,9 @@ def test_clean_title():
 
 
 def test_abbreviate_on_words():
-    assert abbreviate_on_words("Hello, World!", 5) == "..."
-    assert abbreviate_on_words("Hello, World!", 10) == "Hello,..."
+    assert abbreviate_on_words("Hello, World!", 5) == "…"
+    assert abbreviate_on_words("Hello, World!", 10) == "Hello,…"
     assert abbreviate_on_words("Hello, World!", 20) == "Hello, World!"
     assert abbreviate_on_words("Hello, World!", 30) == "Hello, World!"
-    assert abbreviate_on_words("Hello, World!", 0) == "..."
+    assert abbreviate_on_words("Hello, World!", 0) == "…"
     assert abbreviate_on_words("", 5) == ""
