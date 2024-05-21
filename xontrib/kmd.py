@@ -14,8 +14,8 @@ from xonsh import xontribs
 from kmd.config.setup import setup
 from kmd.config.settings import media_cache_dir
 from kmd.file_storage.workspaces import show_workspace_info
-from kmd.actions.actions import run_action
-from kmd.actions.registry import load_all_actions
+from kmd.actions.action_exec import run_action
+from kmd.actions.action_registry import load_all_actions
 from kmd.commands import commands
 from kmd.model.actions_model import Action
 

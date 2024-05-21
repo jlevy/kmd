@@ -1,8 +1,9 @@
 from typing import Dict, Type
 
 from cachetools import cached
-from kmd.actions.llm_actions import LLMAction
+from kmd.actions.llm_action import LLMAction
 from kmd.model.actions_model import Action
+from kmd.action_defs import import_all_actions
 from kmd.config.logging import get_logger
 
 log = get_logger(__name__)
@@ -47,8 +48,7 @@ def register_llm_action(
 
 @cached({})
 def load_all_actions() -> Dict[str, Action]:
-    # Import to register the actions.
-    import kmd.actions.action_definitions  # noqa
+    import_all_actions()
 
     actions_map = {}
     for cls in _actions:

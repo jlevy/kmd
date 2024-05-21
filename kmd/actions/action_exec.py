@@ -1,6 +1,6 @@
 from typing import List, cast
 from strif import abbreviate_str
-from kmd.actions.registry import load_all_actions
+from kmd.actions.action_registry import load_all_actions
 from kmd.file_storage.file_store import NoSelectionError
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.model.actions_model import Action, ActionResult
