@@ -167,14 +167,15 @@ def unarchive(path: StorePath) -> None:
 
 
 @register_command
-def files(path: Optional[str] = None, full: Optional[bool] = True) -> None:
+def files(
+    path: Optional[str] = None, full: Optional[bool] = True, human_time: Optional[bool] = True
+) -> None:
     """
     List all files in a directory or workspace.
     """
     base_dir = path or str(current_workspace().base_dir)
     folder_tally = {}
 
-    print(f"Listing files in {base_dir}")
     for dirname, dirnames, filenames in os.walk(base_dir):
         # TODO: Better sort options.
         dirnames.sort()
@@ -189,20 +190,33 @@ def files(path: Optional[str] = None, full: Optional[bool] = True) -> None:
 
         command_output(f"{dirname_rel}{tally}", color="bright_blue")
         if full:
-            for file in filenames:
-                if file.startswith("."):
+            for filename in filenames:
+                if filename.startswith("."):
                     continue
 
-                full_path = os.path.join(dirname, file)
+                full_path = os.path.join(dirname, filename)
                 file_size = humanize.naturalsize(os.path.getsize(full_path))
-                file_mod_time = datetime.fromtimestamp(os.path.getmtime(full_path)).isoformat()
-                file_mod_time = file_mod_time.split(".", 1)[0]
-                file_rel = os.path.relpath(file, base_dir)
+
+                if human_time:
+                    file_mod_time = humanize.naturaltime(
+                        datetime.fromtimestamp(os.path.getmtime(full_path))
+                    )
+                else:
+                    file_mod_time = (
+                        datetime.fromtimestamp(os.path.getmtime(full_path))
+                        .isoformat()
+                        .split(".", 1)[0]
+                    )
+
+                file_rel = os.path.relpath(filename, base_dir)
                 if file_rel.startswith("."):
                     continue
 
+                parent_dir = os.path.basename(dirname)
+                display_name = f"{parent_dir}/{file_rel}" if parent_dir != "." else file_rel
+
                 # TODO: Show actual lines and words of body text as well as size with wc. Indicate if body is empty.
-                command_output("  %-10s %s  %s" % (file_size, file_mod_time, file_rel))
+                command_output("  %-10s %-14s  %s" % (file_size, file_mod_time, display_name))
 
     total_items = sum(folder_tally.values())
     command_output(
