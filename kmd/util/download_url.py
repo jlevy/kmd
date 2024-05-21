@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 import requests
 from strif import atomic_output_file, copyfile_atomic
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 

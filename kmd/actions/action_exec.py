@@ -8,7 +8,7 @@ from kmd.model.locators import StorePath
 from kmd.util.text_formatting import format_lines
 from kmd.util.type_utils import not_none
 from kmd.commands import commands
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 

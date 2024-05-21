@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from kmd.actions.llm_action import LLM
 from kmd.actions.action_registry import register_llm_action
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 

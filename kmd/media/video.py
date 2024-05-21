@@ -8,7 +8,7 @@ from .audio import deepgram_transcribe_audio, downsample_to_16khz
 from ..util.web_cache import DirStore
 from .video_youtube import YouTube
 from .video_vimeo import Vimeo
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 

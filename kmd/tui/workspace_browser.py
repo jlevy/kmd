@@ -10,7 +10,7 @@ from textual.widgets import DirectoryTree, Footer, Static, Markdown, Input, Foot
 
 from kmd.file_storage.frontmatter_format import fmf_read
 from kmd.file_storage.workspaces import current_workspace_dir
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 

@@ -5,7 +5,7 @@ import openai
 from cachetools import cached
 from assertpy import assert_that
 
-from kmd.config.logging import logging_setup
+from kmd.config.logger import logging_setup
 
 
 @cached(cache={})
@@ -43,7 +43,7 @@ def _load_secrets():
             continue
 
     if not all_secrets:
-        from kmd.config.logging import get_logger
+        from kmd.config.logger import get_logger
 
         log = get_logger(__name__)
         log.error(

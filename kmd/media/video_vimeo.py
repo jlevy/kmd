@@ -7,7 +7,7 @@ from vimeo_downloader import Vimeo as VimeoDownloader
 
 from kmd.media.media_services import VideoService
 from kmd.util.url_utils import Url
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 

@@ -1,6 +1,6 @@
 from typing import NewType
 from urllib.parse import urlsplit, urlunsplit
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 

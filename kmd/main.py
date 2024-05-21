@@ -11,7 +11,7 @@ from kmd.config.setup import setup
 from kmd.config.settings import APP_NAME
 from kmd.tui import tui
 from kmd.commands import commands
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 
 def _log_start():

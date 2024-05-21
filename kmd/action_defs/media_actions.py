@@ -5,14 +5,13 @@ from typing import Any, Dict, List
 from kmd.file_storage.workspaces import current_workspace
 from kmd.media.video import video_download_audio, youtube
 from kmd.actions.action_registry import register_action
-from kmd.actions.action_registry import register_action
 from kmd.media import web
 from kmd.media.video import video_transcription
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.util.type_utils import not_none
 from kmd.util.url_utils import Url
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 

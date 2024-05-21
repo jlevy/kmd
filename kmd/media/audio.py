@@ -6,7 +6,7 @@ from pydub import AudioSegment
 from strif import atomic_output_file
 
 from kmd.config import setup
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 

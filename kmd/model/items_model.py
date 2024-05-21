@@ -178,9 +178,9 @@ class Item:
             )
         )
 
-    def get_config(self) -> Any:
+    def read_as_config(self) -> Any:
         """
-        Parse YAML from a config item.
+        If it is a config Item, return the parsed YAML.
         """
         if not self.type == ItemType.config:
             raise ValueError(f"Item is not a config: {self}")

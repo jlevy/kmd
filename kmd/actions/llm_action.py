@@ -5,7 +5,7 @@ from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.model.items_model import Format
 from kmd.file_storage.workspaces import current_workspace
 from kmd.config import setup
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 

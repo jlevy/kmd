@@ -53,9 +53,7 @@ def generate_web_page(config_item: Item) -> str:
     """
     Generate a web page using the supplied config.
     """
-    if config_item.type != ItemType.config:
-        raise ValueError(f"Expected a config item, got: {config_item}")
-    config = read_yaml_file(not_none(config_item.store_path))
+    config = config_item.read_as_config()
     config = asdict(as_dataclass(config, TabbedWebPage))  # Check the format.
     return render_web_template(
         "tabbed_web_page.template.html",
@@ -80,7 +78,7 @@ def test_render():
 
     os.makedirs("tmp", exist_ok=True)
     write_yaml_file(asdict(config), "tmp/web_page_config.yaml")
-    print("Wrote config to tmp/web_page_config.yaml")
+    print("\nWrote config to tmp/web_page_config.yaml")
 
     # Check config reads correctly.
     new_config = as_dataclass(read_yaml_file("tmp/web_page_config.yaml"), TabbedWebPage)
@@ -92,7 +90,6 @@ def test_render():
     )
     with open("tmp/web_page.html", "w") as f:
         f.write(html)
-
     print("Rendered tabbed web_page to tmp/web_page.html")
 
     lines = open("tmp/web_page.html", "r").readlines()

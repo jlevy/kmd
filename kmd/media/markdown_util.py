@@ -2,7 +2,7 @@ from typing import List
 import marko
 from marko.inline import Link
 from marko.block import ListItem, Heading
-from kmd.config.logging import get_logger
+from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 
