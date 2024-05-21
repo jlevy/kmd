@@ -22,6 +22,10 @@ def clean_title(text: str) -> str:
     return regex.sub(r"[^\p{L}\p{N},./:;'!?/@%&()+“”‘’…–—-]+", " ", text).strip()
 
 
+def _trim_trailing_punctuation(text: str) -> str:
+    return regex.sub(r"[.,;:!?]+$", "", text)
+
+
 def abbreviate_on_words(text: str, max_len: int, indicator: str = "…") -> str:
     """
     Abbreviate text to a maximum length, breaking on whole words.
@@ -29,9 +33,9 @@ def abbreviate_on_words(text: str, max_len: int, indicator: str = "…") -> str:
     if len(text) <= max_len:
         return text
     words = text.split()
-    while words and len(" ".join(words)) + len(indicator) > max_len:
+    while words and len(_trim_trailing_punctuation(" ".join(words))) + len(indicator) > max_len:
         words.pop()
-    return " ".join(words) + indicator
+    return _trim_trailing_punctuation(" ".join(words)) + indicator
 
 
 # Tests
@@ -49,8 +53,9 @@ def test_clean_title():
 
 def test_abbreviate_on_words():
     assert abbreviate_on_words("Hello, World!", 5) == "…"
-    assert abbreviate_on_words("Hello, World!", 10) == "Hello,…"
-    assert abbreviate_on_words("Hello, World!", 20) == "Hello, World!"
-    assert abbreviate_on_words("Hello, World!", 30) == "Hello, World!"
+    assert abbreviate_on_words("Hello, World!", 6) == "Hello…"
+    assert abbreviate_on_words("Hello, World!", 13) == "Hello, World!"
+    assert abbreviate_on_words("Hello, World!", 12) == "Hello…"
+    assert abbreviate_on_words("", 2) == ""
     assert abbreviate_on_words("Hello, World!", 0) == "…"
     assert abbreviate_on_words("", 5) == ""
