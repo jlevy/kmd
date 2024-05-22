@@ -107,7 +107,7 @@ class FileStore:
     def __init__(self, base_dir: Path):
         self.base_dir = base_dir
         self.uniquifier = Uniquifier()
-        self.url_map = {}
+        self.url_resources: dict[Url, StorePath] = {}
         self._initialize_index()
 
         self.archive_dir = join(self.base_dir, ARCHIVE_DIR)
@@ -139,8 +139,8 @@ class FileStore:
         self.uniquifier.add(name, f"{item_type.name}.{file_ext.name}")
 
         item = self.load(store_path)
-        if item.url:
-            self.url_map[item.url] = store_path
+        if item.is_url_resource() and item.url:
+            self.url_resources[item.url] = store_path
 
     def _unindex_item(self, store_path: StorePath):
         """
@@ -150,7 +150,7 @@ class FileStore:
             item = self.load(store_path)
             if item.url:
                 try:
-                    self.url_map.pop(item.url, None)
+                    self.url_resources.pop(item.url, None)
                 except KeyError:
                     pass  # If we happen to reload a store it might no longer be in memory.
         except FileNotFoundError:
@@ -179,9 +179,9 @@ class FileStore:
         """
         if item.store_path:
             store_path = item.store_path
-        elif item.url and item.format == Format.url and item.url in self.url_map:
+        elif item.is_url_resource() and item.url in self.url_resources:
             # If the item is a URL and we've already saved it, use the same store path.
-            store_path = self.url_map[item.url]
+            store_path = self.url_resources[item.url]
             log.message("URL already saved: %s holds %s", store_path, item.url)
         else:
             folder_path = Path(item_type_to_folder(item.type))

@@ -8,7 +8,8 @@ def not_none(value: Optional[T], message: Optional[str] = None) -> T:
     """
     Fluent assertion that the given value is not None.
     """
-    assert value is not None, message
+    if value is None:
+        raise ValueError(message or "Unexpected None value")
     return value
 
 

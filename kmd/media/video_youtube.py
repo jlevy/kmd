@@ -9,6 +9,7 @@ from pprint import pprint
 from typing import Any, Dict, List
 import yt_dlp
 from kmd.file_storage.yaml_util import write_yaml_file
+from kmd.util.type_utils import not_none
 from kmd.util.url import Url
 from .media_services import VideoService
 from kmd.config.logger import get_logger
@@ -96,10 +97,10 @@ class YouTube(VideoService):
         mp3_path = os.path.splitext(audio_file_path)[0] + ".mp3"
         return mp3_path
 
-    def list_channel_videos(self, channel_url: Url) -> List[YoutubeVideoMeta]:
-        """Get all video URLs and metadata from a YouTube channel."""
-
-        # FIXME: Make this work for playlist URLs too.
+    def list_channel_videos(self, url: Url) -> List[YoutubeVideoMeta]:
+        """
+        Get all video URLs and metadata from a YouTube channel or playlist.
+        """
 
         ydl_opts = {
             "extract_flat": "in_playlist",  # Extract metadata only, without downloading.
@@ -107,23 +108,32 @@ class YouTube(VideoService):
             "dump_single_json": True,
         }
 
+        url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            result = ydl.extract_info(str(channel_url), download=False)
+            result = ydl.extract_info(str(url), download=False)
             write_yaml_file(result, "yt_dlp_result.yaml")
 
         if not isinstance(result, dict):
             raise ValueError(f"Unexpected result from yt_dlp: {result}")
         if "entries" in result:
-            videos = result["entries"]
+            entries = result["entries"]
         else:
             log.warning("No videos found in the channel.")
-            videos = []
+            entries = []
 
         video_meta_list = []
 
-        for page in videos:
-            video_meta_list.extend(YoutubeVideoMeta.from_dict(info) for info in page["entries"])
-        log.message("Found %d videos in channel %s", len(video_meta_list), channel_url)
+        # TODO: Inspect and collect rest of the metadata here.
+        for value in entries:
+            if "entries" in value:
+                # For channels there is a list of values each with their own videos.
+                video_meta_list.extend(YoutubeVideoMeta.from_dict(e) for e in value["entries"])
+            else:
+                # For playlists, entries holds the videos.
+                video_meta_list.append(YoutubeVideoMeta.from_dict(value))
+
+        log.message("Found %d videos in channel %s", len(video_meta_list), url)
 
         return video_meta_list
 

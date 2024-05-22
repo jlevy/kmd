@@ -224,6 +224,13 @@ class Item:
 
         raise ValueError(f"Cannot convert item of type {self.format} to HTML: {self}")
 
+    def is_url_resource(self) -> bool:
+        return (
+            self.type == ItemType.resource
+            and self.format == Format.url.value
+            and self.url is not None
+        )
+
     def new_copy_with(self, **kwargs) -> "Item":
         """
         Copy item with the given field updates. Resets store_path and updates timestamps.
