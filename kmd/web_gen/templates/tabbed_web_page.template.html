@@ -32,7 +32,7 @@
         line-height: 1.6;
         padding: 2rem;
         margin: auto;
-        max-width: 75rem; /* FIXME: Reduce to 55rem and fix nav */
+        max-width: 55rem;
       }
 
       p {
@@ -53,18 +53,18 @@
 
       h1 {
         font-size: 2rem;
-        margin-top: 1.5rem;
+        margin-top: 2rem;
         margin-bottom: 1rem;
       }
 
       h2 {
         font-size: 1.5rem;
-        margin-top: 1.7rem;
+        margin-top: 2rem;
         margin-bottom: 1rem;
       }
 
       h3 {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
         text-transform: uppercase;
         font-weight: 600;
         margin-top: 1.5rem;
@@ -125,13 +125,26 @@
         overflow-x: auto;
       }
 
+      nav {
+        display: flex;
+        flex-wrap: wrap; /* Allow wrapping */
+        justify-content: center; /* Center the content */
+        gap: 1rem; /* Add some space between the buttons */
+      }
+
       .tab-button {
+        flex: 1 1 auto; /* Allow the buttons to grow and shrink as needed */
+        min-width: 5rem;
+        max-width: 10rem;
+        text-align: center;
+
         font-family: "Varta", sans-serif;
-        font-weight: 400;
+        font-size: 0.95rem;
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         line-height: 1.2;
-        padding: 0.25rem 1rem;
+        padding: 0 0.5rem;
         border-bottom-width: 2px;
         outline: none;
       }
@@ -156,11 +169,11 @@
     </style>
   </head>
   <body>
-    <div class="container mx-auto bg-white p-8 shadow-lg">
-      <h1 class="text-center text-4xl mb-4">{{ title }}</h1>
+    <div class="container mx-auto bg-white py-8 px-16 shadow-lg">
+      <h1 class="text-center text-4xl mt-6 mb-6">{{ title }}</h1>
       <div>
         <!-- Navigation Tabs -->
-        <nav class="flex justify-center space-x-4 mb-4">
+        <nav>
           {% for tab in tabs %}
           <button
             class="tab-button {% if loop.first %}tab-button-active{% else %}tab-button-inactive{% endif %}"
