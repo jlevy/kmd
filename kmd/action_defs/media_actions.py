@@ -1,6 +1,3 @@
-from dataclasses import dataclass, fields
-from pprint import pprint
-from typing import Any, Dict, List
 from kmd.file_storage.workspaces import current_workspace
 from kmd.media.video import video_download_audio, youtube
 from kmd.actions.action_registry import register_action
@@ -42,26 +39,6 @@ class FetchPage(Action):
         return ActionResult(result_items, replaces_input=True)
 
 
-@dataclass
-class YoutubeVideoMeta:
-    id: str
-    url: str
-    title: str
-    description: str
-    thumbnails: List[Dict]
-    view_count: int
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "YoutubeVideoMeta":
-        try:
-            field_names = {f.name for f in fields(cls)}
-            filtered_data = {k: v for k, v in data.items() if k in field_names}
-            return cls(**filtered_data)
-        except TypeError as e:
-            print(pprint(data))
-            raise ValueError(f"Invalid data for YoutubeVideoMeta: {data}")
-
-
 @register_action
 class ListChannelVideos(Action):
     def __init__(self):
@@ -79,16 +56,11 @@ class ListChannelVideos(Action):
         if not youtube.canonicalize(url):
             raise ValueError("Only YouTube download currently supported")
 
-        result_raw = youtube.list_channel_videos(url)
-
-        video_meta_list = []
-        for page in result_raw:
-            video_meta_list.extend(YoutubeVideoMeta.from_dict(info) for info in page["entries"])
-        log.message("Found %d videos in channel %s", len(video_meta_list), url)
+        video_meta_list = youtube.list_channel_videos(url)
 
         result_items = []
         for info in video_meta_list:
-            if not youtube.canonicalize(info.url):
+            if not youtube.canonicalize(Url(info.url)):
                 log.warning("Skipping non-recognized video URL: %s", info.url)
                 continue
 

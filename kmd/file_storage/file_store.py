@@ -274,7 +274,10 @@ class FileStore:
         Add a resource from a file or URL.
         """
         if is_url(file_path_or_url):
-            url = canonicalize_url(Url(file_path_or_url))
+            orig_url = Url(file_path_or_url)
+            url = canonicalize_url(orig_url)
+            if url != orig_url:
+                log.message("Canonicalized URL: %s -> %s", orig_url, url)
             item = Item(ItemType.resource, url=url, format=Format.url)
             # TODO: Also fetch the title and description as a follow-on action.
             return self.save(item)

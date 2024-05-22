@@ -1,9 +1,14 @@
+from dataclasses import dataclass
 import re
 import tempfile
 import os
 from typing import Optional, List, Dict
 from urllib.parse import urlparse, parse_qs
+from dataclasses import dataclass, fields
+from pprint import pprint
+from typing import Any, Dict, List
 import yt_dlp
+from kmd.file_storage.yaml_util import write_yaml_file
 from kmd.util.url import Url
 from .media_services import VideoService
 from kmd.config.logger import get_logger
@@ -12,6 +17,26 @@ log = get_logger(__name__)
 
 
 VIDEO_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{11}$")
+
+
+@dataclass
+class YoutubeVideoMeta:
+    id: str
+    url: str
+    title: str
+    description: str
+    thumbnails: List[Dict]
+    view_count: int
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "YoutubeVideoMeta":
+        try:
+            field_names = {f.name for f in fields(cls)}
+            filtered_data = {k: v for k, v in data.items() if k in field_names}
+            return cls(**filtered_data)
+        except TypeError as e:
+            print(pprint(data))
+            raise ValueError(f"Invalid data for YoutubeVideoMeta: {data}")
 
 
 class YouTube(VideoService):
@@ -71,8 +96,10 @@ class YouTube(VideoService):
         mp3_path = os.path.splitext(audio_file_path)[0] + ".mp3"
         return mp3_path
 
-    def list_channel_videos(self, channel_url: Url) -> List[Dict]:
+    def list_channel_videos(self, channel_url: Url) -> List[YoutubeVideoMeta]:
         """Get all video URLs and metadata from a YouTube channel."""
+
+        # FIXME: Make this work for playlist URLs too.
 
         ydl_opts = {
             "extract_flat": "in_playlist",  # Extract metadata only, without downloading.
@@ -82,15 +109,23 @@ class YouTube(VideoService):
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             result = ydl.extract_info(str(channel_url), download=False)
+            write_yaml_file(result, "yt_dlp_result.yaml")
 
         if not isinstance(result, dict):
             raise ValueError(f"Unexpected result from yt_dlp: {result}")
         if "entries" in result:
             videos = result["entries"]
-            return videos
         else:
             log.warning("No videos found in the channel.")
-            return []
+            videos = []
+
+        video_meta_list = []
+
+        for page in videos:
+            video_meta_list.extend(YoutubeVideoMeta.from_dict(info) for info in page["entries"])
+        log.message("Found %d videos in channel %s", len(video_meta_list), channel_url)
+
+        return video_meta_list
 
 
 ## Tests
