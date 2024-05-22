@@ -73,7 +73,7 @@ register_llm_action(
     name="summarize_as_bullets",
     friendly_name="Summarize as Bullet Points",
     description="Summarize text as bullet points.",
-    model=LLM.gpt_3_5_turbo_16k_0613.value,
+    model=LLM.gpt_4o.value,
     system_message=dedent(
         """
         You are a careful and precise editor.
@@ -102,7 +102,7 @@ register_llm_action(
     name="extract_concepts",
     friendly_name="Extract Concepts",
     description="Extract key concepts from text.",
-    model=LLM.gpt_3_5_turbo_16k_0613.value,
+    model=LLM.gpt_4o.value,
     system_message=dedent(
         """
         You are a careful and precise editor.

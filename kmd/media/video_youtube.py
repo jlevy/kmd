@@ -124,7 +124,7 @@ class YouTube(VideoService):
 
         video_meta_list = []
 
-        # TODO: Inspect and collect rest of the metadata here.
+        # TODO: Inspect and collect rest of the metadata here, like upload date etc.
         for value in entries:
             if "entries" in value:
                 # For channels there is a list of values each with their own videos.
