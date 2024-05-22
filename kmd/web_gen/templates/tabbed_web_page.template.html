@@ -61,7 +61,8 @@
         font-family: "Varta", sans-serif;
         font-weight: 400;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.05em;
+        line-height: 1.2;
         padding: 0.25rem 1rem;
         border-bottom-width: 2px;
         outline: none;
@@ -87,7 +88,7 @@
       <h1 class="text-center text-4xl mb-4">{{ title }}</h1>
       <div>
         <!-- Navigation Tabs -->
-        <nav class="flex justify-left space-x-4 mb-4">
+        <nav class="flex justify-center space-x-4 mb-4">
           {% for tab in tabs %}
           <button
             class="tab-button {% if loop.first %}tab-button-active{% else %}tab-button-inactive{% endif %}"
@@ -110,6 +111,7 @@
           {% endfor %}
         </div>
       </div>
+      <!-- FIXME: Footer info (match with pdf export) -->
     </div>
 
     <script>
