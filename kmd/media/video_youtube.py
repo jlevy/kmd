@@ -22,6 +22,7 @@ class YouTube(VideoService):
             if VIDEO_ID_PATTERN.match(video_id):
                 return Url(f"https://www.youtube.com/watch?v={video_id}")
         elif parsed_url.hostname in ("www.youtube.com", "youtube.com", "m.youtube.com"):
+            # Check for channel URLs:
             if (
                 "/channel/" in parsed_url.path
                 or "/c/" in parsed_url.path
@@ -31,6 +32,13 @@ class YouTube(VideoService):
                 return url  # It's already a canonical channel URL.
 
             query = parse_qs(parsed_url.query)
+
+            # Check for playlist URLs:
+            if "/playlist" in parsed_url.path:
+                list_id = query.get("list", [""])[0]
+                return Url(f"https://www.youtube.com/playlist?list={list_id}")
+
+            # Check for video URLs:
             video_id = query.get("v", [""])[0]
             if video_id and VIDEO_ID_PATTERN.match(video_id):
                 return Url(f"https://www.youtube.com/watch?v={video_id}")
@@ -91,14 +99,26 @@ class YouTube(VideoService):
 def test_canonicalize_youtube():
     youtube = YouTube()
 
-    assert youtube.canonicalize(Url("https://youtu.be/12345678901")) == Url(
-        "https://www.youtube.com/watch?v=12345678901"
+    def assert_canon(url: str, canon_url: str):
+        assert youtube.canonicalize(Url(url)) == Url(canon_url)
+
+    assert_canon("https://youtu.be/12345678901", "https://www.youtube.com/watch?v=12345678901")
+
+    assert_canon(
+        "https://www.youtube.com/watch?v=12345678901", "https://www.youtube.com/watch?v=12345678901"
     )
-    assert youtube.canonicalize(Url("https://www.youtube.com/watch?v=12345678901")) == Url(
-        "https://www.youtube.com/watch?v=12345678901"
+
+    assert_canon(
+        "https://www.youtube.com/watch?v=_5y0AalUDh4&list=PL9XbNw3iJu1zKJRyV3Jz3rqlFV1XJfvNv&index=12",
+        "https://www.youtube.com/watch?v=_5y0AalUDh4",
     )
-    assert youtube.canonicalize(
-        Url(
-            "https://www.youtube.com/watch?v=_5y0AalUDh4&list=PL9XbNw3iJu1zKJRyV3Jz3rqlFV1XJfvNv&index=12"
-        )
-    ) == Url("https://www.youtube.com/watch?v=_5y0AalUDh4")
+
+    assert_canon(
+        "https://www.youtube.com/@hubermanlab",
+        "https://www.youtube.com/@hubermanlab",
+    )
+
+    assert_canon(
+        "https://youtube.com/playlist?list=PLPNW_gerXa4N_PVVoq0Za03YKASSGCazr&si=9IVO8p-ZwmMLI18F",
+        "https://www.youtube.com/playlist?list=PLPNW_gerXa4N_PVVoq0Za03YKASSGCazr",
+    )
