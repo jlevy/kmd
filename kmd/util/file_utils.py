@@ -17,3 +17,5 @@ def move_file(src: str, dest: str, keep_backup: bool = True):
 
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(src_path, dest_path)
+
+    # TODO: If we created a backup, compare file contents and remove backup if it's identical, to avoid clutter.

@@ -28,8 +28,11 @@ class CallableAction:
         self.action = action
 
     def __call__(self, args):
-        run_action(self.action, *args)
-        # We don't return the result to keep the shell output clean.
+        try:
+            run_action(self.action, *args)
+            # We don't return the result to keep the shell output clean.
+        except ValueError as e:
+            rprint(Text(f"Action error: {e}", "bright_red"))
 
     def __repr__(self):
         return f"CallableAction({repr(self.action)})"
@@ -50,7 +53,10 @@ def initialize():
 
     def xonsh_command_for(func: Callable):
         def command(args: List[str]):
-            func(*args)
+            try:
+                func(*args)
+            except ValueError as e:
+                rprint(Text(f"Command error: {e}", "bright_red"))
 
         command.__doc__ = func.__doc__
         return command
@@ -71,11 +77,12 @@ def initialize():
 rprint(
     Text.assemble(
         ("\n🄺\n", "bright_blue"),
-        ("\nWelcome to the kmd shell.\n", "bright_green"),
+        ("\nWelcome to kmd.\n", "bright_green"),
         "\nUse `kmd_help` for available kmd commands and actions.\n",
         "Use `xonfig tutorial` for xonsh help and `help()` for Python help.\n",
         f"Using media cache directory: {media_cache_dir()}\n",
     )
+    # TODO: Replace help() with kmd_help.
 )
 
 initialize()

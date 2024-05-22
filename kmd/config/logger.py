@@ -5,6 +5,8 @@ import sys
 
 from kmd.config.settings import APP_NAME
 
+# TODO: Add rich logging
+
 
 def logging_setup():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
