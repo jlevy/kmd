@@ -13,7 +13,7 @@ from rich.text import Text
 from xonsh import xontribs
 from kmd.config.setup import setup
 from kmd.config.settings import media_cache_dir
-from kmd.file_storage.workspaces import show_workspace_info
+from kmd.file_storage.workspaces import current_workspace
 from kmd.actions.action_exec import run_action
 from kmd.actions.action_registry import load_all_actions
 from kmd.commands import commands
@@ -31,7 +31,7 @@ class CallableAction:
         try:
             run_action(self.action, *args)
             # We don't return the result to keep the shell output clean.
-        except ValueError as e:
+        except (ValueError, IOError) as e:
             rprint(Text(f"Action error: {e}", "bright_red"))
 
     def __repr__(self):
@@ -55,7 +55,7 @@ def initialize():
         def command(args: List[str]):
             try:
                 func(*args)
-            except ValueError as e:
+            except (ValueError, IOError) as e:
                 rprint(Text(f"Command error: {e}", "bright_red"))
 
         command.__doc__ = func.__doc__
@@ -88,7 +88,7 @@ rprint(
 initialize()
 
 try:
-    show_workspace_info()
+    current_workspace()
 except ValueError as e:
     rprint(
         "The current directory is not a workspace. Create or switch to a workspace with the `workspace` command."

@@ -149,6 +149,8 @@ def add_resource(*files_or_urls: str) -> None:
     select(*store_paths)
 
 
+# TODO: Consider for some commands like archive, using the current selection.
+# (This wouldn't make sense for all commands though.)
 @register_command
 def archive(path: StorePath) -> None:
     """

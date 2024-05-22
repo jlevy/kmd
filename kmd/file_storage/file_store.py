@@ -1,10 +1,9 @@
+import operator
 import os
 from pathlib import Path
-import textwrap
-from typing import Any, Optional, Tuple
+from typing import Any, Callable, Optional, Tuple
 from os.path import join, relpath, commonpath
 from os import path
-
 from slugify import slugify
 from strif import copyfile_atomic
 from kmd.file_storage.filenames import parse_filename
@@ -58,6 +57,20 @@ def skippable_file(filename: str) -> bool:
     return filename.startswith(".")
 
 
+def remove_value(data: Any, target: Any, eq: Callable[[Any, Any], bool] = operator.eq) -> Any:
+    """
+    Recursively remove all occurrences of the target value from a data structure.
+    """
+    if isinstance(data, dict):
+        return {k: remove_value(v, target) for k, v in data.items() if not eq(v, target)}
+    elif isinstance(data, list):
+        return [remove_value(item, target) for item in data if not eq(item, target)]
+    elif eq(data, target):
+        return None
+    else:
+        return data
+
+
 class PersistedYaml:
     """
     Maintain a value (such as a dictionary or list of strings) as a YAML file.
@@ -74,20 +87,6 @@ class PersistedYaml:
         write_yaml_file(value, self.filename)
 
     def remove(self, target: Any):
-        """
-        Remove all occurrences of the target value from the data structure.
-        """
-
-        def remove_value(data: Any, target: Any) -> Any:
-            if isinstance(data, dict):
-                return {k: remove_value(v, target) for k, v in data.items() if v != target}
-            elif isinstance(data, list):
-                return [remove_value(item, target) for item in data if item != target]
-            elif data == target:
-                return None
-            else:
-                return data
-
         self.value = remove_value(self.value, target)
         self.set(self.value)
 
@@ -118,6 +117,8 @@ class FileStore:
 
         self.selection = PersistedYaml(join(self.settings_dir, "selection.yaml"), [])
 
+        self.log_info()
+
     def _initialize_index(self):
         for root, dirnames, filenames in os.walk(self.base_dir):
             dirnames[:] = [d for d in dirnames if not skippable_file(d)]
@@ -133,7 +134,7 @@ class FileStore:
         try:
             name, item_type, file_ext = _parse_check_filename(store_path)
         except ValueError:
-            log.info("Skipping file with invalid name: %s", store_path)
+            log.debug("Skipping file with invalid name: %s", store_path)
             return
         self.uniquifier.add(name, f"{item_type.name}.{file_ext.name}")
 
@@ -145,9 +146,15 @@ class FileStore:
         """
         Remove an item from the metadata index.
         """
-        item = self.load(store_path)
-        if item.url:
-            self.url_map.pop(item.url, None)
+        try:
+            item = self.load(store_path)
+            if item.url:
+                try:
+                    self.url_map.pop(item.url, None)
+                except KeyError:
+                    pass  # If we happen to reload a store it might no longer be in memory.
+        except FileNotFoundError:
+            pass
 
     def _new_filename_for(self, item: Item) -> str:
         """
@@ -278,7 +285,7 @@ class FileStore:
                 file_ext = FileExt(ext_str)
             except ValueError:
                 raise ValueError(
-                    f"Unknown extension for file: {file_path} (known types are {FileExt.__members__})"
+                    f"Unknown extension for file: {file_path} (known types are {", ".join(FileExt.__members__.keys())})"
                 )
             format = Format.for_file_ext(file_ext)
             if not format:
@@ -305,6 +312,7 @@ class FileStore:
         """
         Archive the item by moving it into the archive directory.
         """
+        log.info("Archiving item: %s", store_path)
         archive_path = join(self.archive_dir, store_path)
         move_file(
             join(self.base_dir, store_path),
@@ -318,6 +326,7 @@ class FileStore:
         Unarchive the item by moving back out of the archive directory.
         Path may be with or without the archive dir prefix.
         """
+        log.info("Unarchiving item: %s", store_path)
         if commonpath([ARCHIVE_DIR, store_path]) == ARCHIVE_DIR:
             store_path = StorePath(relpath(store_path, ARCHIVE_DIR))
         original_path = join(self.base_dir, store_path)
@@ -341,3 +350,11 @@ class FileStore:
         new_selection = [path for path in current_selection if path not in unselect_paths]
         self.set_selection(new_selection)
         return new_selection
+
+    def log_info(self):
+        log.message(
+            "Using workspace: %s (%s items)",
+            path.abspath(self.base_dir),
+            len(self.uniquifier),
+        )
+        # TODO: Log more info (optionally in longer form with paging).

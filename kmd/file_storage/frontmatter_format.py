@@ -52,8 +52,6 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
             lines = f.readlines()
     except UnicodeDecodeError as e:
         raise ValueError(f"File not a text file: {file_path}: {e}")
-    except IOError as e:
-        raise IOError(f"Error reading file {file_path}: {e}")
 
     if not lines:
         raise ValueError(f"File is empty: {file_path}")

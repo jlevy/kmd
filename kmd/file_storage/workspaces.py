@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 from pathlib import Path
 from typing import Tuple
-from os import path
+from cachetools import cached
 from kmd.file_storage.file_store import FileStore
 from kmd.model.locators import Locator, StorePath
 from kmd.model.items_model import Format, Item, ItemType
@@ -52,21 +52,22 @@ def current_workspace_name() -> Optional[str]:
     return workspace_name
 
 
+# Cache the file store per directory, since it takes a little while to load.
+@cached({})
+def _new_workspace_dir(base_dir: Path) -> FileStore:
+    return FileStore(base_dir)
+
+
 def current_workspace() -> FileStore:
     """
     Get the current workspace.
     """
-    return FileStore(current_workspace_dir())
+    return _new_workspace_dir(current_workspace_dir())
 
 
 def show_workspace_info() -> None:
     workspace = current_workspace()
-    log.message(
-        "Using workspace at %s (%s items)",
-        path.abspath(workspace.base_dir),
-        len(workspace.uniquifier),
-    )
-    # TODO: Log more info (optionally in longer form with paging).
+    workspace.log_info()
 
 
 def ensure_saved(locator: Locator) -> Item:
