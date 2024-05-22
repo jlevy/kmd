@@ -55,26 +55,26 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
     # Run the action.
     result = action.run(input_items)
 
-    # TODO: Consider moving save here, not within the action.
+    # TODO: Consider moving save here, instead of always doing it within the action.
     for item in result.items:
         if not item.store_path:
             raise ValueError(f"Result Item should have a store path (forgot to save?): {item}")
 
     log.message(f"Action %s completed with %s items", action_name, len(result.items))
 
-    # Select the result items.
+    input_store_paths = [StorePath(not_none(item.store_path)) for item in input_items]
     result_store_paths = [StorePath(not_none(item.store_path)) for item in result.items]
-    current_workspace().set_selection(result_store_paths)
+    old_inputs = sorted(set(input_store_paths) - set(result_store_paths))
+    new_outputs = sorted(set(result_store_paths) - set(input_store_paths))
 
     # If there is a hint that the action replaces the input, archive any inputs that are not in the result.
     if result.replaces_input and input_items:
-        for item in input_items:
-            input_store_path = StorePath(not_none(item.store_path))
-            if input_store_path not in result_store_paths:
-                current_workspace().archive(input_store_path)
-                log.message("Archived input item: %s", input_store_path)
+        for input_store_path in old_inputs:
+            current_workspace().archive(input_store_path)
+            log.message("Archived input item: %s", input_store_path)
 
-    # Show the current selection.
+    # Select the final output and show the current selection.
+    current_workspace().set_selection(new_outputs)
     commands.select()
 
     return result
