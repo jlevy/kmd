@@ -50,6 +50,14 @@ def _format_from_ext(file_ext: FileExt) -> Optional[Format]:
     return file_ext_to_format[file_ext]
 
 
+def skippable_file(filename: str) -> bool:
+    """
+    Check if a file should be skipped when processing a directory.
+    This skipps .archive, .settings, etc.
+    """
+    return filename.startswith(".")
+
+
 class PersistedYaml:
     """
     Maintain a value (such as a dictionary or list of strings) as a YAML file.
@@ -111,10 +119,12 @@ class FileStore:
         self.selection = PersistedYaml(join(self.settings_dir, "selection.yaml"), [])
 
     def _initialize_index(self):
-        for root, _dirnames, filenames in os.walk(self.base_dir):
+        for root, dirnames, filenames in os.walk(self.base_dir):
+            dirnames[:] = [d for d in dirnames if not skippable_file(d)]
             for filename in filenames:
-                store_path = StorePath(path.relpath(join(root, filename), self.base_dir))
-                self._index_item(store_path)
+                if not skippable_file(filename):
+                    store_path = StorePath(path.relpath(join(root, filename), self.base_dir))
+                    self._index_item(store_path)
 
     def _index_item(self, store_path: StorePath):
         """
@@ -130,6 +140,14 @@ class FileStore:
         item = self.load(store_path)
         if item.url:
             self.url_map[item.url] = store_path
+
+    def _unindex_item(self, store_path: StorePath):
+        """
+        Remove an item from the metadata index.
+        """
+        item = self.load(store_path)
+        if item.url:
+            self.url_map.pop(item.url, None)
 
     def _new_filename_for(self, item: Item) -> str:
         """
@@ -281,6 +299,7 @@ class FileStore:
 
     def _remove_references(self, store_path: StorePath):
         self.selection.remove(store_path)
+        self._unindex_item(store_path)
 
     def archive(self, store_path: StorePath) -> StorePath:
         """

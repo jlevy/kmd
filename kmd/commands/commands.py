@@ -7,6 +7,7 @@ import humanize
 from rich import print as rprint
 from rich.text import Text
 from kmd.commands.local_file_tools import open_platform_specific
+from kmd.file_storage.file_store import skippable_file
 
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info
 from kmd.model.locators import StorePath
@@ -139,7 +140,7 @@ def add_resource(*files_or_urls: str) -> None:
     if not files_or_urls:
         raise ValueError("No files or URLs provided to import")
     store_paths = [current_workspace().add_resource(r) for r in files_or_urls]
-    command_output(
+    log.info(
         "Imported %s %s:\n%s",
         len(store_paths),
         plural("item", len(store_paths)),
@@ -176,6 +177,9 @@ def files(
     base_dir = path or str(current_workspace().base_dir)
     folder_tally = {}
 
+    if not os.path.exists(base_dir):
+        raise ValueError(f"Directory not found: {base_dir}")
+
     for dirname, dirnames, filenames in os.walk(base_dir):
         # TODO: Better sort options.
         dirnames.sort()
@@ -185,13 +189,13 @@ def files(
         tally = f" - {len(filenames)} files" if len(filenames) > 0 else ""
         dirname_rel = os.path.relpath(dirname, base_dir)
 
-        if dirname_rel.startswith("."):
+        if skippable_file(dirname_rel):
             continue
 
         command_output(f"{dirname_rel}{tally}", color="bright_blue")
         if full:
             for filename in filenames:
-                if filename.startswith("."):
+                if skippable_file(filename):
                     continue
 
                 full_path = os.path.join(dirname, filename)
@@ -209,7 +213,7 @@ def files(
                     )
 
                 file_rel = os.path.relpath(filename, base_dir)
-                if file_rel.startswith("."):
+                if skippable_file(file_rel):
                     continue
 
                 parent_dir = os.path.basename(dirname)
