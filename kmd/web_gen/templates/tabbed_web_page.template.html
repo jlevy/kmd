@@ -30,12 +30,13 @@
         color: var(--color-text);
         background-color: var(--color-bg);
         line-height: 1.6;
-        margin: 0;
-        padding: 1rem;
+        padding: 2rem;
+        margin: auto;
+        max-width: 75rem; /* FIXME: Reduce to 55rem and fix nav */
       }
 
       p {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
       }
 
       h1,
@@ -76,20 +77,29 @@
       }
 
       ul {
-        list-style-type: disc;
+        list-style-type: none;
         margin-left: 2rem;
-        margin-bottom: 1.5rem;
-      }
-
-      ol {
-        list-style-type: decimal;
-        margin-left: 2rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
+        padding-left: 0;
       }
 
       li {
         margin-top: 0.5rem;
         margin-bottom: 0;
+        position: relative;
+      }
+
+      ul > li::before {
+        content: "▪︎";
+        position: absolute;
+        left: -1rem;
+        font-size: 0.9rem;
+      }
+
+      ol {
+        list-style-type: decimal;
+        margin-left: 2rem;
+        margin-bottom: 1rem;
       }
 
       blockquote {
@@ -145,7 +155,7 @@
       }
     </style>
   </head>
-  <body class="p-6 bg-gray-100">
+  <body>
     <div class="container mx-auto bg-white p-8 shadow-lg">
       <h1 class="text-center text-4xl mb-4">{{ title }}</h1>
       <div>
