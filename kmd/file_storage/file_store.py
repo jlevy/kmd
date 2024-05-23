@@ -12,6 +12,7 @@ from kmd.model.locators import StorePath
 from kmd.model.items_model import FileExt, Format, Item, ItemId, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.model.canon_url import canonicalize_url
+from kmd.text_handling.text_formatting import format_lines
 from kmd.text_handling.text_wrapping import wrap_text
 from kmd.text_handling.lang_tools import plural
 from kmd.util.file_utils import move_file
@@ -120,14 +121,20 @@ class FileStore:
         self.log_info()
 
     def _initialize_index(self):
+        num_dups = 0
         for root, dirnames, filenames in os.walk(self.base_dir):
             dirnames[:] = [d for d in dirnames if not skippable_file(d)]
             for filename in filenames:
                 if not skippable_file(filename):
                     store_path = StorePath(path.relpath(join(root, filename), self.base_dir))
-                    self._index_item(store_path)
+                    dup_path = self._index_item(store_path)
+                    if dup_path:
+                        num_dups += 1
+        
+        if num_dups > 0:
+            log.warning("Found %s duplicate items in store; see kmd.log for details.", num_dups)
 
-    def _index_item(self, store_path: StorePath):
+    def _index_item(self, store_path: StorePath) -> Optional[StorePath]:
         """
         Update metadata index with a new item.
         """
@@ -140,9 +147,15 @@ class FileStore:
 
         item = self.load(store_path)
         item_id = item.item_id()
+        dup_path = None
         if item_id:
+            old_path = self.id_map.get(item_id)
+            if old_path:
+                dup_path = old_path
+                log.info("Duplicate items (%s):\n%s", item_id, format_lines([old_path, store_path]))
             self.id_map[item_id] = store_path
 
+        return dup_path
 
     def _unindex_item(self, store_path: StorePath):
         """
@@ -186,7 +199,7 @@ class FileStore:
         elif item_id in self.id_map:
             # If this item has an identity and we've saved under that id before, use the same store path.
             store_path = self.id_map[item_id]
-            log.message("Item already saved: item id %s is at: %s", item_id, store_path)
+            log.message("Item already saved: %s (%s)", store_path, item_id)
         else:
             folder_path = Path(item_type_to_folder(item.type))
             filename = self._new_filename_for(item)
