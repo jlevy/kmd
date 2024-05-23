@@ -6,7 +6,7 @@ from cachetools import cached
 from kmd.file_storage.file_store import FileStore
 from kmd.model.locators import Locator, StorePath
 from kmd.model.items_model import Format, Item, ItemType
-from kmd.model.url_canon import canonicalize_url
+from kmd.model.canon_url import canonicalize_url
 from kmd.util.url import Url, is_url
 from kmd.config.logger import get_logger
 

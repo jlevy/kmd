@@ -31,7 +31,7 @@ class CallableAction:
         try:
             run_action(self.action, *args)
             # We don't return the result to keep the shell output clean.
-        except (ValueError, IOError) as e:
+        except (ValueError, KeyError, IOError) as e:
             rprint(Text(f"Action error: {e}", "bright_red"))
 
     def __repr__(self):
@@ -55,7 +55,7 @@ def initialize():
         def command(args: List[str]):
             try:
                 func(*args)
-            except (ValueError, IOError) as e:
+            except (ValueError, KeyError, IOError) as e:
                 rprint(Text(f"Command error: {e}", "bright_red"))
 
         command.__doc__ = func.__doc__

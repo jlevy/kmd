@@ -5,7 +5,7 @@ from kmd.file_storage.file_store import NoSelectionError
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.model.actions_model import Action, ActionResult
 from kmd.model.locators import StorePath
-from kmd.text_formats.text_formatting import format_lines
+from kmd.text_handling.text_formatting import format_lines
 from kmd.util.type_utils import not_none
 from kmd.commands import commands
 from kmd.config.logger import get_logger

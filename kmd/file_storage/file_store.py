@@ -9,14 +9,14 @@ from strif import copyfile_atomic
 from kmd.file_storage.filenames import parse_filename
 from kmd.file_storage.yaml_util import read_yaml_file, write_yaml_file
 from kmd.model.locators import StorePath
-from kmd.model.items_model import FileExt, Format, Item, ItemType
+from kmd.model.items_model import FileExt, Format, Item, ItemId, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
-from kmd.model.url_canon import canonicalize_url
-from kmd.text_formats.text_wrapping import wrap_text
+from kmd.model.canon_url import canonicalize_url
+from kmd.text_handling.text_wrapping import wrap_text
+from kmd.text_handling.lang_tools import plural
 from kmd.util.file_utils import move_file
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
-from kmd.text_formats.text_formatting import plural
 from kmd.util.url import Url, is_url
 from kmd.config.logger import get_logger
 
@@ -107,7 +107,7 @@ class FileStore:
     def __init__(self, base_dir: Path):
         self.base_dir = base_dir
         self.uniquifier = Uniquifier()
-        self.url_resources: dict[Url, StorePath] = {}
+        self.id_map: dict[ItemId, StorePath] = {}
         self._initialize_index()
 
         self.archive_dir = join(self.base_dir, ARCHIVE_DIR)
@@ -139,8 +139,10 @@ class FileStore:
         self.uniquifier.add(name, f"{item_type.name}.{file_ext.name}")
 
         item = self.load(store_path)
-        if item.is_url_resource() and item.url:
-            self.url_resources[item.url] = store_path
+        item_id = item.item_id()
+        if item_id:
+            self.id_map[item_id] = store_path
+
 
     def _unindex_item(self, store_path: StorePath):
         """
@@ -148,9 +150,10 @@ class FileStore:
         """
         try:
             item = self.load(store_path)
-            if item.url:
+            item_id = item.item_id()
+            if item_id:
                 try:
-                    self.url_resources.pop(item.url, None)
+                    self.id_map.pop(item_id, None)
                 except KeyError:
                     pass  # If we happen to reload a store it might no longer be in memory.
         except FileNotFoundError:
@@ -177,12 +180,13 @@ class FileStore:
         Return (base_dir, store_path) for an item. Store path may or may not already exist, depending
         on whether store_path is already set on the item or the same item has been saved before.
         """
+        item_id = item.item_id()
         if item.store_path:
             store_path = item.store_path
-        elif item.is_url_resource() and item.url in self.url_resources:
-            # If the item is a URL and we've already saved it, use the same store path.
-            store_path = self.url_resources[item.url]
-            log.message("URL already saved: %s holds %s", store_path, item.url)
+        elif item_id in self.id_map:
+            # If this item has an identity and we've saved under that id before, use the same store path.
+            store_path = self.id_map[item_id]
+            log.message("Item already saved: item id %s is at: %s", item_id, store_path)
         else:
             folder_path = Path(item_type_to_folder(item.type))
             filename = self._new_filename_for(item)
@@ -247,20 +251,21 @@ class FileStore:
         Load item at the given path.
         """
         _name, item_type, file_ext = _parse_check_filename(store_path)
-        format = _format_from_ext(file_ext)
         if FileExt.is_text(file_ext):
             # This is a known text format or a YAML file, so we can read the whole thing.
             body, metadata = fmf_read(self.base_dir / store_path)
             if not metadata:
                 raise ValueError(f"No metadata found in file: {store_path}")
+            format = Format(metadata.get("format"))
 
             other_metadata = {
-                key: value for key, value in metadata.items() if key not in ["body", "type"]
+                key: value for key, value in metadata.items() if key not in ["type", "format", "body"]
             }
 
-            return Item(type=item_type, body=body, **other_metadata, store_path=store_path)
+            return Item(type=item_type, format=format, body=body, **other_metadata, store_path=store_path)
         else:
             # This is a PDF or other binary file, so we just return the metadata.
+            format = _format_from_ext(file_ext)
             return Item(
                 type=item_type,
                 external_path=str(self.base_dir / store_path),
@@ -360,4 +365,4 @@ class FileStore:
             path.abspath(self.base_dir),
             len(self.uniquifier),
         )
-        # TODO: Log more info (optionally in longer form with paging).
+        # TODO: Log more info like number of items by type.

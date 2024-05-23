@@ -11,7 +11,8 @@ from kmd.file_storage.file_store import skippable_file
 
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info
 from kmd.model.locators import StorePath
-from kmd.text_formats.text_formatting import format_lines, plural
+from kmd.text_handling.text_formatting import format_lines
+from kmd.text_handling.lang_tools import plural
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)

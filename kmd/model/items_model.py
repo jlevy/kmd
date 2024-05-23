@@ -8,8 +8,10 @@ from enum import Enum
 from typing import Any, Optional
 from strif import abbreviate_str
 from kmd.file_storage.yaml_util import from_yaml_string
-from kmd.text_formats.markdown_util import markdown_to_html
-from kmd.text_formats.text_formatting import abbreviate_on_words, clean_title, plaintext_to_html
+from kmd.model.canon_concept import canonicalize_concept
+from kmd.model.canon_url import canonicalize_url
+from kmd.text_handling.markdown_util import markdown_to_html
+from kmd.text_handling.text_formatting import abbreviate_on_words, clean_title, plaintext_to_html
 from kmd.util.url import Url
 
 
@@ -90,6 +92,21 @@ class FileExt(Enum):
 
     def __str__(self):
         return self.name
+
+
+@dataclass(frozen=True)
+class ItemId:
+    """
+    Represents the identity of an an item. Used as a key to determine when to treat two items as
+    the same object (same URL, same concept, etc.).
+    """
+
+    type: ItemType
+    format: Format
+    value: str
+
+    def __str__(self):
+        return f"id:{self.type.value}:{self.format.value}:{self.value}"
 
 
 UNTITLED = "Untitled"
@@ -241,6 +258,19 @@ class Item:
         new_item.created_at = datetime.now()
         new_item.modified_at = datetime.now()
         return new_item
+
+    def item_id(self) -> Optional[ItemId]:
+        """
+        Return identity of the item, or None if it should be treated as unique.
+        """
+        item_id = None
+
+        if self.type == ItemType.resource and self.format == Format.url and self.url:
+            item_id = ItemId(self.type, self.format, canonicalize_url(self.url))
+        elif self.type == ItemType.concept and self.title:
+            item_id = ItemId(self.type, Format.plaintext, canonicalize_concept(self.title))
+
+        return item_id
 
     # Skip body in string representations to keep them manageable.
 
