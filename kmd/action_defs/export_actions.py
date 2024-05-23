@@ -26,7 +26,8 @@ class CreatePDF(Action):
             raise ValueError(f"Item must have a body: {item}")
 
         pdf_item = item.new_copy_with(type=ItemType.export, format=Format.pdf, file_ext=FileExt.pdf)
-        base_dir, pdf_path = current_workspace().find_path_for(pdf_item)
+        pdf_path, _old_pdf_path = current_workspace().find_path_for(pdf_item)
+        base_dir = current_workspace().base_dir
         full_pdf_path = join(base_dir, pdf_path)
 
         # Add directly to the store.

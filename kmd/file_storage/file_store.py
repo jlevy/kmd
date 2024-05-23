@@ -111,7 +111,7 @@ class FileStore:
         self.id_map: dict[ItemId, StorePath] = {}
         self._initialize_index()
 
-        self.archive_dir = join(self.base_dir, ARCHIVE_DIR)
+        self.archive_dir = self.base_dir / ARCHIVE_DIR
         os.makedirs(self.archive_dir, exist_ok=True)
         self.settings_dir = join(self.base_dir, SETTINGS_DIR)
         os.makedirs(self.settings_dir, exist_ok=True)
@@ -130,7 +130,7 @@ class FileStore:
                     dup_path = self._index_item(store_path)
                     if dup_path:
                         num_dups += 1
-        
+
         if num_dups > 0:
             log.warning("Found %s duplicate items in store; see kmd.log for details.", num_dups)
 
@@ -172,46 +172,61 @@ class FileStore:
         except FileNotFoundError:
             pass
 
-    def _new_filename_for(self, item: Item) -> str:
+    def _new_filename_for(self, item: Item) -> Tuple[str, Optional[str]]:
         """
         Get a suitable filename for this item that is close to the slugified title yet also unique.
+        Also return the old filename if it's different.
         """
+
         title = item.get_title()
         slug = slugify(title, max_length=64, separator="_")
 
         # Get a unique name per item type.
-        unique_slug = self.uniquifier.uniquify(slug, item.get_full_suffix())
+        unique_slug, old_slugs = self.uniquifier.uniquify_historic(slug, item.get_full_suffix())
 
         type = item.type.value
         ext = item.get_file_ext().value
 
         # Suffix files with both item type and a suitable file extension.
-        return f"{unique_slug}.{type}.{ext}"
+        new_unique_filename = f"{unique_slug}.{type}.{ext}"
 
-    def find_path_for(self, item: Item) -> Tuple[str, StorePath]:
+        old_filename = f"{old_slugs[0]}.{type}.{ext}" if old_slugs else None
+
+        return new_unique_filename, old_filename
+
+    def find_path_for(self, item: Item) -> Tuple[StorePath, Optional[StorePath]]:
         """
-        Return (base_dir, store_path) for an item. Store path may or may not already exist, depending
-        on whether store_path is already set on the item or the same item has been saved before.
+        Return (store_path, old_store_path) for an item. Store path may or may not already
+        exist, depending on whether store_path is already set on the item or the same item has been
+        saved before. Also return the old store path if it's different.
         """
         item_id = item.item_id()
+        old_filename = None
         if item.store_path:
             store_path = item.store_path
+            return StorePath(str(store_path)), None
         elif item_id in self.id_map:
             # If this item has an identity and we've saved under that id before, use the same store path.
             store_path = self.id_map[item_id]
             log.message("Item already saved: %s (%s)", store_path, item_id)
+            return StorePath(str(store_path)), None
         else:
             folder_path = Path(item_type_to_folder(item.type))
-            filename = self._new_filename_for(item)
+            filename, old_filename = self._new_filename_for(item)
             store_path = folder_path / filename
-        return str(self.base_dir), StorePath(str(store_path))
+
+            old_store_path = None
+            if old_filename and Path(self.base_dir / folder_path / old_filename).exists():
+                old_store_path = StorePath(str(folder_path / old_filename))
+
+            return StorePath(str(store_path)), old_store_path
 
     def save(self, item: Item) -> StorePath:
         """
         Save the item. Uses the store_path if it's already set or generates a new one.
         Updates item.store_path.
         """
-        # If external file alrady exists within the workspace, the file is alrady saved (without metadata).
+        # If external file already exists within the workspace, the file is alrady saved (without metadata).
         if (
             item.external_path
             and path.exists(item.external_path)
@@ -221,16 +236,18 @@ class FileStore:
             store_path = StorePath(path.relpath(item.external_path, self.base_dir))
         else:
             # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
-            base_dir, store_path = self.find_path_for(item)
-            full_path = join(base_dir, store_path)
+            store_path, old_store_path = self.find_path_for(item)
+            full_path = self.base_dir / store_path
+
             log.info("Saving item to %s: %s", full_path, item)
 
-            # If we're overwriting an existing file, archive it first.
-            if path.exists(full_path):
+            # If we're overwriting an existing file, archive it first. This shouldn't happen if we've
+            # geneated a unique filename, but better to keep a copy if it does happen.
+            if full_path.exists():
                 try:
                     self.archive(store_path)
                 except Exception as e:
-                    log.warning("Error archiving existing file: %s", e)
+                    log.error("Error archiving existing file: %s", e)
 
             # Now save the new item.
             try:
@@ -246,12 +263,24 @@ class FileStore:
             except IOError as e:
                 log.error("Error saving item: %s", e)
                 self.unarchive(store_path)
+                raise e
 
             # Set filesystem file creation and modification times as well.
             if item.created_at:
                 created_time = item.created_at.timestamp()
                 modified_time = item.modified_at.timestamp() if item.modified_at else created_time
                 os.utime(full_path, (created_time, modified_time))
+
+            # Check if it's an exact duplicate of the previous file, to reduce clutter.
+            if old_store_path:
+                old_item = self.load(old_store_path)
+                if item.content_equals(old_item):
+                    log.message(
+                        "New item is identical to previous version, will keep old item: %s",
+                        old_store_path,
+                    )
+                    os.unlink(full_path)
+                    store_path = old_store_path
 
         item.store_path = store_path
         self._index_item(store_path)
@@ -272,10 +301,14 @@ class FileStore:
             format = Format(metadata.get("format"))
 
             other_metadata = {
-                key: value for key, value in metadata.items() if key not in ["type", "format", "body"]
+                key: value
+                for key, value in metadata.items()
+                if key not in ["type", "format", "body"]
             }
 
-            return Item(type=item_type, format=format, body=body, **other_metadata, store_path=store_path)
+            return Item(
+                type=item_type, format=format, body=body, **other_metadata, store_path=store_path
+            )
         else:
             # This is a PDF or other binary file, so we just return the metadata.
             format = _format_from_ext(file_ext)
@@ -334,11 +367,8 @@ class FileStore:
         Archive the item by moving it into the archive directory.
         """
         log.info("Archiving item: %s", store_path)
-        archive_path = join(self.archive_dir, store_path)
-        move_file(
-            join(self.base_dir, store_path),
-            archive_path,
-        )
+        archive_path = self.archive_dir / store_path
+        move_file(self.base_dir / store_path, archive_path)
         self._remove_references(store_path)
         return StorePath(join(ARCHIVE_DIR, store_path))
 
@@ -350,11 +380,8 @@ class FileStore:
         log.info("Unarchiving item: %s", store_path)
         if commonpath([ARCHIVE_DIR, store_path]) == ARCHIVE_DIR:
             store_path = StorePath(relpath(store_path, ARCHIVE_DIR))
-        original_path = join(self.base_dir, store_path)
-        move_file(
-            join(self.archive_dir, store_path),
-            original_path,
-        )
+        original_path = self.base_dir / store_path
+        move_file(self.archive_dir / store_path, original_path)
         return StorePath(store_path)
 
     def set_selection(self, selection: list[StorePath]):

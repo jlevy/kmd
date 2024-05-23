@@ -272,6 +272,20 @@ class Item:
 
         return item_id
 
+    def content_equals(self, other: "Item") -> bool:
+        """
+        Check if two items have identical content, ignoring timestamps and store path.
+        """
+        return (
+            replace(
+                self,
+                created_at=other.created_at,
+                modified_at=other.modified_at,
+                store_path=other.store_path,
+            )
+            == other
+        )
+
     # Skip body in string representations to keep them manageable.
 
     def __abbreviated_self(self):
