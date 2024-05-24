@@ -132,7 +132,7 @@ class FileStore:
                         num_dups += 1
 
         if num_dups > 0:
-            log.warning("Found %s duplicate items in store; see kmd.log for details.", num_dups)
+            log.warning("Found %s duplicate items in store. See kmd.log for details.", num_dups)
 
     def _index_item(self, store_path: StorePath) -> Optional[StorePath]:
         """
@@ -241,8 +241,7 @@ class FileStore:
 
             log.info("Saving item to %s: %s", full_path, item)
 
-            # If we're overwriting an existing file, archive it first. This shouldn't happen if we've
-            # geneated a unique filename, but better to keep a copy if it does happen.
+            # If we're overwriting an existing file, archive it first.
             if full_path.exists():
                 try:
                     self.archive(store_path)

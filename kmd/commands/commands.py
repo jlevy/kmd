@@ -150,25 +150,32 @@ def add_resource(*files_or_urls: str) -> None:
     select(*store_paths)
 
 
-# TODO: Consider for some commands like archive, using the current selection.
-# (This wouldn't make sense for all commands though.)
-# FIXME: Allow this to work with multiple paths.
 @register_command
-def archive(path: StorePath) -> None:
+def archive(*paths: str) -> None:
     """
-    Archive the item at the given path.
+    Archive the items at the given path, or the current selection.
     """
-    current_workspace().archive(path)
-    command_output("Archived %s", path)
+    if paths:
+        store_paths = [StorePath(path) for path in paths]
+    else:
+        store_paths = current_workspace().get_selection()
+        if not store_paths:
+            raise ValueError("No selection")
+    for store_path in store_paths:
+        current_workspace().archive(store_path)
+    command_output("Archived:\n%s", format_lines(store_paths))
 
 
 @register_command
-def unarchive(path: StorePath) -> None:
+def unarchive(*paths: str) -> None:
     """
-    Unarchive the item at the given path.
+    Unarchive the items at the given paths.
     """
-    store_path = current_workspace().unarchive(path)
-    command_output("Unarchived %s", store_path)
+    if not paths:
+        raise ValueError("No paths provided to unarchive")
+    for path in paths:
+        store_path = current_workspace().unarchive(StorePath(path))
+        command_output("Unarchived %s", store_path)
 
 
 @register_command

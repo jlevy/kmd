@@ -23,9 +23,16 @@ def plaintext_to_html(text):
     )
 
 
+def single_line(text: str) -> str:
+    """
+    Convert newlines and other whitespace to spaces.
+    """
+    return regex.sub(r"\s+", " ", text).strip()
+
+
 def clean_title(text: str) -> str:
     """
-    Clean up arbitrary text to make it suitable for a title.
+    Clean up arbitrary text to make it suitable for a title. Convert all whitespace to spaces.
     Only allows the most common punctuation, letters, and numbers, but not Markdown, code characters etc.
     """
     return regex.sub(r"[^\p{L}\p{N},./:;'!?/@%&()+“”‘’…–—-]+", " ", text).strip()

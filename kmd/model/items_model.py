@@ -11,7 +11,11 @@ from kmd.file_storage.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
 from kmd.text_handling.markdown_util import markdown_to_html
-from kmd.text_handling.text_formatting import abbreviate_on_words, clean_title, plaintext_to_html
+from kmd.text_handling.text_formatting import (
+    abbreviate_on_words,
+    clean_title,
+    plaintext_to_html,
+)
 from kmd.util.url import Url
 
 
@@ -286,16 +290,22 @@ class Item:
             == other
         )
 
-    # Skip body in string representations to keep them manageable.
-
-    def __abbreviated_self(self):
-        item_dict = asdict(self)
-        for field in ["title", "description", "body"]:
-            item_dict[field] = abbreviate_str(item_dict[field], max_len=64)
-        return item_dict
+    def _abbreviated_self(self):
+        return {
+            k: repr(
+                abbreviate_str(
+                    str(v.value) if isinstance(v, Enum) else str(v),
+                    max_len=64,
+                    indicator="[…]",
+                )
+            )
+            for k, v in sorted(asdict(self).items())
+            if v is not None
+        }
 
     def __str__(self):
-        return str(self.__abbreviated_self())
-
-    def __repr__(self):
-        return repr(self.__abbreviated_self())
+        """
+        Abbreviate long fields and omit Nones for readability.
+        """
+        summary = ", ".join([f"{k}={v}" for k, v in self._abbreviated_self().items()])
+        return f"Item({summary})"
