@@ -1,7 +1,7 @@
 from textwrap import dedent
 from typing import Generator
 from pprint import pprint
-from kmd.text_handling.text_doc import DocIndex, Paragraph, TextDoc, size, size_space
+from kmd.text_handling.text_doc import DocIndex, TextDoc, size, size_space
 
 
 def seek_doc(doc: TextDoc, offset: int) -> DocIndex:
@@ -13,7 +13,7 @@ def seek_doc(doc: TextDoc, offset: int) -> DocIndex:
 
     for para_index, para in enumerate(doc.paragraphs):
         for sent_index, sent in enumerate(para.sentences):
-            sentence_size = size(sent)
+            sentence_size = sent.size()
             if current_size + sentence_size + size_space <= offset:
                 current_size += sentence_size + size_space
                 last_fit_index = DocIndex(para_index, sent_index)
@@ -93,7 +93,9 @@ def test_sliding_window():
     windows = list(sliding_window(doc, window_size, shift))
     pprint(windows)
 
-    sentence_windows = [[para.sentences for para in doc.paragraphs] for doc in windows]
+    sentence_windows = [
+        [[sent.text for sent in para.sentences] for para in doc.paragraphs] for doc in windows
+    ]
 
     assert sentence_windows == [
         [["This is the first paragraph.", "It has multiple sentences."]],

@@ -53,7 +53,9 @@ def size_in_bytes(text: str) -> int:
     return len(text.encode("utf-8"))
 
 
-# Use bytes throughout. May want to support token length or other metrics.
+# For offsets, we use characters, not bytes.
+# For sizes, we use bytes.
+# We may also want to support tokens for size in the future.
 size = size_in_bytes
 
 PARA_BREAK = "\n\n"
@@ -70,21 +72,38 @@ class DocIndex:
 
 
 @dataclass
+class Sentence:
+    text: str
+    offset: int
+
+    def size(self) -> int:
+        return size(self.text)
+
+    def __str__(self):
+        return repr(self.text)
+
+
+@dataclass
 class Paragraph:
     original_text: str
-    sentences: List[str]
+    sentences: List[Sentence]
     offset: int
 
     @classmethod
     def from_text(cls, text: str, offset: int = -1) -> "Paragraph":
-        sentences = split_sentences(text)
+        sent_values = split_sentences(text)
+        sent_offset = 0
+        sentences = []
+        for sent_str in sent_values:
+            sentences.append(Sentence(sent_str, sent_offset))
+            sent_offset += len(sent_str) + len(SPACE)
         return cls(original_text=text, sentences=sentences, offset=offset)
 
     def size(self) -> int:
-        return sum(size(sent) for sent in self.sentences) + (len(self.sentences) - 1) * size_space
+        return sum(sent.size() for sent in self.sentences) + (len(self.sentences) - 1) * size_space
 
     def reassemble(self) -> str:
-        return SPACE.join(self.sentences)
+        return SPACE.join(sent.text for sent in self.sentences)
 
 
 @dataclass
@@ -117,16 +136,23 @@ class TextDoc:
             if i == first.para_index and i == para_end:
                 sub_paras.append(
                     Paragraph.from_text(
-                        SPACE.join(para.sentences[first.sent_index : last.sent_index + 1])
+                        SPACE.join(
+                            sent.text
+                            for sent in para.sentences[first.sent_index : last.sent_index + 1]
+                        )
                     )
                 )
             elif i == first.para_index:
                 sub_paras.append(
-                    Paragraph.from_text(SPACE.join(para.sentences[first.sent_index :]))
+                    Paragraph.from_text(
+                        SPACE.join(sent.text for sent in para.sentences[first.sent_index :])
+                    )
                 )
             elif i == para_end:
                 sub_paras.append(
-                    Paragraph.from_text(SPACE.join(para.sentences[: last.sent_index + 1]))
+                    Paragraph.from_text(
+                        SPACE.join(sent.text for sent in para.sentences[: last.sent_index + 1])
+                    )
                 )
             else:
                 sub_paras.append(para)
