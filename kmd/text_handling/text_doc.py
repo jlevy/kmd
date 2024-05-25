@@ -73,11 +73,12 @@ class DocIndex:
 class Paragraph:
     original_text: str
     sentences: List[str]
+    offset: int
 
     @classmethod
-    def from_text(cls, text: str) -> "Paragraph":
+    def from_text(cls, text: str, offset: int = -1) -> "Paragraph":
         sentences = split_sentences(text)
-        return cls(original_text=text, sentences=sentences)
+        return cls(original_text=text, sentences=sentences, offset=offset)
 
     def size(self) -> int:
         return sum(size(sent) for sent in self.sentences) + (len(self.sentences) - 1) * size_space
@@ -93,7 +94,13 @@ class TextDoc:
     @classmethod
     def from_text(cls, text: str) -> "TextDoc":
         text = text.strip()
-        paragraphs = [Paragraph.from_text(para) for para in text.split(PARA_BREAK) if para.strip()]
+        paragraphs = []
+        offset = 0
+        for para in text.split(PARA_BREAK):
+            stripped_para = para.strip()
+            if stripped_para:
+                paragraphs.append(Paragraph.from_text(stripped_para, offset))
+                offset += len(para) + len(PARA_BREAK)
         return cls(paragraphs=paragraphs)
 
     def reassemble(self) -> str:
@@ -145,7 +152,7 @@ class TextDoc:
 ## Tests
 
 
-def test_document_reassemble():
+def test_document_parse_reassemble():
     # FIXME: Normalize Markdown so itemized lists are delimted by \n\n, or else they they are
     # broken incorrectly into sentences.
     text = dedent(
@@ -188,11 +195,16 @@ def test_document_reassemble():
 
     reassembled_text = doc.reassemble()
 
+    # Should be exactly the same except for within-paragraph line breaks.
     def normalize(text):
         return regex.sub(r"\s+", " ", text.replace("\n\n", "<PARA>"))
 
-    # Should be exactly the same except for within-paragraph line breaks.
     assert normalize(reassembled_text) == normalize(text)
+
+    # Check offset of a paragraph towards the end of the document.
+    last_para = doc.paragraphs[-1]
+    last_para_offset = text.rindex(last_para.original_text)
+    assert last_para.offset == last_para_offset
 
 
 def test_sub_doc():

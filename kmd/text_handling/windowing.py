@@ -91,49 +91,15 @@ def test_sliding_window():
     shift = 60
 
     windows = list(sliding_window(doc, window_size, shift))
+    pprint(windows)
 
-    assert windows == [
-        TextDoc(
-            paragraphs=[
-                Paragraph(
-                    original_text="This is the first paragraph. It has multiple sentences.",
-                    sentences=["This is the first paragraph.", "It has multiple sentences."],
-                )
-            ]
-        ),
-        TextDoc(
-            paragraphs=[
-                Paragraph(
-                    original_text="It has multiple sentences.",
-                    sentences=["It has multiple sentences."],
-                ),
-                Paragraph(
-                    original_text="This is the second paragraph.",
-                    sentences=["This is the second paragraph."],
-                ),
-            ]
-        ),
-        TextDoc(
-            paragraphs=[
-                Paragraph(
-                    original_text="This is the second paragraph. It also has multiple sentences. And it continues.",
-                    sentences=[
-                        "This is the second paragraph.",
-                        "It also has multiple sentences.",
-                        "And it continues.",
-                    ],
-                )
-            ]
-        ),
-        TextDoc(
-            paragraphs=[
-                Paragraph(original_text="And it continues.", sentences=["And it continues."]),
-                Paragraph(
-                    original_text="Here is the third paragraph. " "More sentences follow.",
-                    sentences=["Here is the third paragraph.", "More sentences follow."],
-                ),
-            ]
-        ),
+    sentence_windows = [[para.sentences for para in doc.paragraphs] for doc in windows]
+
+    assert sentence_windows == [
+        [["This is the first paragraph.", "It has multiple sentences."]],
+        [["It has multiple sentences."], ["This is the second paragraph."]],
+        [["This is the second paragraph.", "It also has multiple sentences.", "And it continues."]],
+        [["And it continues."], ["Here is the third paragraph.", "More sentences follow."]],
     ]
 
     for sub_doc in windows:
