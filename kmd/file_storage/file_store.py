@@ -13,8 +13,8 @@ from kmd.model.items_model import FileExt, Format, Item, ItemId, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.model.canon_url import canonicalize_url
 from kmd.text_handling.text_formatting import format_lines
-from kmd.text_handling.text_wrapping import wrap_text
-from kmd.text_handling.lang_tools import plural
+from kmd.text_handling.wrapping import wrap_text
+from kmd.text_handling.inflection import plural
 from kmd.util.file_utils import move_file
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier

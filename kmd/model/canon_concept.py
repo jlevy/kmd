@@ -1,4 +1,4 @@
-from kmd.text_handling.lang_tools import capitalize_cms
+from kmd.text_handling.capitalization import capitalize_cms
 
 
 def canonicalize_concept(concept: str) -> str:

@@ -54,7 +54,7 @@ def split_sentences(text: str) -> List[str]:
     """
     Split text into sentences. (English.)
     """
-    return [sent.text for sent in nlp.en(text).sents]
+    return [sent.text.strip() for sent in nlp.en(text).sents]
 
 
 def size_in_bytes(text: str) -> int:
@@ -305,4 +305,4 @@ def test_tokenization():
         ".",
     ]
     assert tokens.count(PARA_BR_TOK) == 2
-    assert join_tokens(tokens) == _short_text
+    assert join_tokens(tokens) == _short_text.replace("\n", " ", 1)  # First \n is not a para break.
