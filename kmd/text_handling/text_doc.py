@@ -13,6 +13,14 @@ import spacy
 from spacy.language import Language
 from spacy.cli.download import download
 from kmd.config.logger import get_logger
+from kmd.text_handling.text_tokens import (
+    join_tokens,
+    tokenize_sentence,
+    SENT_BR_STR,
+    SENT_BR_TOK,
+    PARA_BR_STR,
+    PARA_BR_TOK,
+)
 
 log = get_logger(__name__)
 
@@ -58,11 +66,9 @@ def size_in_bytes(text: str) -> int:
 # We may also want to support tokens for size in the future.
 size = size_in_bytes
 
-PARA_BREAK = "\n\n"
-SPACE = " "
 
-size_para_break = size(PARA_BREAK)
-size_space = size(SPACE)
+size_para_break = size(PARA_BR_STR)
+size_space = size(SENT_BR_STR)
 
 
 @dataclass(frozen=True)
@@ -78,6 +84,9 @@ class Sentence:
 
     def size(self) -> int:
         return size(self.text)
+
+    def as_tokens(self) -> List[str]:
+        return tokenize_sentence(self.text)
 
     def __str__(self):
         return repr(self.text)
@@ -96,14 +105,18 @@ class Paragraph:
         sentences = []
         for sent_str in sent_values:
             sentences.append(Sentence(sent_str, sent_offset))
-            sent_offset += len(sent_str) + len(SPACE)
+            sent_offset += len(sent_str) + len(SENT_BR_STR)
         return cls(original_text=text, sentences=sentences, offset=offset)
+
+    def reassemble(self) -> str:
+        return SENT_BR_STR.join(sent.text for sent in self.sentences)
 
     def size(self) -> int:
         return sum(sent.size() for sent in self.sentences) + (len(self.sentences) - 1) * size_space
 
-    def reassemble(self) -> str:
-        return SPACE.join(sent.text for sent in self.sentences)
+    def as_tokens(self) -> List[str]:
+        tokens = [token for sent in self.sentences for token in sent.as_tokens() + [SENT_BR_TOK]]
+        return tokens[:-1]
 
 
 @dataclass
@@ -115,15 +128,15 @@ class TextDoc:
         text = text.strip()
         paragraphs = []
         offset = 0
-        for para in text.split(PARA_BREAK):
+        for para in text.split(PARA_BR_STR):
             stripped_para = para.strip()
             if stripped_para:
                 paragraphs.append(Paragraph.from_text(stripped_para, offset))
-                offset += len(para) + len(PARA_BREAK)
+                offset += len(para) + len(PARA_BR_STR)
         return cls(paragraphs=paragraphs)
 
     def reassemble(self) -> str:
-        return PARA_BREAK.join(paragraph.reassemble() for paragraph in self.paragraphs)
+        return PARA_BR_STR.join(paragraph.reassemble() for paragraph in self.paragraphs)
 
     def sub_doc(self, first: DocIndex, last: DocIndex) -> "TextDoc":
         """
@@ -136,7 +149,7 @@ class TextDoc:
             if i == first.para_index and i == para_end:
                 sub_paras.append(
                     Paragraph.from_text(
-                        SPACE.join(
+                        SENT_BR_STR.join(
                             sent.text
                             for sent in para.sentences[first.sent_index : last.sent_index + 1]
                         )
@@ -145,13 +158,15 @@ class TextDoc:
             elif i == first.para_index:
                 sub_paras.append(
                     Paragraph.from_text(
-                        SPACE.join(sent.text for sent in para.sentences[first.sent_index :])
+                        SENT_BR_STR.join(sent.text for sent in para.sentences[first.sent_index :])
                     )
                 )
             elif i == para_end:
                 sub_paras.append(
                     Paragraph.from_text(
-                        SPACE.join(sent.text for sent in para.sentences[: last.sent_index + 1])
+                        SENT_BR_STR.join(
+                            sent.text for sent in para.sentences[: last.sent_index + 1]
+                        )
                     )
                 )
             else:
@@ -173,6 +188,11 @@ class TextDoc:
             sum(para.size() for para in self.paragraphs)
             + (len(self.paragraphs) - 1) * size_para_break
         )
+
+    def as_tokens(self) -> List[str]:
+        tokens = [token for para in self.paragraphs for token in (para.as_tokens() + [PARA_BR_TOK])]
+        print(f"---Tokens: {tokens}")
+        return tokens[:-1]
 
 
 ## Tests
@@ -233,17 +253,21 @@ def test_document_parse_reassemble():
     assert last_para.offset == last_para_offset
 
 
+_short_text = dedent(
+    """
+    Paragraph one.
+    Sentence 1a. Sentence 1b. Sentence 1c.
+    
+    Paragraph two. Sentence 2a. Sentence 2b. Sentence 2c.
+    
+    Paragraph three. Sentence 3a. Sentence 3b. Sentence 3c.
+    """
+).strip()
+
+
 def test_sub_doc():
-    text = dedent(
-        """
-        Paragraph one. Sentence 1a. Sentence 1b. Sentence 1c.
-        
-        Paragraph two. Sentence 2a. Sentence 2b. Sentence 2c.
-        
-        Paragraph three. Sentence 3a. Sentence 3b. Sentence 3c.
-        """
-    ).strip()
-    doc = TextDoc.from_text(text)
+
+    doc = TextDoc.from_text(_short_text)
 
     sub_doc = doc.sub_doc(DocIndex(1, 1), DocIndex(2, 1))
 
@@ -252,7 +276,7 @@ def test_sub_doc():
         Sentence 2a. Sentence 2b. Sentence 2c.
         
         Paragraph three. Sentence 3a.
-    """
+        """
     ).strip()
     expected_sub_doc = TextDoc.from_text(expected_text)
 
@@ -262,3 +286,23 @@ def test_sub_doc():
     pprint(sub_doc)
 
     assert sub_doc.reassemble() == expected_sub_doc.reassemble()
+
+
+def test_tokenization():
+    doc = TextDoc.from_text(_short_text)
+    tokens = doc.as_tokens()
+
+    pprint(tokens)
+
+    assert tokens[:6] == ["Paragraph", " ", "one", ".", "<-SENT-BR->", "Sentence"]
+    assert tokens[-7:] == [
+        "3b",
+        ".",
+        "<-SENT-BR->",
+        "Sentence",
+        " ",
+        "3c",
+        ".",
+    ]
+    assert tokens.count(PARA_BR_TOK) == 2
+    assert join_tokens(tokens) == _short_text
