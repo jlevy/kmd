@@ -117,9 +117,12 @@ class Paragraph:
     def size(self) -> int:
         return sum(sent.size() for sent in self.sentences) + (len(self.sentences) - 1) * size_space
 
-    def as_tokens(self) -> List[str]:
-        tokens = [token for sent in self.sentences for token in sent.as_tokens() + [SENT_BR_TOK]]
-        return tokens[:-1]
+    def as_tokens(self) -> Iterable[str]:
+        last_sent_index = len(self.sentences) - 1
+        for i, sent in enumerate(self.sentences):
+            yield from sent.as_tokens()
+            if i != last_sent_index:
+                yield SENT_BR_TOK
 
 
 @dataclass
@@ -213,9 +216,12 @@ class TextDoc:
             + (len(self.paragraphs) - 1) * size_para_break
         )
 
-    def as_tokens(self) -> List[str]:
-        tokens = [token for para in self.paragraphs for token in (para.as_tokens() + [PARA_BR_TOK])]
-        return tokens[:-1]
+    def as_tokens(self) -> Iterable[str]:
+        last_para_index = len(self.paragraphs) - 1
+        for i, para in enumerate(self.paragraphs):
+            yield from para.as_tokens()
+            if i != last_para_index:
+                yield PARA_BR_TOK
 
 
 ## Tests
@@ -318,10 +324,15 @@ def test_sub_doc():
     sub_sentences = [sent for _index, sent in sub_doc.sentence_iter()]
     assert orig_sentences[5:10] == sub_sentences
 
+    # Confirm indexing and reverse iteration.
+    assert doc.sub_doc(DocIndex(0, 0), None) == doc
+    reversed_sentences = [sent for _index, sent in doc.sentence_iter(reverse=True)]
+    assert reversed_sentences == list(reversed(orig_sentences))
+
 
 def test_tokenization():
     doc = TextDoc.from_text(_short_text)
-    tokens = doc.as_tokens()
+    tokens = list(doc.as_tokens())
 
     print("\n---Tokens:")
     pprint(tokens)
