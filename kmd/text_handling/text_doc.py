@@ -6,7 +6,7 @@ Compatible with Markdown.
 from dataclasses import dataclass
 from pprint import pprint
 from textwrap import dedent
-from typing import List
+from typing import Iterable, List, Optional, Tuple
 from cachetools import cached
 import regex
 import spacy
@@ -71,10 +71,13 @@ size_para_break = size(PARA_BR_STR)
 size_space = size(SENT_BR_STR)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class DocIndex:
     para_index: int
     sent_index: int
+
+    def __str__(self):
+        return f"¶{self.para_index}‖{self.sent_index})"
 
 
 @dataclass
@@ -138,39 +141,60 @@ class TextDoc:
     def reassemble(self) -> str:
         return PARA_BR_STR.join(paragraph.reassemble() for paragraph in self.paragraphs)
 
-    def sub_doc(self, first: DocIndex, last: DocIndex) -> "TextDoc":
+    def first_index(self) -> DocIndex:
+        return DocIndex(0, 0)
+
+    def last_index(self) -> DocIndex:
+        return DocIndex(len(self.paragraphs) - 1, len(self.paragraphs[-1].sentences) - 1)
+
+    def sentence_iter(self, reverse: bool = False) -> Iterable[Tuple[DocIndex, Sentence]]:
+        enum_paras = list(enumerate(self.paragraphs))
+        for para_index, para in reversed(enum_paras) if reverse else enum_paras:
+            enum_sents = list(enumerate(para.sentences))
+            for sent_index, sent in reversed(enum_sents) if reverse else enum_sents:
+                yield DocIndex(para_index, sent_index), sent
+
+    def sub_doc(self, first: DocIndex, last: Optional[DocIndex] = None) -> "TextDoc":
         """
-        Get a sub-document. Inclusive ranges.
+        Get a sub-document. Inclusive ranges. Preserves original paragraph and sentence offsets.
         """
-        para_end = min(last.para_index, len(self.paragraphs) - 1)
+        if not last:
+            last = self.last_index()
+        if last > self.last_index():
+            raise ValueError(f"End index out of range: {last} > {self.last_index()}")
+        if first < self.first_index():
+            raise ValueError(f"Start index out of range: {first} < {self.first_index()}")
+
         sub_paras = []
-        for i in range(first.para_index, para_end + 1):
+        for i in range(first.para_index, last.para_index + 1):
             para = self.paragraphs[i]
-            if i == first.para_index and i == para_end:
+            if i == first.para_index and i == last.para_index:
                 sub_paras.append(
-                    Paragraph.from_text(
-                        SENT_BR_STR.join(
-                            sent.text
-                            for sent in para.sentences[first.sent_index : last.sent_index + 1]
-                        )
+                    Paragraph(
+                        original_text=para.original_text,
+                        sentences=para.sentences[first.sent_index : last.sent_index + 1],
+                        offset=para.offset,  # Original paragraph offset.
                     )
                 )
             elif i == first.para_index:
                 sub_paras.append(
-                    Paragraph.from_text(
-                        SENT_BR_STR.join(sent.text for sent in para.sentences[first.sent_index :])
+                    Paragraph(
+                        original_text=para.original_text,
+                        sentences=para.sentences[first.sent_index :],
+                        offset=para.offset,  # Original paragraph offset.
                     )
                 )
-            elif i == para_end:
+            elif i == last.para_index:
                 sub_paras.append(
-                    Paragraph.from_text(
-                        SENT_BR_STR.join(
-                            sent.text for sent in para.sentences[: last.sent_index + 1]
-                        )
+                    Paragraph(
+                        original_text=para.original_text,
+                        sentences=para.sentences[: last.sent_index + 1],
+                        offset=para.offset,
                     )
                 )
             else:
                 sub_paras.append(para)
+
         return TextDoc(sub_paras)
 
     def prev_sent(self, index: DocIndex) -> "DocIndex":
@@ -191,7 +215,6 @@ class TextDoc:
 
     def as_tokens(self) -> List[str]:
         tokens = [token for para in self.paragraphs for token in (para.as_tokens() + [PARA_BR_TOK])]
-        print(f"---Tokens: {tokens}")
         return tokens[:-1]
 
 
@@ -269,7 +292,9 @@ def test_sub_doc():
 
     doc = TextDoc.from_text(_short_text)
 
-    sub_doc = doc.sub_doc(DocIndex(1, 1), DocIndex(2, 1))
+    sub_doc_start = DocIndex(1, 1)
+    sub_doc_end = DocIndex(2, 1)
+    sub_doc = doc.sub_doc(sub_doc_start, sub_doc_end)
 
     expected_text = dedent(
         """
@@ -285,13 +310,20 @@ def test_sub_doc():
     print("---Subdoc:")
     pprint(sub_doc)
 
+    # Confirm reassembled text is correct.
     assert sub_doc.reassemble() == expected_sub_doc.reassemble()
+
+    # Confirm sentences and offsets are preserved in sub-doc.
+    orig_sentences = [sent for _index, sent in doc.sentence_iter()]
+    sub_sentences = [sent for _index, sent in sub_doc.sentence_iter()]
+    assert orig_sentences[5:10] == sub_sentences
 
 
 def test_tokenization():
     doc = TextDoc.from_text(_short_text)
     tokens = doc.as_tokens()
 
+    print("\n---Tokens:")
     pprint(tokens)
 
     assert tokens[:6] == ["Paragraph", " ", "one", ".", "<-SENT-BR->", "Sentence"]
