@@ -32,6 +32,15 @@ class DiffOp:
 
 
 @dataclass
+class TokenDiffStats:
+    tokens_added: int
+    tokens_removed: int
+
+    def total(self) -> int:
+        return self.tokens_added + self.tokens_removed
+
+
+@dataclass
 class TextDiff:
     """
     A diff of two texts as a sequence of EQUAL, INSERT, and DELETE operations.
@@ -41,6 +50,11 @@ class TextDiff:
 
     def changes(self) -> List[DiffOp]:
         return [op for op in self.ops if op.action != DiffTag.EQUAL]
+
+    def stats(self) -> TokenDiffStats:
+        tokens_added = sum(len(op.tokens) for op in self.ops if op.action == DiffTag.INSERT)
+        tokens_removed = sum(len(op.tokens) for op in self.ops if op.action == DiffTag.DELETE)
+        return TokenDiffStats(tokens_added, tokens_removed)
 
     def __str__(self):
         return "\n".join(str(op) for op in self.ops)
@@ -89,6 +103,22 @@ def lcs_diff_tokens(tokens1: List[str], tokens2: List[str]) -> TextDiff:
             diff.append(DiffOp(DiffTag.INSERT, tokens2[j1:j2]))
 
     return TextDiff(diff)
+
+
+def token_diff_stats(doc1: TextDoc, doc2: TextDoc) -> TokenDiffStats:
+    """
+    Calculate the number of tokens added and removed between two TextDocs.
+    Returns a tuple (tokens_added, tokens_removed).
+    """
+    diff = lcs_diff_tokens(doc1.as_tokens(), doc2.as_tokens())
+    return diff.stats()
+
+
+def token_difference(doc1: TextDoc, doc2: TextDoc) -> int:
+    """
+    Total text token changes between in two docs.
+    """
+    return token_diff_stats(doc1, doc2).total()
 
 
 ## Tests
@@ -147,3 +177,9 @@ def test_lcs_diff_tokens():
             DiffOp(action=DiffTag.DELETE, tokens=["Sentence", "3c"]),
         ]
     )
+
+    print("---Tokens changed")
+    token_diffs = token_diff_stats(TextDoc.from_text(_short_text1), TextDoc.from_text(_short_text2))
+    print(token_diffs)
+
+    assert token_diffs == TokenDiffStats(3, 3)
