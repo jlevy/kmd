@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from typing import List
-from kmd.apis.completion import completion
+from kmd.llms.completion import completion
 from kmd.model.actions_model import Action, ActionInput, ActionResult, ONE_OR_MORE_ARGS
 from kmd.model.items_model import Format, Item
 from kmd.file_storage.workspaces import current_workspace

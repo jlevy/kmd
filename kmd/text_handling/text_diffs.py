@@ -4,7 +4,7 @@ from enum import Enum
 from textwrap import dedent
 from typing import Any, Callable, List, Optional, Tuple
 from kmd.text_handling.text_doc import DocIndex, TextDoc
-from kmd.text_handling.text_tokens import is_br_space, is_word
+from kmd.text_handling.wordtoks import is_br_or_space, is_word
 
 
 class DiffTag(Enum):
@@ -19,14 +19,14 @@ class DiffTag(Enum):
 @dataclass
 class DiffOp:
     action: DiffTag
-    tokens: List[str]
+    wordtoks: List[str]
 
     def filter(self, pred: Callable[[str], bool]):
-        return DiffOp(self.action, [tok for tok in self.tokens if pred(tok)])
+        return DiffOp(self.action, [tok for tok in self.wordtoks if pred(tok)])
 
     def __str__(self):
-        if self.tokens:
-            return f"{self.action.as_plus_minus()} {", ".join(repr(tok) for tok in self.tokens)},"
+        if self.wordtoks:
+            return f"{self.action.as_plus_minus()} {", ".join(repr(tok) for tok in self.wordtoks)},"
         else:
             return "(empty DiffOp)"
 
@@ -52,9 +52,9 @@ class TextDiff:
         return [op for op in self.ops if op.action != DiffTag.EQUAL]
 
     def stats(self) -> TokenDiffStats:
-        tokens_added = sum(len(op.tokens) for op in self.ops if op.action == DiffTag.INSERT)
-        tokens_removed = sum(len(op.tokens) for op in self.ops if op.action == DiffTag.DELETE)
-        return TokenDiffStats(tokens_added, tokens_removed)
+        wordtoks_added = sum(len(op.wordtoks) for op in self.ops if op.action == DiffTag.INSERT)
+        wordtoks_removed = sum(len(op.wordtoks) for op in self.ops if op.action == DiffTag.DELETE)
+        return TokenDiffStats(wordtoks_added, wordtoks_removed)
 
     def __str__(self):
         if len(self.changes()) == 0:
@@ -63,39 +63,39 @@ class TextDiff:
             return "TextDiff:\n" + "\n".join(str(op) for op in self.ops)
 
 
-def lcs_diff_tokens(tokens1: List[str], tokens2: List[str]) -> TextDiff:
+def lcs_diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
     """
-    Perform an LCS-style diff on two lists of tokens.
+    Perform an LCS-style diff on two lists of wordtoks.
     """
-    s = difflib.SequenceMatcher(None, tokens1, tokens2)
+    s = difflib.SequenceMatcher(None, wordtoks1, wordtoks2)
     diff: List[DiffOp] = []
 
     for tag, i1, i2, j1, j2 in s.get_opcodes():
         if tag == "equal":
-            diff.append(DiffOp(DiffTag.EQUAL, tokens1[i1:i2]))
+            diff.append(DiffOp(DiffTag.EQUAL, wordtoks1[i1:i2]))
         elif tag == "insert":
-            diff.append(DiffOp(DiffTag.INSERT, tokens2[j1:j2]))
+            diff.append(DiffOp(DiffTag.INSERT, wordtoks2[j1:j2]))
         elif tag == "delete":
-            diff.append(DiffOp(DiffTag.DELETE, tokens1[i1:i2]))
+            diff.append(DiffOp(DiffTag.DELETE, wordtoks1[i1:i2]))
         elif tag == "replace":
-            diff.append(DiffOp(DiffTag.DELETE, tokens1[i1:i2]))
-            diff.append(DiffOp(DiffTag.INSERT, tokens2[j1:j2]))
+            diff.append(DiffOp(DiffTag.DELETE, wordtoks1[i1:i2]))
+            diff.append(DiffOp(DiffTag.INSERT, wordtoks2[j1:j2]))
 
     return TextDiff(diff)
 
 
-def scored_lcs_diff(tokens1: List[str], tokens2: List[str]) -> Tuple[float, TextDiff]:
+def scored_lcs_diff(wordtoks1: List[str], wordtoks2: List[str]) -> Tuple[float, TextDiff]:
     """
-    Calculate the number of tokens added and removed between two TextDocs.
-    Score is (tokens_added + tokens_removed) / min(len(doc1), len(doc2)),
+    Calculate the number of wordtoks added and removed between two TextDocs.
+    Score is (wordtoks_added + wordtoks_removed) / min(len(doc1), len(doc2)),
     which is 0 for identical docs.
     """
 
-    if len(tokens1) == 0 or len(tokens2) == 0:
+    if len(wordtoks1) == 0 or len(wordtoks2) == 0:
         raise ValueError("Cannot score diff for empty documents")
 
-    diff = lcs_diff_tokens(tokens1, tokens2)
-    score = float(diff.stats().nchanges()) / min(len(tokens1), len(tokens2))
+    diff = lcs_diff_wordtoks(wordtoks1, wordtoks2)
+    score = float(diff.stats().nchanges()) / min(len(wordtoks1), len(wordtoks2))
     return score, diff
 
 
@@ -148,8 +148,8 @@ def diff_non_br_whitespace(diff: TextDiff) -> TextDiff:
     """
     ops = []
     for op in diff.changes():
-        match = op.filter(lambda tok: not is_br_space(tok))
-        if len(match.tokens) > 0:
+        match = op.filter(lambda tok: not is_br_or_space(tok))
+        if len(match.wordtoks) > 0:
             ops.append(match)
     return TextDiff(ops)
 
@@ -161,7 +161,7 @@ def diff_non_punctuation_whitespace(diff: TextDiff) -> TextDiff:
     ops = []
     for op in diff.changes():
         match = op.filter(lambda tok: bool(is_word(tok)))
-        if len(match.tokens) > 0:
+        if len(match.wordtoks) > 0:
             ops.append(match)
     return TextDiff(ops)
 
@@ -189,11 +189,11 @@ _short_text2 = dedent(
 ).strip()
 
 
-def test_lcs_diff_tokens():
-    tokens1 = list(TextDoc.from_text(_short_text1).as_tokens())
-    tokens2 = list(TextDoc.from_text(_short_text2).as_tokens())
+def test_lcs_diff_wordtoks():
+    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
+    wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks())
 
-    diff = lcs_diff_tokens(tokens1, tokens2)
+    diff = lcs_diff_wordtoks(wordtoks1, wordtoks2)
 
     print("---Diff:")
     print(diff)
@@ -210,10 +210,10 @@ def test_lcs_diff_tokens():
 
     assert diff_non_br_whitespace(diff) == TextDiff(
         ops=[
-            DiffOp(action=DiffTag.INSERT, tokens=["blah"]),
-            DiffOp(action=DiffTag.DELETE, tokens=["."]),
-            DiffOp(action=DiffTag.INSERT, tokens=["!"]),
-            DiffOp(action=DiffTag.DELETE, tokens=["Sentence", "3c", "."]),
+            DiffOp(action=DiffTag.INSERT, wordtoks=["blah"]),
+            DiffOp(action=DiffTag.DELETE, wordtoks=["."]),
+            DiffOp(action=DiffTag.INSERT, wordtoks=["!"]),
+            DiffOp(action=DiffTag.DELETE, wordtoks=["Sentence", "3c", "."]),
         ]
     )
 
@@ -222,22 +222,22 @@ def test_lcs_diff_tokens():
 
     assert diff_non_punctuation_whitespace(diff) == TextDiff(
         ops=[
-            DiffOp(action=DiffTag.INSERT, tokens=["blah"]),
-            DiffOp(action=DiffTag.DELETE, tokens=["Sentence", "3c"]),
+            DiffOp(action=DiffTag.INSERT, wordtoks=["blah"]),
+            DiffOp(action=DiffTag.DELETE, wordtoks=["Sentence", "3c"]),
         ]
     )
 
 
 def test_find_best_alignment():
-    tokens1 = list(TextDoc.from_text(_short_text1).as_tokens())
-    tokens2 = list(TextDoc.from_text(_short_text1).sub_doc(DocIndex(1, 1)).as_tokens())
-    tokens3 = list(tokens2) + ["Extra", "tokens", "at", "the", "end"]
-    tokens4 = list(tokens3)
-    tokens4[0] = "X"
-    tokens4[3] = "Y"
+    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
+    wordtoks2 = list(TextDoc.from_text(_short_text1).sub_doc(DocIndex(1, 1)).as_wordtoks())
+    wordtoks3 = list(wordtoks2) + ["Extra", "wordtoks", "at", "the", "end"]
+    wordtoks4 = list(wordtoks3)
+    wordtoks4[0] = "X"
+    wordtoks4[3] = "Y"
 
     print("---Alignment:")
-    offset, score, diff = find_best_alignment(tokens1, tokens2, 1)
+    offset, score, diff = find_best_alignment(wordtoks1, wordtoks2, 1)
     print(f"Offset: {offset}, Score: {score}")
     print(diff)
     print()
@@ -245,7 +245,7 @@ def test_find_best_alignment():
     assert score == 0.0
     assert diff.changes() == []
 
-    offset, score, diff = find_best_alignment(tokens1, tokens3, 3)
+    offset, score, diff = find_best_alignment(wordtoks1, wordtoks3, 3)
     print(f"Offset: {offset}, Score: {score}")
     print(diff)
     print()
@@ -253,7 +253,7 @@ def test_find_best_alignment():
     assert score == 0.0
     assert diff.changes() == []
 
-    offset, score, diff = find_best_alignment(tokens1, tokens4, 3)
+    offset, score, diff = find_best_alignment(wordtoks1, wordtoks4, 3)
     print(f"Offset: {offset}, Score: {score}")
     print(diff)
     print()

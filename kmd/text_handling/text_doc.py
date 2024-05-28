@@ -14,9 +14,9 @@ import spacy
 from spacy.language import Language
 from spacy.cli.download import download
 from kmd.config.logger import get_logger
-from kmd.text_handling.text_tokens import (
-    join_tokens,
-    tokenize_sentence,
+from kmd.text_handling.wordtoks import (
+    join_wordtoks,
+    sentence_as_wordtoks,
     SENT_BR_STR,
     SENT_BR_TOK,
     PARA_BR_STR,
@@ -62,20 +62,23 @@ def size_in_bytes(text: str) -> int:
     return len(text.encode("utf-8"))
 
 
-def size_in_tokens(text: str) -> int:
-    return len(tokenize_sentence(text))
+def size_in_wordtoks(text: str) -> int:
+    return len(sentence_as_wordtoks(text))
 
 
 class Unit(Enum):
     BYTES = "bytes"
-    TOKENS = "tokens"
+    CHARS = "chars"
+    WORDTOKS = "wordtoks"
 
 
 def size(text: str, unit: Unit) -> int:
     if unit == Unit.BYTES:
         return size_in_bytes(text)
-    elif unit == Unit.TOKENS:
-        return size_in_tokens(text)
+    elif unit == Unit.CHARS:
+        return len(text)
+    elif unit == Unit.WORDTOKS:
+        return size_in_wordtoks(text)
     else:
         raise ValueError(f"Unsupported unit: {unit}")
 
@@ -97,8 +100,8 @@ class Sentence:
     def size(self, unit: Unit) -> int:
         return size(self.text, unit)
 
-    def as_tokens(self) -> List[str]:
-        return tokenize_sentence(self.text)
+    def as_wordtoks(self) -> List[str]:
+        return sentence_as_wordtoks(self.text)
 
     def __str__(self):
         return repr(self.text)
@@ -124,19 +127,20 @@ class Paragraph:
         return SENT_BR_STR.join(sent.text for sent in self.sentences)
 
     def size(self, unit: Unit) -> int:
+        base_size = sum(sent.size(unit) for sent in self.sentences)
         if unit == Unit.BYTES:
-            return sum(sent.size(unit) for sent in self.sentences) + (
-                len(self.sentences) - 1
-            ) * size_in_bytes(SENT_BR_STR)
-        elif unit == Unit.TOKENS:
-            return sum(sent.size(unit) for sent in self.sentences) + (len(self.sentences) - 1)
+            return base_size + (len(self.sentences) - 1) * size_in_bytes(SENT_BR_STR)
+        elif unit == Unit.CHARS:
+            return base_size + (len(self.sentences) - 1) * len(SENT_BR_STR)
+        elif unit == Unit.WORDTOKS:
+            return base_size + (len(self.sentences) - 1)
         else:
             raise ValueError(f"Unsupported unit: {unit}")
 
-    def as_tokens(self) -> Iterable[str]:
+    def as_wordtoks(self) -> Iterable[str]:
         last_sent_index = len(self.sentences) - 1
         for i, sent in enumerate(self.sentences):
-            yield from sent.as_tokens()
+            yield from sent.as_wordtoks()
             if i != last_sent_index:
                 yield SENT_BR_TOK
 
@@ -236,19 +240,20 @@ class TextDoc:
             last_para.sentences.append(sent)
 
     def size(self, unit: Unit) -> int:
+        base_size = sum(para.size(unit) for para in self.paragraphs)
         if unit == Unit.BYTES:
-            return sum(para.size(unit) for para in self.paragraphs) + (
-                len(self.paragraphs) - 1
-            ) * size_in_bytes(PARA_BR_STR)
-        elif unit == Unit.TOKENS:
-            return sum(para.size(unit) for para in self.paragraphs) + (len(self.paragraphs) - 1)
+            return base_size + (len(self.paragraphs) - 1) * size_in_bytes(PARA_BR_STR)
+        elif unit == Unit.CHARS:
+            return base_size + (len(self.paragraphs) - 1) * len(PARA_BR_STR)
+        elif unit == Unit.WORDTOKS:
+            return base_size + (len(self.paragraphs) - 1)
         else:
             raise ValueError(f"Unsupported unit: {unit}")
 
-    def as_tokens(self) -> Iterable[str]:
+    def as_wordtoks(self) -> Iterable[str]:
         last_para_index = len(self.paragraphs) - 1
         for i, para in enumerate(self.paragraphs):
-            yield from para.as_tokens()
+            yield from para.as_wordtoks()
             if i != last_para_index:
                 yield PARA_BR_TOK
 
@@ -361,13 +366,13 @@ def test_sub_doc():
 
 def test_tokenization():
     doc = TextDoc.from_text(_short_text)
-    tokens = list(doc.as_tokens())
+    wordtoks = list(doc.as_wordtoks())
 
     print("\n---Tokens:")
-    pprint(tokens)
+    pprint(wordtoks)
 
-    assert tokens[:6] == ["Paragraph", " ", "one", ".", "<-SENT-BR->", "Sentence"]
-    assert tokens[-7:] == [
+    assert wordtoks[:6] == ["Paragraph", " ", "one", ".", "<-SENT-BR->", "Sentence"]
+    assert wordtoks[-7:] == [
         "3b",
         ".",
         "<-SENT-BR->",
@@ -376,5 +381,7 @@ def test_tokenization():
         "3c",
         ".",
     ]
-    assert tokens.count(PARA_BR_TOK) == 2
-    assert join_tokens(tokens) == _short_text.replace("\n", " ", 1)  # First \n is not a para break.
+    assert wordtoks.count(PARA_BR_TOK) == 2
+    assert join_wordtoks(wordtoks) == _short_text.replace(
+        "\n", " ", 1
+    )  # First \n is not a para break.
