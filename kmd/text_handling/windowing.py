@@ -1,15 +1,16 @@
 from textwrap import dedent
-from typing import Callable, Generator
+from typing import Generator
 from pprint import pprint
 from kmd.config.logger import get_logger
 from kmd.text_handling.text_doc import (
     DocIndex,
+    Sentence,
     TextDoc,
     Unit,
     size,
     size_in_bytes,
 )
-from kmd.text_handling.text_tokens import PARA_BR_STR, SENT_BR_STR
+from kmd.text_handling.text_tokens import PARA_BR_STR, SENT_BR_STR, join_tokens, tokenize_sentence
 
 
 log = get_logger(__name__)
@@ -20,7 +21,7 @@ def seek_doc(doc: TextDoc, offset: int, unit: Unit) -> DocIndex:
     Find the last sentence that starts before a given offset in bytes.
     """
     current_size = 0
-    last_fit_index = DocIndex(0, 0)
+    last_fit_index = None
 
     if unit == Unit.BYTES:
         size_sent_break = size_in_bytes(SENT_BR_STR)
@@ -44,7 +45,39 @@ def seek_doc(doc: TextDoc, offset: int, unit: Unit) -> DocIndex:
         if para_index < len(doc.paragraphs) - 1:
             current_size += size_para_break
 
+    if last_fit_index is None:
+        raise ValueError("Cannot seek into empty document")
+
     return last_fit_index
+
+
+def _truncate_sent_at_token_offset(sent: Sentence, offset: int) -> Sentence:
+    """
+    Truncate a sentence to the given number of tokens.
+    """
+    tokens = tokenize_sentence(sent.text)
+    truncated_tokens = tokens[:offset]
+    joined = join_tokens(truncated_tokens)
+    return Sentence(joined, sent.char_offset)
+
+
+def truncate_at_token_offset(doc: TextDoc, offset: int) -> TextDoc:
+    """
+    Truncate a document at a given token offset.
+    """
+    index = seek_doc(doc, offset, Unit.TOKENS)
+    try:
+        sub_doc = doc.sub_doc(DocIndex(0, 0), doc.prev_sent(index))
+    except ValueError:
+        # Offset is within the first sentence.
+        sub_doc = TextDoc([])
+    current_size = sub_doc.size(Unit.TOKENS)
+    last_sent = doc.paragraphs[index.para_index].sentences[index.sent_index]
+    remaining_tokens = offset - current_size - 1
+    if remaining_tokens > 0:
+        truncated_sent = _truncate_sent_at_token_offset(last_sent, remaining_tokens)
+        sub_doc.append_sent(truncated_sent)
+    return sub_doc
 
 
 def sliding_window(
@@ -150,3 +183,27 @@ def test_sliding_window():
         assert size(sub_text, Unit.BYTES) <= window_size
 
         assert sub_text in doc.reassemble()
+
+
+def test_truncate_at_token():
+    # Sentence truncation.
+    sent = Sentence("This is a test sentence.", 999)
+    truncated_sent = _truncate_sent_at_token_offset(sent, 0)
+    assert truncated_sent.text == ""
+
+    truncated_sent = _truncate_sent_at_token_offset(sent, 7)
+    assert truncated_sent.text == "This is a test"
+    assert truncated_sent.char_offset == 999
+
+    # Doc truncation.
+    doc = TextDoc.from_text(_example_text)
+    truncated_doc = truncate_at_token_offset(doc, 10)
+    expected_text = "This is the first paragraph."
+    expected_doc = TextDoc.from_text(expected_text)
+    assert truncated_doc.reassemble() == expected_doc.reassemble()
+
+    truncated_doc = truncate_at_token_offset(doc, 34)
+    expected_text = "This is the first paragraph. It has multiple sentences.\n\nThis is the second paragraph. It also"
+    print(truncated_doc.reassemble())
+    expected_doc = TextDoc.from_text(expected_text)
+    assert truncated_doc.reassemble() == expected_doc.reassemble()

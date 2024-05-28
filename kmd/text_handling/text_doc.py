@@ -226,6 +226,15 @@ class TextDoc:
         else:
             raise ValueError("No previous sentence")
 
+    def append_sent(self, sent: Sentence) -> None:
+        if len(self.paragraphs) == 0:
+            self.paragraphs.append(
+                Paragraph(original_text=sent.text, sentences=[sent], char_offset=0)
+            )
+        else:
+            last_para = self.paragraphs[-1]
+            last_para.sentences.append(sent)
+
     def size(self, unit: Unit) -> int:
         if unit == Unit.BYTES:
             return sum(para.size(unit) for para in self.paragraphs) + (
