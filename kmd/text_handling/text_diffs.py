@@ -21,9 +21,6 @@ class DiffOp:
     action: DiffTag
     wordtoks: List[str]
 
-    def filter(self, pred: Callable[[str], bool]):
-        return DiffOp(self.action, [tok for tok in self.wordtoks if pred(tok)])
-
     def __str__(self):
         if self.wordtoks:
             return f"{self.action.as_plus_minus()} {", ".join(repr(tok) for tok in self.wordtoks)},"
@@ -38,6 +35,13 @@ class TokenDiffStats:
 
     def nchanges(self) -> int:
         return self.added + self.removed
+
+
+DiffOpFilter = Callable[[DiffOp], bool]
+
+BR_AND_SPACE: DiffOpFilter = lambda diff_op: all(is_br_or_space(tok) for tok in diff_op.wordtoks)
+
+PUNCT_AND_SPACE: DiffOpFilter = lambda diff_op: all(not is_word(tok) for tok in diff_op.wordtoks)
 
 
 @dataclass
@@ -55,6 +59,48 @@ class TextDiff:
         wordtoks_added = sum(len(op.wordtoks) for op in self.ops if op.action == DiffTag.INSERT)
         wordtoks_removed = sum(len(op.wordtoks) for op in self.ops if op.action == DiffTag.DELETE)
         return TokenDiffStats(wordtoks_added, wordtoks_removed)
+
+    def apply_to(self, original: List[str]) -> List[str]:
+        result = []
+        original_index = 0
+
+        for op in self.ops:
+            if op.action == DiffTag.EQUAL:
+                result.extend(original[original_index : original_index + len(op.wordtoks)])
+                original_index += len(op.wordtoks)
+            elif op.action == DiffTag.DELETE:
+                original_index += len(op.wordtoks)
+            elif op.action == DiffTag.INSERT:
+                result.extend(op.wordtoks)
+
+        result.extend(original[original_index:])
+
+        return result
+
+    def filter(self, accept_fn: DiffOpFilter) -> Tuple["TextDiff", "TextDiff"]:
+        """
+        Return two diffs, one that only applies accepted operations and one that only applies
+        rejected operations.
+        """
+        accepted_ops = []
+        rejected_ops = []
+
+        for op in self.ops:
+            if op.action == DiffTag.EQUAL:
+                # For equal ops, all tokens are both accepted and rejected.
+                accepted_ops.append(op)
+                rejected_ops.append(op)
+            else:
+                # We take the DiffOp as a whole, not token by token, since token by token yields odd results,
+                # like deleting words but leaving whitespace.
+                if accept_fn(op):
+                    accepted_ops.append(op)
+                    rejected_ops.append(DiffOp(DiffTag.EQUAL, op.wordtoks))
+                else:
+                    accepted_ops.append(DiffOp(DiffTag.EQUAL, op.wordtoks))
+                    rejected_ops.append(op)
+
+        return TextDiff(accepted_ops), TextDiff(rejected_ops)
 
     def __str__(self):
         if len(self.changes()) == 0:
@@ -142,30 +188,6 @@ def find_best_alignment(
     return best_offset, best_score, best_diff
 
 
-def diff_non_br_whitespace(diff: TextDiff) -> TextDiff:
-    """
-    Return any diff operations that are not simply changes to whitespace and paragraph breaks.
-    """
-    ops = []
-    for op in diff.changes():
-        match = op.filter(lambda tok: not is_br_or_space(tok))
-        if len(match.wordtoks) > 0:
-            ops.append(match)
-    return TextDiff(ops)
-
-
-def diff_non_punctuation_whitespace(diff: TextDiff) -> TextDiff:
-    """
-    Return any diff operations that are not simply changes to punctuation or whitespace.
-    """
-    ops = []
-    for op in diff.changes():
-        match = op.filter(lambda tok: bool(is_word(tok)))
-        if len(match.wordtoks) > 0:
-            ops.append(match)
-    return TextDiff(ops)
-
-
 ## Tests
 
 _short_text1 = dedent(
@@ -188,6 +210,16 @@ _short_text2 = dedent(
     """
 ).strip()
 
+# _short_text3 contains all the whitespace and break-only changes from _short_text1 to _short_text2.
+_short_text3 = dedent(
+    """
+    Paragraph one. Sentence 1a. Sentence 1b. Sentence 1c.
+    Paragraph two. Sentence 2a. Sentence 2b. Sentence 2c.
+    
+    Paragraph three. Sentence 3a. Sentence 3b. Sentence 3c.
+    """
+).strip()
+
 
 def test_lcs_diff_wordtoks():
     wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
@@ -205,27 +237,47 @@ def test_lcs_diff_wordtoks():
     assert diff.ops[1] == DiffOp(DiffTag.DELETE, ["<-PARA-BR->"])
     assert diff.ops[-1] == DiffOp(DiffTag.DELETE, ["<-SENT-BR->", "Sentence", " ", "3c", "."])
 
-    print("---Non-para breaks:")
-    print(diff_non_br_whitespace(diff))
 
-    assert diff_non_br_whitespace(diff) == TextDiff(
-        ops=[
-            DiffOp(action=DiffTag.INSERT, wordtoks=["blah"]),
-            DiffOp(action=DiffTag.DELETE, wordtoks=["."]),
-            DiffOp(action=DiffTag.INSERT, wordtoks=["!"]),
-            DiffOp(action=DiffTag.DELETE, wordtoks=["Sentence", "3c", "."]),
-        ]
-    )
+def test_apply_to():
+    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
+    wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks())
 
-    print("---Non-punctuation/whitespace:")
-    print(diff_non_punctuation_whitespace(diff))
+    diff = lcs_diff_wordtoks(wordtoks1, wordtoks2)
+    result = diff.apply_to(wordtoks1)
+    print(f"---Applied diff:")
+    print("/".join(wordtoks1))
+    print(diff)
+    print("/".join(result))
+    assert result == wordtoks2
 
-    assert diff_non_punctuation_whitespace(diff) == TextDiff(
-        ops=[
-            DiffOp(action=DiffTag.INSERT, wordtoks=["blah"]),
-            DiffOp(action=DiffTag.DELETE, wordtoks=["Sentence", "3c"]),
-        ]
-    )
+    wordtoks3 = ["a", "b", "c", "d", "e"]
+    wordtoks4 = ["a", "x", "c", "y", "e"]
+    diff2 = lcs_diff_wordtoks(wordtoks3, wordtoks4)
+    result2 = diff2.apply_to(wordtoks3)
+    assert result2 == wordtoks4
+
+
+def test_filter_br_and_space():
+    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
+    wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks())
+    wordtoks3 = list(TextDoc.from_text(_short_text3).as_wordtoks())
+
+    diff = lcs_diff_wordtoks(wordtoks1, wordtoks2)
+
+    accepted, rejected = diff.filter(BR_AND_SPACE)
+
+    accepted_result = accepted.apply_to(wordtoks1)
+    rejected_result = rejected.apply_to(wordtoks1)
+
+    print(f"---Filtered diff:")
+    print("Original: " + "/".join(wordtoks1))
+    print("Full diff:", diff)
+    print("Accepted diff:", accepted)
+    print("Rejected diff:", rejected)
+    print("Accepted result: " + "/".join(accepted_result))
+    print("Rejected result: " + "/".join(rejected_result))
+
+    assert accepted_result == wordtoks3
 
 
 def test_find_best_alignment():
