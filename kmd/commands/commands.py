@@ -179,59 +179,63 @@ def unarchive(*paths: str) -> None:
 
 
 @register_command
-def files(
-    path: Optional[str] = None, full: Optional[bool] = True, human_time: Optional[bool] = True
-) -> None:
+def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] = True) -> None:
     """
-    List all files in a directory or workspace.
+    List files or folders in a workspace. Shows the full current workspace if no path is provided.
     """
-    base_dir = path or str(current_workspace().base_dir)
+    base_dir = str(current_workspace().base_dir)
+    if len(paths) == 0:
+        paths = (base_dir,)
+
+    for path in paths:
+        if not os.path.exists(path):
+            raise ValueError(f"Directory not found: {path}")
+
     folder_tally = {}
 
-    if not os.path.exists(base_dir):
-        raise ValueError(f"Directory not found: {base_dir}")
+    for path in paths:
+        rel_path = os.path.relpath(path, base_dir)
+        # FIXME: Need to handle the case where paths are files since os.walk works on directories only.
+        for dirname, dirnames, filenames in os.walk(rel_path):
+            # TODO: Better sort options.
+            dirnames.sort()
+            filenames.sort()
 
-    for dirname, dirnames, filenames in os.walk(base_dir):
-        # TODO: Better sort options.
-        dirnames.sort()
-        filenames.sort()
+            folder_tally[dirname] = len(filenames)
+            tally_str = f" - {len(filenames)} files" if len(filenames) > 0 else ""
+            rel_dirname = os.path.relpath(dirname, base_dir)
 
-        folder_tally[dirname] = len(filenames)
-        tally = f" - {len(filenames)} files" if len(filenames) > 0 else ""
-        dirname_rel = os.path.relpath(dirname, base_dir)
+            if skippable_file(rel_dirname):
+                continue
 
-        if skippable_file(dirname_rel):
-            continue
+            command_output(f"{rel_dirname}{tally_str}", color="bright_blue")
+            if full:
+                for filename in filenames:
+                    rel_filename = os.path.relpath(filename, base_dir)
+                    if skippable_file(filename) or skippable_file(rel_filename):
+                        continue
 
-        command_output(f"{dirname_rel}{tally}", color="bright_blue")
-        if full:
-            for filename in filenames:
-                if skippable_file(filename):
-                    continue
+                    full_path = os.path.join(dirname, filename)
+                    file_size = humanize.naturalsize(os.path.getsize(full_path))
 
-                full_path = os.path.join(dirname, filename)
-                file_size = humanize.naturalsize(os.path.getsize(full_path))
+                    if human_time:
+                        file_mod_time = humanize.naturaltime(
+                            datetime.fromtimestamp(os.path.getmtime(full_path))
+                        )
+                    else:
+                        file_mod_time = (
+                            datetime.fromtimestamp(os.path.getmtime(full_path))
+                            .isoformat()
+                            .split(".", 1)[0]
+                        )
 
-                if human_time:
-                    file_mod_time = humanize.naturaltime(
-                        datetime.fromtimestamp(os.path.getmtime(full_path))
+                    parent_dir = os.path.basename(dirname)
+                    display_name = (
+                        f"{parent_dir}/{rel_filename}" if parent_dir != "." else rel_filename
                     )
-                else:
-                    file_mod_time = (
-                        datetime.fromtimestamp(os.path.getmtime(full_path))
-                        .isoformat()
-                        .split(".", 1)[0]
-                    )
 
-                file_rel = os.path.relpath(filename, base_dir)
-                if skippable_file(file_rel):
-                    continue
-
-                parent_dir = os.path.basename(dirname)
-                display_name = f"{parent_dir}/{file_rel}" if parent_dir != "." else file_rel
-
-                # TODO: Show actual lines and words of body text as well as size with wc. Indicate if body is empty.
-                command_output("  %-10s %-14s  %s" % (file_size, file_mod_time, display_name))
+                    # TODO: Show actual lines and words of body text as well as size with wc. Indicate if body is empty.
+                    command_output("  %-10s %-14s  %s" % (file_size, file_mod_time, display_name))
 
     total_items = sum(folder_tally.values())
     command_output(

@@ -55,7 +55,7 @@ def skippable_file(filename: str) -> bool:
     Check if a file should be skipped when processing a directory.
     This skipps .archive, .settings, etc.
     """
-    return filename.startswith(".")
+    return len(filename) > 1 and filename.startswith(".")
 
 
 def remove_value(data: Any, target: Any, eq: Callable[[Any, Any], bool] = operator.eq) -> Any:
