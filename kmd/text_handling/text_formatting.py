@@ -11,7 +11,7 @@ def format_lines(values: Iterable[Any], prefix="    ") -> str:
     return indent("\n".join(str(value) for value in values), prefix)
 
 
-def plaintext_to_html(text):
+def plaintext_to_html(text: str):
     """
     Convert plaintext to HTML, also handling newlines and whitespace.
     """
@@ -21,6 +21,17 @@ def plaintext_to_html(text):
         .replace("\t", "&nbsp;" * 4)
         .replace("  ", "&nbsp;&nbsp;")
     )
+
+
+def html_to_plaintext(text: str):
+    """
+    Convert HTML to plaintext, stripping tags and converting entities.
+    """
+    text = regex.sub(r"<br>", "\n", text, flags=regex.IGNORECASE)
+    text = regex.sub(r"<p>", "\n\n", text, flags=regex.IGNORECASE)
+    unescaped_text = html.unescape(text)
+    clean_text = regex.sub("<[^<]+?>", "", unescaped_text)
+    return clean_text
 
 
 def single_line(text: str) -> str:
@@ -58,10 +69,24 @@ def abbreviate_on_words(text: str, max_len: int, indicator: str = "…") -> str:
 
 
 def test_plaintext_to_html():
+    assert plaintext_to_html("") == ""
     assert plaintext_to_html("Hello, World!") == "Hello, World!"
     assert plaintext_to_html("Hello\n  World!") == "Hello<br>&nbsp;&nbsp;World!"
     assert plaintext_to_html("Hello\tWorld!") == "Hello&nbsp;&nbsp;&nbsp;&nbsp;World!"
     assert plaintext_to_html("<Hello, World!>") == "&lt;Hello, World!&gt;"
+
+
+def test_html_to_plaintext():
+    assert html_to_plaintext("") == ""
+    assert html_to_plaintext("<p>Hello, World!</p>") == "\n\nHello, World!"
+    assert html_to_plaintext("<br>Hello, World!<br>") == "\nHello, World!\n"
+    assert html_to_plaintext("<BR>Hello, World!<BR>") == "\nHello, World!\n"
+    assert (
+        html_to_plaintext(
+            '<p>Hello,<br>World!<br><div>Hello, <span data-id="123">World!</span></div></p>'
+        )
+        == "\n\nHello,\nWorld!\nHello, World!"
+    )
 
 
 def test_clean_title():

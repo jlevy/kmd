@@ -26,6 +26,16 @@ def logging_setup():
     root_logger.addHandler(file_handler)
     root_logger.addHandler(console_handler)
 
+    # Customize the logger for LiteLLM.
+    litellm_logger = logging.getLogger("LiteLLM")
+    if litellm_logger.handlers:
+        litellm_logger.setLevel(logging.INFO)
+        # Remove any existing handlers.
+        for handler in litellm_logger.handlers[:]:
+            litellm_logger.removeHandler(handler)
+        litellm_logger.addHandler(console_handler)
+        litellm_logger.addHandler(file_handler)
+
 
 class CustomLogger:
     """

@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from enum import Enum
-from kmd.apis.openai import openai_completion
+from typing import List
+from kmd.apis.completion import completion
 from kmd.model.actions_model import Action, ActionInput, ActionResult, ONE_OR_MORE_ARGS
-from kmd.model.items_model import Format
+from kmd.model.items_model import Format, Item
 from kmd.file_storage.workspaces import current_workspace
 from kmd.config import setup
 from kmd.config.logger import get_logger
@@ -39,7 +40,7 @@ class LLMAction(Action):
 
 
 def _run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
-    result_items = []
+    result_items: List[Item] = []
     for item in items:
         if not item.body:
             raise ValueError(f"LLM actions expect a body: {action.name} on {item}")
@@ -55,11 +56,15 @@ def _run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
         result_item = item.new_copy_with(body=None)
 
         llm_input = action.template.format(body=item.body)
-        llm_output = openai_completion(
-            action.model, system_message=action.system_message, user_message=llm_input
+        text_output = completion(
+            action.model,
+            messages=[
+                {"role": "system", "content": action.system_message},
+                {"role": "user", "content": llm_input},
+            ],
         )
+        result_item.body = text_output
 
-        result_item.body = llm_output
         if action.title_template:
             result_item.title = action.title_template.format(title=item.get_title())
         result_item.format = Format.markdown
