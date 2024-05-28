@@ -4,6 +4,7 @@ Compatible with Markdown.
 """
 
 from dataclasses import dataclass
+from enum import Enum
 from pprint import pprint
 from textwrap import dedent
 from typing import Iterable, List, Optional, Tuple
@@ -61,14 +62,22 @@ def size_in_bytes(text: str) -> int:
     return len(text.encode("utf-8"))
 
 
-# For offsets, we use characters, not bytes.
-# For sizes, we use bytes.
-# We may also want to support tokens for size in the future.
-size = size_in_bytes
+def size_in_tokens(text: str) -> int:
+    return len(tokenize_sentence(text))
 
 
-size_para_break = size(PARA_BR_STR)
-size_space = size(SENT_BR_STR)
+class Unit(Enum):
+    BYTES = "bytes"
+    TOKENS = "tokens"
+
+
+def size(text: str, unit: Unit) -> int:
+    if unit == Unit.BYTES:
+        return size_in_bytes(text)
+    elif unit == Unit.TOKENS:
+        return size_in_tokens(text)
+    else:
+        raise ValueError(f"Unsupported unit: {unit}")
 
 
 @dataclass(frozen=True, order=True)
@@ -77,16 +86,16 @@ class DocIndex:
     sent_index: int
 
     def __str__(self):
-        return f"¶{self.para_index}‖{self.sent_index})"
+        return f"¶{self.para_index},S{self.sent_index}"
 
 
 @dataclass
 class Sentence:
     text: str
-    offset: int
+    char_offset: int  # Offset of the sentence in the original text.
 
-    def size(self) -> int:
-        return size(self.text)
+    def size(self, unit: Unit) -> int:
+        return size(self.text, unit)
 
     def as_tokens(self) -> List[str]:
         return tokenize_sentence(self.text)
@@ -99,23 +108,30 @@ class Sentence:
 class Paragraph:
     original_text: str
     sentences: List[Sentence]
-    offset: int
+    char_offset: int  # Offset of the paragraph in the original text.
 
     @classmethod
-    def from_text(cls, text: str, offset: int = -1) -> "Paragraph":
+    def from_text(cls, text: str, char_offset: int = -1) -> "Paragraph":
         sent_values = split_sentences(text)
         sent_offset = 0
         sentences = []
         for sent_str in sent_values:
             sentences.append(Sentence(sent_str, sent_offset))
             sent_offset += len(sent_str) + len(SENT_BR_STR)
-        return cls(original_text=text, sentences=sentences, offset=offset)
+        return cls(original_text=text, sentences=sentences, char_offset=char_offset)
 
     def reassemble(self) -> str:
         return SENT_BR_STR.join(sent.text for sent in self.sentences)
 
-    def size(self) -> int:
-        return sum(sent.size() for sent in self.sentences) + (len(self.sentences) - 1) * size_space
+    def size(self, unit: Unit) -> int:
+        if unit == Unit.BYTES:
+            return sum(sent.size(unit) for sent in self.sentences) + (
+                len(self.sentences) - 1
+            ) * size_in_bytes(SENT_BR_STR)
+        elif unit == Unit.TOKENS:
+            return sum(sent.size(unit) for sent in self.sentences) + (len(self.sentences) - 1)
+        else:
+            raise ValueError(f"Unsupported unit: {unit}")
 
     def as_tokens(self) -> Iterable[str]:
         last_sent_index = len(self.sentences) - 1
@@ -133,12 +149,12 @@ class TextDoc:
     def from_text(cls, text: str) -> "TextDoc":
         text = text.strip()
         paragraphs = []
-        offset = 0
+        char_offset = 0
         for para in text.split(PARA_BR_STR):
             stripped_para = para.strip()
             if stripped_para:
-                paragraphs.append(Paragraph.from_text(stripped_para, offset))
-                offset += len(para) + len(PARA_BR_STR)
+                paragraphs.append(Paragraph.from_text(stripped_para, char_offset))
+                char_offset += len(para) + len(PARA_BR_STR)
         return cls(paragraphs=paragraphs)
 
     def reassemble(self) -> str:
@@ -176,7 +192,7 @@ class TextDoc:
                     Paragraph(
                         original_text=para.original_text,
                         sentences=para.sentences[first.sent_index : last.sent_index + 1],
-                        offset=para.offset,  # Original paragraph offset.
+                        char_offset=para.char_offset,
                     )
                 )
             elif i == first.para_index:
@@ -184,7 +200,7 @@ class TextDoc:
                     Paragraph(
                         original_text=para.original_text,
                         sentences=para.sentences[first.sent_index :],
-                        offset=para.offset,  # Original paragraph offset.
+                        char_offset=para.char_offset,
                     )
                 )
             elif i == last.para_index:
@@ -192,7 +208,7 @@ class TextDoc:
                     Paragraph(
                         original_text=para.original_text,
                         sentences=para.sentences[: last.sent_index + 1],
-                        offset=para.offset,
+                        char_offset=para.char_offset,
                     )
                 )
             else:
@@ -210,11 +226,15 @@ class TextDoc:
         else:
             raise ValueError("No previous sentence")
 
-    def size(self) -> int:
-        return (
-            sum(para.size() for para in self.paragraphs)
-            + (len(self.paragraphs) - 1) * size_para_break
-        )
+    def size(self, unit: Unit) -> int:
+        if unit == Unit.BYTES:
+            return sum(para.size(unit) for para in self.paragraphs) + (
+                len(self.paragraphs) - 1
+            ) * size_in_bytes(PARA_BR_STR)
+        elif unit == Unit.TOKENS:
+            return sum(para.size(unit) for para in self.paragraphs) + (len(self.paragraphs) - 1)
+        else:
+            raise ValueError(f"Unsupported unit: {unit}")
 
     def as_tokens(self) -> Iterable[str]:
         last_para_index = len(self.paragraphs) - 1
@@ -278,8 +298,8 @@ def test_document_parse_reassemble():
 
     # Check offset of a paragraph towards the end of the document.
     last_para = doc.paragraphs[-1]
-    last_para_offset = text.rindex(last_para.original_text)
-    assert last_para.offset == last_para_offset
+    last_para_char_offset = text.rindex(last_para.original_text)
+    assert last_para.char_offset == last_para_char_offset
 
 
 _short_text = dedent(
