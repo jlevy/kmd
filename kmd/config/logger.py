@@ -5,8 +5,6 @@ import sys
 
 from kmd.config.settings import APP_NAME
 
-# TODO: Add rich logging
-
 
 def logging_setup():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -35,6 +33,8 @@ def logging_setup():
             litellm_logger.removeHandler(handler)
         litellm_logger.addHandler(console_handler)
         litellm_logger.addHandler(file_handler)
+
+    # TODO: Improve ytdl logging setup.
 
 
 class CustomLogger:

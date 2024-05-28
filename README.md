@@ -2,9 +2,9 @@
 
 A command line for knowledge exploration.
 
-## Dev setup
+## Python Setup
 
-One-time Python and other dependency setup (this part assumes MacOS):
+Ensure you have a modern Python 3.12+ and Poetry (this part assumes MacOS):
 
 ```
 # Install pyenv if needed:
@@ -24,36 +24,28 @@ curl -sSL https://install.python-poetry.org | python3 -
 poetry self add poetry-plugin-up
 ```
 
-One-time API key setup:
+## Before Running
+
+The `secrets.toml` file in your current directory (or a parent directory) must hold
+needed API keys for OpenAI, Deepgram, and any other needed services:
 
 ```
 # Set up API secrets:
-cp secrets/secrets.template.toml secrets/secrets.toml  
-vi secrets/secrets.toml  # Enter API keys
+cp secrets.template.toml secrets/secrets.toml  
+vi secrets.toml  # Enter API keys
 ```
 
-First time running:
+Install package dependencies:
 
 ```
 # Install packages:
 poetry install
-# Convenience to set up xonsh:
-poetry run xonsh_install_kmd
-# Check it works:
-poetry run kmd
 ```
 
-Basic usage:
+## Running the kmd Shell
 
-```
-# Enter shell.
-poetry shell
-
-# Transcribe a video and summarize it.
-kmd action transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
-```
-
-Recommended usage: Use as a shell, via [xonsh](https://xon.sh/):
+The recommended way to use kdm is as its own shell, via [xonsh](https://xon.sh/), so you get
+a full environment with all actions, completions, and other commands:
 
 ```
 # Run kmd within the xonsh shell:
@@ -66,6 +58,7 @@ workspace fitness
 fetch_page 'https://thisappwillgiveyouabs.com/'
 # A short transcription:
 transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
+
 # A transcription with multiple speakers:
 transcribe_video 'https://www.youtube.com/watch?v=uUd7LleJuqM'
 # Now manipulate that transcription (note we are using the outputs of each previous command,
@@ -73,10 +66,34 @@ transcribe_video 'https://www.youtube.com/watch?v=uUd7LleJuqM'
 break_into_paragraphs
 summarize_as_bullets
 create_pdf
-list_channel_videos https://www.youtube.com/@Kboges
+
+# Get all videos on a channel and then download them (to cache), and then transcribe them.
+list_channel_videos 'https://www.youtube.com/@Kboges'
+transcribe_video
 ```
 
-Other useful dev tasks:
+## Other Ways to Run kmd
+
+You can also run kmd directly from your regular shell:
+
+```
+# Ensure your Python environment is set up:
+poetry shell
+
+# Transcribe a video and summarize it:
+mkdir myworkspace.kb
+cd myworkspace.kb
+kmd transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
+```
+
+To install globally in current user's Python environment (so you can use `kmd` anywhere):
+
+```
+poetry build
+pip install --user dist/kmd-0.1.0-py3-none-any.whl 
+```
+
+## Dev Tasks
 
 ```
 # Run pytests:
@@ -85,8 +102,4 @@ pytest -s kmd/commands/command_parser.py
 
 # Upgrade packages:
 poetry up
-
-# To install globally in current user's Python environment (so you can use `kmd` anywhere):
-poetry build
-pip install --user dist/kmd-0.1.0-py3-none-any.whl 
 ```
