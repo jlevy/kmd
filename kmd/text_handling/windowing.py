@@ -1,7 +1,13 @@
+"""
+Transform text using sliding windows over a document, then reassembling the
+transformed text.
+"""
+
 from textwrap import dedent
-from typing import Generator
+from typing import Callable, Generator, Optional
 from pprint import pprint
 from kmd.config.logger import get_logger
+from kmd.text_handling.text_diffs import find_best_alignment
 from kmd.text_handling.text_doc import (
     DocIndex,
     Sentence,
@@ -111,6 +117,42 @@ def sliding_window(
         start_index = end_index
 
 
+TextDocTransform = Callable[[TextDoc], TextDoc]
+
+
+def sliding_transform(
+    doc: TextDoc,
+    transform_func: TextDocTransform,
+    window_size: int,
+    shift: int,
+    min_overlap: int,
+    window_separator: Optional[str] = None,
+) -> TextDoc:
+    """
+    Apply a transformation function to each TextDoc in a sliding window over the given document,
+    then reassemble the transformed document. Uses best effort to stitch the results together
+    seamlessly by searching for the best alignment (minimum token edit distance) of each
+    transformed window.
+    """
+    output_tokens = []
+    windows = sliding_window(doc, window_size, shift, Unit.TOKENS)
+    sep_tokens = [window_separator] if window_separator else []
+
+    for window in windows:
+        transformed_window = transform_func(window)
+        new_tokens = list(transformed_window.as_tokens())
+        if not output_tokens:
+            output_tokens = new_tokens
+        else:
+            offset, _score, _diff = find_best_alignment(output_tokens, new_tokens, min_overlap)
+            output_tokens = output_tokens[:offset] + sep_tokens + new_tokens
+
+    # An alternate approach would be to accumulate the document sentences instead of tokens to
+    # avoid re-parsing, but this probably a little simpler.
+    output_doc = TextDoc.from_text(join_tokens(output_tokens))
+    return output_doc
+
+
 ## Tests
 
 _example_text = dedent(
@@ -207,3 +249,29 @@ def test_truncate_at_token():
     print(truncated_doc.reassemble())
     expected_doc = TextDoc.from_text(expected_text)
     assert truncated_doc.reassemble() == expected_doc.reassemble()
+
+
+def test_sliding_transform():
+    window_size = 80
+    shift = 60
+
+    long_text = (_example_text + "\n\n") * 2
+    doc = TextDoc.from_text(long_text)
+
+    # Simple transformation that converts all text to uppercase.
+    def transform_func(window: TextDoc) -> TextDoc:
+        transformed_text = window.reassemble().upper()
+        return TextDoc.from_text(transformed_text)
+
+    transformed_doc = sliding_transform(
+        doc, transform_func, window_size, shift, 5, window_separator="|"
+    )
+    print("---Transformed document with separator:")
+    print(transformed_doc.reassemble())
+
+    assert transformed_doc.reassemble().count("|") == 2
+
+    long_text = (_example_text + "\n\n") * 20
+    doc = TextDoc.from_text(long_text)
+    transformed_doc = sliding_transform(doc, transform_func, window_size, shift, 5)
+    assert transformed_doc.reassemble() == long_text.upper().strip()
