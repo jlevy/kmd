@@ -11,6 +11,7 @@ from typing import Callable, List
 from rich import print as rprint
 from rich.text import Text
 from xonsh import xontribs
+from xonsh.tools import XonshError
 from kmd.config.setup import setup
 from kmd.config.settings import media_cache_dir
 from kmd.file_storage.workspaces import current_workspace
@@ -31,7 +32,7 @@ class CallableAction:
         try:
             run_action(self.action, *args)
             # We don't return the result to keep the shell output clean.
-        except (ValueError, KeyError, IOError) as e:
+        except (ValueError, KeyError, IOError, XonshError) as e:
             rprint(Text(f"Action error: {e}", "bright_red"))
 
     def __repr__(self):
@@ -55,7 +56,7 @@ def initialize():
         def command(args: List[str]):
             try:
                 func(*args)
-            except (ValueError, KeyError, IOError) as e:
+            except (ValueError, KeyError, IOError, XonshError) as e:
                 rprint(Text(f"Command error: {e}", "bright_red"))
 
         command.__doc__ = func.__doc__

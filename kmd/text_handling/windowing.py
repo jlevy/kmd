@@ -155,16 +155,26 @@ def sliding_transform(
     """
     output_wordtoks = []
     windows = sliding_window(doc, settings.size, settings.shift, Unit.WORDTOKS)
+    nwordtoks = doc.size(Unit.WORDTOKS)
+    nbytes = doc.size(Unit.BYTES)
+    nwindows = (nwordtoks - settings.size) // settings.shift + 1
     sep_wordtoks = [settings.separator] if settings.separator else []
 
-    log.message("Beginning sliding window: %s", settings)
+    log.message(
+        "Sliding transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
+        nwordtoks,
+        nbytes,
+        nwindows,
+        settings,
+    )
 
     for i, window in enumerate(windows):
         log.message(
-            "Processing window %s (%s wordtoks, %s bytes)",
+            "Sliding transform: Window %s (%s wordtoks, %s bytes), at %s wordtoks so far",
             i,
             window.size(Unit.WORDTOKS),
             window.size(Unit.BYTES),
+            len(output_wordtoks),
         )
         transformed_window = transform_func(window)
         new_wordtoks = list(transformed_window.as_wordtoks())
@@ -175,7 +185,7 @@ def sliding_transform(
                 output_wordtoks, new_wordtoks, settings.min_overlap
             )
             log.message(
-                "Best alignment of window %s is at token offset %s (score %s, %s)",
+                "Sliding transform: Best alignment of window %s is at token offset %s (score %s, %s)",
                 i,
                 offset,
                 score,
@@ -183,6 +193,8 @@ def sliding_transform(
             )
 
             output_wordtoks = output_wordtoks[:offset] + sep_wordtoks + new_wordtoks
+
+    log.message("Sliding transform: Done, output total %s wordtoks", len(output_wordtoks))
 
     # An alternate approach would be to accumulate the document sentences instead of wordtoks to
     # avoid re-parsing, but this probably a little simpler.
