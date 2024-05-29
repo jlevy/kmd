@@ -195,24 +195,31 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
 
     for path in paths:
         rel_path = os.path.relpath(path, base_dir)
+
+        # If we're explicitly looking in a hidden directory, show hidden files.
+        show_hidden = skippable_file(path)
+
         # FIXME: Need to handle the case where paths are files since os.walk works on directories only.
         for dirname, dirnames, filenames in os.walk(rel_path):
             # TODO: Better sort options.
             dirnames.sort()
             filenames.sort()
 
-            folder_tally[dirname] = len(filenames)
-            tally_str = f" - {len(filenames)} files" if len(filenames) > 0 else ""
             rel_dirname = os.path.relpath(dirname, base_dir)
 
-            if skippable_file(rel_dirname):
+            if not show_hidden and skippable_file(rel_dirname):
                 continue
+
+            folder_tally[dirname] = len(filenames)
+            tally_str = f" - {len(filenames)} files" if len(filenames) > 0 else ""
 
             command_output(f"{rel_dirname}{tally_str}", color="bright_blue")
             if full:
                 for filename in filenames:
                     rel_filename = os.path.relpath(filename, base_dir)
-                    if skippable_file(filename) or skippable_file(rel_filename):
+                    if not show_hidden and (
+                        skippable_file(filename) or skippable_file(rel_filename)
+                    ):
                         continue
 
                     full_path = os.path.join(dirname, filename)
