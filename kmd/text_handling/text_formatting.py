@@ -2,6 +2,7 @@ import html
 from textwrap import indent
 from typing import Any, Iterable
 import regex
+from strif import abbreviate_str
 
 
 def format_lines(values: Iterable[Any], prefix="    ") -> str:
@@ -48,14 +49,64 @@ def _trim_trailing_punctuation(text: str) -> str:
 
 def abbreviate_on_words(text: str, max_len: int, indicator: str = "…") -> str:
     """
-    Abbreviate text to a maximum length, breaking on whole words.
+    Abbreviate text to a maximum length, breaking on whole words (unless the first word
+    is too long). For aesthetics, removes trailing punctuation from the last word.
     """
     if len(text) <= max_len:
         return text
     words = text.split()
+
+    if words and max_len and len(words[0]) > max_len:
+        return abbreviate_str(words[0], max_len, indicator)
+
     while words and len(_trim_trailing_punctuation(" ".join(words))) + len(indicator) > max_len:
         words.pop()
+
     return _trim_trailing_punctuation(" ".join(words)) + indicator
+
+
+def abbreviate_phrase_in_middle(
+    phrase: str, max_len: int, ellipsis="…", max_trailing_len: int = 0
+) -> str:
+    """
+    Abbreviate a phrase to a maximum length, preserving the first and last few words of
+    the phrase whenever possible. The ellipsis is inserted in the middle of the phrase.
+    """
+    if not max_trailing_len:
+        max_trailing_len = min(int(max_len / 2), max(8, int(max_len / 4)))
+
+    phrase = " ".join(phrase.split())
+
+    if len(phrase) <= max_len:
+        return phrase
+
+    words = phrase.split()
+    total_len = len(phrase)
+    prefix_tally = 0
+    prefix_end_index = 0
+
+    # Walk through the split words, and tally total number of chars as we go.
+    for i in range(len(words)):
+        words[i] = abbreviate_str(words[i], max_len, ellipsis)
+        if prefix_tally >= max_len - max_trailing_len - len(ellipsis) - 1:
+            prefix_end_index = i
+            break
+        prefix_tally += len(words[i]) + 1
+
+    # Begin replacing words with "".
+    chars_removed = 0
+    for i in range(prefix_end_index, len(words)):
+        chars_removed += len(words[i]) + 1
+        words[i] = ""
+        if total_len - chars_removed - prefix_tally <= max_trailing_len - len(ellipsis) - 1:
+            break
+
+    words.insert(prefix_end_index, ellipsis)
+
+    # Join the words
+    result = " ".join(word for word in words if word)
+
+    return result
 
 
 ## Tests
@@ -92,10 +143,34 @@ def test_clean_title():
 
 
 def test_abbreviate_on_words():
-    assert abbreviate_on_words("Hello, World!", 5) == "…"
+    assert abbreviate_on_words("Hello, World!", 5) == "Hell…"
     assert abbreviate_on_words("Hello, World!", 6) == "Hello…"
     assert abbreviate_on_words("Hello, World!", 13) == "Hello, World!"
     assert abbreviate_on_words("Hello, World!", 12) == "Hello…"
     assert abbreviate_on_words("", 2) == ""
     assert abbreviate_on_words("Hello, World!", 0) == "…"
     assert abbreviate_on_words("", 5) == ""
+    assert (
+        abbreviate_on_words("Supercalifragilisticexpialidocious is a long word", 20)
+        == "Supercalifragilisti…"
+    )
+
+
+def test_abbreviate_phrase_in_middle():
+    assert abbreviate_phrase_in_middle("Hello, World! This is a test.", 16) == "Hello, … test."
+    assert (
+        abbreviate_phrase_in_middle("Hello, World! This is a test.", 23) == "Hello, World! … test."
+    )
+    assert (
+        abbreviate_phrase_in_middle("Hello, World! This is a test.", 27)
+        == "Hello, World! This … test."
+    )
+    assert (
+        abbreviate_phrase_in_middle("Hello, World! This is a test.", 40)
+        == "Hello, World! This is a test."
+    )
+    assert abbreviate_phrase_in_middle("Hello, World! This is a test.", 10) == "Hello, …"
+    assert (
+        abbreviate_phrase_in_middle("Supercalifragilisticexpialidocious is a long word", 24)
+        == "Supercalifragilisticexp… …"
+    )
