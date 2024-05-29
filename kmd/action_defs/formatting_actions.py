@@ -22,13 +22,16 @@ class StripHtml(Action):
         )
 
     def run(self, items: ActionInput) -> ActionResult:
-        item = items[0]
-        if not item.body:
-            raise ValueError(f"Item must have a body: {item}")
+        result_items = []
+        for item in items:
+            if not item.body:
+                raise ValueError(f"Item must have a body: {item}")
 
-        clean_body = html_to_plaintext(item.body)
-        new_title = f"{item.title} (clean text)"
-        output_item = item.new_copy_with(type=ItemType.note, title=new_title, body=clean_body)
+            clean_body = html_to_plaintext(item.body)
+            new_title = f"{item.title} (clean text)"
+            output_item = item.new_copy_with(type=ItemType.note, title=new_title, body=clean_body)
 
-        current_workspace().save(output_item)
-        return ActionResult([output_item])
+            current_workspace().save(output_item)
+            result_items.append(output_item)
+
+        return ActionResult(result_items)

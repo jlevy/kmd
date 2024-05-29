@@ -3,6 +3,7 @@ Transform text using sliding windows over a document, then reassembling the
 transformed text.
 """
 
+from dataclasses import dataclass
 from textwrap import dedent
 from typing import Callable, Generator, Optional
 from pprint import pprint
@@ -95,7 +96,7 @@ def truncate_at_wordtok_offset(doc: TextDoc, offset: int) -> TextDoc:
 
 
 def sliding_window(
-    doc: TextDoc, window_size: int, shift: int, unit: Unit
+    doc: TextDoc, window_size: int, window_shift: int, unit: Unit
 ) -> Generator[TextDoc, None, None]:
     """
     Generate TextDoc sub-documents in a sliding window over the given document.
@@ -121,20 +122,30 @@ def sliding_window(
 
         yield sub_doc
 
-        start_offset += shift
+        start_offset += window_shift
         start_index = end_index
 
 
 TextDocTransform = Callable[[TextDoc], TextDoc]
 
 
+@dataclass
+class WindowSettings:
+    """
+    Size of the sliding window, the shift, and the min overlap required when stitching windows
+    together. All sizes in wordtoks.
+    """
+
+    size: int
+    shift: int
+    min_overlap: int
+    separator: Optional[str] = None
+
+
 def sliding_transform(
     doc: TextDoc,
     transform_func: TextDocTransform,
-    window_size: int,
-    shift: int,
-    min_overlap: int,
-    window_separator: Optional[str] = None,
+    settings: WindowSettings,
 ) -> TextDoc:
     """
     Apply a transformation function to each TextDoc in a sliding window over the given document,
@@ -143,16 +154,34 @@ def sliding_transform(
     transformed window.
     """
     output_wordtoks = []
-    windows = sliding_window(doc, window_size, shift, Unit.WORDTOKS)
-    sep_wordtoks = [window_separator] if window_separator else []
+    windows = sliding_window(doc, settings.size, settings.shift, Unit.WORDTOKS)
+    sep_wordtoks = [settings.separator] if settings.separator else []
 
-    for window in windows:
+    log.message("Beginning sliding window: %s", settings)
+
+    for i, window in enumerate(windows):
+        log.message(
+            "Processing window %s (%s wordtoks, %s bytes)",
+            i,
+            window.size(Unit.WORDTOKS),
+            window.size(Unit.BYTES),
+        )
         transformed_window = transform_func(window)
         new_wordtoks = list(transformed_window.as_wordtoks())
         if not output_wordtoks:
             output_wordtoks = new_wordtoks
         else:
-            offset, _score, _diff = find_best_alignment(output_wordtoks, new_wordtoks, min_overlap)
+            offset, (score, diff) = find_best_alignment(
+                output_wordtoks, new_wordtoks, settings.min_overlap
+            )
+            log.message(
+                "Best alignment of window %s is at token offset %s (score %s, %s)",
+                i,
+                offset,
+                score,
+                diff.stats(),
+            )
+
             output_wordtoks = output_wordtoks[:offset] + sep_wordtoks + new_wordtoks
 
     # An alternate approach would be to accumulate the document sentences instead of wordtoks to
@@ -208,9 +237,9 @@ def test_seek_doc():
 def test_sliding_window():
     doc = TextDoc.from_text(_example_text)
     window_size = 80
-    shift = 60
+    window_shift = 60
 
-    windows = list(sliding_window(doc, window_size, shift, Unit.BYTES))
+    windows = list(sliding_window(doc, window_size, window_shift, Unit.BYTES))
     pprint(windows)
 
     sentence_windows = [
@@ -260,9 +289,6 @@ def test_truncate_at_wordtok():
 
 
 def test_sliding_transform():
-    window_size = 80
-    shift = 60
-
     long_text = (_example_text + "\n\n") * 2
     doc = TextDoc.from_text(long_text)
 
@@ -272,7 +298,7 @@ def test_sliding_transform():
         return TextDoc.from_text(transformed_text)
 
     transformed_doc = sliding_transform(
-        doc, transform_func, window_size, shift, 5, window_separator="|"
+        doc, transform_func, WindowSettings(80, 60, min_overlap=5, separator="|")
     )
     print("---Transformed document with separator:")
     print(transformed_doc.reassemble())
@@ -281,5 +307,5 @@ def test_sliding_transform():
 
     long_text = (_example_text + "\n\n") * 20
     doc = TextDoc.from_text(long_text)
-    transformed_doc = sliding_transform(doc, transform_func, window_size, shift, 5)
+    transformed_doc = sliding_transform(doc, transform_func, WindowSettings(80, 60, min_overlap=5))
     assert transformed_doc.reassemble() == long_text.upper().strip()

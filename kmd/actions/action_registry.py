@@ -24,7 +24,15 @@ def register_action(cls: Type[Action]):
 
 
 def register_llm_action(
-    name, friendly_name, description, model, system_message, title_template, template
+    name,
+    friendly_name,
+    description,
+    model,
+    system_message,
+    title_template,
+    template,
+    window_settings=None,
+    diff_filter=None,
 ):
     """
     Convenience method to register an LLM action.
@@ -41,6 +49,8 @@ def register_llm_action(
                 system_message=system_message,
                 title_template=title_template,
                 template=template,
+                window_settings=window_settings,
+                diff_filter=diff_filter,
             )
 
     return CustomLLMAction

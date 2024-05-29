@@ -29,7 +29,7 @@ class DiffOp:
 
 
 @dataclass
-class TokenDiffStats:
+class DiffStats:
     added: int
     removed: int
 
@@ -55,10 +55,10 @@ class TextDiff:
     def changes(self) -> List[DiffOp]:
         return [op for op in self.ops if op.action != DiffTag.EQUAL]
 
-    def stats(self) -> TokenDiffStats:
+    def stats(self) -> DiffStats:
         wordtoks_added = sum(len(op.wordtoks) for op in self.ops if op.action == DiffTag.INSERT)
         wordtoks_removed = sum(len(op.wordtoks) for op in self.ops if op.action == DiffTag.DELETE)
-        return TokenDiffStats(wordtoks_added, wordtoks_removed)
+        return DiffStats(wordtoks_added, wordtoks_removed)
 
     def apply_to(self, original: List[str]) -> List[str]:
         result = []
@@ -130,7 +130,10 @@ def lcs_diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
     return TextDiff(diff)
 
 
-def scored_lcs_diff(wordtoks1: List[str], wordtoks2: List[str]) -> Tuple[float, TextDiff]:
+ScoredDiff = Tuple[float, TextDiff]
+
+
+def scored_lcs_diff(wordtoks1: List[str], wordtoks2: List[str]) -> ScoredDiff:
     """
     Calculate the number of wordtoks added and removed between two TextDocs.
     Score is (wordtoks_added + wordtoks_removed) / min(len(doc1), len(doc2)),
@@ -150,8 +153,8 @@ def find_best_alignment(
     list2: List[str],
     min_overlap: int,
     max_overlap: Optional[int] = None,
-    scored_diff: Callable[[List[str], List[str]], Tuple[float, Any]] = scored_lcs_diff,
-) -> Tuple[int, float, Any]:
+    scored_diff: Callable[[List[str], List[str]], ScoredDiff] = scored_lcs_diff,
+) -> Tuple[int, ScoredDiff]:
     """
     Find the best alignment of two lists of values, where edit distance is smallest but overlap is
     at least min_overlap and at most max_overlap. Returns offset into list1 and diff object.
@@ -185,7 +188,7 @@ def find_best_alignment(
     if best_diff is None:
         raise ValueError("No alignment found")
 
-    return best_offset, best_score, best_diff
+    return best_offset, (best_score, best_diff)
 
 
 ## Tests
@@ -232,7 +235,7 @@ def test_lcs_diff_wordtoks():
 
     print("---Diff stats:")
     print(diff.stats())
-    assert diff.stats() == TokenDiffStats(added=4, removed=7)
+    assert diff.stats() == DiffStats(added=4, removed=7)
 
     assert diff.ops[1] == DiffOp(DiffTag.DELETE, ["<-PARA-BR->"])
     assert diff.ops[-1] == DiffOp(DiffTag.DELETE, ["<-SENT-BR->", "Sentence", " ", "3c", "."])
@@ -289,7 +292,7 @@ def test_find_best_alignment():
     wordtoks4[3] = "Y"
 
     print("---Alignment:")
-    offset, score, diff = find_best_alignment(wordtoks1, wordtoks2, 1)
+    offset, (score, diff) = find_best_alignment(wordtoks1, wordtoks2, 1)
     print(f"Offset: {offset}, Score: {score}")
     print(diff)
     print()
@@ -297,7 +300,7 @@ def test_find_best_alignment():
     assert score == 0.0
     assert diff.changes() == []
 
-    offset, score, diff = find_best_alignment(wordtoks1, wordtoks3, 3)
+    offset, (score, diff) = find_best_alignment(wordtoks1, wordtoks3, 3)
     print(f"Offset: {offset}, Score: {score}")
     print(diff)
     print()
@@ -305,7 +308,7 @@ def test_find_best_alignment():
     assert score == 0.0
     assert diff.changes() == []
 
-    offset, score, diff = find_best_alignment(wordtoks1, wordtoks4, 3)
+    offset, (score, diff) = find_best_alignment(wordtoks1, wordtoks4, 3)
     print(f"Offset: {offset}, Score: {score}")
     print(diff)
     print()

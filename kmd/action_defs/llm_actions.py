@@ -2,8 +2,13 @@ from textwrap import dedent
 from kmd.actions.llm_action_base import LLM
 from kmd.actions.action_registry import register_llm_action
 from kmd.config.logger import get_logger
+from kmd.text_handling.windowing import WindowSettings
 
 log = get_logger(__name__)
+
+
+# About 2K wordtoks is several paragraphs.
+WINDOW_2K_WORDTOKS = WindowSettings(2048, 2048 - 256, 8)
 
 
 register_llm_action(
@@ -67,6 +72,7 @@ register_llm_action(
         Formatted text:
         """
     ),
+    window_settings=WINDOW_2K_WORDTOKS,
 )
 
 register_llm_action(
