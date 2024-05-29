@@ -67,7 +67,7 @@ break_into_paragraphs
 summarize_as_bullets
 create_pdf
 
-# Get all videos on a channel and then download them (to cache), and then transcribe them.
+# Get all videos on a channel and then download and transcribe them:
 list_channel_videos 'https://www.youtube.com/@Kboges'
 transcribe_video
 ```

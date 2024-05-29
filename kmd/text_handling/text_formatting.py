@@ -34,13 +34,6 @@ def html_to_plaintext(text: str):
     return clean_text
 
 
-def single_line(text: str) -> str:
-    """
-    Convert newlines and other whitespace to spaces.
-    """
-    return regex.sub(r"\s+", " ", text).strip()
-
-
 def clean_title(text: str) -> str:
     """
     Clean up arbitrary text to make it suitable for a title. Convert all whitespace to spaces.
