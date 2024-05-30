@@ -26,7 +26,7 @@ class ConfigureWebPage(Action):
 
         # Determine item title etc from first item.
         first_item = items[0]
-        title = first_item.get_title()
+        title = first_item.abbrev_title()
         config_item = configure_web_page(title, items)
         current_workspace().save(config_item)
 

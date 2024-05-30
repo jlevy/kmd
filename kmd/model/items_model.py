@@ -5,7 +5,7 @@ The data model for Items and their file formats.
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 from strif import abbreviate_str
 from kmd.file_storage.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
@@ -13,7 +13,7 @@ from kmd.model.canon_url import canonicalize_url
 from kmd.model.locators import Locator
 from kmd.text_handling.markdown_util import markdown_to_html
 from kmd.text_handling.text_formatting import (
-    abbreviate_on_words,
+    abbreviate_phrase_in_middle,
     clean_title,
     plaintext_to_html,
 )
@@ -120,7 +120,7 @@ class ItemRelations:
     Relations of a given item to other items.
     """
 
-    derived_from: Optional[Locator] = None
+    derived_from: Optional[list[Locator]] = None
 
     # TODO: Other relations.
     # citations: Optional[list[Locator]] = None
@@ -166,6 +166,46 @@ class Item:
     NON_METADATA_FIELDS = ["file_ext", "body", "external_path", "is_binary", "store_path"]
     OPTIONAL_FIELDS = ["extra"]
 
+    @classmethod
+    def from_dict(cls, item_dict: dict[str, Any], **kwargs) -> "Item":
+        """
+        Deserialize fields from a dict that may incude string and dict values.
+        """
+        item_dict = {**item_dict, **kwargs}
+
+        # These are the enum and dataclass fields.
+        try:
+            type = ItemType(item_dict["type"])
+            format = Format(item_dict["format"]) if "format" in item_dict else None
+            file_ext = FileExt(item_dict["file_ext"]) if "file_ext" in item_dict else None
+            body = item_dict.get("body")
+            relations = (
+                ItemRelations(item_dict["relations"])
+                if "relations" in item_dict
+                else ItemRelations()
+            )
+            store_path = item_dict.get("store_path")
+            # TODO: created_at and modified_at could be handled here too.
+        except KeyError as e:
+            raise ValueError(f"Error deserializing Item: {e}")
+
+        # Other fields are basic strings or dicts.
+        other_metadata = {
+            key: value
+            for key, value in item_dict.items()
+            if key not in ["type", "format", "file_ext", "body", "relations", "store_path"]
+        }
+
+        return Item(
+            type=type,
+            format=format,
+            file_ext=file_ext,
+            body=body,
+            relations=relations,
+            **other_metadata,
+            store_path=store_path,
+        )
+
     def update_modified_at(self):
         self.modified_at = datetime.now()
 
@@ -199,7 +239,7 @@ class Item:
 
         return item_dict
 
-    def get_title(self, max_len: int = 100) -> str:
+    def abbrev_title(self, max_len: int = 100) -> str:
         """
         Get or infer title.
         """
@@ -210,11 +250,8 @@ class Item:
             or (not self.is_binary and self.body)
             or UNTITLED
         )
-        return clean_title(
-            abbreviate_on_words(
-                abbreviate_str(full_title, max_len=max_len + 2, indicator="…"), max_len=max_len
-            )
-        )
+
+        return clean_title(abbreviate_phrase_in_middle(full_title, max_len))
 
     def read_as_config(self) -> Any:
         """

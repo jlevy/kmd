@@ -12,7 +12,7 @@ from kmd.model.locators import StorePath
 from kmd.model.items_model import FileExt, Format, Item, ItemId, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.model.canon_url import canonicalize_url
-from kmd.text_handling.text_formatting import abbreviate_phrase_in_middle, format_lines
+from kmd.text_handling.text_formatting import format_lines
 from kmd.text_handling.wrapping import wrap_text
 from kmd.text_handling.inflection import plural
 from kmd.util.file_utils import move_file
@@ -117,6 +117,7 @@ class FileStore:
         self.settings_dir = join(self.base_dir, SETTINGS_DIR)
         os.makedirs(self.settings_dir, exist_ok=True)
 
+        # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
         self.selection = PersistedYaml(join(self.settings_dir, "selection.yaml"), [])
 
         self.log_info()
@@ -179,9 +180,8 @@ class FileStore:
         Also return the old filename if it's different.
         """
 
-        title = item.get_title()
-        shortened_title = abbreviate_phrase_in_middle(title, FILENAME_SLUG_MAX_LEN)
-        slug = slugify(shortened_title, max_length=FILENAME_SLUG_MAX_LEN, separator="_")
+        title = item.abbrev_title(max_len=FILENAME_SLUG_MAX_LEN)
+        slug = slugify(title, max_length=FILENAME_SLUG_MAX_LEN, separator="_")
 
         # Get a unique name per item type.
         unique_slug, old_slugs = self.uniquifier.uniquify_historic(slug, item.get_full_suffix())
@@ -299,17 +299,8 @@ class FileStore:
             body, metadata = fmf_read(self.base_dir / store_path)
             if not metadata:
                 raise ValueError(f"No metadata found in file: {store_path}")
-            format = Format(metadata.get("format"))
-
-            other_metadata = {
-                key: value
-                for key, value in metadata.items()
-                if key not in ["type", "format", "body"]
-            }
-
-            return Item(
-                type=item_type, format=format, body=body, **other_metadata, store_path=store_path
-            )
+            
+            return Item.from_dict(metadata, body=body, store_path=store_path)
         else:
             # This is a PDF or other binary file, so we just return the metadata.
             format = _format_from_ext(file_ext)

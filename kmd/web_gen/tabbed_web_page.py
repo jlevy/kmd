@@ -37,7 +37,9 @@ def configure_web_page(title: str, items: List[Item]) -> Item:
         if not item.store_path:
             raise ValueError(f"Item has no store_path: {item}")
 
-    tabs = [TabInfo(label=item.get_title(max_len=20), store_path=item.store_path) for item in items]
+    tabs = [
+        TabInfo(label=item.abbrev_title(max_len=20), store_path=item.store_path) for item in items
+    ]
     _fill_in_ids(tabs)
     config = TabbedWebPage(title=title, tabs=tabs)
 
