@@ -5,7 +5,7 @@ from kmd.text_handling.text_diffs import DiffTag, lcs_diff_wordtoks
 from kmd.text_handling.text_doc import TextDoc
 
 
-class OffsetMapping:
+class TokenMapping:
     """
     Given two documents doc1 and doc2 as a sequence of word tokens, create a mapping from offsets
     in doc2 back to doc1.
@@ -68,7 +68,7 @@ def test_offset_mapping():
     doc1 = TextDoc.from_text("This is a simple test.")
     doc2 = TextDoc.from_text("This is a simpler pytest.")
 
-    mapping = OffsetMapping(doc1, doc2)
+    mapping = TokenMapping(doc1, doc2)
     wordtoks1 = mapping.wordtoks1
     wordtoks2 = mapping.wordtoks2
 
