@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import difflib
 from enum import Enum
 from textwrap import dedent
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 from kmd.text_handling.text_doc import DocIndex, TextDoc
 from kmd.text_handling.wordtoks import is_br_or_space, is_word
 
@@ -135,7 +135,7 @@ ScoredDiff = Tuple[float, TextDiff]
 
 def scored_lcs_diff(wordtoks1: List[str], wordtoks2: List[str]) -> ScoredDiff:
     """
-    Calculate the number of wordtoks added and removed between two TextDocs.
+    Calculate the number of wordtoks added and removed between two lists of tokens.
     Score is (wordtoks_added + wordtoks_removed) / min(len(doc1), len(doc2)),
     which is 0 for identical docs.
     """

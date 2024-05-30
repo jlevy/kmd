@@ -15,8 +15,27 @@ PARA_BR_STR = "\n\n"
 SPACE_TOK = " "
 
 # Currently break on words, spaces, or any single other/punctuation character.
-# TODO: Could add proper support for Markdown and HTML formatting as wordtoks.
-_wordtok_pattern = regex.compile(r"(\w+|[^\w\s]|[\s]+)")
+# HTML tags (of length <1024 chars) are also a single token.
+# TODO: Could add nicer support for Markdown formatting as well.
+_wordtok_pattern = regex.compile(r"(<.{0,1024}?>|\w+|[^\w\s]|[\s]+)")
+
+
+def wordtok_to_str(wordtok: str) -> str:
+    """
+    Convert a wordtok to a string.
+    """
+    if wordtok == SENT_BR_TOK:
+        return SENT_BR_STR
+    if wordtok == PARA_BR_TOK:
+        return PARA_BR_STR
+    return wordtok
+
+
+def wordtok_len(wordtok: str) -> int:
+    """
+    Char length of a wordtok.
+    """
+    return len(wordtok_to_str(wordtok))
 
 
 def sentence_as_wordtoks(sentence: str) -> List[str]:
@@ -33,9 +52,7 @@ def join_wordtoks(wordtoks: List[str]) -> str:
     """
     Join wordtoks back into a sentence.
     """
-    wordtoks = [SENT_BR_STR if wordtok == SENT_BR_TOK else wordtok for wordtok in wordtoks]
-    wordtoks = [PARA_BR_STR if wordtok == PARA_BR_TOK else wordtok for wordtok in wordtoks]
-
+    wordtoks = [wordtok_to_str(wordtok) for wordtok in wordtoks]
     return "".join(wordtoks)
 
 
@@ -66,6 +83,7 @@ def test_wordtokization():
         "And here's another one!",
         "Special characters: @#%^&*()",
     ]
+    html_test_case = 'This is <span data-timestamp="1.234">a test</span>.'
 
     for sentence in test_cases:
         wordtoks = sentence_as_wordtoks(sentence)
@@ -92,3 +110,20 @@ def test_wordtokization():
     ]
     assert sentence_as_wordtoks("") == []
     assert sentence_as_wordtoks("   ") == [" "]
+
+    assert sentence_as_wordtoks(html_test_case) == [
+        "This",
+        " ",
+        "is",
+        " ",
+        '<span data-timestamp="1.234">',
+        "a",
+        " ",
+        "test",
+        "</span>",
+        ".",
+    ]
+
+    assert len(html_test_case) == sum(
+        wordtok_len(wordtok) for wordtok in sentence_as_wordtoks(html_test_case)
+    )
