@@ -2,10 +2,49 @@ from textwrap import dedent
 from kmd.actions.llm_action_base import LLM
 from kmd.actions.action_registry import register_llm_action
 from kmd.config.logger import get_logger
-from kmd.text_handling.windowing import WINDOW_2K_WORDTOKS
+from kmd.text_handling.windowing import WindowSettings, Unit, WINDOW_BR
 
 
 log = get_logger(__name__)
+
+
+# Sliding, overlapping word-based window. 2K wordtoks is several paragraphs.
+WINDOW_2K_WORDTOKS = WindowSettings(Unit.WORDTOKS, 2048, 2048 - 256, 8, separator=WINDOW_BR)
+
+# Process 4 paragraphs at a time.
+WINDOW_4_PARAS = WindowSettings(Unit.PARAGRAPHS, 4, 4, 0, separator=WINDOW_BR)
+
+
+register_llm_action(
+    name="break_into_paragraphs",
+    friendly_name="Reformat Text as Paragraphs",
+    description="Reformat text as paragraphs.",
+    model=LLM.gpt_3_5_turbo_16k_0613.value,
+    system_message=dedent(
+        """
+        You are a careful and precise editor.
+        You give exactly the results requested without additional commentary.
+        """
+    ),
+    title_template="{title} (in paragraphs)",
+    template=dedent(
+        """
+        Format this text according to these rules:
+        - Break the following text into paragraphs so it is readable and organized.
+        - Add oriented quotation marks so quotes are “like this” and not "like this".
+        - Make any other punctuation changes to fit the Chicago Manual of Style.
+        - Do *not* change any words of the text. Add line breaks and punctuation and formatting changes only.
+        - Preserve all Markdown formatting.
+
+        Input text:
+
+        {body}
+
+        Formatted text:
+        """
+    ),
+    windowing=WINDOW_2K_WORDTOKS,
+)
 
 
 register_llm_action(
@@ -38,39 +77,9 @@ register_llm_action(
         Corrected text:
         """
     ),
+    windowing=WINDOW_4_PARAS,
 )
 
-
-register_llm_action(
-    name="break_into_paragraphs",
-    friendly_name="Reformat Text as Paragraphs",
-    description="Reformat text as paragraphs.",
-    model=LLM.gpt_3_5_turbo_16k_0613.value,
-    system_message=dedent(
-        """
-        You are a careful and precise editor.
-        You give exactly the results requested without additional commentary.
-        """
-    ),
-    title_template="{title} (in paragraphs)",
-    template=dedent(
-        """
-        Format this text according to these rules:
-        - Break the following text into paragraphs so it is readable and organized.
-        - Add oriented quotation marks so quotes are “like this” and not "like this".
-        - Make any other punctuation changes to fit the Chicago Manual of Style.
-        - Do *not* change any words of the text. Add line breaks and punctuation and formatting changes only.
-        - Preserve all Markdown formatting.
-
-        Input text:
-
-        {body}
-
-        Formatted text:
-        """
-    ),
-    window_settings=WINDOW_2K_WORDTOKS,
-)
 
 register_llm_action(
     name="summarize_as_bullets",
@@ -99,6 +108,7 @@ register_llm_action(
         Bullet points:
         """
     ),
+    windowing=WINDOW_4_PARAS,
 )
 
 register_llm_action(
@@ -130,4 +140,5 @@ register_llm_action(
         Concepts:
         """
     ),
+    windowing=WINDOW_4_PARAS,
 )

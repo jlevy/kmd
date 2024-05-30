@@ -156,13 +156,6 @@ class WindowSettings:
     separator: str = ""
 
 
-# Sliding, overlapping word-based window. 2K wordtoks is several paragraphs.
-WINDOW_2K_WORDTOKS = WindowSettings(Unit.WORDTOKS, 2048, 2048 - 256, 8, separator=WINDOW_BR)
-
-# Process 4 paragraphs at a time.
-WINDOW_4_PARAS = WindowSettings(Unit.PARAGRAPHS, 4, 4, 0, separator=WINDOW_BR)
-
-
 def sliding_window_transform(
     doc: TextDoc,
     transform_func: TextDocTransform,

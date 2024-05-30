@@ -31,7 +31,7 @@ def register_llm_action(
     system_message,
     title_template,
     template,
-    window_settings=None,
+    windowing=None,
     diff_filter=None,
 ):
     """
@@ -49,7 +49,7 @@ def register_llm_action(
                 system_message=system_message,
                 title_template=title_template,
                 template=template,
-                window_settings=window_settings,
+                windowing=windowing,
                 diff_filter=diff_filter,
             )
 

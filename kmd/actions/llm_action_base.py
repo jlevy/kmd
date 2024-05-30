@@ -33,7 +33,7 @@ class LLMAction(Action):
         system_message,
         title_template,
         template,
-        window_settings: Optional[WindowSettings] = None,
+        windowing: Optional[WindowSettings] = None,
         diff_filter: Optional[DiffOpFilter] = None,
     ):
         super().__init__(
@@ -47,7 +47,7 @@ class LLMAction(Action):
             expected_args=ONE_OR_MORE_ARGS,
         )
         self.implementation: str = "llm"
-        self.window_settings = window_settings
+        self.windowing = windowing
         self.diff_filter = diff_filter
 
     def run(self, items: ActionInput) -> ActionResult:
@@ -72,9 +72,9 @@ def _sliding_llm_transform(
     system_message: str,
     template: str,
     input: str,
-    window_settings: Optional[WindowSettings],
+    windowing: Optional[WindowSettings],
 ) -> str:
-    if not window_settings:
+    if not windowing:
         result_str = llm_completion(model, system_message, template, input)
     else:
 
@@ -87,7 +87,7 @@ def _sliding_llm_transform(
         transformed_doc = sliding_window_transform(
             input_doc,
             transform,
-            window_settings,
+            windowing,
         )
         result_str = transformed_doc.reassemble()
 
@@ -116,7 +116,7 @@ def run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
             action.system_message,
             action.template,
             item.body,
-            action.window_settings,
+            action.windowing,
         )
 
         if action.title_template:
