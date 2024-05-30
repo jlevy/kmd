@@ -15,7 +15,12 @@ def single_line(text: str) -> str:
     return regex.sub(r"\s+", " ", text).strip()
 
 
-def abbreviate_arg(value: Any, repr_func: Callable = repr, truncate_length: int = 32) -> str:
+DEFAULT_TRUNCATE = 36
+
+
+def abbreviate_arg(
+    value: Any, repr_func: Callable = repr, truncate_length: int = DEFAULT_TRUNCATE
+) -> str:
     """
     Abbreviate an argument value for logging.
     """
@@ -41,7 +46,7 @@ def log_calls(
     level: str = "info",
     show_args=True,
     show_return=False,
-    truncate_length: int = 32,
+    truncate_length: int = DEFAULT_TRUNCATE,
     repr_func: Callable = repr,
 ):
     """

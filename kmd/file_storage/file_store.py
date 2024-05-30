@@ -13,7 +13,7 @@ from kmd.model.items_model import FileExt, Format, Item, ItemId, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.model.canon_url import canonicalize_url
 from kmd.text_handling.text_formatting import format_lines
-from kmd.text_handling.wrapping import wrap_text
+from kmd.text_handling.doc_formatting import normalize_formatting
 from kmd.text_handling.inflection import plural
 from kmd.util.file_utils import move_file
 from kmd.util.type_utils import not_none
@@ -258,7 +258,8 @@ class FileStore:
                     if item.is_binary:
                         raise ValueError(f"Binary Items should be external files: {item}")
 
-                    formatted_body = wrap_text(item.body_text(), item.format)
+                    formatted_body = normalize_formatting(item.body_text(), item.format)
+                    
                     is_html = str(item.format) == str(Format.html)
                     fmf_write(full_path, formatted_body, item.metadata(), is_html=is_html)
             except IOError as e:
