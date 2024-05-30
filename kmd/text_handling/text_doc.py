@@ -70,6 +70,8 @@ class Unit(Enum):
     BYTES = "bytes"
     CHARS = "chars"
     WORDTOKS = "wordtoks"
+    PARAGRAPHS = "paragraphs"
+    SENTENCES = "sentences"
 
 
 def size(text: str, unit: Unit) -> int:
@@ -80,7 +82,7 @@ def size(text: str, unit: Unit) -> int:
     elif unit == Unit.WORDTOKS:
         return size_in_wordtoks(text)
     else:
-        raise ValueError(f"Unsupported unit: {unit}")
+        raise ValueError(f"Unsupported unit for string: {unit}")
 
 
 @dataclass(frozen=True, order=True)
@@ -127,15 +129,20 @@ class Paragraph:
         return SENT_BR_STR.join(sent.text for sent in self.sentences)
 
     def size(self, unit: Unit) -> int:
+        if unit == Unit.PARAGRAPHS:
+            return 1
+        if unit == Unit.SENTENCES:
+            return len(self.sentences)
+
         base_size = sum(sent.size(unit) for sent in self.sentences)
         if unit == Unit.BYTES:
             return base_size + (len(self.sentences) - 1) * size_in_bytes(SENT_BR_STR)
-        elif unit == Unit.CHARS:
+        if unit == Unit.CHARS:
             return base_size + (len(self.sentences) - 1) * len(SENT_BR_STR)
-        elif unit == Unit.WORDTOKS:
+        if unit == Unit.WORDTOKS:
             return base_size + (len(self.sentences) - 1)
-        else:
-            raise ValueError(f"Unsupported unit: {unit}")
+
+        raise ValueError(f"Unsupported unit for Paragraph: {unit}")
 
     def as_wordtoks(self) -> Iterable[str]:
         last_sent_index = len(self.sentences) - 1
@@ -240,15 +247,23 @@ class TextDoc:
             last_para.sentences.append(sent)
 
     def size(self, unit: Unit) -> int:
+        if unit == Unit.PARAGRAPHS:
+            return len(self.paragraphs)
+        if unit == Unit.SENTENCES:
+            return sum(len(para.sentences) for para in self.paragraphs)
+
         base_size = sum(para.size(unit) for para in self.paragraphs)
         if unit == Unit.BYTES:
             return base_size + (len(self.paragraphs) - 1) * size_in_bytes(PARA_BR_STR)
-        elif unit == Unit.CHARS:
+        if unit == Unit.CHARS:
             return base_size + (len(self.paragraphs) - 1) * len(PARA_BR_STR)
-        elif unit == Unit.WORDTOKS:
+        if unit == Unit.WORDTOKS:
             return base_size + (len(self.paragraphs) - 1)
-        else:
-            raise ValueError(f"Unsupported unit: {unit}")
+
+        raise ValueError(f"Unsupported unit for TextDoc: {unit}")
+
+    def size_summary(self) -> str:
+        return f"{self.size(Unit.PARAGRAPHS)} paragraphs, {self.size(Unit.SENTENCES)} sentences, {self.size(Unit.BYTES)} bytes"
 
     def as_wordtoks(self) -> Iterable[str]:
         last_para_index = len(self.paragraphs) - 1

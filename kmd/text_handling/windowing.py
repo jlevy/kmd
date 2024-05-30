@@ -4,13 +4,15 @@ transformed text.
 """
 
 from dataclasses import dataclass
+from math import ceil
 from textwrap import dedent
-from typing import Callable, Generator, Optional
+from typing import Callable, Generator, List, Optional
 from pprint import pprint
 from kmd.config.logger import get_logger
 from kmd.text_handling.text_diffs import find_best_alignment
 from kmd.text_handling.text_doc import (
     DocIndex,
+    Paragraph,
     Sentence,
     TextDoc,
     Unit,
@@ -45,7 +47,7 @@ def seek_doc(doc: TextDoc, offset: int, unit: Unit) -> DocIndex:
         size_sent_break = 1
         size_para_break = 1
     else:
-        raise ValueError(f"Invalid unit {unit}")
+        raise ValueError(f"Unsupported unit for seek_doc: {unit}")
 
     for para_index, para in enumerate(doc.paragraphs):
         for sent_index, sent in enumerate(para.sentences):
@@ -95,7 +97,7 @@ def truncate_at_wordtok_offset(doc: TextDoc, offset: int) -> TextDoc:
     return sub_doc
 
 
-def sliding_window(
+def sliding_word_window(
     doc: TextDoc, window_size: int, window_shift: int, unit: Unit
 ) -> Generator[TextDoc, None, None]:
     """
@@ -126,7 +128,18 @@ def sliding_window(
         start_index = end_index
 
 
+def sliding_para_window(doc: TextDoc, nparas: int) -> Generator[TextDoc, None, None]:
+    """
+    Generate TextDoc sub-documents taking `nparas` paragraphs at a time.
+    """
+    for i in range(0, len(doc.paragraphs), nparas):
+        end_index = min(i + nparas - 1, len(doc.paragraphs) - 1)
+        yield doc.sub_doc(DocIndex(i, 0), DocIndex(end_index, 0))
+
+
 TextDocTransform = Callable[[TextDoc], TextDoc]
+
+WINDOW_BR = "<!--window-br-->"
 
 
 @dataclass
@@ -136,32 +149,56 @@ class WindowSettings:
     together. All sizes in wordtoks.
     """
 
+    unit: Unit
     size: int
     shift: int
-    min_overlap: int
-    separator: Optional[str] = None
+    min_overlap: int = 0
+    separator: str = ""
 
 
-def sliding_transform(
+# Sliding, overlapping word-based window. 2K wordtoks is several paragraphs.
+WINDOW_2K_WORDTOKS = WindowSettings(Unit.WORDTOKS, 2048, 2048 - 256, 8, separator=WINDOW_BR)
+
+# Process 4 paragraphs at a time.
+WINDOW_4_PARAS = WindowSettings(Unit.PARAGRAPHS, 4, 4, 0, separator=WINDOW_BR)
+
+
+def sliding_window_transform(
+    doc: TextDoc,
+    transform_func: TextDocTransform,
+    settings: WindowSettings,
+) -> TextDoc:
+    if settings.unit == Unit.WORDTOKS:
+        return sliding_word_window_transform(doc, transform_func, settings)
+    elif settings.unit == Unit.PARAGRAPHS:
+        return sliding_para_window_transform(doc, transform_func, settings)
+    else:
+        raise ValueError(f"Unsupported sliding transform unit: {settings.unit}")
+
+
+def sliding_word_window_transform(
     doc: TextDoc,
     transform_func: TextDocTransform,
     settings: WindowSettings,
 ) -> TextDoc:
     """
     Apply a transformation function to each TextDoc in a sliding window over the given document,
-    then reassemble the transformed document. Uses best effort to stitch the results together
-    seamlessly by searching for the best alignment (minimum wordtok edit distance) of each
-    transformed window.
+    stepping through wordtoks, then reassemble the transformed document. Uses best effort to
+    stitch the results together seamlessly by searching for the best alignment (minimum wordtok
+    edit distance) of each transformed window.
     """
+    if settings.unit != Unit.WORDTOKS:
+        raise ValueError(f"This sliding window expects wordtoks, not {settings.unit}")
+
     output_wordtoks = []
-    windows = sliding_window(doc, settings.size, settings.shift, Unit.WORDTOKS)
+    windows = sliding_word_window(doc, settings.size, settings.shift, Unit.WORDTOKS)
     nwordtoks = doc.size(Unit.WORDTOKS)
     nbytes = doc.size(Unit.BYTES)
     nwindows = (nwordtoks - settings.size) // settings.shift + 1
     sep_wordtoks = [settings.separator] if settings.separator else []
 
     log.message(
-        "Sliding transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
+        "Sliding word transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
         nwordtoks,
         nbytes,
         nwindows,
@@ -170,7 +207,7 @@ def sliding_transform(
 
     for i, window in enumerate(windows):
         log.message(
-            "Sliding transform: Window %s (%s wordtoks, %s bytes), at %s wordtoks so far",
+            "Sliding word transform: Window %s (%s wordtoks, %s bytes), at %s wordtoks so far",
             i,
             window.size(Unit.WORDTOKS),
             window.size(Unit.BYTES),
@@ -185,7 +222,7 @@ def sliding_transform(
                 output_wordtoks, new_wordtoks, settings.min_overlap
             )
             log.message(
-                "Sliding transform: Best alignment of window %s is at token offset %s (score %s, %s)",
+                "Sliding word transform: Best alignment of window %s is at token offset %s (score %s, %s)",
                 i,
                 offset,
                 score,
@@ -194,12 +231,61 @@ def sliding_transform(
 
             output_wordtoks = output_wordtoks[:offset] + sep_wordtoks + new_wordtoks
 
-    log.message("Sliding transform: Done, output total %s wordtoks", len(output_wordtoks))
+    log.message("Sliding word transform: Done, output total %s wordtoks", len(output_wordtoks))
 
     # An alternate approach would be to accumulate the document sentences instead of wordtoks to
     # avoid re-parsing, but this probably a little simpler.
     output_doc = TextDoc.from_text(join_wordtoks(output_wordtoks))
     return output_doc
+
+
+def sliding_para_window_transform(
+    doc: TextDoc, transform_func: TextDocTransform, settings: WindowSettings
+) -> TextDoc:
+    """
+    Apply a transformation function to each TextDoc, stepping through paragraphs `settings.size`
+    at a time, then reassemble the transformed document.
+    """
+    if settings.unit != Unit.PARAGRAPHS:
+        raise ValueError(f"This sliding window expects paragraphs, not {settings.unit}")
+    if settings.size != settings.shift:
+        raise ValueError("Paragraph window transform requires equal size and shift")
+
+    windows = sliding_para_window(doc, settings.size)
+
+    log.message(
+        "Sliding paragraph transform: Begin on doc: %s windows of size %s paragraphs on total %s",
+        ceil(doc.size(Unit.PARAGRAPHS) / settings.size),
+        settings.size,
+        doc.size_summary(),
+    )
+
+    transformed_paras: List[Paragraph] = []
+    for i, window in enumerate(windows):
+        log.message(
+            "Sliding paragraph transform: Begin on doc: window %s",
+            window.size_summary(),
+        )
+
+        new_doc = transform_func(window)
+        if i > 0:
+            try:
+                new_doc.paragraphs[0].sentences[0].text = (
+                    settings.separator + new_doc.paragraphs[0].sentences[0].text
+                )
+            except KeyError:
+                pass
+        transformed_paras.extend(new_doc.paragraphs)
+
+    transformed_text = f"\n\n".join(para.reassemble() for para in transformed_paras)
+    new_text_doc = TextDoc.from_text(transformed_text)
+
+    log.message(
+        "Sliding paragraph transform: Done, output total %s",
+        new_text_doc.size_summary(),
+    )
+
+    return new_text_doc
 
 
 ## Tests
@@ -251,7 +337,7 @@ def test_sliding_window():
     window_size = 80
     window_shift = 60
 
-    windows = list(sliding_window(doc, window_size, window_shift, Unit.BYTES))
+    windows = list(sliding_word_window(doc, window_size, window_shift, Unit.BYTES))
     pprint(windows)
 
     sentence_windows = [
@@ -300,7 +386,7 @@ def test_truncate_at_wordtok():
     assert truncated_doc.reassemble() == expected_doc.reassemble()
 
 
-def test_sliding_transform():
+def test_sliding_word_window_transform():
     long_text = (_example_text + "\n\n") * 2
     doc = TextDoc.from_text(long_text)
 
@@ -309,15 +395,61 @@ def test_sliding_transform():
         transformed_text = window.reassemble().upper()
         return TextDoc.from_text(transformed_text)
 
-    transformed_doc = sliding_transform(
-        doc, transform_func, WindowSettings(80, 60, min_overlap=5, separator="|")
+    transformed_doc = sliding_window_transform(
+        doc, transform_func, WindowSettings(Unit.WORDTOKS, 80, 60, min_overlap=5, separator="|")
     )
-    print("---Transformed document with separator:")
+    print("---Wordtok transformed doc:")
     print(transformed_doc.reassemble())
 
     assert transformed_doc.reassemble().count("|") == 2
 
     long_text = (_example_text + "\n\n") * 20
     doc = TextDoc.from_text(long_text)
-    transformed_doc = sliding_transform(doc, transform_func, WindowSettings(80, 60, min_overlap=5))
+    transformed_doc = sliding_window_transform(
+        doc, transform_func, WindowSettings(Unit.WORDTOKS, 80, 60, min_overlap=5)
+    )
     assert transformed_doc.reassemble() == long_text.upper().strip()
+
+
+def test_sliding_para_window_transform():
+    def transform_func(window: TextDoc) -> TextDoc:
+        transformed_text = window.reassemble().upper()
+        return TextDoc.from_text(transformed_text)
+
+    text = "\n\n".join(f"Paragraph {i}." for i in range(7))
+    doc = TextDoc.from_text(text)
+
+    transformed_doc = sliding_para_window_transform(
+        doc,
+        transform_func,
+        WindowSettings(
+            Unit.PARAGRAPHS,
+            3,
+            3,
+            separator=WINDOW_BR,
+        ),
+    )
+
+    print("---Paragraph transformed doc:")
+    print(transformed_doc.reassemble())
+
+    assert (
+        transformed_doc.reassemble()
+        == dedent(
+            """
+            PARAGRAPH 0.
+
+            PARAGRAPH 1.
+
+            PARAGRAPH 2.
+
+            <!--window-br-->PARAGRAPH 3.
+
+            PARAGRAPH 4.
+
+            PARAGRAPH 5.
+
+            <!--window-br-->PARAGRAPH 6.
+            """
+        ).strip()
+    )

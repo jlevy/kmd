@@ -2,14 +2,11 @@ from textwrap import dedent
 from kmd.actions.llm_action_base import LLM
 from kmd.actions.action_registry import register_llm_action
 from kmd.config.logger import get_logger
-from kmd.text_handling.windowing import WindowSettings
+from kmd.text_handling.windowing import WINDOW_2K_WORDTOKS
+
 
 log = get_logger(__name__)
 
-WINDOW_BR = "<!--window-br-->"
-
-# About 2K wordtoks is several paragraphs.
-WINDOW_2K_WORDTOKS = WindowSettings(2048, 2048 - 256, 8, separator=WINDOW_BR)
 
 register_llm_action(
     name="proofread",

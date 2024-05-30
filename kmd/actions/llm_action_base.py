@@ -9,7 +9,7 @@ from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.text_handling.text_diffs import DiffOpFilter
 from kmd.text_handling.text_doc import TextDoc
-from kmd.text_handling.windowing import WindowSettings, sliding_transform
+from kmd.text_handling.windowing import WindowSettings, sliding_window_transform
 from kmd.util.log_calls import log_calls
 
 log = get_logger(__name__)
@@ -84,7 +84,7 @@ def _sliding_llm_transform(
             )
 
         input_doc = TextDoc.from_text(input)
-        transformed_doc = sliding_transform(
+        transformed_doc = sliding_window_transform(
             input_doc,
             transform,
             window_settings,
