@@ -5,11 +5,12 @@ The data model for Items and their file formats.
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 from strif import abbreviate_str
 from kmd.file_storage.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
+from kmd.model.locators import Locator
 from kmd.text_handling.markdown_util import markdown_to_html
 from kmd.text_handling.text_formatting import (
     abbreviate_on_words,
@@ -113,6 +114,20 @@ class ItemId:
         return f"id:{self.type.value}:{self.format.value}:{self.value}"
 
 
+@dataclass
+class ItemRelations:
+    """
+    Relations of a given item to other items.
+    """
+
+    derived_from: Optional[Locator] = None
+
+    # TODO: Other relations.
+    # citations: Optional[list[Locator]] = None
+    # named_entities: Optional[list[Locator]] = None
+    # related_concepts: Optional[list[Locator]] = None
+
+
 UNTITLED = "Untitled"
 
 
@@ -141,6 +156,9 @@ class Item:
 
     # Path to the item in the store, if it has been saved.
     store_path: Optional[str] = None
+
+    # Optionally, relations to other items, including any time this item is derived from.
+    relations: ItemRelations = field(default_factory=ItemRelations)
 
     # Optional additional metadata.
     extra: Optional[dict] = None
@@ -256,12 +274,29 @@ class Item:
         """
         Copy item with the given field updates. Resets store_path and updates timestamps.
         """
-
         new_item = replace(self, **kwargs)
         new_item.store_path = None
         new_item.created_at = datetime.now()
         new_item.modified_at = datetime.now()
         return new_item
+
+    def derived_copy(self, **kwargs) -> "Item":
+        """
+        Same as `new_copy_with()`, but also updates `derived_from` relation.
+        """
+        if not self.store_path:
+            raise ValueError(f"Cannot derive from an item that has not been saved: {self}")
+        new_item = self.new_copy_with(**kwargs)
+        new_item.update_relations(derived_from=[self.store_path])
+        return new_item
+
+    def update_relations(self, **relations: List[str]) -> ItemRelations:
+        """
+        Update relations with the given field updates.
+        """
+        self.relations = self.relations or ItemRelations()
+        self.relations = replace(self.relations, **relations)
+        return self.relations
 
     def item_id(self) -> Optional[ItemId]:
         """

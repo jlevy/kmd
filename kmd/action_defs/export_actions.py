@@ -24,7 +24,7 @@ class CreatePDF(Action):
         if not item.body:
             raise ValueError(f"Item must have a body: {item}")
 
-        pdf_item = item.new_copy_with(type=ItemType.export, format=Format.pdf, file_ext=FileExt.pdf)
+        pdf_item = item.derived_copy(type=ItemType.export, format=Format.pdf, file_ext=FileExt.pdf)
         pdf_path, _old_pdf_path = current_workspace().find_path_for(pdf_item)
         base_dir = current_workspace().base_dir
         full_pdf_path = join(base_dir, pdf_path)

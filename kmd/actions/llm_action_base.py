@@ -110,7 +110,7 @@ def run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
 
         log.info("Running action %s on item %s", action.name, item)
 
-        result_item = item.new_copy_with(body=None)
+        result_item = item.derived_copy(body=None)
         result_item.body = _sliding_llm_transform(
             action.model,
             action.system_message,

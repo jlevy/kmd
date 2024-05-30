@@ -11,6 +11,13 @@ from strif import atomic_output_file
 def _new_yaml() -> YAML:
     yaml = YAML(typ="safe")
     yaml.default_flow_style = False  # Block style dictionaries.
+
+    # Ignore None values in output.
+    def ignore_none(dumper, data):
+        return dumper.represent_dict({k: v for k, v in data.items() if v is not None})
+
+    yaml.representer.add_representer(dict, ignore_none)
+
     return yaml
 
 

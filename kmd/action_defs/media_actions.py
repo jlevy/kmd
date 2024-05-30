@@ -129,7 +129,7 @@ class TranscribeVideo(Action):
 
             transcription = video_transcription(url)
             result_title = f"{item.title} (transcription)"
-            result_item = item.new_copy_with(
+            result_item = item.derived_copy(
                 type=ItemType.note,
                 title=result_title,
                 body=transcription,

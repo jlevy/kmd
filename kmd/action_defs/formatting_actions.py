@@ -1,6 +1,3 @@
-import html
-
-import regex
 from kmd.actions.action_registry import register_action
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
@@ -29,7 +26,7 @@ class StripHtml(Action):
 
             clean_body = html_to_plaintext(item.body)
             new_title = f"{item.title} (clean text)"
-            output_item = item.new_copy_with(type=ItemType.note, title=new_title, body=clean_body)
+            output_item = item.derived_copy(type=ItemType.note, title=new_title, body=clean_body)
 
             current_workspace().save(output_item)
             result_items.append(output_item)
