@@ -12,8 +12,10 @@ from rich import print as rprint
 from rich.text import Text
 from xonsh import xontribs
 from xonsh.tools import XonshError
+from litellm.exceptions import APIError
 from kmd.config.setup import setup
 from kmd.config.settings import media_cache_dir
+from kmd.config.logger import get_logger
 from kmd.file_storage.workspaces import current_workspace
 from kmd.actions.action_exec import run_action
 from kmd.actions.action_registry import load_all_actions
@@ -22,6 +24,28 @@ from kmd.model.actions_model import Action
 
 
 setup()
+
+log = get_logger(__name__)
+
+# Common exceptions that don't merit a full stack trace.
+# Might not want this for
+_common_exceptions = (ValueError, KeyError, IOError, XonshError, APIError)
+
+
+def _elide_traceback(exception_str: str) -> str:
+    lines = exception_str.splitlines()
+    return "\n".join(
+        [
+            line
+            for line in lines
+            if line.strip()
+            and not line.lstrip().startswith("Traceback")
+            and not line.lstrip().startswith("File ")
+            and not line.lstrip().startswith("The above exception")
+            and not line.startswith("    ")
+        ]
+        + ["See log for more details."]
+    )
 
 
 class CallableAction:
@@ -32,8 +56,9 @@ class CallableAction:
         try:
             run_action(self.action, *args)
             # We don't return the result to keep the shell output clean.
-        except (ValueError, KeyError, IOError, XonshError) as e:
-            rprint(Text(f"Action error: {e}", "bright_red"))
+        except _common_exceptions as e:
+            rprint(Text(f"Action error: {_elide_traceback(str(e))}", "bright_red"))
+            log.info("Action error: %s", e)
 
     def __repr__(self):
         return f"CallableAction({repr(self.action)})"
@@ -56,8 +81,9 @@ def initialize():
         def command(args: List[str]):
             try:
                 func(*args)
-            except (ValueError, KeyError, IOError, XonshError) as e:
-                rprint(Text(f"Command error: {e}", "bright_red"))
+            except _common_exceptions as e:
+                rprint(Text(f"Command error: {_elide_traceback(str(e))}", "bright_red"))
+                log.info("Command error: %s", e)
 
         command.__doc__ = func.__doc__
         return command
