@@ -87,12 +87,11 @@ def ensure_saved(locator: Locator) -> Item:
 
 def import_url_to_workspace(url: Url) -> Item:
     """
-    Import a URL as a resource.
+    Import a URL as a resource. Should call fetch_page to fill in metadata.
     """
     url = canonicalize_url(url)
     item = Item(ItemType.resource, url=url, format=Format.url)
     workspace = current_workspace()
     store_path = workspace.save(item)
-    # FIXME: Indicate fetch_page to be auto-called here somehow. Ensure everything idempotent.
     log.message("Saved url: %s", store_path)
     return item

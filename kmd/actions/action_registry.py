@@ -1,5 +1,4 @@
 from typing import Dict, Type
-
 from cachetools import cached
 from kmd.actions.llm_action_base import LLMAction
 from kmd.model.actions_model import Action
@@ -68,3 +67,8 @@ def load_all_actions() -> Dict[str, Action]:
     actions_map = dict(sorted(actions_map.items()))
     log.info("Registered actions: %s", list(actions_map.keys()))
     return actions_map
+
+
+def look_up_action(action_name: str) -> Action:
+    actions = load_all_actions()
+    return actions[action_name]

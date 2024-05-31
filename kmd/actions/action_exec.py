@@ -1,9 +1,12 @@
 from typing import List, cast
 from strif import abbreviate_str
-from kmd.actions.action_registry import load_all_actions
+from kmd.actions.action_registry import look_up_action
+from kmd.actions.system_actions import FETCH_ACTION, FETCH_ACTION_NAME
 from kmd.file_storage.file_store import NoSelectionError
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.model.actions_model import Action, ActionResult
+from kmd.model.canon_url import canonicalize_url
+from kmd.model.items_model import Item
 from kmd.model.locators import StorePath
 from kmd.text_handling.text_formatting import format_lines
 from kmd.util.type_utils import not_none
@@ -24,12 +27,24 @@ def collect_args(*args: str) -> List[str]:
         return list(args)
 
 
-def run_action(action: str | Action, *provided_args: str) -> ActionResult:
+def fetch_url_items(item: Item) -> Item:
+    if not item.url or not item.is_url_resource():
+        return item
+
+    if not item.store_path:
+        raise ValueError("URL item should already be stored: %s", item)
+
+    item.url = canonicalize_url(item.url)
+    log.message("Fetching URL for metadata: %s", item.url)
+    enriched_item = run_action(FETCH_ACTION, item.store_path, internal_call=True)
+    return enriched_item.items[0]
+
+
+def run_action(action: str | Action, *provided_args: str, internal_call=False) -> ActionResult:
 
     # Get the action and action name.
     if not isinstance(action, Action):
-        actions = load_all_actions()
-        action = actions[action]
+        action = look_up_action(action)
     action_name = action.name
 
     # Collect args from the provided args or otherwise the current selection.
@@ -56,6 +71,11 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
     # This looks up any URLs.
     input_items = [ensure_saved(arg) for arg in args]
 
+    # URLs should have metadata like a title and be valid, so we fetch them.
+    # Note we call ourselves to do the fetch.
+    if action.name != FETCH_ACTION_NAME:
+        input_items = [fetch_url_items(item) for item in input_items]
+
     # Run the action.
     result = action.run(input_items)
 
@@ -79,8 +99,9 @@ def run_action(action: str | Action, *provided_args: str) -> ActionResult:
         archived_store_paths = old_inputs
 
     # Select the final output (omitting any that were archived) and show the current selection.
-    remaining_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
-    current_workspace().set_selection(remaining_outputs)
-    commands.select()
+    if not internal_call:
+        remaining_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
+        current_workspace().set_selection(remaining_outputs)
+        commands.select()
 
     return result

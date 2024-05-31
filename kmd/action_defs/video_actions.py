@@ -1,41 +1,14 @@
-from kmd.file_storage.workspaces import current_workspace
 from kmd.media.video import video_download_audio, youtube
 from kmd.actions.action_registry import register_action
 from kmd.media import web
 from kmd.media.video import video_transcription
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
-from kmd.model.items_model import FileExt, Format, Item, ItemType
+from kmd.model.items_model import UNTITLED, FileExt, Format, Item, ItemType
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
-
-
-@register_action
-class FetchPage(Action):
-    def __init__(self):
-        super().__init__(
-            name="fetch_page",
-            friendly_name="Fetch Page Details",
-            description="Fetches the title, description, and body of a web page.",
-            expected_args=ONE_OR_MORE_ARGS,
-        )
-
-    def run(self, items: ActionInput) -> ActionResult:
-        for item in items:
-            if not item.url:
-                raise ValueError(f"Item must have a URL: {item}")
-
-        result_items = []
-        for item in items:
-            page_data = web.fetch_extract(not_none(item.url))
-            fetched_item = item.new_copy_with(
-                title=page_data.title, description=page_data.description, body=page_data.content
-            )
-            result_items.append(fetched_item)
-
-        return ActionResult(result_items, replaces_input=True)
 
 
 @register_action
@@ -49,13 +22,12 @@ class ListChannelVideos(Action):
 
     def run(self, items: ActionInput) -> ActionResult:
         item = items[0]
-        url = item.url
-        if not url:
+        if not item.url:
             raise ValueError("Item must have a URL")
-        if not youtube.canonicalize(url):
+        if not youtube.canonicalize(item.url):
             raise ValueError("Only YouTube download currently supported")
 
-        video_meta_list = youtube.list_channel_videos(url)
+        video_meta_list = youtube.list_channel_videos(item.url)
 
         result_items = []
         for info in video_meta_list:
@@ -96,11 +68,10 @@ class DownloadVideo(Action):
     def run(self, items: ActionInput) -> ActionResult:
         result_items = []
         for item in items:
-            url = item.url
-            if not url:
+            if not item.url:
                 raise ValueError("Item must have a URL")
 
-            video_download_audio(url)
+            video_download_audio(item.url)
 
             # Actually return the same item since the video is actually saved to cache.
             result_items.append(item)
@@ -121,12 +92,12 @@ class TranscribeVideo(Action):
     def run(self, items: ActionInput) -> ActionResult:
         result_items = []
         for item in items:
-            url = item.url
-            if not url:
+            if not item.url:
                 raise ValueError("Item must have a URL")
 
-            transcription = video_transcription(url)
-            result_title = f"{item.title} (transcription)"
+            transcription = video_transcription(item.url)
+            title = item.title or UNTITLED  # This shouldn't happen normally.
+            result_title = f"{title} (transcription)"
             result_item = item.derived_copy(
                 type=ItemType.note,
                 title=result_title,

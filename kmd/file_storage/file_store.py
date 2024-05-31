@@ -200,7 +200,8 @@ class FileStore:
         """
         Return (store_path, old_store_path) for an item. Store path may or may not already
         exist, depending on whether store_path is already set on the item or the same item has been
-        saved before. Also return the old store path if it's different.
+        saved before. Returns `store_path, old_store_path` where `old_store_path` is the
+        previous similarly named item (or None there is none).
         """
         item_id = item.item_id()
         old_filename = None
@@ -210,7 +211,7 @@ class FileStore:
         elif item_id in self.id_map:
             # If this item has an identity and we've saved under that id before, use the same store path.
             store_path = self.id_map[item_id]
-            log.message("Item already saved: %s matches id %s", store_path, item_id)
+            log.message("Item with id %s already saved: %s", item_id, store_path)
             return StorePath(str(store_path)), None
         else:
             folder_path = Path(item_type_to_folder(item.type))
