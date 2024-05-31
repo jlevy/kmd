@@ -66,7 +66,7 @@ def log_calls(
                 )
                 log_func(f"≫ Call: {func.__name__}({args_str})")
             else:
-                log_func(f"->Call: {func.__name__}")
+                log_func(f"≫ Call: {func.__name__}")
             start_time = time.time()
 
             result = func(*args, **kwargs)
@@ -74,9 +74,11 @@ def log_calls(
             end_time = time.time()
             elapsed = end_time - start_time
             if show_return:
-                log_func(f"≪ Done: {func.__name__} in {format_duration(elapsed)}: {to_str(result)}")
+                log_func(
+                    f"≪ Call done: {func.__name__} in {format_duration(elapsed)}: {to_str(result)}"
+                )
             else:
-                log_func(f"≪ Done: {func.__name__} in {format_duration(elapsed)}")
+                log_func(f"≪ Call done: {func.__name__} in {format_duration(elapsed)}")
             return result
 
         return wrapper

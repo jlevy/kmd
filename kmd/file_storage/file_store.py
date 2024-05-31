@@ -210,7 +210,7 @@ class FileStore:
         elif item_id in self.id_map:
             # If this item has an identity and we've saved under that id before, use the same store path.
             store_path = self.id_map[item_id]
-            log.message("Item already saved: %s (%s)", store_path, item_id)
+            log.message("Item already saved: %s matches id %s", store_path, item_id)
             return StorePath(str(store_path)), None
         else:
             folder_path = Path(item_type_to_folder(item.type))

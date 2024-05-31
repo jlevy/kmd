@@ -28,7 +28,6 @@ class StripHtml(Action):
             new_title = f"{item.title} (clean text)"
             output_item = item.derived_copy(type=ItemType.note, title=new_title, body=clean_body)
 
-            current_workspace().save(output_item)
             result_items.append(output_item)
 
         return ActionResult(result_items)

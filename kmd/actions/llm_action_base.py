@@ -123,8 +123,6 @@ def run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
             result_item.title = action.title_template.format(title=item.abbrev_title())
         result_item.format = Format.markdown
 
-        current_workspace().save(result_item)
-
         result_items.append(result_item)
 
     return ActionResult(result_items)

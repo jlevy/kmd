@@ -39,7 +39,7 @@ class VideoCache(DirStore):
     def _read_transcript(self, url) -> Optional[str]:
         transcript_file = self.find(url, suffix=SUFFIX_TRANSCRIPT)
         if transcript_file:
-            log.message("Video transcript in cache: %s: %s", url, transcript_file)
+            log.message("Video transcript already in cache: %s: %s", url, transcript_file)
             with open(transcript_file, "r") as f:
                 return f.read()
         return None
@@ -68,7 +68,7 @@ class VideoCache(DirStore):
         if not no_cache:
             full_audio_file = self.find(url, suffix=SUFFIX_MP3)
             if full_audio_file:
-                log.message("Audio of video in cache: %s: %s", url, full_audio_file)
+                log.message("Audio of video already in cache: %s: %s", url, full_audio_file)
                 return full_audio_file
         log.message("Downloading audio of video: %s", url)
         mp3_path = _download_audio_with_service(url)

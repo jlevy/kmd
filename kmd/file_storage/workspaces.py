@@ -3,10 +3,11 @@ from typing import Optional, Tuple
 from pathlib import Path
 from typing import Tuple
 from cachetools import cached
+from kmd.model.canon_url import canonicalize_url
+from kmd.model.items_model import Format, Item, ItemType
 from kmd.file_storage.file_store import FileStore
 from kmd.model.locators import Locator, StorePath
-from kmd.model.items_model import Format, Item, ItemType
-from kmd.model.canon_url import canonicalize_url
+from kmd.model.items_model import Item
 from kmd.util.url import Url, is_url
 from kmd.config.logger import get_logger
 
@@ -75,14 +76,23 @@ def ensure_saved(locator: Locator) -> Item:
     Ensure that the URL or Item is saved to the workspace.
     """
 
-    workspace = current_workspace()
-
     if is_url(locator):
-        url = canonicalize_url(Url(locator))
-        item = Item(ItemType.resource, url=url, format=Format.url)
-        store_path = workspace.save(item)
-        log.message("Saved url: %s", store_path)
+        item = import_url_to_workspace(Url(locator))
     else:
+        workspace = current_workspace()
         item = workspace.load(StorePath(locator))
 
+    return item
+
+
+def import_url_to_workspace(url: Url) -> Item:
+    """
+    Import a URL as a resource.
+    """
+    url = canonicalize_url(url)
+    item = Item(ItemType.resource, url=url, format=Format.url)
+    workspace = current_workspace()
+    store_path = workspace.save(item)
+    # FIXME: Indicate fetch_page to be auto-called here somehow. Ensure everything idempotent.
+    log.message("Saved url: %s", store_path)
     return item

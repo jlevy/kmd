@@ -28,7 +28,6 @@ class ConfigureWebPage(Action):
         first_item = items[0]
         title = first_item.abbrev_title()
         config_item = configure_web_page(title, items)
-        current_workspace().save(config_item)
 
         return ActionResult([config_item])
 
@@ -54,6 +53,5 @@ class GenerateWebPage(Action):
             file_ext=FileExt.html,
             body=html,
         )
-        current_workspace().save(web_page_item)
 
         return ActionResult([web_page_item])

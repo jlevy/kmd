@@ -33,7 +33,6 @@ class FetchPage(Action):
             fetched_item = item.new_copy_with(
                 title=page_data.title, description=page_data.description, body=page_data.content
             )
-            current_workspace().save(fetched_item)
             result_items.append(fetched_item)
 
         return ActionResult(result_items, replaces_input=True)
@@ -79,7 +78,6 @@ class ListChannelVideos(Action):
                 },
             )
 
-            current_workspace().save(item)
             result_items.append(item)
 
         return ActionResult(result_items)
@@ -136,7 +134,6 @@ class TranscribeVideo(Action):
                 format=Format.markdown,
                 file_ext=FileExt.md,
             )
-            current_workspace().save(result_item)
 
             result_items.append(result_item)
 
