@@ -2,7 +2,8 @@ from textwrap import dedent
 from kmd.actions.llm_action_base import LLM
 from kmd.actions.action_registry import register_llm_action
 from kmd.config.logger import get_logger
-from kmd.text_handling.windowing import WindowSettings, Unit, WINDOW_BR
+from kmd.text_handling.sliding_transforms import WindowSettings, WINDOW_BR
+from kmd.text_handling.text_doc import Unit
 
 
 log = get_logger(__name__)
