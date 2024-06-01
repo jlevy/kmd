@@ -91,7 +91,7 @@ def _sliding_llm_transform(
         )
         result_str = transformed_doc.reassemble()
 
-    # FIXME: Add diff filtering here.
+    # FIXME: Add diff filtering here, for use with paragraph breaks for example.
     return result_str
 
 

@@ -7,9 +7,9 @@ from os import path
 from slugify import slugify
 from strif import copyfile_atomic
 from kmd.file_storage.filenames import parse_filename
-from kmd.file_storage.yaml_util import read_yaml_file, write_yaml_file
+from kmd.file_storage.yaml_util import custom_key_sort, read_yaml_file, write_yaml_file
 from kmd.model.locators import StorePath
-from kmd.model.items_model import FileExt, Format, Item, ItemId, ItemType
+from kmd.model.items_model import ITEM_FIELDS, FileExt, Format, Item, ItemId, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.model.canon_url import canonicalize_url
 from kmd.text_handling.text_formatting import format_lines
@@ -100,6 +100,8 @@ ARCHIVE_DIR = ".archive"
 SETTINGS_DIR = ".settings"
 
 FILENAME_SLUG_MAX_LEN = 64
+
+ITEM_FIELD_SORT = custom_key_sort(ITEM_FIELDS)
 
 class FileStore:
     """
@@ -262,7 +264,7 @@ class FileStore:
                     formatted_body = normalize_formatting(item.body_text(), item.format)
                     
                     is_html = str(item.format) == str(Format.html)
-                    fmf_write(full_path, formatted_body, item.metadata(), is_html=is_html)
+                    fmf_write(full_path, formatted_body, item.metadata(), is_html=is_html, key_sort=ITEM_FIELD_SORT)
             except IOError as e:
                 log.error("Error saving item: %s", e)
                 self.unarchive(store_path)

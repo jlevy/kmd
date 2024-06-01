@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Tuple, Optional, Dict
 from ruamel.yaml.error import YAMLError
 from strif import atomic_output_file
-from kmd.file_storage.yaml_util import from_yaml_string, write_yaml
+from kmd.file_storage.yaml_util import KeySort, custom_key_sort, from_yaml_string, write_yaml
 
 YAML_SEPARATOR = "---"
 HTML_FRONTMATTER_START = "<!---"
@@ -21,7 +21,11 @@ HTML_FRONTMATTER_END = "--->"
 
 
 def fmf_write(
-    file_path: Path | str, content: str, metadata: Optional[Dict], is_html: bool = False
+    file_path: Path | str,
+    content: str,
+    metadata: Optional[Dict],
+    is_html: bool = False,
+    key_sort: Optional[KeySort] = None,
 ) -> None:
     """
     Write the given Markdown content to a file, with associated YAML metadata, in
@@ -32,7 +36,7 @@ def fmf_write(
             if metadata:
                 f.write(HTML_FRONTMATTER_START) if is_html else f.write(YAML_SEPARATOR)
                 f.write("\n")
-                write_yaml(metadata, f)
+                write_yaml(metadata, f, key_sort=key_sort)
                 f.write(HTML_FRONTMATTER_END) if is_html else f.write(YAML_SEPARATOR)
                 f.write("\n")
 
@@ -145,3 +149,23 @@ def test_fmf():
     read_content_html, read_metadata_html = fmf_read(file_path_html)
     assert read_content_html.strip() == content_html
     assert read_metadata_html == metadata_html
+
+
+def test_fmf_with_custom_key_sort():
+    os.makedirs("tmp", exist_ok=True)
+
+    # Test with Markdown.
+    file_path_md = "tmp/test_write_custom_sort.md"
+    content_md = "Hello, World!"
+    metadata_md = {"title": "Test Title", "author": "Test Author", "date": "2022-01-01"}
+    priority_keys = ["date", "title"]
+    key_sort = custom_key_sort(priority_keys)
+    fmf_write(file_path_md, content_md, metadata_md, key_sort=key_sort)
+    with open(file_path_md, "r") as f:
+        lines = f.readlines()
+    assert lines[0] == YAML_SEPARATOR + "\n"
+    assert lines[-1].strip() == content_md
+    # Check that the priority keys come first in the order they are in the list
+    assert lines[1].strip() == "date: '2022-01-01'"
+    assert lines[2].strip() == "title: Test Title"
+    assert lines[3].strip() == "author: Test Author"

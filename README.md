@@ -70,6 +70,12 @@ create_pdf
 # Get all videos on a channel and then download and transcribe them:
 list_channel_videos 'https://www.youtube.com/@Kboges'
 transcribe_video
+
+# Processing a really long document with sliding windows:
+transcribe_video 'https://www.youtube.com/watch?v=juD99_sPWGU'
+strip_html
+break_into_paragraphs
+summarize_as_bullets
 ```
 
 ## Other Ways to Run kmd

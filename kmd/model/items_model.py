@@ -3,6 +3,7 @@ The data model for Items and their file formats.
 """
 
 from dataclasses import asdict, dataclass, field, replace
+import dataclasses
 from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional
@@ -381,3 +382,8 @@ class Item:
         """
         summary = ", ".join([f"{k}={v}" for k, v in self._abbreviated_self().items()])
         return f"Item({summary})"
+
+
+# Some refletion magic so the order of the YAML metadata for an item will match
+# the order of the fields here.
+ITEM_FIELDS = [f.name for f in dataclasses.fields(Item)]
