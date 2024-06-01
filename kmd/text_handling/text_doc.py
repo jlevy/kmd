@@ -263,7 +263,7 @@ class TextDoc:
         raise ValueError(f"Unsupported unit for TextDoc: {unit}")
 
     def size_summary(self) -> str:
-        return f"{self.size(Unit.PARAGRAPHS)} paragraphs, {self.size(Unit.SENTENCES)} sentences, {self.size(Unit.BYTES)} bytes"
+        return f"{self.size(Unit.BYTES)} bytes ({self.size(Unit.PARAGRAPHS)} paragraphs, {self.size(Unit.SENTENCES)} sentences)"
 
     def as_wordtoks(self) -> Iterable[str]:
         last_para_index = len(self.paragraphs) - 1

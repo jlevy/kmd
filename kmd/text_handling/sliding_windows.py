@@ -3,9 +3,11 @@ Sliding windows of text on a text doc.
 """
 
 from textwrap import dedent
-from typing import Generator
+from typing import Generator, Optional
 from pprint import pprint
 from kmd.config.logger import get_logger
+from kmd.model.items_model import Format
+from kmd.text_handling.doc_formatting import normalize_formatting
 from kmd.text_handling.text_doc import (
     DocIndex,
     Sentence,
@@ -123,13 +125,19 @@ def sliding_word_window(
         start_index = end_index
 
 
-def sliding_para_window(doc: TextDoc, nparas: int) -> Generator[TextDoc, None, None]:
+def sliding_para_window(
+    doc: TextDoc, nparas: int, format: Optional[Format]
+) -> Generator[TextDoc, None, None]:
     """
     Generate TextDoc sub-documents taking `nparas` paragraphs at a time.
     """
     for i in range(0, len(doc.paragraphs), nparas):
         end_index = min(i + nparas - 1, len(doc.paragraphs) - 1)
-        yield doc.sub_doc(DocIndex(i, 0), DocIndex(end_index, 0))
+        sub_doc = doc.sub_doc(DocIndex(i, 0), DocIndex(end_index, 0))
+        # XXX It's important we re-normalize especially because LLMs like itemized lists with just
+        # one newline, but we want separate paragraphs for each list item.
+        formatted_sub_doc = TextDoc.from_text(normalize_formatting(sub_doc.reassemble(), format))
+        yield formatted_sub_doc
 
 
 ## Tests

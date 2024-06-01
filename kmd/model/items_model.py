@@ -7,7 +7,6 @@ import dataclasses
 from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional
-from strif import abbreviate_str
 from kmd.file_storage.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
@@ -18,6 +17,7 @@ from kmd.text_handling.text_formatting import (
     clean_title,
     plaintext_to_html,
 )
+from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
 
 
@@ -363,25 +363,8 @@ class Item:
             == other
         )
 
-    def _abbreviated_self(self):
-        return {
-            k: repr(
-                abbreviate_str(
-                    str(v.value) if isinstance(v, Enum) else str(v),
-                    max_len=64,
-                    indicator="[…]",
-                )
-            )
-            for k, v in sorted(asdict(self).items())
-            if v is not None
-        }
-
     def __str__(self):
-        """
-        Abbreviate long fields and omit Nones for readability.
-        """
-        summary = ", ".join([f"{k}={v}" for k, v in self._abbreviated_self().items()])
-        return f"Item({summary})"
+        return abbreviate_obj(self)
 
 
 # Some refletion magic so the order of the YAML metadata for an item will match

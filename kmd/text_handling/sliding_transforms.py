@@ -8,6 +8,7 @@ from math import ceil
 from textwrap import dedent
 from typing import Callable, List
 from kmd.config.logger import get_logger
+from kmd.model.items_model import Format
 from kmd.text_handling.sliding_windows import sliding_para_window, sliding_word_window
 from kmd.text_handling.text_diffs import find_best_alignment
 from kmd.text_handling.text_doc import (
@@ -23,7 +24,7 @@ log = get_logger(__name__)
 
 TextDocTransform = Callable[[TextDoc], TextDoc]
 
-WINDOW_BR = "<!--window-br-->"
+WINDOW_BR = "\n<!--window-br-->\n"
 
 
 @dataclass
@@ -128,11 +129,12 @@ def sliding_para_window_transform(
     if settings.size != settings.shift:
         raise ValueError("Paragraph window transform requires equal size and shift")
 
-    windows = sliding_para_window(doc, settings.size)
+    windows = sliding_para_window(doc, settings.size, format=Format.markdown)
 
+    nwindows = ceil(doc.size(Unit.PARAGRAPHS) / settings.size)
     log.message(
         "Sliding paragraph transform: Begin on doc: %s windows of size %s paragraphs on total %s",
-        ceil(doc.size(Unit.PARAGRAPHS) / settings.size),
+        nwindows,
         settings.size,
         doc.size_summary(),
     )
@@ -140,7 +142,9 @@ def sliding_para_window_transform(
     transformed_paras: List[Paragraph] = []
     for i, window in enumerate(windows):
         log.message(
-            "Sliding paragraph transform: Begin on doc: window %s",
+            "Sliding paragraph transform: Window %s/%s input is %s",
+            i,
+            nwindows,
             window.size_summary(),
         )
 

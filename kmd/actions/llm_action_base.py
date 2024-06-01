@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from enum import Enum
+from textwrap import indent
 from typing import List, Optional
 from kmd.llms.completion import completion
 from kmd.model.actions_model import Action, ActionInput, ActionResult, ONE_OR_MORE_ARGS
 from kmd.model.items_model import Format, Item
-from kmd.file_storage.workspaces import current_workspace
 from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.text_handling.text_diffs import DiffOpFilter
@@ -57,6 +57,7 @@ class LLMAction(Action):
 @log_calls(level="message")
 def llm_completion(model: str, system_message: str, template: str, input: str) -> str:
     user_message = template.format(body=input)
+    log.info("LLM completion input to model %s:\n%s", model, indent(user_message, "    "))
     text_output = completion(
         model,
         messages=[
@@ -64,6 +65,7 @@ def llm_completion(model: str, system_message: str, template: str, input: str) -
             {"role": "user", "content": user_message},
         ],
     )
+    log.info("LLM completion output:\n%s", indent(text_output, "    "))
     return text_output
 
 

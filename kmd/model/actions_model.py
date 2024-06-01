@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from kmd.model.items_model import Item
+from kmd.util.obj_utils import abbreviate_obj
 
 
 @dataclass
@@ -30,6 +31,9 @@ class ActionResult:
 
     # If True, a hint to archive the input items.
     replaces_input: bool = False
+
+    def __str__(self):
+        return abbreviate_obj(self, field_max_len=80)
 
 
 @dataclass
@@ -61,3 +65,6 @@ class Action:
     @abstractmethod
     def run(self, items: ActionInput) -> ActionResult:
         pass
+
+    def __str__(self):
+        return abbreviate_obj(self)

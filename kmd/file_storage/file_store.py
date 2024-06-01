@@ -1,7 +1,6 @@
-import operator
 import os
 from pathlib import Path
-from typing import Any, Callable, Optional, Tuple
+from typing import Any, Optional, Tuple
 from os.path import join, relpath, commonpath
 from os import path
 from slugify import slugify
@@ -16,6 +15,7 @@ from kmd.text_handling.text_formatting import format_lines
 from kmd.text_handling.doc_formatting import normalize_formatting
 from kmd.text_handling.inflection import plural
 from kmd.util.file_utils import move_file
+from kmd.util.obj_utils import remove_value
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import Url, is_url
@@ -56,20 +56,6 @@ def skippable_file(filename: str) -> bool:
     This skipps .archive, .settings, etc.
     """
     return len(filename) > 1 and filename.startswith(".")
-
-
-def remove_value(data: Any, target: Any, eq: Callable[[Any, Any], bool] = operator.eq) -> Any:
-    """
-    Recursively remove all occurrences of the target value from a data structure.
-    """
-    if isinstance(data, dict):
-        return {k: remove_value(v, target) for k, v in data.items() if not eq(v, target)}
-    elif isinstance(data, list):
-        return [remove_value(item, target) for item in data if not eq(item, target)]
-    elif eq(data, target):
-        return None
-    else:
-        return data
 
 
 class PersistedYaml:
