@@ -21,7 +21,7 @@ log = get_logger(__name__)
 _commands: List[Callable] = []
 
 
-def register_command(func):
+def kmd_command(func):
     _commands.append(func)
     return func
 
@@ -34,7 +34,7 @@ def command_output(message: str, *args, color="yellow"):
     rprint(Text(message % args, color))
 
 
-@register_command
+@kmd_command
 def kmd_help() -> None:
     """
     kmd help. Lists all available actions.
@@ -60,7 +60,7 @@ def kmd_help() -> None:
         rprint()
 
 
-@register_command
+@kmd_command
 def workspace(workspace_name: Optional[str] = None) -> None:
     """
     Show info on the current workspace.
@@ -77,7 +77,7 @@ def workspace(workspace_name: Optional[str] = None) -> None:
     show_workspace_info()
 
 
-@register_command
+@kmd_command
 def select(*paths: str) -> None:
     """
     Get or show the current selection.
@@ -99,7 +99,7 @@ def select(*paths: str) -> None:
         )
 
 
-@register_command
+@kmd_command
 def unselect(*paths: str) -> None:
     """
     Remove items from the current selection. Handy if you've selected some items and
@@ -118,7 +118,7 @@ def unselect(*paths: str) -> None:
     )
 
 
-@register_command
+@kmd_command
 def show(path: Optional[str] = None) -> None:
     """
     Show the contents of a file.
@@ -133,7 +133,8 @@ def show(path: Optional[str] = None) -> None:
         open_platform_specific(selection[0])
 
 
-@register_command
+@kmd_command
+@kmd_command
 def add_resource(*files_or_urls: str) -> None:
     """
     Add a file or URL resource to the workspace.
@@ -150,7 +151,7 @@ def add_resource(*files_or_urls: str) -> None:
     select(*store_paths)
 
 
-@register_command
+@kmd_command
 def archive(*paths: str) -> None:
     """
     Archive the items at the given path, or the current selection.
@@ -166,7 +167,7 @@ def archive(*paths: str) -> None:
     command_output("Archived:\n%s", format_lines(store_paths))
 
 
-@register_command
+@kmd_command
 def unarchive(*paths: str) -> None:
     """
     Unarchive the items at the given paths.
@@ -178,7 +179,7 @@ def unarchive(*paths: str) -> None:
         command_output("Unarchived %s", store_path)
 
 
-@register_command
+@kmd_command
 def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] = True) -> None:
     """
     List files or folders in a workspace. Shows the full current workspace if no path is provided.
@@ -225,7 +226,7 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
         command_output(f"\n{total_files} items total in {total_files} folders", color="bright_blue")
 
 
-@register_command
+@kmd_command
 def canonicalize(*paths: str) -> None:
     """
     Canonicalize the given items, reformatting files' YAML and text or Markdown according

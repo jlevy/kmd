@@ -1,5 +1,5 @@
 from kmd.media.video import video_download_audio, youtube
-from kmd.actions.action_registry import register_action
+from kmd.actions.action_registry import kmd_action
 from kmd.media import web
 from kmd.media.video import video_transcription
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
@@ -11,7 +11,7 @@ from kmd.config.logger import get_logger
 log = get_logger(__name__)
 
 
-@register_action
+@kmd_action
 class ListChannelVideos(Action):
     def __init__(self):
         super().__init__(
@@ -55,7 +55,7 @@ class ListChannelVideos(Action):
         return ActionResult(result_items)
 
 
-@register_action
+@kmd_action
 class DownloadVideo(Action):
     def __init__(self):
         super().__init__(
@@ -79,7 +79,7 @@ class DownloadVideo(Action):
         return ActionResult(result_items)
 
 
-@register_action
+@kmd_action
 class TranscribeVideo(Action):
     def __init__(self):
         super().__init__(

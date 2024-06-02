@@ -1,4 +1,4 @@
-from kmd.actions.action_registry import register_action
+from kmd.actions.action_registry import kmd_action
 from kmd.media import web
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
 from kmd.util.type_utils import not_none
@@ -7,7 +7,7 @@ from kmd.config.logger import get_logger
 log = get_logger(__name__)
 
 
-@register_action
+@kmd_action
 class FetchPage(Action):
     def __init__(self):
         super().__init__(

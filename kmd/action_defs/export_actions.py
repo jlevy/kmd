@@ -1,6 +1,6 @@
 from os.path import join
 from kmd.file_storage.workspaces import current_workspace
-from kmd.actions.action_registry import register_action
+from kmd.actions.action_registry import kmd_action
 from kmd.model.actions_model import ONE_ARG, Action, ActionInput, ActionResult
 from kmd.model.items_model import FileExt, Format, ItemType
 from kmd.pdf.pdf_output import markdown_to_pdf
@@ -9,7 +9,7 @@ from kmd.config.logger import get_logger
 log = get_logger(__name__)
 
 
-@register_action
+@kmd_action
 class CreatePDF(Action):
     def __init__(self):
         super().__init__(

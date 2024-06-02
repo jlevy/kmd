@@ -58,9 +58,6 @@ def skippable_file(filename: str) -> bool:
     return len(filename) > 1 and filename.startswith(".")
 
 
-
-
-
 class NoSelectionError(RuntimeError):
     pass
 
@@ -92,7 +89,9 @@ class FileStore:
         # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
         self.selection = PersistedYaml(self.settings_dir / "selection.yaml", [])
 
-        self.log_info()
+        self.action_params = PersistedYaml(self.settings_dir / "action_params.yaml", {})
+
+        self.log_store_info()
 
     def _initialize_index(self):
         num_dups = 0
@@ -153,7 +152,7 @@ class FileStore:
         title = item.abbrev_title(max_len=FILENAME_SLUG_MAX_LEN)
         slug = slugify(title, max_length=FILENAME_SLUG_MAX_LEN, separator="_")
         return slug
-    
+
     def _new_filename_for(self, item: Item) -> Tuple[str, Optional[str]]:
         """
         Get a suitable filename for this item that is close to the slugified title yet also unique.
@@ -387,7 +386,7 @@ class FileStore:
         self.set_selection(new_selection)
         return new_selection
 
-    def log_info(self):
+    def log_store_info(self):
         log.message(
             "Using workspace: %s (%s items)",
             path.abspath(self.base_dir),

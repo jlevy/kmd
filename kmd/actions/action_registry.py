@@ -10,7 +10,7 @@ log = get_logger(__name__)
 _actions = []
 
 
-def register_action(cls: Type[Action]):
+def kmd_action(cls: Type[Action]):
     """
     Annotation to register an action.
     """
@@ -22,7 +22,7 @@ def register_action(cls: Type[Action]):
     return cls
 
 
-def register_llm_action(
+def define_llm_action(
     name,
     friendly_name,
     description,
@@ -37,7 +37,7 @@ def register_llm_action(
     Convenience method to register an LLM action.
     """
 
-    @register_action
+    @kmd_action
     class CustomLLMAction(LLMAction):
         def __init__(self):
             super().__init__(

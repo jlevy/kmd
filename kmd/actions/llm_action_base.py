@@ -15,13 +15,6 @@ from kmd.util.log_calls import log_calls
 log = get_logger(__name__)
 
 
-class LLM(Enum):
-    gpt_3_5_turbo_16k_0613 = "gpt-3.5-turbo-16k-0613"
-    gpt_4 = "gpt-4"
-    gpt_4_turbo = "gpt-4-turbo"
-    gpt_4o = "gpt-4o"
-
-
 @dataclass
 class LLMAction(Action):
     def __init__(

@@ -68,7 +68,7 @@ def current_workspace() -> FileStore:
 
 def show_workspace_info() -> None:
     workspace = current_workspace()
-    workspace.log_info()
+    workspace.log_store_info()
 
 
 def ensure_saved(locator: Locator) -> Item:

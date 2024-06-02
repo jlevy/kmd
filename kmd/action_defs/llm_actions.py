@@ -1,7 +1,7 @@
 from textwrap import dedent
-from kmd.actions.llm_action_base import LLM
-from kmd.actions.action_registry import register_llm_action
+from kmd.actions.action_registry import define_llm_action
 from kmd.config.logger import get_logger
+from kmd.model.language_models import LLM
 from kmd.text_handling.sliding_transforms import WindowSettings, WINDOW_BR
 from kmd.text_handling.text_doc import Unit
 
@@ -16,7 +16,7 @@ WINDOW_2K_WORDTOKS = WindowSettings(Unit.WORDTOKS, 2048, 2048 - 256, 8, separato
 WINDOW_4_PARAS = WindowSettings(Unit.PARAGRAPHS, 4, 4, 0, separator=WINDOW_BR)
 
 
-register_llm_action(
+define_llm_action(
     name="break_into_paragraphs",
     friendly_name="Reformat Text as Paragraphs",
     description="Reformat text as paragraphs.",
@@ -53,7 +53,7 @@ register_llm_action(
 )
 
 
-register_llm_action(
+define_llm_action(
     name="proofread",
     friendly_name="Proofread and Correct",
     description="Proofread text, only fixing spelling, punctuation, and grammar.",
@@ -94,7 +94,7 @@ register_llm_action(
 )
 
 
-register_llm_action(
+define_llm_action(
     name="summarize_as_bullets",
     friendly_name="Summarize as Bullet Points",
     description="Summarize text as bullet points.",
@@ -128,7 +128,7 @@ register_llm_action(
     windowing=WINDOW_4_PARAS,
 )
 
-register_llm_action(
+define_llm_action(
     name="extract_concepts",
     friendly_name="Extract Concepts",
     description="Extract key concepts from text.",

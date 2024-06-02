@@ -1,4 +1,4 @@
-from kmd.actions.action_registry import register_action
+from kmd.actions.action_registry import kmd_action
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
 from kmd.model.items_model import ItemType
@@ -8,7 +8,7 @@ from kmd.text_handling.text_formatting import html_to_plaintext
 log = get_logger(__name__)
 
 
-@register_action
+@kmd_action
 class StripHtml(Action):
     def __init__(self):
         super().__init__(

@@ -1,6 +1,6 @@
 from kmd.file_storage.workspaces import current_workspace
-from kmd.actions.action_registry import register_action
-from kmd.actions.action_registry import register_action
+from kmd.actions.action_registry import kmd_action
+from kmd.actions.action_registry import kmd_action
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, ONE_ARG, Action, ActionInput, ActionResult
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.config.logger import get_logger
@@ -9,7 +9,7 @@ from kmd.web_gen.tabbed_web_page import configure_web_page, generate_web_page
 log = get_logger(__name__)
 
 
-@register_action
+@kmd_action
 class ConfigureWebPage(Action):
     def __init__(self):
         super().__init__(
@@ -32,7 +32,7 @@ class ConfigureWebPage(Action):
         return ActionResult([config_item])
 
 
-@register_action
+@kmd_action
 class GenerateWebPage(Action):
     def __init__(self):
         super().__init__(
