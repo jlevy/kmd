@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, Optional, Tuple
+from typing import Any, Generator, List, Optional, Tuple
 from os.path import join, relpath, commonpath
 from os import path
 from slugify import slugify
@@ -388,3 +388,39 @@ class FileStore:
             len(self.uniquifier),
         )
         # TODO: Log more info like number of items by type.
+
+    def walk_files(self, store_path: Optional[StorePath] = None, show_hidden: Optional[bool] = False) -> Generator[Tuple[StorePath, List[str]], None, None]:
+        """
+        Yields all files (store_dirname, filenames) for each directory in the store.
+        """
+
+        path = self.base_dir / store_path if store_path else self.base_dir
+
+        if not path.exists():
+            raise ValueError(f"Directory not found: {path}")
+        
+        # Special case of a single file.
+        if path.is_file():
+            yield StorePath(relpath(path.parent, self.base_dir)), [path.name]
+            return
+
+        # Walk the directory.
+        for dirname, dirnames, filenames in os.walk(path):
+            # TODO: Support other sorting options.
+            dirnames.sort()
+            filenames.sort()
+
+            store_dirname = relpath(dirname, self.base_dir)
+
+            if not show_hidden and skippable_file(store_dirname):
+                continue
+
+            filtered_filenames = []
+            for filename in filenames:
+                store_filename = relpath(filename, self.base_dir)
+                if not show_hidden and skippable_file(store_filename):
+                    continue
+                filtered_filenames.append(filename)
+            
+            if len(filtered_filenames) > 0:
+                yield StorePath(str(store_dirname)), filtered_filenames

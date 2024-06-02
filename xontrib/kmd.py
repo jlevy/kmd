@@ -29,7 +29,7 @@ log = get_logger(__name__)
 
 # Common exceptions that don't merit a full stack trace.
 # Might not want this for
-_common_exceptions = (ValueError, KeyError, IOError, XonshError, APIError)
+_common_exceptions = (ValueError, IOError, XonshError, APIError)
 
 
 def _elide_traceback(exception_str: str) -> str:

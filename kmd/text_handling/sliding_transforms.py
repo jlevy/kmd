@@ -239,13 +239,15 @@ def test_sliding_para_window_transform():
 
             PARAGRAPH 2.
 
-            <!--window-br-->PARAGRAPH 3.
+            <!--window-br-->
+            PARAGRAPH 3.
 
             PARAGRAPH 4.
 
             PARAGRAPH 5.
 
-            <!--window-br-->PARAGRAPH 6.
+            <!--window-br-->
+            PARAGRAPH 6.
             """
         ).strip()
     )
