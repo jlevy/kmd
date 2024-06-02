@@ -15,7 +15,7 @@ from kmd.text_handling.text_formatting import format_lines
 from kmd.text_handling.doc_formatting import normalize_formatting
 from kmd.text_handling.inflection import plural
 from kmd.util.file_utils import move_file
-from kmd.util.obj_utils import remove_value
+from kmd.util.obj_utils import remove_values, replace_values
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import Url, is_url
@@ -63,8 +63,8 @@ class PersistedYaml:
     Maintain a value (such as a dictionary or list of strings) as a YAML file.
     """
 
-    def __init__(self, filename: str, value: Any):
-        self.filename = filename
+    def __init__(self, filename: str | Path, value: Any):
+        self.filename = str(filename)
         self.value = value
 
     def read(self) -> Any:
@@ -73,8 +73,12 @@ class PersistedYaml:
     def set(self, value: Any):
         write_yaml_file(value, self.filename)
 
-    def remove(self, target: Any):
-        self.value = remove_value(self.value, target)
+    def remove(self, targets: List[Any]):
+        self.value = remove_values(self.value, targets)
+        self.set(self.value)
+
+    def replace(self, replacements: List[Tuple[Any, Any]]):
+        self.value = replace_values(self.value, replacements)
         self.set(self.value)
 
 
@@ -89,6 +93,7 @@ FILENAME_SLUG_MAX_LEN = 64
 
 ITEM_FIELD_SORT = custom_key_sort(ITEM_FIELDS)
 
+
 class FileStore:
     """
     Store items on the filesystem, using a simple convention for filenames and folders.
@@ -102,11 +107,11 @@ class FileStore:
 
         self.archive_dir = self.base_dir / ARCHIVE_DIR
         os.makedirs(self.archive_dir, exist_ok=True)
-        self.settings_dir = join(self.base_dir, SETTINGS_DIR)
+        self.settings_dir = self.base_dir / SETTINGS_DIR
         os.makedirs(self.settings_dir, exist_ok=True)
 
         # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
-        self.selection = PersistedYaml(join(self.settings_dir, "selection.yaml"), [])
+        self.selection = PersistedYaml(self.settings_dir / "selection.yaml", [])
 
         self.log_info()
 
@@ -162,14 +167,20 @@ class FileStore:
         except FileNotFoundError:
             pass
 
+    def _base_slug_for(self, item: Item) -> str:
+        """
+        Get a readable slugified version of the title for this item (may not be unique).
+        """
+        title = item.abbrev_title(max_len=FILENAME_SLUG_MAX_LEN)
+        slug = slugify(title, max_length=FILENAME_SLUG_MAX_LEN, separator="_")
+        return slug
+    
     def _new_filename_for(self, item: Item) -> Tuple[str, Optional[str]]:
         """
         Get a suitable filename for this item that is close to the slugified title yet also unique.
         Also return the old filename if it's different.
         """
-
-        title = item.abbrev_title(max_len=FILENAME_SLUG_MAX_LEN)
-        slug = slugify(title, max_length=FILENAME_SLUG_MAX_LEN, separator="_")
+        slug = self._base_slug_for(item)
 
         # Get a unique name per item type.
         unique_slug, old_slugs = self.uniquifier.uniquify_historic(slug, item.get_full_suffix())
@@ -186,10 +197,10 @@ class FileStore:
 
     def find_path_for(self, item: Item) -> Tuple[StorePath, Optional[StorePath]]:
         """
-        Return (store_path, old_store_path) for an item. Store path may or may not already
-        exist, depending on whether store_path is already set on the item or the same item has been
-        saved before. Returns `store_path, old_store_path` where `old_store_path` is the
-        previous similarly named item (or None there is none).
+        Return the store path for an item. Store path may or may not already exist, depending on whether
+        store_path is already set on the item or the an item with the same identity has been saved before.
+        Returns `store_path, old_store_path` where `old_store_path` is the previous similarly named item
+        (or None there is none).
         """
         item_id = item.item_id()
         old_filename = None
@@ -202,6 +213,7 @@ class FileStore:
             log.message("Item with id %s already saved: %s", item_id, store_path)
             return StorePath(str(store_path)), None
         else:
+            # We need to generate a new name.
             folder_path = Path(item_type_to_folder(item.type))
             filename, old_filename = self._new_filename_for(item)
             store_path = folder_path / filename
@@ -248,9 +260,15 @@ class FileStore:
                         raise ValueError(f"Binary Items should be external files: {item}")
 
                     formatted_body = normalize_formatting(item.body_text(), item.format)
-                    
+
                     is_html = str(item.format) == str(Format.html)
-                    fmf_write(full_path, formatted_body, item.metadata(), is_html=is_html, key_sort=ITEM_FIELD_SORT)
+                    fmf_write(
+                        full_path,
+                        formatted_body,
+                        item.metadata(),
+                        is_html=is_html,
+                        key_sort=ITEM_FIELD_SORT,
+                    )
             except IOError as e:
                 log.error("Error saving item: %s", e)
                 self.unarchive(store_path)
@@ -289,7 +307,7 @@ class FileStore:
             body, metadata = fmf_read(self.base_dir / store_path)
             if not metadata:
                 raise ValueError(f"No metadata found in file: {store_path}")
-            
+
             return Item.from_dict(metadata, body=body, store_path=store_path)
         else:
             # This is a PDF or other binary file, so we just return the metadata.
@@ -340,9 +358,18 @@ class FileStore:
             saved_store_path = self.save(new_item)
             return saved_store_path
 
-    def _remove_references(self, store_path: StorePath):
-        self.selection.remove(store_path)
-        self._unindex_item(store_path)
+    def _remove_references(self, store_paths: List[StorePath]):
+        self.selection.remove(store_paths)
+        for store_path in store_paths:
+            self._unindex_item(store_path)
+        # TODO: Update metadata of all relations that point to this path too.
+
+    def _rename_items(self, replacements: List[Tuple[StorePath, StorePath]]):
+        self.selection.replace(replacements)
+        for store_path, new_store_path in replacements:
+            self._unindex_item(store_path)
+            self._index_item(new_store_path)
+        # TODO: Update metadata of all relations that point to this path too.
 
     def archive(self, store_path: StorePath) -> StorePath:
         """
@@ -351,7 +378,7 @@ class FileStore:
         log.info("Archiving item: %s", store_path)
         archive_path = self.archive_dir / store_path
         move_file(self.base_dir / store_path, archive_path)
-        self._remove_references(store_path)
+        self._remove_references([store_path])
         return StorePath(join(ARCHIVE_DIR, store_path))
 
     def unarchive(self, store_path: StorePath):
@@ -389,16 +416,18 @@ class FileStore:
         )
         # TODO: Log more info like number of items by type.
 
-    def walk_files(self, store_path: Optional[StorePath] = None, show_hidden: Optional[bool] = False) -> Generator[Tuple[StorePath, List[str]], None, None]:
+    def walk_by_folder(
+        self, store_path: Optional[StorePath] = None, show_hidden: bool = False
+    ) -> Generator[Tuple[StorePath, List[str]], None, None]:
         """
-        Yields all files (store_dirname, filenames) for each directory in the store.
+        Yields all files in each folder as `(store_dirname, filenames)` for each directory in the store.
         """
 
         path = self.base_dir / store_path if store_path else self.base_dir
 
         if not path.exists():
             raise ValueError(f"Directory not found: {path}")
-        
+
         # Special case of a single file.
         if path.is_file():
             yield StorePath(relpath(path.parent, self.base_dir)), [path.name]
@@ -421,6 +450,27 @@ class FileStore:
                 if not show_hidden and skippable_file(store_filename):
                     continue
                 filtered_filenames.append(filename)
-            
+
             if len(filtered_filenames) > 0:
                 yield StorePath(str(store_dirname)), filtered_filenames
+
+    def walk_items(
+        self, store_path: Optional[StorePath] = None, show_hidden: bool = False
+    ) -> Generator[StorePath, None, None]:
+        """
+        Yields StorePaths of items in a folder or the entire store.
+        """
+        for store_dirname, filenames in self.walk_by_folder(store_path, show_hidden):
+            for filename in filenames:
+                yield StorePath(join(store_dirname, filename))
+
+    def canonicalize(self, store_path: StorePath) -> StorePath:
+        """
+        Canonicalize an item to make sure its filename and contents are in current format.
+        """
+        log.info("Canonicalizing item: %s", store_path)
+        item = self.load(store_path)
+
+        new_store_path = self.save(item)
+        # TODO: Handle checking if filename should change (may want this if we alter the slugify rules, etc.)
+        return new_store_path

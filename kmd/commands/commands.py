@@ -183,8 +183,9 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
     """
     List files or folders in a workspace. Shows the full current workspace if no path is provided.
     """
+    workspace = current_workspace()
     if len(paths) == 0:
-        paths = (str(current_workspace().base_dir),)
+        paths = (str(workspace.base_dir),)
 
     total_folders, total_files = 0, 0
 
@@ -192,8 +193,7 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
         # If we're explicitly looking in a hidden directory, show hidden files.
         show_hidden = skippable_file(path)
 
-        workspace = current_workspace()
-        for store_dirname, filenames in workspace.walk_files(StorePath(path), show_hidden):
+        for store_dirname, filenames in workspace.walk_by_folder(StorePath(path), show_hidden):
             # Show tally for this directory.
             nfiles = len(filenames)
             if nfiles > 0:
@@ -223,3 +223,30 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
             total_files += nfiles
 
         command_output(f"\n{total_files} items total in {total_files} folders", color="bright_blue")
+
+
+@register_command
+def canonicalize(*paths: str) -> None:
+    """
+    Canonicalize the given items, reformatting files' YAML and text or Markdown according
+    to our conventions.
+    """
+    workspace = current_workspace()
+
+    if len(paths) == 0:
+        paths = (str(workspace.base_dir),)
+
+    canon_paths = []
+    for path in paths:
+        log.message("Canonicalizing files in path: %s", path)
+        for store_path in workspace.walk_items(StorePath(path)):
+            try:
+                workspace.canonicalize(store_path)
+            except ValueError as e:
+                log.warning("Could not canonicalize %s: %s", store_path, e)
+            canon_paths.append(store_path)
+
+    if len(canon_paths) == 1:
+        select(*canon_paths)
+
+    # TODO: Also consider implementing duplicate elimination here.

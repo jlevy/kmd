@@ -181,7 +181,7 @@ class Item:
             file_ext = FileExt(item_dict["file_ext"]) if "file_ext" in item_dict else None
             body = item_dict.get("body")
             relations = (
-                ItemRelations(item_dict["relations"])
+                ItemRelations(**item_dict["relations"])
                 if "relations" in item_dict
                 else ItemRelations()
             )
