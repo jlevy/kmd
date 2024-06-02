@@ -89,9 +89,11 @@ def import_url_to_workspace(url: Url) -> Item:
     """
     Import a URL as a resource. Should call fetch_page to fill in metadata.
     """
-    url = canonicalize_url(url)
-    item = Item(ItemType.resource, url=url, format=Format.url)
+    canon_url = canonicalize_url(url)
+    log.message(
+        "Importing url: %s%s", canon_url, f" canonicalized from {url}" if url != canon_url else ""
+    )
+    item = Item(ItemType.resource, url=canon_url, format=Format.url)
     workspace = current_workspace()
-    store_path = workspace.save(item)
-    log.message("Saved url: %s", store_path)
+    workspace.save(item)
     return item

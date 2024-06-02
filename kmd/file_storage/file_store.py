@@ -1,12 +1,13 @@
 import os
 from pathlib import Path
-from typing import Any, Generator, List, Optional, Tuple
+from typing import Generator, List, Optional, Tuple
 from os.path import join, relpath, commonpath
 from os import path
 from slugify import slugify
 from strif import copyfile_atomic
 from kmd.file_storage.filenames import parse_filename
-from kmd.file_storage.yaml_util import custom_key_sort, read_yaml_file, write_yaml_file
+from kmd.file_storage.persisted_yaml import PersistedYaml
+from kmd.file_storage.yaml_util import custom_key_sort
 from kmd.model.locators import StorePath
 from kmd.model.items_model import ITEM_FIELDS, FileExt, Format, Item, ItemId, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
@@ -15,7 +16,6 @@ from kmd.text_handling.text_formatting import format_lines
 from kmd.text_handling.doc_formatting import normalize_formatting
 from kmd.text_handling.inflection import plural
 from kmd.util.file_utils import move_file
-from kmd.util.obj_utils import remove_values, replace_values
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import Url, is_url
@@ -58,28 +58,7 @@ def skippable_file(filename: str) -> bool:
     return len(filename) > 1 and filename.startswith(".")
 
 
-class PersistedYaml:
-    """
-    Maintain a value (such as a dictionary or list of strings) as a YAML file.
-    """
 
-    def __init__(self, filename: str | Path, value: Any):
-        self.filename = str(filename)
-        self.value = value
-
-    def read(self) -> Any:
-        return read_yaml_file(self.filename)
-
-    def set(self, value: Any):
-        write_yaml_file(value, self.filename)
-
-    def remove(self, targets: List[Any]):
-        self.value = remove_values(self.value, targets)
-        self.set(self.value)
-
-    def replace(self, replacements: List[Tuple[Any, Any]]):
-        self.value = replace_values(self.value, replacements)
-        self.set(self.value)
 
 
 class NoSelectionError(RuntimeError):
@@ -294,7 +273,7 @@ class FileStore:
         item.store_path = store_path
         self._index_item(store_path)
 
-        log.message("Saved %s: %s", item.type.value, store_path)
+        log.message("Saved item: %s", store_path)
         return store_path
 
     def load(self, store_path: StorePath) -> Item:
@@ -359,13 +338,13 @@ class FileStore:
             return saved_store_path
 
     def _remove_references(self, store_paths: List[StorePath]):
-        self.selection.remove(store_paths)
+        self.selection.remove_values(store_paths)
         for store_path in store_paths:
             self._unindex_item(store_path)
         # TODO: Update metadata of all relations that point to this path too.
 
     def _rename_items(self, replacements: List[Tuple[StorePath, StorePath]]):
-        self.selection.replace(replacements)
+        self.selection.replace_values(replacements)
         for store_path, new_store_path in replacements:
             self._unindex_item(store_path)
             self._index_item(new_store_path)
