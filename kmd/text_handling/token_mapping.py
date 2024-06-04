@@ -1,6 +1,6 @@
 from textwrap import dedent
 from typing import Dict
-from kmd.text_handling.text_diffs import DiffTag, lcs_diff_wordtoks
+from kmd.text_handling.text_diffs import DiffTag, diff_wordtoks
 
 from kmd.text_handling.text_doc import TextDoc
 
@@ -16,9 +16,9 @@ class TokenMapping:
     ):
         self.doc1 = doc1
         self.doc2 = doc2
-        self.wordtoks1 = list(doc1.as_wordtoks())
-        self.wordtoks2 = list(doc2.as_wordtoks())
-        self.diff = lcs_diff_wordtoks(self.wordtoks1, self.wordtoks2)
+        self.wordtoks1 = doc1.as_wordtoks()
+        self.wordtoks2 = doc2.as_wordtoks()
+        self.diff = diff_wordtoks(self.wordtoks1, self.wordtoks2)
         self._validate(min_wordtoks, max_diff_frac)
         self.map: Dict[int, int] = {}
         self._create_mapping()

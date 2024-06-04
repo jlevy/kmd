@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pprint import pprint
 from textwrap import dedent
-from typing import Iterable, List, Optional, Tuple
+from typing import Generator, Iterable, List, Optional, Tuple
 import regex
 from kmd.config.logger import get_logger
 from kmd.text_handling.sentence_segmentation import split_sentences
@@ -109,17 +109,24 @@ class Paragraph:
 
         raise ValueError(f"Unsupported unit for Paragraph: {unit}")
 
-    def as_wordtoks(self) -> Iterable[str]:
+    def as_wordtoks_iter(self) -> Generator[str, None, None]:
         last_sent_index = len(self.sentences) - 1
         for i, sent in enumerate(self.sentences):
             yield from sent.as_wordtoks()
             if i != last_sent_index:
                 yield SENT_BR_TOK
 
+    def as_wordtoks(self) -> List[str]:
+        return list(self.as_wordtoks_iter())
 
-@dataclass
+
 class TextDoc:
     paragraphs: List[Paragraph]
+
+    def __init__(self, paragraphs: List[Paragraph]):
+        self.paragraphs = paragraphs
+
+    # TODO: Could lazily compute paragraphs and wordtoks only for better performance.
 
     @classmethod
     def from_text(cls, text: str) -> "TextDoc":
@@ -132,6 +139,10 @@ class TextDoc:
                 paragraphs.append(Paragraph.from_text(stripped_para, char_offset))
                 char_offset += len(para) + len(PARA_BR_STR)
         return cls(paragraphs=paragraphs)
+
+    @classmethod
+    def from_wordtoks(cls, wordtoks: List[str]) -> "TextDoc":
+        return TextDoc.from_text(join_wordtoks(wordtoks))
 
     def reassemble(self) -> str:
         return PARA_BR_STR.join(paragraph.reassemble() for paragraph in self.paragraphs)
@@ -230,12 +241,18 @@ class TextDoc:
     def size_summary(self) -> str:
         return f"{self.size(Unit.BYTES)} bytes ({self.size(Unit.PARAGRAPHS)} paragraphs, {self.size(Unit.SENTENCES)} sentences)"
 
-    def as_wordtoks(self) -> Iterable[str]:
+    def as_wordtoks_iter(self) -> Generator[str, None, None]:
         last_para_index = len(self.paragraphs) - 1
         for i, para in enumerate(self.paragraphs):
-            yield from para.as_wordtoks()
+            yield from para.as_wordtoks_iter()
             if i != last_para_index:
                 yield PARA_BR_TOK
+
+    def as_wordtoks(self) -> List[str]:
+        return list(self.as_wordtoks_iter())
+
+    def __str__(self):
+        return f"TextDoc({self.size_summary()})"
 
 
 ## Tests
@@ -344,7 +361,7 @@ def test_sub_doc():
 
 def test_tokenization():
     doc = TextDoc.from_text(_short_text)
-    wordtoks = list(doc.as_wordtoks())
+    wordtoks = doc.as_wordtoks()
 
     print("\n---Tokens:")
     pprint(wordtoks)

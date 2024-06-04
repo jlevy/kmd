@@ -34,6 +34,7 @@ class MarkdownNormalizer(Renderer):
         self._prefix, self._second_prefix = old_prefix, old_second_prefix
 
     def render_paragraph(self, element: block.Paragraph) -> str:
+        # FIXME: Wrap and break lines sensibly.
         children = self.render_children(element)
         line = f"{self._prefix}{children}\n"
         self._prefix = self._second_prefix

@@ -4,7 +4,7 @@ from enum import Enum
 from textwrap import dedent
 from typing import Callable, List, Optional, Tuple
 from kmd.text_handling.text_doc import DocIndex, TextDoc
-from kmd.text_handling.wordtoks import is_br_or_space, is_word
+from kmd.text_handling.wordtoks import is_break_or_space, is_word
 
 
 class DiffTag(Enum):
@@ -39,15 +39,24 @@ class DiffStats:
 
 DiffOpFilter = Callable[[DiffOp], bool]
 
-BR_AND_SPACE: DiffOpFilter = lambda diff_op: all(is_br_or_space(tok) for tok in diff_op.wordtoks)
+ONLY_BR_AND_SPACE: DiffOpFilter = lambda diff_op: all(
+    is_break_or_space(tok) for tok in diff_op.wordtoks
+)
+"""Only accepts changes to stentence and paragraph breaks and whitespace."""
 
-PUNCT_AND_SPACE: DiffOpFilter = lambda diff_op: all(not is_word(tok) for tok in diff_op.wordtoks)
+ONLY_PUNCT_AND_SPACE: DiffOpFilter = lambda diff_op: all(
+    not is_word(tok) for tok in diff_op.wordtoks
+)
+"""Only accepts changes to punctuation and whitespace."""
+
+ALL_CHANGES: DiffOpFilter = lambda diff_op: True
+"""Accepts all changes."""
 
 
 @dataclass
 class TextDiff:
     """
-    A diff of two texts as a sequence of EQUAL, INSERT, and DELETE operations.
+    A diff of two texts as a sequence of EQUAL, INSERT, and DELETE operations on wordtoks.
     """
 
     ops: List[DiffOp]
@@ -60,20 +69,23 @@ class TextDiff:
         wordtoks_removed = sum(len(op.wordtoks) for op in self.ops if op.action == DiffTag.DELETE)
         return DiffStats(wordtoks_added, wordtoks_removed)
 
-    def apply_to(self, original: List[str]) -> List[str]:
+    def apply_to(self, original_wordtoks: List[str]) -> List[str]:
+        """
+        Apply the diff to a list of wordtoks.
+        """
         result = []
         original_index = 0
 
         for op in self.ops:
             if op.action == DiffTag.EQUAL:
-                result.extend(original[original_index : original_index + len(op.wordtoks)])
+                result.extend(original_wordtoks[original_index : original_index + len(op.wordtoks)])
                 original_index += len(op.wordtoks)
             elif op.action == DiffTag.DELETE:
                 original_index += len(op.wordtoks)
             elif op.action == DiffTag.INSERT:
                 result.extend(op.wordtoks)
 
-        result.extend(original[original_index:])
+        result.extend(original_wordtoks[original_index:])
 
         return result
 
@@ -109,7 +121,14 @@ class TextDiff:
             return "TextDiff:\n" + "\n".join(str(op) for op in self.ops)
 
 
-def lcs_diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
+def diff_docs(doc1: TextDoc, doc2: TextDoc) -> TextDiff:
+    """
+    Calculate the LCS-style diff between two documents based on words.
+    """
+    return diff_wordtoks(doc1.as_wordtoks(), doc2.as_wordtoks())
+
+
+def diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
     """
     Perform an LCS-style diff on two lists of wordtoks.
     """
@@ -133,7 +152,7 @@ def lcs_diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
 ScoredDiff = Tuple[float, TextDiff]
 
 
-def scored_lcs_diff(wordtoks1: List[str], wordtoks2: List[str]) -> ScoredDiff:
+def scored_diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> ScoredDiff:
     """
     Calculate the number of wordtoks added and removed between two lists of tokens.
     Score is (wordtoks_added + wordtoks_removed) / min(len(doc1), len(doc2)),
@@ -143,7 +162,7 @@ def scored_lcs_diff(wordtoks1: List[str], wordtoks2: List[str]) -> ScoredDiff:
     if len(wordtoks1) == 0 or len(wordtoks2) == 0:
         raise ValueError("Cannot score diff for empty documents")
 
-    diff = lcs_diff_wordtoks(wordtoks1, wordtoks2)
+    diff = diff_wordtoks(wordtoks1, wordtoks2)
     score = float(diff.stats().nchanges()) / min(len(wordtoks1), len(wordtoks2))
     return score, diff
 
@@ -153,7 +172,7 @@ def find_best_alignment(
     list2: List[str],
     min_overlap: int,
     max_overlap: Optional[int] = None,
-    scored_diff: Callable[[List[str], List[str]], ScoredDiff] = scored_lcs_diff,
+    scored_diff: Callable[[List[str], List[str]], ScoredDiff] = scored_diff_wordtoks,
 ) -> Tuple[int, ScoredDiff]:
     """
     Find the best alignment of two lists of values, where edit distance is smallest but overlap is
@@ -225,10 +244,10 @@ _short_text3 = dedent(
 
 
 def test_lcs_diff_wordtoks():
-    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
-    wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks())
+    wordtoks1 = TextDoc.from_text(_short_text1).as_wordtoks()
+    wordtoks2 = TextDoc.from_text(_short_text2).as_wordtoks()
 
-    diff = lcs_diff_wordtoks(wordtoks1, wordtoks2)
+    diff = diff_wordtoks(wordtoks1, wordtoks2)
 
     print("---Diff:")
     print(diff)
@@ -242,10 +261,10 @@ def test_lcs_diff_wordtoks():
 
 
 def test_apply_to():
-    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
-    wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks())
+    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks_iter())
+    wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks_iter())
 
-    diff = lcs_diff_wordtoks(wordtoks1, wordtoks2)
+    diff = diff_wordtoks(wordtoks1, wordtoks2)
     result = diff.apply_to(wordtoks1)
     print(f"---Applied diff:")
     print("/".join(wordtoks1))
@@ -255,19 +274,19 @@ def test_apply_to():
 
     wordtoks3 = ["a", "b", "c", "d", "e"]
     wordtoks4 = ["a", "x", "c", "y", "e"]
-    diff2 = lcs_diff_wordtoks(wordtoks3, wordtoks4)
+    diff2 = diff_wordtoks(wordtoks3, wordtoks4)
     result2 = diff2.apply_to(wordtoks3)
     assert result2 == wordtoks4
 
 
 def test_filter_br_and_space():
-    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
-    wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks())
-    wordtoks3 = list(TextDoc.from_text(_short_text3).as_wordtoks())
+    wordtoks1 = TextDoc.from_text(_short_text1).as_wordtoks()
+    wordtoks2 = TextDoc.from_text(_short_text2).as_wordtoks()
+    wordtoks3 = TextDoc.from_text(_short_text3).as_wordtoks()
 
-    diff = lcs_diff_wordtoks(wordtoks1, wordtoks2)
+    diff = diff_wordtoks(wordtoks1, wordtoks2)
 
-    accepted, rejected = diff.filter(BR_AND_SPACE)
+    accepted, rejected = diff.filter(ONLY_BR_AND_SPACE)
 
     accepted_result = accepted.apply_to(wordtoks1)
     rejected_result = rejected.apply_to(wordtoks1)
@@ -284,9 +303,9 @@ def test_filter_br_and_space():
 
 
 def test_find_best_alignment():
-    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
-    wordtoks2 = list(TextDoc.from_text(_short_text1).sub_doc(DocIndex(1, 1)).as_wordtoks())
-    wordtoks3 = list(wordtoks2) + ["Extra", "wordtoks", "at", "the", "end"]
+    wordtoks1 = TextDoc.from_text(_short_text1).as_wordtoks()
+    wordtoks2 = TextDoc.from_text(_short_text1).sub_doc(DocIndex(1, 1)).as_wordtoks()
+    wordtoks3 = wordtoks2 + ["Extra", "wordtoks", "at", "the", "end"]
     wordtoks4 = list(wordtoks3)
     wordtoks4[0] = "X"
     wordtoks4[3] = "Y"

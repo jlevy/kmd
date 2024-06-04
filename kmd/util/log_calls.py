@@ -95,7 +95,7 @@ def log_calls(
                     log_func("%s", call_msg)
             else:
                 if elapsed > if_slower_than:
-                    call_msg = f"Call to {func.__name__} took {format_duration(elapsed)}."
+                    call_msg = f"Call to {func.__name__} took {format_duration(elapsed)}"
                     log_func("%s", call_msg)
 
             return result

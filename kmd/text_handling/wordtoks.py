@@ -56,7 +56,7 @@ def join_wordtoks(wordtoks: List[str]) -> str:
     return "".join(wordtoks)
 
 
-def is_br_or_space(wordtok: str) -> bool:
+def is_break_or_space(wordtok: str) -> bool:
     """
     Any kind of paragraph break, sentence break, or space.
     """
