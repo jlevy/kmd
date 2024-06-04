@@ -2,13 +2,14 @@ from typing import List, cast
 from strif import abbreviate_str
 from kmd.actions.action_registry import look_up_action
 from kmd.actions.system_actions import FETCH_ACTION, FETCH_ACTION_NAME
-from kmd.file_storage.file_store import NoSelectionError
+from kmd.file_storage.file_store import StoreStateError
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.model.actions_model import Action, ActionResult
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.items_model import Item
 from kmd.model.locators import StorePath
 from kmd.text_handling.text_formatting import format_lines
+from kmd.util.parse_utils import format_key_value
 from kmd.util.type_utils import not_none
 from kmd.commands import commands
 from kmd.config.logger import get_logger
@@ -21,7 +22,7 @@ def collect_args(*args: str) -> List[str]:
         try:
             selection_args = current_workspace().get_selection()
             return cast(List[str], selection_args)
-        except NoSelectionError:
+        except StoreStateError:
             return []
     else:
         return list(args)
@@ -47,16 +48,26 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
         action = look_up_action(action)
     action_name = action.name
 
+    # Get the current action params.
+    workspace = current_workspace()
+    action_params = workspace.get_action_params()
+
+    # Update the action with any overridden params.
+    if action_params:
+        action.update_with_params(action_params)
+        log.message(
+            "Action %s: Overriding parameters:\n%s",
+            action_name,
+            format_lines(format_key_value(key, value) for key, value in action_params.items()),
+        )
+
     # Collect args from the provided args or otherwise the current selection.
     args = collect_args(*provided_args)
-    if provided_args:
+    if args:
+        source_str = "provided args" if provided_args else "selection"
         log.message(
-            f"Using provided args as inputs to action %s:\n%s",
-            action_name,
-            format_lines(provided_args),
+            "Action %s: Using %s as inputs:\n%s", action_name, source_str, format_lines(args)
         )
-    elif args:
-        log.message(f"Using selection as inputs to action %s:\n%s", action_name, format_lines(args))
 
     # Ensure we have the right number of args.
     action.validate_args(args)
@@ -84,7 +95,7 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
 
     # Save the result items. This is done here so the action need not worry about saving.
     for item in result.items:
-        current_workspace().save(item)
+        workspace.save(item)
 
     input_store_paths = [StorePath(not_none(item.store_path)) for item in input_items]
     result_store_paths = [StorePath(not_none(item.store_path)) for item in result.items]

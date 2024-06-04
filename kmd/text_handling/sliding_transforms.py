@@ -40,6 +40,9 @@ class WindowSettings:
     min_overlap: int = 0
     separator: str = ""
 
+    def __str__(self):
+        return f"windowing size={self.size}, shift={self.shift}, min_overlap={self.min_overlap} {self.unit.value}"
+
 
 def sliding_window_transform(
     doc: TextDoc,

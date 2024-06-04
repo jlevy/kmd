@@ -5,19 +5,19 @@ from typing import Any, Callable, Dict, List, Tuple
 from strif import abbreviate_str
 
 
-class _DeleteMe:
+class DeleteSentinel:
     pass
 
 
-DELETE_VALUE = _DeleteMe()
+DELETE_VALUE = DeleteSentinel()
 """Sentinel value to indicate a list or dict value should be deleted."""
 
 
-DataTransform = List[Tuple[Any, Any]]  # List of (old_value, new_value) pairs
+ValueReplacements = List[Tuple[Any, Any]]  # List of (old_value, new_value) pairs
 
 
 def replace_values(
-    data: Any, transform: DataTransform, eq: Callable[[Any, Any], bool] = operator.eq
+    data: Any, transform: ValueReplacements, eq: Callable[[Any, Any], bool] = operator.eq
 ) -> Any:
     """
     Recursively replace or remove values from a data structure according to the provided list of

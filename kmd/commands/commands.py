@@ -8,12 +8,17 @@ from humanize import naturaltime, naturalsize
 from rich import print as rprint
 from rich.text import Text
 from kmd.commands.local_file_tools import open_platform_specific
+from kmd.commands.text_styles import COLOR_EMPH, COLOR_HEADING, COLOR_OUTPUT, COLOR_PLAIN
+from kmd.config.settings import KMD_WRAP_WIDTH
 from kmd.file_storage.file_store import skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info
+from kmd.model.actions_model import ACTION_PARAMS
 from kmd.model.locators import StorePath
 from kmd.text_handling.text_formatting import format_lines
 from kmd.text_handling.inflection import plural
 from kmd.config.logger import get_logger
+from kmd.util.obj_utils import remove_values
+from kmd.util.parse_utils import format_key_value, parse_key_value
 
 log = get_logger(__name__)
 
@@ -30,8 +35,14 @@ def all_commands():
     return sorted(_commands, key=lambda cmd: cmd.__name__)
 
 
-def command_output(message: str, *args, color="yellow"):
+def command_output(message: str, *args, color=COLOR_OUTPUT):
     rprint(Text(message % args, color))
+
+
+def format_docstr(name: str, doc: str) -> Text:
+    doc = textwrap.dedent(doc).strip()
+    wrapped = textwrap.fill(doc, width=KMD_WRAP_WIDTH, initial_indent="", subsequent_indent="    ")
+    return Text.assemble((name, COLOR_EMPH), (": ", COLOR_EMPH), (wrapped, COLOR_PLAIN))
 
 
 @kmd_command
@@ -41,22 +52,17 @@ def kmd_help() -> None:
     """
     from kmd.actions.action_registry import load_all_actions
 
-    rprint(Text("\nAvailable kmd commands:\n", style="bright_green"))
-
-    def format_doc(name: str, doc: str) -> Text:
-        doc = textwrap.dedent(doc).strip()
-        wrapped = textwrap.fill(doc, width=70, initial_indent="", subsequent_indent="    ")
-        return Text.assemble((name, "bright_blue"), (": ", "bright_blue"), (wrapped, "default"))
+    rprint(Text("\nAvailable kmd commands:\n", style=COLOR_HEADING))
 
     for command in all_commands():
         doc = command.__doc__ if command.__doc__ else ""
-        rprint(format_doc(command.__name__, doc))
+        rprint(format_docstr(command.__name__, doc))
         rprint()
 
-    rprint(Text("\nAvailable kmd actions:\n", style="bright_green"))
+    rprint(Text("\nAvailable kmd actions:\n", style=COLOR_HEADING))
     actions = load_all_actions()
     for action in actions.values():
-        rprint(format_doc(action.name, action.description))
+        rprint(format_docstr(action.name, action.description))
         rprint()
 
 
@@ -134,6 +140,46 @@ def show(path: Optional[str] = None) -> None:
 
 
 @kmd_command
+def param(*args: str) -> None:
+    """
+    Show or set currently set parameters for actions.
+    """
+    if args:
+        new_key_vals = dict([parse_key_value(arg) for arg in args])
+
+        for key in new_key_vals:
+            if key not in ACTION_PARAMS:
+                raise ValueError(f"Unknown action parameter: {key}")
+
+        for key, value in new_key_vals.items():
+            action_param = ACTION_PARAMS[key]
+            if value and action_param.valid_values and value not in action_param.valid_values:
+                raise ValueError(f"Unrecognized value for action parameter {key}: {value}")
+
+        current_params = current_workspace().get_action_params()
+        new_params = {**current_params, **new_key_vals}
+
+        deletes = [key for key, value in new_params.items() if value is None]
+        new_params = remove_values(new_params, deletes)
+        current_workspace().set_action_params(new_params)
+
+    rprint(Text("\nAvailable action parameters:\n", style=COLOR_HEADING))
+
+    for ap in ACTION_PARAMS.values():
+        rprint(format_docstr(ap.name, ap.full_description()))
+        rprint()
+
+    params = current_workspace().get_action_params()
+    if not params:
+        command_output("No action parameters set.")
+    else:
+        rprint(Text("Action parameters:\n", style=COLOR_HEADING))
+
+        for key, value in params.items():
+            command_output(format_key_value(key, value))
+        rprint()
+
+
 @kmd_command
 def add_resource(*files_or_urls: str) -> None:
     """
@@ -198,7 +244,7 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
             # Show tally for this directory.
             nfiles = len(filenames)
             if nfiles > 0:
-                command_output(f"{store_dirname} - {nfiles} files", color="bright_blue")
+                command_output(f"\n{store_dirname} - {nfiles} files", color=COLOR_EMPH)
 
             for filename in filenames:
                 full_path = join(workspace.base_dir, store_dirname, filename)
@@ -223,7 +269,7 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
             total_folders += 1
             total_files += nfiles
 
-        command_output(f"\n{total_files} items total in {total_files} folders", color="bright_blue")
+        command_output(f"\n{total_files} items total in {total_files} folders", color=COLOR_EMPH)
 
 
 @kmd_command

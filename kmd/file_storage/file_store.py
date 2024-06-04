@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Generator, List, Optional, Tuple
+from typing import Dict, Generator, List, Optional, Tuple
 from os.path import join, relpath, commonpath
 from os import path
 from slugify import slugify
@@ -58,7 +58,7 @@ def skippable_file(filename: str) -> bool:
     return len(filename) > 1 and filename.startswith(".")
 
 
-class NoSelectionError(RuntimeError):
+class StoreStateError(ValueError):
     pass
 
 
@@ -378,7 +378,16 @@ class FileStore:
         try:
             return self.selection.read()
         except OSError:
-            raise NoSelectionError()
+            raise StoreStateError("No selection in workspace")
+
+    def get_action_params(self) -> Dict[str, str]:
+        try:
+            return self.action_params.read()
+        except OSError:
+            return {}
+
+    def set_action_params(self, action_params: dict):
+        self.action_params.set(action_params)
 
     def unselect(self, unselect_paths: list[StorePath]):
         current_selection = self.get_selection()

@@ -1,5 +1,6 @@
 import textwrap
 from typing import Optional
+from kmd.config.settings import DEFAULT_WRAP_WIDTH
 from kmd.model.items_model import Format
 from kmd.text_handling.markdown_normalization import normalize_markdown
 
@@ -16,7 +17,7 @@ def wrap_plaintext(text: str, width=80) -> str:
     return "\n\n".join(wrapped_paragraphs)
 
 
-def normalize_formatting(text: str, format: Optional[Format], width=80) -> str:
+def normalize_formatting(text: str, format: Optional[Format], width=DEFAULT_WRAP_WIDTH) -> str:
     """
     Normalize text formatting by wrapping lines and normalizing Markdown.
     """

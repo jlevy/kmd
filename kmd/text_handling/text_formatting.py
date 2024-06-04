@@ -5,11 +5,11 @@ import regex
 from strif import abbreviate_str
 
 
-def format_lines(values: Iterable[Any], prefix="    ") -> str:
+def format_lines(values: Iterable[Any], prefix: str = "    ", line_break: str = "\n") -> str:
     """
     Simple indented or prefixed formatting of values one per line.
     """
-    return indent("\n".join(str(value) for value in values), prefix)
+    return indent(line_break.join(str(value) for value in values), prefix)
 
 
 def plaintext_to_html(text: str):

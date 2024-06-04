@@ -4,10 +4,34 @@ The model for Actions and other types associated with actions.
 
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Optional
-
+import textwrap
+from typing import Dict, List, Optional
+from kmd.config.settings import KMD_WRAP_WIDTH
 from kmd.model.items_model import Item
+from kmd.model.language_models import MODEL_LIST
 from kmd.util.obj_utils import abbreviate_obj
+
+
+@dataclass(frozen=True)
+class ActionParam:
+    name: str
+    description: str
+    valid_values: Optional[list[str]]
+
+    def full_description(self) -> str:
+        desc = self.description
+        if self.valid_values:
+            desc += f" Allowed values are: {', '.join(self.valid_values)}"
+        return desc
+
+
+ACTION_PARAMS = {
+    "model": ActionParam(
+        "model",
+        "The name of the LLM.",
+        MODEL_LIST,
+    )
+}
 
 
 @dataclass
@@ -61,6 +85,14 @@ class Action:
             raise ValueError(
                 f"Action {self.name} expects at least {self.expected_args.min_args} arguments"
             )
+
+    def update_with_params(self, params: Dict[str, str]):
+        """
+        Update the action with the given parameters.
+        """
+        for name, value in params.items():
+            if name in ACTION_PARAMS and hasattr(self, name):
+                setattr(self, name, value)
 
     @abstractmethod
     def run(self, items: ActionInput) -> ActionResult:
