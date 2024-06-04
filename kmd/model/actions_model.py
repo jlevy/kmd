@@ -3,10 +3,9 @@ The model for Actions and other types associated with actions.
 """
 
 from abc import abstractmethod
+from copy import deepcopy
 from dataclasses import dataclass, field
-import textwrap
 from typing import Dict, List, Optional
-from kmd.config.settings import KMD_WRAP_WIDTH
 from kmd.model.items_model import Item
 from kmd.model.language_models import MODEL_LIST
 from kmd.util.obj_utils import abbreviate_obj
@@ -60,6 +59,7 @@ class ActionResult:
         return abbreviate_obj(self, field_max_len=80)
 
 
+# TODO: frozen=True
 @dataclass
 class Action:
     name: str
@@ -86,13 +86,17 @@ class Action:
                 f"Action {self.name} expects at least {self.expected_args.min_args} arguments"
             )
 
-    def update_with_params(self, params: Dict[str, str]):
+    def update_with_params(self, params: Dict[str, str]) -> "Action":
         """
-        Update the action with the given parameters.
+        Update the action with the given parameters and return a new Action.
         """
+        new_instance = deepcopy(self)
+
         for name, value in params.items():
-            if name in ACTION_PARAMS and hasattr(self, name):
-                setattr(self, name, value)
+            if name in vars(new_instance) and name in ACTION_PARAMS:
+                setattr(new_instance, name, value)
+
+        return new_instance
 
     @abstractmethod
     def run(self, items: ActionInput) -> ActionResult:

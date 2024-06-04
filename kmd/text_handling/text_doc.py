@@ -120,11 +120,9 @@ class Paragraph:
         return list(self.as_wordtoks_iter())
 
 
+@dataclass
 class TextDoc:
     paragraphs: List[Paragraph]
-
-    def __init__(self, paragraphs: List[Paragraph]):
-        self.paragraphs = paragraphs
 
     # TODO: Could lazily compute paragraphs and wordtoks only for better performance.
 

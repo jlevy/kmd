@@ -6,16 +6,17 @@ transformed text.
 from dataclasses import dataclass
 from math import ceil
 from textwrap import dedent
-from typing import Callable, List
+from typing import Callable, List, Optional
 from kmd.config.logger import get_logger
 from kmd.model.items_model import Format
 from kmd.text_handling.sliding_windows import sliding_para_window, sliding_word_window
-from kmd.text_handling.text_diffs import find_best_alignment
+from kmd.text_handling.text_diffs import ALL_CHANGES, DiffOpFilter, diff_docs, find_best_alignment
 from kmd.text_handling.text_doc import (
     Paragraph,
     TextDoc,
     Unit,
 )
+from kmd.text_handling.text_formatting import format_lines
 from kmd.text_handling.wordtoks import (
     join_wordtoks,
 )
@@ -44,20 +45,77 @@ class WindowSettings:
         return f"windowing size={self.size}, shift={self.shift}, min_overlap={self.min_overlap} {self.unit.value}"
 
 
+def filtered_transform(
+    doc: TextDoc,
+    transform_func: TextDocTransform,
+    windowing: Optional[WindowSettings],
+    diff_filter: DiffOpFilter = ALL_CHANGES,
+) -> TextDoc:
+    """
+    Apply a transform with sliding window across the input doc, enforcing
+    the changes it's allowed to make with `diff_filter`.
+    """
+
+    if not windowing:
+        transformed_doc = transform_func(doc)
+    else:
+
+        def transform_and_check_diff(input_doc: TextDoc) -> TextDoc:
+            result_doc = transform_func(input_doc)
+
+            # Check the transform did what it should have.
+            diff = diff_docs(input_doc, result_doc)
+            accepted_diff, rejected_diff = diff.filter(diff_filter)
+
+            log.info(
+                "Accepted changes: %s:\n%s",
+                accepted_diff.stats(),
+                format_lines(str(accepted_diff).splitlines()),
+            )
+
+            # Note any rejections.
+            rejected_changes = rejected_diff.changes()
+            if rejected_changes:
+                log.warning(
+                    "Rejected changes: %s:\n%s",
+                    rejected_diff.stats(),
+                    format_lines(str(rejected_diff).splitlines()),
+                )
+
+            # Apply only the accepted changes.
+            final_doc = TextDoc.from_wordtoks(accepted_diff.apply_to(input_doc.as_wordtoks()))
+
+            log.message(
+                "Word token changes:\n%s",
+                format_lines(
+                    [f"Accepted: {accepted_diff.stats()}", f"Rejected: {rejected_diff.stats()}"]
+                ),
+            )
+            return final_doc
+
+        transformed_doc = sliding_window_transform(
+            doc,
+            transform_and_check_diff,
+            windowing,
+        )
+
+    return transformed_doc
+
+
 def sliding_window_transform(
     doc: TextDoc,
     transform_func: TextDocTransform,
     settings: WindowSettings,
 ) -> TextDoc:
     if settings.unit == Unit.WORDTOKS:
-        return sliding_word_window_transform(doc, transform_func, settings)
+        return sliding_wordtok_window_transform(doc, transform_func, settings)
     elif settings.unit == Unit.PARAGRAPHS:
         return sliding_para_window_transform(doc, transform_func, settings)
     else:
         raise ValueError(f"Unsupported sliding transform unit: {settings.unit}")
 
 
-def sliding_word_window_transform(
+def sliding_wordtok_window_transform(
     doc: TextDoc,
     transform_func: TextDocTransform,
     settings: WindowSettings,
@@ -71,8 +129,8 @@ def sliding_word_window_transform(
     if settings.unit != Unit.WORDTOKS:
         raise ValueError(f"This sliding window expects wordtoks, not {settings.unit}")
 
-    output_wordtoks = []
     windows = sliding_word_window(doc, settings.size, settings.shift, Unit.WORDTOKS)
+
     nwordtoks = doc.size(Unit.WORDTOKS)
     nbytes = doc.size(Unit.BYTES)
     nwindows = (nwordtoks - settings.size) // settings.shift + 1
@@ -86,6 +144,7 @@ def sliding_word_window_transform(
         settings,
     )
 
+    output_wordtoks = []
     for i, window in enumerate(windows):
         log.message(
             "Sliding word transform: Window %s (%s wordtoks, %s bytes), at %s wordtoks so far",
@@ -95,7 +154,7 @@ def sliding_word_window_transform(
             len(output_wordtoks),
         )
         transformed_window = transform_func(window)
-        new_wordtoks = list(transformed_window.as_wordtoks())
+        new_wordtoks = transformed_window.as_wordtoks()
         if not output_wordtoks:
             output_wordtoks = new_wordtoks
         else:

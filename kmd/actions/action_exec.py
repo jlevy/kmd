@@ -54,7 +54,7 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
 
     # Update the action with any overridden params.
     if action_params:
-        action.update_with_params(action_params)
+        action = action.update_with_params(action_params)
         log.message(
             "Parameters apply to action %s:\n%s",
             action_name,

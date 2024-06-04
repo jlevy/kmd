@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from enum import Enum
 from textwrap import indent
 from typing import List, Optional
 from kmd.llms.completion import completion
@@ -7,9 +6,12 @@ from kmd.model.actions_model import Action, ActionInput, ActionResult, ONE_OR_MO
 from kmd.model.items_model import Format, Item
 from kmd.config import setup
 from kmd.config.logger import get_logger
-from kmd.text_handling.text_diffs import DiffOpFilter
+from kmd.text_handling.text_diffs import ALL_CHANGES, DiffOpFilter
 from kmd.text_handling.text_doc import TextDoc
-from kmd.text_handling.sliding_transforms import WindowSettings, sliding_window_transform
+from kmd.text_handling.sliding_transforms import (
+    WindowSettings,
+    filtered_transform,
+)
 from kmd.util.log_calls import log_calls
 
 log = get_logger(__name__)
@@ -68,26 +70,23 @@ def _sliding_llm_transform(
     template: str,
     input: str,
     windowing: Optional[WindowSettings],
+    diff_filter: DiffOpFilter,
 ) -> str:
-    if not windowing:
-        result_str = llm_completion(model, system_message, template, input)
-    else:
 
-        def transform(text_doc: TextDoc):
-            return TextDoc.from_text(
-                llm_completion(model, system_message, template, text_doc.reassemble())
+    def llm_transform(input_doc: TextDoc) -> TextDoc:
+        return TextDoc.from_text(
+            llm_completion(
+                model,
+                system_message=system_message,
+                template=template,
+                input=input_doc.reassemble(),
             )
-
-        input_doc = TextDoc.from_text(input)
-        transformed_doc = sliding_window_transform(
-            input_doc,
-            transform,
-            windowing,
         )
-        result_str = transformed_doc.reassemble()
 
-    # FIXME: Add diff filtering here, for use with paragraph breaks for example.
-    return result_str
+    input_doc = TextDoc.from_text(input)
+    result_doc = filtered_transform(input_doc, llm_transform, windowing, diff_filter)
+
+    return result_doc.reassemble()
 
 
 @log_calls(level="message")
@@ -103,7 +102,14 @@ def run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
 
         setup.api_setup()
 
-        log.info("Running action %s on item %s", action.name, item)
+        log.message(
+            "Running LLM action %s with model %s: %s %s",
+            action.name,
+            action.model,
+            action.windowing,
+            "with filter" if action.diff_filter else "without filter",  # TODO: Give filters names.
+        )
+        log.info("Input item: %s", item)
 
         result_item = item.derived_copy(body=None)
         result_item.body = _sliding_llm_transform(
@@ -112,6 +118,7 @@ def run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
             action.template,
             item.body,
             action.windowing,
+            action.diff_filter or ALL_CHANGES,
         )
 
         if action.title_template:

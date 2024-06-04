@@ -23,7 +23,7 @@ class DiffOp:
 
     def __str__(self):
         if self.wordtoks:
-            return f"{self.action.as_plus_minus()} {", ".join(repr(tok) for tok in self.wordtoks)},"
+            return f"{self.action.as_plus_minus()} \"{''.join(tok for tok in self.wordtoks)}\""
         else:
             return "(empty DiffOp)"
 
@@ -36,15 +36,18 @@ class DiffStats:
     def nchanges(self) -> int:
         return self.added + self.removed
 
+    def __str__(self):
+        return f"+{self.added} added, -{self.removed} removed"
+
 
 DiffOpFilter = Callable[[DiffOp], bool]
 
-ONLY_BR_AND_SPACE: DiffOpFilter = lambda diff_op: all(
+ONLY_BREAKS_AND_SPACES: DiffOpFilter = lambda diff_op: all(
     is_break_or_space(tok) for tok in diff_op.wordtoks
 )
-"""Only accepts changes to stentence and paragraph breaks and whitespace."""
+"""Only accepts changes to sentence and paragraph breaks and whitespace."""
 
-ONLY_PUNCT_AND_SPACE: DiffOpFilter = lambda diff_op: all(
+ONLY_PUNCT_AND_SPACES: DiffOpFilter = lambda diff_op: all(
     not is_word(tok) for tok in diff_op.wordtoks
 )
 """Only accepts changes to punctuation and whitespace."""
@@ -114,11 +117,20 @@ class TextDiff:
 
         return TextDiff(accepted_ops), TextDiff(rejected_ops)
 
+    def line_summary(self) -> str:
+        toks = 0
+        lines = []
+        for op in self.ops:
+            if op.action != DiffTag.EQUAL:
+                lines.append(f"tok {toks}: {op}")
+            toks += len(op.wordtoks)
+        return "\n".join(lines)
+
     def __str__(self):
         if len(self.changes()) == 0:
-            return "TextDiff: (no changes)"
+            return "TextDiff: No changes"
         else:
-            return "TextDiff:\n" + "\n".join(str(op) for op in self.ops)
+            return "TextDiff:\n" + self.line_summary()
 
 
 def diff_docs(doc1: TextDoc, doc2: TextDoc) -> TextDiff:
@@ -286,7 +298,7 @@ def test_filter_br_and_space():
 
     diff = diff_wordtoks(wordtoks1, wordtoks2)
 
-    accepted, rejected = diff.filter(ONLY_BR_AND_SPACE)
+    accepted, rejected = diff.filter(ONLY_BREAKS_AND_SPACES)
 
     accepted_result = accepted.apply_to(wordtoks1)
     rejected_result = rejected.apply_to(wordtoks1)
