@@ -86,3 +86,6 @@ def api_setup():
 
     secret_deepgram = get_secret("secret_deepgram")
     os.environ["DEEPGRAM_API_KEY"] = secret_deepgram
+
+    secret_groq = get_secret("secret_groq")
+    os.environ["GROQ_API_KEY"] = secret_groq

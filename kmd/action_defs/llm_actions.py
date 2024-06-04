@@ -42,7 +42,9 @@ define_llm_action(
 
         - Preserve all Markdown formatting.
 
-        Input text:
+        - ONLY GIVE THE FORMATTED TEXT, with no other commentary.
+
+        Original text:
 
         {body}
 
@@ -82,8 +84,10 @@ define_llm_action(
         - If unsure about any correction, leave that portion of the text unchanged.
 
         - Preserve all Markdown formatting.
+
+        - ONLY GIVE THE CORRECTED TEXT, with no other commentary.
         
-        Input text:
+        Original text:
         
         {body}
 
