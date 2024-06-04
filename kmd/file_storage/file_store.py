@@ -87,9 +87,9 @@ class FileStore:
         os.makedirs(self.settings_dir, exist_ok=True)
 
         # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
-        self.selection = PersistedYaml(self.settings_dir / "selection.yaml", [])
+        self.selection = PersistedYaml(self.settings_dir / "selection.yaml", init_value=[])
 
-        self.action_params = PersistedYaml(self.settings_dir / "action_params.yaml", {})
+        self.action_params = PersistedYaml(self.settings_dir / "action_params.yaml", init_value={})
 
         self.log_store_info()
 

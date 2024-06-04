@@ -99,7 +99,7 @@ def select(*paths: str) -> None:
         command_output("No selection.")
     else:
         command_output(
-            "★ Selected %s %s:\n%s",
+            "⭑ Selected %s %s:\n%s",
             len(selection),
             plural("item", len(selection)),
             format_lines(selection),

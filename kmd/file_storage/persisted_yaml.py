@@ -10,15 +10,19 @@ class PersistedYaml:
     File writes are atomic but does not lock.
     """
 
-    def __init__(self, filename: str | Path, value: Any):
+    def __init__(self, filename: str | Path, init_value: Any):
         self.filename = str(filename)
-        self.set(value)
+        self.initialize(init_value)
 
     def read(self) -> Any:
         return read_yaml_file(self.filename)
 
     def set(self, value: Any):
         write_yaml_file(value, self.filename)
+
+    def initialize(self, value: Any):
+        if not Path(self.filename).exists():
+            self.set(value)
 
     def remove_values(self, targets: List[Any]):
         value = self.read()
