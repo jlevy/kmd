@@ -272,7 +272,7 @@ class FileStore:
         item.store_path = store_path
         self._index_item(store_path)
 
-        log.message("Saved item: %s", store_path)
+        log.message("✔️ Saved item: %s", store_path)
         return store_path
 
     def load(self, store_path: StorePath) -> Item:

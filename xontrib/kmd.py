@@ -130,7 +130,7 @@ except ValueError as e:
 print()
 
 
-# TODO: Completion for actions, e.g. known URLs, resource titles, concepts, etc.
+# TODO: Completion for actions, e.g. known URLs, resource titles, concepts, parameters and values, etc.
 # def _action_completer(cls, prefix, line, begidx, endidx, ctx):
 #     return ["https://"]
 # __xonsh__.completers["foo"] = _action_completer

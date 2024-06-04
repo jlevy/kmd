@@ -56,7 +56,7 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
     if action_params:
         action.update_with_params(action_params)
         log.message(
-            "Action %s: Overriding parameters:\n%s",
+            "Parameters apply to action %s:\n%s",
             action_name,
             format_lines(format_key_value(key, value) for key, value in action_params.items()),
         )
@@ -66,7 +66,7 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
     if args:
         source_str = "provided args" if provided_args else "selection"
         log.message(
-            "Action %s: Using %s as inputs:\n%s", action_name, source_str, format_lines(args)
+            "Using %s as inputs to action %s:\n%s", source_str, action_name, format_lines(args)
         )
 
     # Ensure we have the right number of args.

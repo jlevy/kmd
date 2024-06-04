@@ -94,15 +94,17 @@ def select(*paths: str) -> None:
         selection = store_paths
     else:
         selection = current_workspace().get_selection()
+    rprint()
     if not selection:
         command_output("No selection.")
     else:
         command_output(
-            "Selected %s %s:\n%s",
+            "★ Selected %s %s:\n%s",
             len(selection),
             plural("item", len(selection)),
             format_lines(selection),
         )
+    rprint()
 
 
 @kmd_command
@@ -167,7 +169,8 @@ def param(*args: str) -> None:
 
     for ap in ACTION_PARAMS.values():
         rprint(format_docstr(ap.name, ap.full_description()))
-        rprint()
+
+    rprint()
 
     params = current_workspace().get_action_params()
     if not params:
@@ -177,7 +180,8 @@ def param(*args: str) -> None:
 
         for key, value in params.items():
             command_output(format_key_value(key, value))
-        rprint()
+
+    rprint()
 
 
 @kmd_command
@@ -188,7 +192,7 @@ def add_resource(*files_or_urls: str) -> None:
     if not files_or_urls:
         raise ValueError("No files or URLs provided to import")
     store_paths = [current_workspace().add_resource(r) for r in files_or_urls]
-    log.info(
+    command_output(
         "Imported %s %s:\n%s",
         len(store_paths),
         plural("item", len(store_paths)),
