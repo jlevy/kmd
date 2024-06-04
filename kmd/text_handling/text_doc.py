@@ -8,12 +8,9 @@ from enum import Enum
 from pprint import pprint
 from textwrap import dedent
 from typing import Iterable, List, Optional, Tuple
-from cachetools import cached
 import regex
-import spacy
-from spacy.language import Language
-from spacy.cli.download import download
 from kmd.config.logger import get_logger
+from kmd.text_handling.sentence_segmentation import split_sentences
 from kmd.text_handling.wordtoks import (
     join_wordtoks,
     sentence_as_wordtoks,
@@ -24,38 +21,6 @@ from kmd.text_handling.wordtoks import (
 )
 
 log = get_logger(__name__)
-
-
-def spacy_download(model_name: str) -> Language:
-    try:
-        return spacy.load(model_name)
-    except OSError:
-        # If the model is not found, download it.
-        log.message("Spacy model '%s' not found, so downloading it...", model_name)
-        download(model_name)
-        log.message("Downloaded Spacy model '%s'.", model_name)
-        return spacy.load(model_name)
-
-
-# Lazy load Spacy models.
-class _Spacy:
-    @cached(cache={})
-    def load_model(self, model_name: str):
-        return spacy_download(model_name)
-
-    @property
-    def en(self):
-        return self.load_model("en_core_web_sm")
-
-
-nlp = _Spacy()
-
-
-def split_sentences(text: str) -> List[str]:
-    """
-    Split text into sentences. (English.)
-    """
-    return [sent.text.strip() for sent in nlp.en(text).sents]
 
 
 def size_in_bytes(text: str) -> int:
@@ -277,8 +242,6 @@ class TextDoc:
 
 
 def test_document_parse_reassemble():
-    # FIXME: Normalize Markdown so itemized lists are delimted by \n\n, or else they they are
-    # broken incorrectly into sentences.
     text = dedent(
         """
         # Title
