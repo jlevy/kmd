@@ -20,7 +20,7 @@ define_llm_action(
     name="break_into_paragraphs",
     friendly_name="Reformat Text as Paragraphs",
     description="Reformat text as paragraphs.",
-    model=LLM.gpt_3_5_turbo_16k_0613.value,
+    model=LLM.groq_llama3_70b_8192.value,
     system_message=dedent(
         """
         You are a careful and precise editor.
