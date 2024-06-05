@@ -88,12 +88,13 @@ def select(*paths: str) -> None:
     """
     Get or show the current selection.
     """
+    workspace = current_workspace()
     if paths:
         store_paths = [StorePath(path) for path in paths]
-        current_workspace().set_selection(store_paths)
+        workspace.set_selection(store_paths)
         selection = store_paths
     else:
-        selection = current_workspace().get_selection()
+        selection = workspace.get_selection()
     rprint()
     if not selection:
         command_output("No selection.")
@@ -113,10 +114,12 @@ def unselect(*paths: str) -> None:
     Remove items from the current selection. Handy if you've selected some items and
     wish to unselect a few of them.
     """
+    workspace = current_workspace()
     if not paths:
         raise ValueError("No paths provided to unselect")
-    previous_selection = current_workspace().get_selection()
-    new_selection = current_workspace().unselect([StorePath(path) for path in paths])
+
+    previous_selection = workspace.get_selection()
+    new_selection = workspace.unselect([StorePath(path) for path in paths])
     command_output(
         "Unselected %s %s, %s now selected:\n%s",
         len(previous_selection) - len(new_selection),
@@ -131,11 +134,11 @@ def show(path: Optional[str] = None) -> None:
     """
     Show the contents of a file.
     """
-
+    workspace = current_workspace()
     if path:
         open_platform_specific(path)
     else:
-        selection = current_workspace().get_selection()
+        selection = workspace.get_selection()
         if not selection:
             raise ValueError("No selection")
         open_platform_specific(selection[0])
@@ -146,6 +149,7 @@ def param(*args: str) -> None:
     """
     Show or set currently set parameters for actions.
     """
+    workspace = current_workspace()
     if args:
         new_key_vals = dict([parse_key_value(arg) for arg in args])
 
@@ -158,12 +162,12 @@ def param(*args: str) -> None:
             if value and action_param.valid_values and value not in action_param.valid_values:
                 raise ValueError(f"Unrecognized value for action parameter {key}: {value}")
 
-        current_params = current_workspace().get_action_params()
+        current_params = workspace.get_action_params()
         new_params = {**current_params, **new_key_vals}
 
         deletes = [key for key, value in new_params.items() if value is None]
         new_params = remove_values(new_params, deletes)
-        current_workspace().set_action_params(new_params)
+        workspace.set_action_params(new_params)
 
     rprint(Text("\nAvailable action parameters:\n", style=COLOR_HEADING))
 
@@ -172,7 +176,7 @@ def param(*args: str) -> None:
 
     rprint()
 
-    params = current_workspace().get_action_params()
+    params = workspace.get_action_params()
     if not params:
         command_output("No action parameters set.")
     else:
@@ -189,9 +193,11 @@ def add_resource(*files_or_urls: str) -> None:
     """
     Add a file or URL resource to the workspace.
     """
+    workspace = current_workspace()
     if not files_or_urls:
         raise ValueError("No files or URLs provided to import")
-    store_paths = [current_workspace().add_resource(r) for r in files_or_urls]
+
+    store_paths = [workspace.add_resource(r) for r in files_or_urls]
     command_output(
         "Imported %s %s:\n%s",
         len(store_paths),
@@ -206,14 +212,16 @@ def archive(*paths: str) -> None:
     """
     Archive the items at the given path, or the current selection.
     """
+    workspace = current_workspace()
     if paths:
         store_paths = [StorePath(path) for path in paths]
     else:
-        store_paths = current_workspace().get_selection()
+        store_paths = workspace.get_selection()
         if not store_paths:
             raise ValueError("No selection")
+
     for store_path in store_paths:
-        current_workspace().archive(store_path)
+        workspace.archive(store_path)
     command_output("Archived:\n%s", format_lines(store_paths))
 
 
@@ -222,10 +230,16 @@ def unarchive(*paths: str) -> None:
     """
     Unarchive the items at the given paths.
     """
-    if not paths:
-        raise ValueError("No paths provided to unarchive")
+    workspace = current_workspace()
+    if paths:
+        store_paths = [StorePath(path) for path in paths]
+    else:
+        store_paths = workspace.get_selection()
+        if not store_paths:
+            raise ValueError("No selection")
+
     for path in paths:
-        store_path = current_workspace().unarchive(StorePath(path))
+        store_path = workspace.unarchive(StorePath(path))
         command_output("Unarchived %s", store_path)
 
 
@@ -283,19 +297,22 @@ def canonicalize(*paths: str) -> None:
     to our conventions.
     """
     workspace = current_workspace()
-
-    if len(paths) == 0:
-        paths = (str(workspace.base_dir),)
+    if paths:
+        store_paths = [StorePath(path) for path in paths]
+    else:
+        store_paths = workspace.get_selection()
+        if not store_paths:
+            raise ValueError("No selection")
 
     canon_paths = []
-    for path in paths:
-        log.message("Canonicalizing files in path: %s", path)
-        for store_path in workspace.walk_items(StorePath(path)):
+    for store_path in store_paths:
+        log.message("Canonicalizing: %s", store_path)
+        for item_store_path in workspace.walk_items(store_path):
             try:
-                workspace.canonicalize(store_path)
+                workspace.canonicalize(item_store_path)
             except ValueError as e:
-                log.warning("Could not canonicalize %s: %s", store_path, e)
-            canon_paths.append(store_path)
+                log.warning("Could not canonicalize %s: %s", item_store_path, e)
+            canon_paths.append(item_store_path)
 
     if len(canon_paths) == 1:
         select(*canon_paths)

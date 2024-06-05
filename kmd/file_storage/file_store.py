@@ -353,7 +353,7 @@ class FileStore:
         """
         Archive the item by moving it into the archive directory.
         """
-        log.info("Archiving item: %s", store_path)
+        log.message("Archiving item: %s -> %s", store_path, Path(ARCHIVE_DIR) / store_path)
         archive_path = self.archive_dir / store_path
         move_file(self.base_dir / store_path, archive_path)
         self._remove_references([store_path])
@@ -456,8 +456,10 @@ class FileStore:
         Canonicalize an item to make sure its filename and contents are in current format.
         """
         log.info("Canonicalizing item: %s", store_path)
-        item = self.load(store_path)
 
+        item = self.load(store_path)
+        self.archive(store_path)
         new_store_path = self.save(item)
+
         # TODO: Handle checking if filename should change (may want this if we alter the slugify rules, etc.)
         return new_store_path
