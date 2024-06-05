@@ -1,4 +1,4 @@
-from typing import List
+from typing import Callable, List
 from cachetools import cached
 import regex
 import spacy
@@ -54,11 +54,13 @@ def split_sentences(text: str) -> List[str]:
 SENTENCE_RE = regex.compile(r"(\p{L}[\p{Ll}])([.?!]['\"’”)]?|['\"’”)][.?!]|[:;]) *$")
 
 
-def _is_end_of_sentence(word: str) -> bool:
+def heuristic_end_of_sentence(word: str) -> bool:
     return bool(SENTENCE_RE.search(word))
 
 
-def split_sentences_fast(text: str) -> List[str]:
+def split_sentences_fast(
+    text: str, heuristic: Callable[[str], bool] = heuristic_end_of_sentence
+) -> List[str]:
     """
     Split text into sentences using an approximate, fast regex heuristic. (English.)
     Goal is to be conservative, not perfect, avoiding excessive breaks.
@@ -68,7 +70,7 @@ def split_sentences_fast(text: str) -> List[str]:
     sentence = []
     for word in words:
         sentence.append(word)
-        if _is_end_of_sentence(word):
+        if heuristic(word):
             sentences.append(" ".join(sentence))
             sentence = []
     if sentence:

@@ -105,7 +105,7 @@ class MarkdownNormalizer(Renderer):
         return "\n".join(lines) + "\n"
 
     def render_html_block(self, element: block.HTMLBlock) -> str:
-        result = f"{self._prefix}{element.body}\n"
+        result = f"{self._prefix}{element.body}"
         self._prefix = self._second_prefix
         return result
 
@@ -266,6 +266,8 @@ _original_doc = dedent(
 
     
     <!--window-br-->
+    
+    <span data-foo="bar">Some HTML.</span>
 
     > This is a quote block. With a couple sentences.
     """
@@ -317,6 +319,7 @@ _expected_doc = dedent(
 
     <!--window-br-->
 
+    <span data-foo="bar">Some HTML.</span>
 
     > This is a quote block.
     > With a couple sentences.
