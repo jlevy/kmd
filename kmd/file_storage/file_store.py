@@ -5,6 +5,7 @@ from os.path import join, relpath, commonpath
 from os import path
 from slugify import slugify
 from strif import copyfile_atomic
+from kmd.config.text_styles import EMOJI_SUCCESS
 from kmd.file_storage.filenames import parse_filename
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.yaml_util import custom_key_sort
@@ -272,7 +273,7 @@ class FileStore:
         item.store_path = store_path
         self._index_item(store_path)
 
-        log.message("✔️ Saved item: %s", store_path)
+        log.message("%s Saved item: %s", EMOJI_SUCCESS, store_path)
         return store_path
 
     def load(self, store_path: StorePath) -> Item:

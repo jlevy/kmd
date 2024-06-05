@@ -1,16 +1,28 @@
+import os
+from pathlib import Path
+from typing import Any
 import warnings
 import logging
 from logging import INFO, WARNING, Formatter
 import sys
+from strif import new_timestamped_uid, atomic_output_file
+from kmd.config.text_styles import EMOJI_DEBUG
 
-from kmd.config.settings import APP_NAME
+LOG_ROOT = Path("./.kmd_logs")
+
+LOG_FILE = "kmd.log"
+
+LOG_OBJECTS = LOG_ROOT / "objects"
 
 
 def logging_setup():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+    os.makedirs(LOG_ROOT, exist_ok=True)
+    os.makedirs(LOG_OBJECTS, exist_ok=True)
+
     # Verbose logging to file, important logging to console.
-    file_handler = logging.FileHandler(f"{APP_NAME}.log")
+    file_handler = logging.FileHandler(LOG_ROOT / LOG_FILE)
     file_handler.setLevel(INFO)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(WARNING)
@@ -39,7 +51,7 @@ def logging_setup():
 
 class CustomLogger:
     """
-    Custom logger simply to be clearer about user messages vs info/warning.
+    Custom logger to be clearer about user messages and allow saving objects.
     """
 
     def __init__(self, name: str):
@@ -47,6 +59,15 @@ class CustomLogger:
 
     def message(self, *args, **kwargs):
         self.logger.warning(*args, **kwargs)
+
+    def save_object(self, description: str, prefix_slug: str, obj: Any):
+        filename = f"{prefix_slug}.{new_timestamped_uid()}.txt"
+        path = LOG_OBJECTS / filename
+        with atomic_output_file(path) as tmp_filename:
+            with open(tmp_filename, "w") as f:
+                f.write(str(obj))
+
+        self.message("%s %s saved: %s", EMOJI_DEBUG, description, path)
 
     def __getattr__(self, attr):
         return getattr(self.logger, attr)

@@ -4,6 +4,7 @@ from typing import Any, Callable
 import regex
 from strif import abbreviate_str
 from kmd.config.logger import get_logger
+from kmd.config.text_styles import EMOJI_TIME
 
 log = get_logger(__name__)
 
@@ -99,7 +100,9 @@ def log_calls(
                     log_func("%s", call_msg)
             else:
                 if elapsed > if_slower_than:
-                    call_msg = f"⏱️ Call to {func.__name__} took {format_duration(elapsed)}."
+                    call_msg = (
+                        f"{EMOJI_TIME} Call to {func.__name__} took {format_duration(elapsed)}."
+                    )
                     log_func("%s", call_msg)
 
             return result

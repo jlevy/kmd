@@ -8,7 +8,7 @@ from humanize import naturaltime, naturalsize
 from rich import print as rprint
 from rich.text import Text
 from kmd.commands.local_file_tools import open_platform_specific
-from kmd.commands.text_styles import COLOR_EMPH, COLOR_HEADING, COLOR_OUTPUT, COLOR_PLAIN
+from kmd.config.text_styles import COLOR_EMPH, COLOR_HEADING, COLOR_OUTPUT, COLOR_PLAIN
 from kmd.config.settings import KMD_WRAP_WIDTH
 from kmd.file_storage.file_store import skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info

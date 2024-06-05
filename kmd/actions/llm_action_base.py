@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from textwrap import indent
 from typing import List, Optional
+from slugify import slugify
 from kmd.llms.completion import completion
 from kmd.model.actions_model import Action, ActionInput, ActionResult, ONE_OR_MORE_ARGS
 from kmd.model.items_model import Format, Item
@@ -52,7 +53,12 @@ class LLMAction(Action):
 @log_calls(level="message")
 def llm_completion(model: str, system_message: str, template: str, input: str) -> str:
     user_message = template.format(body=input)
+    model_slug = slugify(model, separator="_")
+
     log.info("LLM completion input to model %s:\n%s", model, indent(user_message, "    "))
+    log.save_object("LLM system message", f"llm.{model_slug}.system_message", system_message)
+    log.save_object("LLM user message", f"llm.{model_slug}.user_message", user_message)
+
     text_output = completion(
         model,
         messages=[
@@ -60,7 +66,10 @@ def llm_completion(model: str, system_message: str, template: str, input: str) -
             {"role": "user", "content": user_message},
         ],
     )
+
     log.info("LLM completion output:\n%s", indent(text_output, "    "))
+    log.save_object("LLM output", f"llm.{model_slug}.output", text_output)
+
     return text_output
 
 

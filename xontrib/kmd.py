@@ -4,10 +4,11 @@ Xonsh extension for kmd.
 This should make use of kmd much easier as it makes all actions available as xonsh commands.
 """
 
-import time
 import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+import time
 from typing import Callable, List
 from rich import print as rprint
 from rich.text import Text
@@ -17,6 +18,7 @@ from litellm.exceptions import APIError
 from kmd.config.setup import setup
 from kmd.config.settings import media_cache_dir
 from kmd.config.logger import get_logger
+from kmd.config.text_styles import EMOJI_TIME
 from kmd.file_storage.workspaces import current_workspace
 from kmd.actions.action_exec import run_action
 from kmd.actions.action_registry import load_all_actions
@@ -65,7 +67,7 @@ class CallableAction:
             end_time = time.time()
             elapsed = end_time - start_time
             if elapsed > 5.0:
-                log.message("⏱️ Action %s took %.1fs.", self.action.name, elapsed)
+                log.message("%s Action %s took %.1fs.", EMOJI_TIME, self.action.name, elapsed)
 
     def __repr__(self):
         return f"CallableAction({repr(self.action)})"
