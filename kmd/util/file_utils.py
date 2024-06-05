@@ -2,6 +2,8 @@ from pathlib import Path
 import shutil
 from strif import move_to_backup
 
+# TODO: Have a copy_to_backup function that always adds a backup suffix.
+
 
 def move_file(src_path: Path, dest_path: Path, keep_backup: bool = True):
     """

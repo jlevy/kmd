@@ -1,24 +1,33 @@
 from contextlib import contextmanager
 from textwrap import dedent
-from typing import Generator, List
+import textwrap
+from typing import Callable, Generator, List
 import re
 from contextlib import contextmanager
 from typing import Generator, cast
 import marko
 from marko.renderer import Renderer
 from marko import block, inline
+from kmd.config.settings import DEFAULT_WRAP_WIDTH
+from kmd.text_handling.sentence_segmentation import split_sentences
 
 
 class MarkdownNormalizer(Renderer):
     """
     Render Markdown in normalized form.
+
+    Also enforces that all line items have two newlines between them, so that items
+    are separate paragraphs when viewed as plaintext.
+
     Based on: https://github.com/frostming/marko/blob/master/marko/md_renderer.py
     """
 
-    def __init__(self) -> None:
+    def __init__(self, line_wrapper: Callable[[str, str, str], str]) -> None:
         super().__init__()
         self._prefix: str = ""
         self._second_prefix: str = ""
+        self._suppress_item_break: bool = True
+        self._line_wrapper = line_wrapper
 
     def __enter__(self) -> "MarkdownNormalizer":
         self._prefix = ""
@@ -34,34 +43,41 @@ class MarkdownNormalizer(Renderer):
         self._prefix, self._second_prefix = old_prefix, old_second_prefix
 
     def render_paragraph(self, element: block.Paragraph) -> str:
-        # FIXME: Wrap and break lines sensibly.
+        # Suppress item breaks on list items following a top-level paragraph.
+        if not self._prefix:
+            self._suppress_item_break = True
         children = self.render_children(element)
-        line = f"{self._prefix}{children}\n"
+        wrapped_text = self._line_wrapper(
+            children,
+            self._prefix,
+            " " * len(self._prefix),
+        )
         self._prefix = self._second_prefix
-        return line
+        return wrapped_text + "\n"
 
     def render_list(self, element: block.List) -> str:
         result: List[str] = []
-        is_first = True
         if element.ordered:
             for num, child in enumerate(element.children, element.start):
-                if not is_first:
-                    result.append("\n")  # Normalize enumerated lists to have an additional newline.
-                is_first = False
                 with self.container(f"{num}. ", " " * (len(str(num)) + 2)):
                     result.append(self.render(child))
         else:
             for child in element.children:
-                if not is_first:
-                    result.append("\n")  # Normalize itemized lists to have an additional newline.
-                is_first = False
                 with self.container(f"{element.bullet} ", "  "):
                     result.append(self.render(child))
+
         self._prefix = self._second_prefix
         return "".join(result)
 
     def render_list_item(self, element: block.ListItem) -> str:
-        return self.render_children(element)
+        result = ""
+        # We want all list items to have two newlines between them.
+        if self._suppress_item_break:
+            self._suppress_item_break = False
+        else:
+            result += "\n"
+        result += self.render_children(element)
+        return result
 
     def render_quote(self, element: block.Quote) -> str:
         with self.container("> ", "> "):
@@ -167,62 +183,148 @@ class MarkdownNormalizer(Renderer):
         return f"`{element.children}`"
 
 
+def wrap_lines_and_break_sentences(
+    text: str, initial_indent: str, subsequent_indent: str, width: int = DEFAULT_WRAP_WIDTH
+) -> str:
+    """
+    Wrap lines of text to a given width but also keep sentences on their own lines.
+    """
+    text = text.replace("\n", " ")
+    wrapped_lines = []
+    first_line = True
+    for line in text.splitlines():
+        if not line.strip():
+            wrapped_lines.append("")
+        else:
+            sentences = split_sentences(line)
+            wrapped_lines.extend(
+                textwrap.fill(
+                    sentence,
+                    width=width,
+                    initial_indent=initial_indent if first_line else subsequent_indent,
+                    subsequent_indent=subsequent_indent,
+                    break_long_words=False,
+                )
+                for sentence in sentences
+            )
+        first_line = False
+    return "\n".join(wrapped_lines)
+
+
 def normalize_markdown(markdown_text: str) -> str:
     """
-    Normalize Markdown text.
+    Normalize Markdown text. Wraps lines and adds line breaks within paragraphs on sentences,
+    to make diffs more readable.
     """
+    markdown_text = markdown_text.strip() + "\n"
+
+    # Normalize the markdown and wrap lines.
     parsed = marko.parse(markdown_text)
-    # TODO: Implement Flowmark Markdown wrapping here.
-    result = MarkdownNormalizer().render(parsed)
+    result = MarkdownNormalizer(wrap_lines_and_break_sentences).render(parsed)
     return result
 
 
 ## Tests
 
 
+_original_doc = dedent(
+    """
+    # This is a header
+
+    This is paragraph 1. This is paragraph 2.
+    This is paragraph 3.
+    This is paragraph 4. This is paragraph 5.
+    A [link](https://example.com). Some *emphasis* and **strong emphasis** and `code`.
+    And a veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long word.
+    This is a sentence with many words and words and words and words and words and words and words and words.
+    And another with words and
+    words and words split across a line.
+
+
+
+    - This is a list item
+    - This is another list item
+        - A sub item
+          - A sub sub item
+    - This is a third list item with many words and words and words and words and words and words and words and words
+      - A sub item
+      - Another sub item
+
+      - Another sub item (after a line break)
+
+    A second paragraph.
+
+    ## Sub-heading
+
+    1. This is a numbered list item
+    2. This is another numbered list item
+
+    
+    <!--window-br-->
+
+    > This is a quote block. With a couple sentences.
+    """
+).lstrip()
+
+_expected_doc = dedent(
+    """
+    # This is a header
+
+    This is paragraph 1.
+    This is paragraph 2.
+    This is paragraph 3.
+    This is paragraph 4.
+    This is paragraph 5.
+    A [link](https://example.com).
+    Some *emphasis* and **strong emphasis** and `code`.
+    And a
+    veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery
+    long word.
+    This is a sentence with many words and words and words and words and words and words and
+    words and words.
+    And another with words and words and words split across a line.
+
+    - This is a list item
+
+    - This is another list item
+
+      - A sub item
+
+        - A sub sub item
+
+    - This is a third list item with many words and words and words and words and words and
+      words and words and words
+
+      - A sub item
+
+      - Another sub item
+
+      - Another sub item (after a line break)
+
+    A second paragraph.
+
+    ## Sub-heading
+
+    1. This is a numbered list item
+
+    2. This is another numbered list item
+
+    <!--window-br-->
+
+    
+    > This is a quote block.
+    > With a couple sentences.
+    """
+).lstrip()
+
+
 def test_normalize_markdown():
-    original = dedent(
-        """
-        # This is a header
 
-        This is a paragraph.
-
-        - This is a list item
-        - This is another list item
-
-        A second paragraph.
-
-        1. This is a numbered list item
-        2. This is another numbered list item
-
-        
-        """
-    ).lstrip()
-
-    normalized = normalize_markdown(original)
+    normalized_doc = normalize_markdown(_original_doc)
 
     print("---Before")
-    print(original)
+    print(_original_doc)
     print("---After")
-    print(normalized)
+    print(normalized_doc)
 
-    assert (
-        normalized
-        == dedent(
-            """
-        # This is a header
-
-        This is a paragraph.
-
-        - This is a list item
-
-        - This is another list item
-
-        A second paragraph.
-
-        1. This is a numbered list item
-
-        2. This is another numbered list item
-        """
-        ).lstrip()
-    )
+    assert normalized_doc == _expected_doc
