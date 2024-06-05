@@ -9,7 +9,7 @@ import marko
 from marko.renderer import Renderer
 from marko import block, inline
 from kmd.config.settings import DEFAULT_WRAP_WIDTH
-from kmd.text_handling.sentence_segmentation import split_sentences
+from kmd.text_handling.sentence_segmentation import split_sentences_fast
 
 
 class MarkdownNormalizer(Renderer):
@@ -184,7 +184,11 @@ class MarkdownNormalizer(Renderer):
 
 
 def wrap_lines_and_break_sentences(
-    text: str, initial_indent: str, subsequent_indent: str, width: int = DEFAULT_WRAP_WIDTH
+    text: str,
+    initial_indent: str,
+    subsequent_indent: str,
+    split_sentences: Callable[[str], List[str]] = split_sentences_fast,
+    width: int = DEFAULT_WRAP_WIDTH,
 ) -> str:
     """
     Wrap lines of text to a given width but also keep sentences on their own lines.
@@ -213,8 +217,8 @@ def wrap_lines_and_break_sentences(
 
 def normalize_markdown(markdown_text: str) -> str:
     """
-    Normalize Markdown text. Wraps lines and adds line breaks within paragraphs on sentences,
-    to make diffs more readable.
+    Normalize Markdown text. Wraps lines and adds line breaks within paragraphs and on
+    best-guess estimations of sentences, to make diffs more readable.
     """
     markdown_text = markdown_text.strip() + "\n"
 
@@ -231,15 +235,16 @@ _original_doc = dedent(
     """
     # This is a header
 
-    This is paragraph 1. This is paragraph 2.
-    This is paragraph 3.
-    This is paragraph 4. This is paragraph 5.
+    This is sentence one. This is sentence two.
+    This is sentence three.
+    This is sentence four. This is sentence 5. This is sentence six.
     A [link](https://example.com). Some *emphasis* and **strong emphasis** and `code`.
     And a veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long word.
     This is a sentence with many words and words and words and words and words and words and words and words.
     And another with words and
     words and words split across a line.
 
+    A second paragraph.
 
 
     - This is a list item
@@ -252,7 +257,7 @@ _original_doc = dedent(
 
       - Another sub item (after a line break)
 
-    A second paragraph.
+    A third paragraph.
 
     ## Sub-heading
 
@@ -270,19 +275,20 @@ _expected_doc = dedent(
     """
     # This is a header
 
-    This is paragraph 1.
-    This is paragraph 2.
-    This is paragraph 3.
-    This is paragraph 4.
-    This is paragraph 5.
+    This is sentence one.
+    This is sentence two.
+    This is sentence three.
+    This is sentence four.
+    This is sentence 5. This is sentence six.
     A [link](https://example.com).
-    Some *emphasis* and **strong emphasis** and `code`.
-    And a
+    Some *emphasis* and **strong emphasis** and `code`. And a
     veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery
     long word.
     This is a sentence with many words and words and words and words and words and words and
     words and words.
     And another with words and words and words split across a line.
+
+    A second paragraph.
 
     - This is a list item
 
@@ -301,7 +307,7 @@ _expected_doc = dedent(
 
       - Another sub item (after a line break)
 
-    A second paragraph.
+    A third paragraph.
 
     ## Sub-heading
 
@@ -311,7 +317,7 @@ _expected_doc = dedent(
 
     <!--window-br-->
 
-    
+
     > This is a quote block.
     > With a couple sentences.
     """

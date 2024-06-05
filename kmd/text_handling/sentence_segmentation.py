@@ -1,5 +1,6 @@
 from typing import List
 from cachetools import cached
+import regex
 import spacy
 from spacy.language import Language
 from spacy.cli.download import download
@@ -40,3 +41,36 @@ def split_sentences(text: str) -> List[str]:
     Split text into sentences using Spacy. (English.)
     """
     return [sent.text.strip() for sent in nlp.en(text).sents]
+
+
+# This is a heuristic from Flowmark:
+# https://github.com/jlevy/atom-flowmark/blob/master/lib/remark-smart-word-wrap.js#L17-L33
+
+# Heuristic: End of sentence must be two letters or more, with the last letter lowercase,
+# followed by a period, exclamation point, question mark, colon, or semicolon.
+# Except for colon or semicolon, a final or preceding parenthesis or quote is allowed.
+# TODO: Could also handle rare cases with quotes and parentheses at sentence end.
+# TODO: Should be OK for most Latin languages but may need to rethink 2-letter restriction.
+SENTENCE_RE = regex.compile(r"(\p{L}[\p{Ll}])([.?!]['\"’”)]?|['\"’”)][.?!]|[:;]) *$")
+
+
+def _is_end_of_sentence(word: str) -> bool:
+    return bool(SENTENCE_RE.search(word))
+
+
+def split_sentences_fast(text: str) -> List[str]:
+    """
+    Split text into sentences using an approximate, fast regex heuristic. (English.)
+    Goal is to be conservative, not perfect, avoiding excessive breaks.
+    """
+    words = text.split()
+    sentences = []
+    sentence = []
+    for word in words:
+        sentence.append(word)
+        if _is_end_of_sentence(word):
+            sentences.append(" ".join(sentence))
+            sentence = []
+    if sentence:
+        sentences.append(" ".join(sentence))
+    return sentences
