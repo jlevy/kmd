@@ -102,7 +102,7 @@ class TranscribeVideo(Action):
                 type=ItemType.note,
                 title=result_title,
                 body=transcription,
-                format=Format.markdown,
+                format=Format.md_html,  # Important to note this since we put in timestamp spans.
                 file_ext=FileExt.md,
             )
 

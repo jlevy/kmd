@@ -319,7 +319,7 @@ class FileStore:
                 raise ValueError(
                     f"Unknown extension for file: {file_path} (known types are {", ".join(FileExt.__members__.keys())})"
                 )
-            format = Format.for_file_ext(file_ext)
+            format = Format.guess_by_file_ext(file_ext)
             if not format:
                 raise ValueError(f"Unknown format for file: {file_path}")
 

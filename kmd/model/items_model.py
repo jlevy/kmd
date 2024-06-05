@@ -40,7 +40,8 @@ class Format(Enum):
 
     url = "url"
     html = "html"
-    markdown = "markdown"
+    markdown = "markdown"  # Should be simple and clean Markdown that we can use with LLMs.
+    md_html = "md_html"  # Markdown with HTML. Helps to know this to avoid using with LLMs and auto-formatting.
     plaintext = "plaintext"
     pdf = "pdf"
     yaml = "yaml"
@@ -49,10 +50,10 @@ class Format(Enum):
         return self not in [Format.pdf]
 
     @classmethod
-    def for_file_ext(cls, file_ext: "FileExt") -> Optional["Format"]:
+    def guess_by_file_ext(cls, file_ext: "FileExt") -> Optional["Format"]:
         """
-        Infer the format for a given file extension. Doesn't work for .yml since that could be
-        various formats.
+        Guess the format for a given file extension. Doesn't work for .yml since that could be
+        various formats. This doesn't need to be perfect, mainly used when importing files.
         """
         ext_to_format = {
             FileExt.html.value: Format.html,
@@ -89,6 +90,7 @@ class FileExt(Enum):
             Format.html.value: FileExt.html,
             Format.url.value: FileExt.yml,
             Format.markdown.value: FileExt.md,
+            Format.md_html.value: FileExt.md,
             Format.plaintext.value: FileExt.txt,
             Format.pdf.value: FileExt.pdf,
             Format.yaml.value: FileExt.yml,

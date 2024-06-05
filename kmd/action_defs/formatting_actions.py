@@ -1,7 +1,6 @@
 from kmd.actions.action_registry import kmd_action
-from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
-from kmd.model.items_model import ItemType
+from kmd.model.items_model import Format, ItemType
 from kmd.config.logger import get_logger
 from kmd.text_handling.text_formatting import html_to_plaintext
 
@@ -26,7 +25,9 @@ class StripHtml(Action):
 
             clean_body = html_to_plaintext(item.body)
             new_title = f"{item.title} (clean text)"
-            output_item = item.derived_copy(type=ItemType.note, title=new_title, body=clean_body)
+            output_item = item.derived_copy(
+                type=ItemType.note, title=new_title, body=clean_body, format=Format.markdown
+            )
 
             result_items.append(output_item)
 
