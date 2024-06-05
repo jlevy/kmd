@@ -122,7 +122,7 @@ class TextDiff:
         lines = []
         for op in self.ops:
             if op.action != DiffTag.EQUAL:
-                lines.append(f"tok {toks}: {op}")
+                lines.append(f"at tok {toks:4}: {op}")
             toks += len(op.wordtoks)
         return "\n".join(lines)
 

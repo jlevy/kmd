@@ -133,7 +133,7 @@ def sliding_wordtok_window_transform(
 
     nwordtoks = doc.size(Unit.WORDTOKS)
     nbytes = doc.size(Unit.BYTES)
-    nwindows = (nwordtoks - settings.size) // settings.shift + 1
+    nwindows = ceil(nwordtoks / settings.size)
     sep_wordtoks = [settings.separator] if settings.separator else []
 
     log.message(
@@ -147,8 +147,9 @@ def sliding_wordtok_window_transform(
     output_wordtoks = []
     for i, window in enumerate(windows):
         log.message(
-            "Sliding word transform: Window %s (%s wordtoks, %s bytes), at %s wordtoks so far",
-            i,
+            "Sliding word transform: Window %s of %s (%s wordtoks, %s bytes), at %s wordtoks so far",
+            i + 1,
+            nwindows,
             window.size(Unit.WORDTOKS),
             window.size(Unit.BYTES),
             len(output_wordtoks),

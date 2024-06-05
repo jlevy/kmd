@@ -36,10 +36,14 @@ def abbreviate_arg(
 
 
 def format_duration(seconds: float) -> str:
-    if seconds < 1.0:
+    if seconds < 100.0 / 1000.0:
         return f"{seconds * 1000:.3f}ms"
-    else:
+    elif seconds < 1.0:
+        return f"{seconds * 1000:.1f}ms"
+    elif seconds < 100.0:
         return f"{seconds:.3f}s"
+    else:
+        return f"{seconds:.1f}s"
 
 
 def log_calls(
@@ -95,7 +99,7 @@ def log_calls(
                     log_func("%s", call_msg)
             else:
                 if elapsed > if_slower_than:
-                    call_msg = f"Call to {func.__name__} took {format_duration(elapsed)}"
+                    call_msg = f"⏱️ Call to {func.__name__} took {format_duration(elapsed)}."
                     log_func("%s", call_msg)
 
             return result
