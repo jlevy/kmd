@@ -8,7 +8,7 @@ from humanize import naturaltime, naturalsize
 from rich import print as rprint
 from rich.text import Text
 from kmd.commands.local_file_tools import open_platform_specific
-from kmd.config.text_styles import COLOR_EMPH, COLOR_HEADING, COLOR_OUTPUT, COLOR_PLAIN
+from kmd.config.text_styles import COLOR_EMPH, COLOR_HEADING, COLOR_OUTPUT, COLOR_PLAIN, EMOJI_WARN
 from kmd.config.settings import KMD_WRAP_WIDTH
 from kmd.file_storage.file_store import skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info
@@ -311,7 +311,7 @@ def canonicalize(*paths: str) -> None:
             try:
                 workspace.canonicalize(item_store_path)
             except ValueError as e:
-                log.warning("Could not canonicalize %s: %s", item_store_path, e)
+                log.warning("%s Could not canonicalize %s: %s", EMOJI_WARN, item_store_path, e)
             canon_paths.append(item_store_path)
 
     if len(canon_paths) == 1:

@@ -11,6 +11,10 @@ COLOR_PLAIN = "default"
 
 ## Emojis
 
+EMOJI_PROCESS = "⛭"
+
+EMOJI_WARN = "⚠️"
+
 EMOJI_SAVED = "⩣"
 
 EMOJI_TIME = "⏱️"

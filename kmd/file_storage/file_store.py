@@ -5,7 +5,7 @@ from os.path import join, relpath, commonpath
 from os import path
 from slugify import slugify
 from strif import copyfile_atomic
-from kmd.config.text_styles import EMOJI_SUCCESS
+from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
 from kmd.file_storage.filenames import parse_filename
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.yaml_util import custom_key_sort
@@ -106,7 +106,7 @@ class FileStore:
                         num_dups += 1
 
         if num_dups > 0:
-            log.warning("Found %s duplicate items in store. See kmd.log for details.", num_dups)
+            log.warning("%s Found %s duplicate items in store. See kmd.log for details.", EMOJI_WARN, num_dups)
 
     def _index_item(self, store_path: StorePath) -> Optional[StorePath]:
         """

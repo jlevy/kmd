@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from textwrap import indent
 from typing import List, Optional
 from slugify import slugify
+from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.llms.completion import completion
 from kmd.model.actions_model import Action, ActionInput, ActionResult, ONE_OR_MORE_ARGS
 from kmd.model.items_model import Format, Item
@@ -112,7 +113,8 @@ def run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
         setup.api_setup()
 
         log.message(
-            "Running LLM action %s with model %s: %s %s",
+            "%s Running LLM action %s with model %s: %s %s",
+            EMOJI_PROCESS,
             action.name,
             action.model,
             action.windowing,

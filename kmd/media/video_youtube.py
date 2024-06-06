@@ -8,6 +8,7 @@ from dataclasses import dataclass, fields
 from pprint import pprint
 from typing import Any, Dict, List
 import yt_dlp
+from kmd.config.text_styles import EMOJI_WARN
 from kmd.file_storage.yaml_util import write_yaml_file
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
@@ -119,7 +120,7 @@ class YouTube(VideoService):
         if "entries" in result:
             entries = result["entries"]
         else:
-            log.warning("No videos found in the channel.")
+            log.warning("%s No videos found in the channel.", EMOJI_WARN)
             entries = []
 
         video_meta_list = []

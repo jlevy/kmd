@@ -3,8 +3,13 @@ import difflib
 from enum import Enum
 from textwrap import dedent
 from typing import Callable, List, Optional, Tuple
+from kmd.config.logger import get_logger
 from kmd.text_handling.text_doc import DocIndex, TextDoc
 from kmd.text_handling.wordtoks import is_break_or_space, is_word
+from kmd.util.log_calls import log_calls
+
+
+log = get_logger(__name__)
 
 
 class DiffTag(Enum):
@@ -13,7 +18,7 @@ class DiffTag(Enum):
     DELETE = "delete"
 
     def as_plus_minus(self):
-        return "+" if self == DiffTag.INSERT else "-" if self == DiffTag.DELETE else " "
+        return "+" if self == DiffTag.INSERT else "-" if self == DiffTag.DELETE else "="
 
 
 @dataclass
@@ -23,7 +28,7 @@ class DiffOp:
 
     def __str__(self):
         if self.wordtoks:
-            return f"{self.action.as_plus_minus()} \"{''.join(tok for tok in self.wordtoks)}\""
+            return f"{self.action.as_plus_minus()}{len(self.wordtoks):4} toks: \"{''.join(tok for tok in self.wordtoks)}\""
         else:
             return "(empty DiffOp)"
 
@@ -122,7 +127,7 @@ class TextDiff:
         lines = []
         for op in self.ops:
             if op.action != DiffTag.EQUAL:
-                lines.append(f"at tok {toks:4}: {op}")
+                lines.append(f"at pos {toks:4}: {op}")
             toks += len(op.wordtoks)
         return "\n".join(lines)
 
@@ -137,15 +142,27 @@ def diff_docs(doc1: TextDoc, doc2: TextDoc) -> TextDiff:
     """
     Calculate the LCS-style diff between two documents based on words.
     """
-    return diff_wordtoks(doc1.as_wordtoks(), doc2.as_wordtoks())
+
+    diff = diff_wordtoks(doc1.as_wordtoks(), doc2.as_wordtoks())
+
+    log.save_object("doc1 wordtoks", "diff_docs", "\n".join(doc1.as_wordtoks()))
+    log.save_object("doc2 wordtoks", "diff_docs", "\n".join(doc2.as_wordtoks()))
+    log.save_object("diff", "diff_docs", diff)
+
+    return diff
 
 
 def diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
     """
     Perform an LCS-style diff on two lists of wordtoks.
     """
-    s = difflib.SequenceMatcher(None, wordtoks1, wordtoks2)
+    s = difflib.SequenceMatcher(None, wordtoks1, wordtoks2, autojunk=False)
     diff: List[DiffOp] = []
+
+    # log.message(f"Diffing {len(wordtoks1)} wordtoks against {len(wordtoks2)} wordtoks")
+    # log.save_object("wordtoks1", "diff_wordtoks", "".join(wordtoks1))
+    # log.save_object("wordtoks2", "diff_wordtoks", "".join(wordtoks2))
+    # log.save_object("diff opcodes", "diff_wordtoks", "\n".join(str(o) for o in s.get_opcodes()))
 
     for tag, i1, i2, j1, j2 in s.get_opcodes():
         if tag == "equal":
@@ -179,6 +196,7 @@ def scored_diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> ScoredDi
     return score, diff
 
 
+@log_calls(level="message", if_slower_than=0.5)
 def find_best_alignment(
     list1: List[str],
     list2: List[str],
