@@ -10,6 +10,7 @@ from typing import Any, List, Optional
 from kmd.file_storage.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
+from kmd.model.errors_model import FileFormatError
 from kmd.model.locators import Locator
 from kmd.text_handling.markdown_util import markdown_to_html
 from kmd.text_handling.text_formatting import (
@@ -212,10 +213,6 @@ class Item:
     def update_modified_at(self):
         self.modified_at = datetime.now()
 
-    def assert_body(self) -> None:
-        if not self.body:
-            raise ValueError(f"Expected body for item: {self}")
-
     def metadata(self) -> dict:
         """
         Metadata is all relevant non-None fields in easy-to-serialize form.
@@ -261,11 +258,11 @@ class Item:
         If it is a config Item, return the parsed YAML.
         """
         if not self.type == ItemType.config:
-            raise ValueError(f"Item is not a config: {self}")
+            raise FileFormatError(f"Item is not a config: {self}")
         if not self.body:
-            raise ValueError(f"Config item has no body: {self}")
+            raise FileFormatError(f"Config item has no body: {self}")
         if self.format != Format.yaml.value:
-            raise ValueError(f"Config item is not YAML: {self.format}: {self}")
+            raise FileFormatError(f"Config item is not YAML: {self.format}: {self}")
         return from_yaml_string(self.body)
 
     def get_file_ext(self) -> FileExt:
@@ -326,6 +323,7 @@ class Item:
         """
         if not self.store_path:
             raise ValueError(f"Cannot derive from an item that has not been saved: {self}")
+
         new_item = self.new_copy_with(**kwargs)
         new_item.update_relations(derived_from=[self.store_path])
         return new_item

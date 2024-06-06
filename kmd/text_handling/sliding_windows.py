@@ -6,6 +6,7 @@ from textwrap import dedent
 from typing import Generator, Optional
 from pprint import pprint
 from kmd.config.logger import get_logger
+from kmd.model.errors_model import ContentError, UnexpectedError
 from kmd.model.items_model import Format
 from kmd.text_handling.doc_formatting import normalize_formatting
 from kmd.text_handling.text_doc import (
@@ -44,7 +45,7 @@ def seek_doc(doc: TextDoc, offset: int, unit: Unit) -> DocIndex:
         size_sent_break = 1
         size_para_break = 1
     else:
-        raise ValueError(f"Unsupported unit for seek_doc: {unit}")
+        raise UnexpectedError(f"Unsupported unit for seek_doc: {unit}")
 
     for para_index, para in enumerate(doc.paragraphs):
         for sent_index, sent in enumerate(para.sentences):
@@ -115,7 +116,7 @@ def sliding_word_window(
                 end_index = doc.prev_sent(end_index)
                 sub_doc = doc.sub_doc(start_index, end_index)
         except ValueError:
-            raise ValueError(
+            raise ContentError(
                 f"Window size {window_size} too small for sentence at offset {start_offset}"
             )
 

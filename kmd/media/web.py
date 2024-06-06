@@ -6,14 +6,11 @@ from strif import abbreviate_str
 import requests
 import justext
 from kmd.media.video import canonicalize_video_url
+from kmd.model.errors_model import CrawlError
 from kmd.util.url import Url
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
-
-
-class CrawlError(ValueError):
-    pass
 
 
 class PageType(enum.Enum):

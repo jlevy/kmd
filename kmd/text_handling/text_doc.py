@@ -10,6 +10,7 @@ from textwrap import dedent
 from typing import Generator, Iterable, List, Optional, Tuple
 import regex
 from kmd.config.logger import get_logger
+from kmd.model.errors_model import UnexpectedError
 from kmd.text_handling.sentence_split_spacy import split_sentences
 from kmd.text_handling.wordtoks import (
     join_wordtoks,
@@ -47,7 +48,7 @@ def size(text: str, unit: Unit) -> int:
     elif unit == Unit.WORDTOKS:
         return size_in_wordtoks(text)
     else:
-        raise ValueError(f"Unsupported unit for string: {unit}")
+        raise UnexpectedError(f"Unsupported unit for string: {unit}")
 
 
 @dataclass(frozen=True, order=True)

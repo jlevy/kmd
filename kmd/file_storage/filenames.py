@@ -1,5 +1,6 @@
 from os import path
 from typing import Tuple
+from kmd.model.errors_model import InvalidFilename
 
 
 def parse_filename(filename: str, expect_type_ext=False) -> Tuple[str, str, str, str]:
@@ -22,7 +23,7 @@ def parse_filename(filename: str, expect_type_ext=False) -> Tuple[str, str, str,
         name = parts[0]
         item_type = ext = ""
     else:
-        raise ValueError(
+        raise InvalidFilename(
             f"Filename does not match file store convention (name.type.ext): {filename}"
         )
     return dirname, name, item_type, ext
@@ -56,5 +57,5 @@ def test_parse_filename():
     assert ext == ""
 
     filename = "missing_type.ext"
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidFilename):
         parse_filename(filename, expect_type_ext=True)

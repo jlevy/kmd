@@ -6,7 +6,7 @@ This should make use of kmd much easier as it makes all actions available as xon
 
 import warnings
 
-from kmd.model.errors_model import CommonError
+from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -20,7 +20,7 @@ from litellm.exceptions import APIError
 from kmd.config.setup import setup
 from kmd.config.settings import media_cache_dir
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import EMOJI_TIME
+from kmd.config.text_styles import EMOJI_TIME, EMOJI_WARN
 from kmd.file_storage.workspaces import current_workspace
 from kmd.actions.action_exec import run_action
 from kmd.actions.action_registry import load_all_actions
@@ -34,7 +34,7 @@ log = get_logger(__name__)
 
 # Common exceptions that don't merit a full stack trace.
 # Might not want this for
-_common_exceptions = (CommonError, IOError, XonshError, APIError)
+_common_exceptions = (SelfExplanatoryError, IOError, XonshError, APIError)
 
 
 def _elide_traceback(exception_str: str) -> str:
@@ -127,9 +127,9 @@ initialize()
 
 try:
     current_workspace()
-except ValueError as e:
+except InvalidStoreState as e:
     rprint(
-        "The current directory is not a workspace. Create or switch to a workspace with the `workspace` command."
+        f"{EMOJI_WARN} The current directory is not a workspace. Create or switch to a workspace with the `workspace` command."
     )
 print()
 

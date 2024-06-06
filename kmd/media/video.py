@@ -3,6 +3,7 @@ from typing import List, Optional
 from strif import atomic_output_file
 from kmd.config.settings import media_cache_dir
 from kmd.media.media_services import VideoService
+from kmd.model.errors_model import InvalidInput, InvalidStoreState
 from kmd.util.url import Url
 from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
 from kmd.media.video_youtube import YouTube
@@ -83,7 +84,7 @@ class VideoCache(DirStore):
     def transcribe(self, url, no_cache=False) -> str:
         url = canonicalize_video_url(url)
         if not url:
-            raise ValueError("Unrecognized video URL: %s" % url)
+            raise InvalidInput("Unrecognized video URL: %s" % url)
         if not no_cache:
             transcript = self._read_transcript(url)
             if transcript:
@@ -93,7 +94,7 @@ class VideoCache(DirStore):
         if transcript:
             return transcript
         else:
-            raise ValueError("No transcript found for: %s" % url)
+            raise InvalidStoreState("No transcript found for: %s" % url)
 
 
 _video_cache = VideoCache(media_cache_dir())

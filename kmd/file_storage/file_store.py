@@ -9,7 +9,7 @@ from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
 from kmd.file_storage.filenames import parse_filename
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.yaml_util import custom_key_sort
-from kmd.model.errors_model import InvalidStoreState
+from kmd.model.errors_model import FileFormatError, InvalidFilename, InvalidStoreState
 from kmd.model.locators import StorePath
 from kmd.model.items_model import ITEM_FIELDS, FileExt, Format, Item, ItemId, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
@@ -38,7 +38,7 @@ def _parse_check_filename(filename: str) -> Tuple[str, ItemType, FileExt]:
     try:
         return name, ItemType[item_type], FileExt[ext]
     except KeyError as e:
-        raise ValueError(f"Unknown type or extension for file: {filename}: {e}")
+        raise InvalidFilename(f"Unknown type or extension for file: {filename}: {e}")
 
 
 def _format_from_ext(file_ext: FileExt) -> Optional[Format]:
@@ -113,7 +113,7 @@ class FileStore:
         """
         try:
             name, item_type, file_ext = _parse_check_filename(store_path)
-        except ValueError:
+        except InvalidFilename:
             log.debug("Skipping file with invalid name: %s", store_path)
             return
         self.uniquifier.add(name, f"{item_type.name}.{file_ext.name}")
@@ -284,7 +284,7 @@ class FileStore:
             # This is a known text format or a YAML file, so we can read the whole thing.
             body, metadata = fmf_read(self.base_dir / store_path)
             if not metadata:
-                raise ValueError(f"No metadata found in file: {store_path}")
+                raise FileFormatError(f"No metadata found in file: {store_path}")
 
             return Item.from_dict(metadata, body=body, store_path=store_path)
         else:
@@ -316,12 +316,12 @@ class FileStore:
                 _dirname, name, _item_type, ext_str = parse_filename(file_path)
                 file_ext = FileExt(ext_str)
             except ValueError:
-                raise ValueError(
+                raise InvalidFilename(
                     f"Unknown extension for file: {file_path} (known types are {", ".join(FileExt.__members__.keys())})"
                 )
             format = Format.guess_by_file_ext(file_ext)
             if not format:
-                raise ValueError(f"Unknown format for file: {file_path}")
+                raise InvalidFilename(f"Unknown format for file (check the file ext?): {file_path}")
 
             with open(file_path, "r") as file:
                 body = file.read()
@@ -413,7 +413,7 @@ class FileStore:
         path = self.base_dir / store_path if store_path else self.base_dir
 
         if not path.exists():
-            raise ValueError(f"Directory not found: {path}")
+            raise FileNotFoundError(f"Directory not found: {path}")
 
         # Special case of a single file.
         if path.is_file():

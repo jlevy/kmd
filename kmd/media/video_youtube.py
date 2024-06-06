@@ -10,6 +10,7 @@ from typing import Any, Dict, List
 import yt_dlp
 from kmd.config.text_styles import EMOJI_WARN
 from kmd.file_storage.yaml_util import write_yaml_file
+from kmd.model.errors_model import ApiResultError
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
 from .media_services import VideoService
@@ -38,7 +39,7 @@ class YoutubeVideoMeta:
             return cls(**filtered_data)
         except TypeError as e:
             print(pprint(data))
-            raise ValueError(f"Invalid data for YoutubeVideoMeta: {data}")
+            raise ApiResultError(f"Invalid data for YoutubeVideoMeta: {data}")
 
 
 class YouTube(VideoService):
@@ -116,7 +117,7 @@ class YouTube(VideoService):
             write_yaml_file(result, "yt_dlp_result.yaml")
 
         if not isinstance(result, dict):
-            raise ValueError(f"Unexpected result from yt_dlp: {result}")
+            raise ApiResultError(f"Unexpected result from yt_dlp: {result}")
         if "entries" in result:
             entries = result["entries"]
         else:

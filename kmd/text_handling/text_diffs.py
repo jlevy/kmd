@@ -4,6 +4,7 @@ from enum import Enum
 from textwrap import dedent
 from typing import Callable, List, Optional, Tuple
 from kmd.config.logger import get_logger
+from kmd.model.errors_model import UnexpectedError
 from kmd.text_handling.text_doc import DocIndex, TextDoc
 from kmd.text_handling.wordtoks import is_break_or_space, is_word
 from kmd.util.log_calls import log_calls
@@ -128,7 +129,7 @@ class TextDiff:
         original_index = 0
 
         if len(original_wordtoks) != self.left_size():
-            raise ValueError(
+            raise UnexpectedError(
                 f"Diff should be complete: original wordtoks length {len(original_wordtoks)} != diff length {self.left_size()}"
             )
 
@@ -273,7 +274,7 @@ def find_best_alignment(
 
     if min_overlap > len1 or min_overlap > len2:
         raise ValueError(
-            f"Minimum overlap {min_overlap} is greater than the length of one of the lists ({len1}, {len2})"
+            f"Minimum overlap {min_overlap} should never exceed the length of one of the lists ({len1}, {len2})"
         )
 
     # Slide the second list over the first list, starting from the end of the first list.

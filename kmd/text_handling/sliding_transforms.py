@@ -9,6 +9,7 @@ from textwrap import dedent
 from typing import Callable, List, Optional
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_PROCESS, EMOJI_WARN
+from kmd.model.errors_model import UnexpectedError
 from kmd.model.items_model import Format
 from kmd.text_handling.markdown_normalization import normalize_markdown
 from kmd.text_handling.sliding_windows import sliding_para_window, sliding_word_window
@@ -135,7 +136,7 @@ def sliding_window_transform(
     elif settings.unit == Unit.PARAGRAPHS:
         return sliding_para_window_transform(doc, transform_func, settings)
     else:
-        raise ValueError(f"Unsupported sliding transform unit: {settings.unit}")
+        raise UnexpectedError(f"Unsupported sliding transform unit: {settings.unit}")
 
 
 def sliding_wordtok_window_transform(

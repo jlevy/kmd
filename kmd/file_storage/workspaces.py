@@ -49,7 +49,7 @@ def current_workspace_name() -> Optional[str]:
     workspace_name = None
     try:
         workspace_name = current_workspace_dir().name
-    except ValueError:
+    except InvalidStoreState:
         pass
     return workspace_name
 

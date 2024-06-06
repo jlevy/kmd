@@ -14,6 +14,7 @@ from typing import Tuple, Optional, Dict
 from ruamel.yaml.error import YAMLError
 from strif import atomic_output_file
 from kmd.file_storage.yaml_util import KeySort, custom_key_sort, from_yaml_string, write_yaml
+from kmd.model.errors_model import FileFormatError
 
 YAML_SEPARATOR = "---"
 HTML_FRONTMATTER_START = "<!---"
@@ -55,10 +56,10 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
         with open(file_path, "r") as f:
             lines = f.readlines()
     except UnicodeDecodeError as e:
-        raise ValueError(f"File not a text file: {file_path}: {e}")
+        raise FileFormatError(f"File not a text file: {file_path}: {e}")
 
     if not lines:
-        raise ValueError(f"File is empty: {file_path}")
+        raise FileFormatError(f"File is empty: {file_path}")
 
     metadata_lines = []
     first_line = lines[0].strip()
@@ -78,7 +79,7 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
             try:
                 metadata = from_yaml_string("".join(metadata_lines))
             except YAMLError as e:
-                raise ValueError(f"Error parsing YAML metadata on {file_path}: {e}")
+                raise FileFormatError(f"Error parsing YAML metadata on {file_path}: {e}")
             in_metadata = False
             continue
 
@@ -88,7 +89,9 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
             content.append(line)
 
     if in_metadata:  # If still true, it means the end '---' was never found
-        raise ValueError(f"Error reading {file_path}: end of YAML front matter ('---') not found")
+        raise FileFormatError(
+            f"Error reading {file_path}: end of YAML front matter ('---') not found"
+        )
 
     return "".join(content), metadata
 
