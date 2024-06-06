@@ -1,8 +1,7 @@
 import textwrap
 from typing import Optional
-from kmd.config.settings import DEFAULT_WRAP_WIDTH
 from kmd.model.items_model import Format
-from kmd.text_handling.markdown_normalization import normalize_markdown
+from kmd.text_handling.markdown_normalization import DEFAULT_WRAP_WIDTH, normalize_markdown
 
 
 def wrap_plaintext(text: str, width=80) -> str:

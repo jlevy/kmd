@@ -8,8 +8,7 @@ from typing import Generator, cast
 import marko
 from marko.renderer import Renderer
 from marko import block, inline
-from kmd.config.settings import DEFAULT_WRAP_WIDTH
-from kmd.text_handling.sentence_segmentation import split_sentences_fast
+from kmd.text_handling.sentence_split_regex import split_sentences_fast
 
 
 class MarkdownNormalizer(Renderer):
@@ -183,6 +182,11 @@ class MarkdownNormalizer(Renderer):
         return f"`{element.children}`"
 
 
+DEFAULT_WRAP_WIDTH = 92
+"""Default wrap width for text content. Same as Flowmark."""
+# See https://github.com/jlevy/atom-flowmark/blob/master/lib/remark-smart-word-wrap.js#L13
+
+
 def wrap_lines_and_break_sentences(
     text: str,
     initial_indent: str,
@@ -208,6 +212,7 @@ def wrap_lines_and_break_sentences(
                     initial_indent=initial_indent if first_line else subsequent_indent,
                     subsequent_indent=subsequent_indent,
                     break_long_words=False,
+                    break_on_hyphens=False,
                 )
                 for sentence in sentences
             )
@@ -238,8 +243,9 @@ _original_doc = dedent(
     This is sentence one. This is sentence two.
     This is sentence three.
     This is sentence four. This is sentence 5. This is sentence six.
+    Seven. Eight. Nine. Ten.
     A [link](https://example.com). Some *emphasis* and **strong emphasis** and `code`.
-    And a veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long word.
+    And a     super-super-super-super-super-super-super-hyphenated veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long word.
     This is a sentence with many words and words and words and words and words and words and words and words.
     And another with words and
     words and words split across a line.
@@ -282,8 +288,10 @@ _expected_doc = dedent(
     This is sentence three.
     This is sentence four.
     This is sentence 5. This is sentence six.
-    A [link](https://example.com).
+    Seven. Eight. Nine.
+    Ten. A [link](https://example.com).
     Some *emphasis* and **strong emphasis** and `code`. And a
+    super-super-super-super-super-super-super-hyphenated
     veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery
     long word.
     This is a sentence with many words and words and words and words and words and words and

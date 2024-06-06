@@ -10,7 +10,7 @@ from textwrap import dedent
 from typing import Generator, Iterable, List, Optional, Tuple
 import regex
 from kmd.config.logger import get_logger
-from kmd.text_handling.sentence_segmentation import split_sentences
+from kmd.text_handling.sentence_split_spacy import split_sentences
 from kmd.text_handling.wordtoks import (
     join_wordtoks,
     sentence_as_wordtoks,
