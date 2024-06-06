@@ -21,10 +21,19 @@ class DiffTag(Enum):
 
     def as_symbol(self):
         abbrev = {
-            DiffTag.EQUAL: "=",
+            DiffTag.EQUAL: " ",
             DiffTag.INSERT: "+",
             DiffTag.DELETE: "-",
             DiffTag.REPLACE: "±",
+        }
+        return abbrev[self]
+
+    def as_abbrev(self):
+        abbrev = {
+            DiffTag.EQUAL: "keep",
+            DiffTag.INSERT: "add ",
+            DiffTag.DELETE: "del ",
+            DiffTag.REPLACE: "repl",
         }
         return abbrev[self]
 
@@ -45,30 +54,26 @@ class DiffOp:
         elif self.action == DiffTag.DELETE:
             assert not self.right
 
-    def __len__(self):
-        return max(len(self.left), len(self.right))
+    def left_str(self, show_toks=True) -> str:
+        s = f"{self.action.as_abbrev()} {len(self.left):4} toks"
+        if show_toks:
+            s += f": - \"{''.join(tok for tok in self.left)}\""
+        return s
 
-    def left_str(self) -> str:
-        return f"-{len(self.left):4} toks: \"{''.join(tok for tok in self.left)}\""
+    def right_str(self, show_toks=True) -> str:
+        s = f"{self.action.as_abbrev()} {len(self.right):4} toks"
+        if show_toks:
+            s += f": + \"{''.join(tok for tok in self.right)}\""
+        return s
 
-    def right_str(self) -> str:
-        return f"+{len(self.right):4} toks: \"{''.join(tok for tok in self.right)}\""
-
-    def equal_str(self) -> str:
-        return f"={len(self.left):4} toks: \"{''.join(tok for tok in self.left)}\""
+    def equal_str(self, show_toks=True) -> str:
+        s = f"{self.action.as_abbrev()} {len(self.left):4} toks"
+        if show_toks:
+            s += f":   \"{''.join(tok for tok in self.left)}\""
+        return s
 
     def __str__(self):
-        if not self.left and not self.right:
-            return "(empty DiffOp)"
-
-        if self.action == DiffTag.EQUAL:
-            return f"{self.equal_str()}"
-        elif self.action == DiffTag.INSERT:
-            return f"{self.right_str()}"
-        elif self.action == DiffTag.DELETE:
-            return f"{self.left_str()}"
-        elif self.action == DiffTag.REPLACE:
-            return f"{self.left_str()} -> {self.right_str()}"
+        return
 
 
 @dataclass(frozen=True)
@@ -173,12 +178,16 @@ class TextDiff:
 
         return accepted_diff, rejected_diff
 
-    def line_summary(self) -> str:
+    def _line_diff_str(self, include_equal=False) -> str:
+        if len(self.ops) == 0:
+            return "(No changes)"
+
         pos = 0
         lines = []
         for op in self.ops:
             if op.action == DiffTag.EQUAL:
-                lines.append(f"at pos {pos:4} {op.equal_str()}")
+                if include_equal:
+                    lines.append(f"at pos {pos:4} {op.equal_str()}")
             elif op.action == DiffTag.INSERT:
                 lines.append(f"at pos {pos:4} {op.right_str()}")
             elif op.action == DiffTag.DELETE:
@@ -186,14 +195,17 @@ class TextDiff:
             elif op.action == DiffTag.REPLACE:
                 lines.append(f"at pos {pos:4} {op.left_str()}")
                 lines.append(f"       {'':4} {op.right_str()}")
-            pos += len(op)
+
+            pos += len(op.left)
         return "\n".join(lines)
 
+    def as_diff_str(self, include_equal=True) -> str:
+        return f"TextDiff on {self.left_size()} tokens:\n" + self._line_diff_str(
+            include_equal=include_equal
+        )
+
     def __str__(self):
-        if len(self.changes()) == 0:
-            return "TextDiff: No changes"
-        else:
-            return f"TextDiff on {self.left_size()} tokens:\n" + self.line_summary()
+        return self.as_diff_str()
 
 
 def diff_docs(doc1: TextDoc, doc2: TextDoc) -> TextDiff:
@@ -338,7 +350,7 @@ def test_lcs_diff_wordtoks():
     diff = diff_wordtoks(wordtoks1, wordtoks2)
 
     print("---Diff:")
-    print(diff)
+    print(diff.as_diff_str(True))
 
     print("---Diff stats:")
     print(diff.stats())
@@ -347,20 +359,20 @@ def test_lcs_diff_wordtoks():
     expected_diff = dedent(
         """
         TextDiff on 59 tokens:
-        at pos    0 =  19 toks: "Paragraph one.<-SENT-BR->Sentence 1a.<-SENT-BR->Sentence 1b.<-SENT-BR->Sentence 1c."
-        at pos   19 -   1 toks: "<-PARA-BR->"
-                    +   1 toks: "<-SENT-BR->"
-        at pos   20 =   3 toks: "Paragraph two"
-        at pos   23 +   2 toks: " blah"
-        at pos   25 =  20 toks: ".<-SENT-BR->Sentence 2a.<-SENT-BR->Sentence 2b.<-SENT-BR->Sentence 2c.<-PARA-BR->Paragraph three"
-        at pos   45 -   1 toks: "."
-                    +   1 toks: "!"
-        at pos   46 =  10 toks: "<-SENT-BR->Sentence 3a.<-SENT-BR->Sentence 3b."
-        at pos   56 -   5 toks: "<-SENT-BR->Sentence 3c."
+        at pos    0 keep   19 toks:   "Paragraph one.<-SENT-BR->Sentence 1a.<-SENT-BR->Sentence 1b.<-SENT-BR->Sentence 1c."
+        at pos   19 repl    1 toks: - "<-PARA-BR->"
+                    repl    1 toks: + "<-SENT-BR->"
+        at pos   20 keep    3 toks:   "Paragraph two"
+        at pos   23 add     2 toks: + " blah"
+        at pos   23 keep   20 toks:   ".<-SENT-BR->Sentence 2a.<-SENT-BR->Sentence 2b.<-SENT-BR->Sentence 2c.<-PARA-BR->Paragraph three"
+        at pos   43 repl    1 toks: - "."
+                    repl    1 toks: + "!"
+        at pos   44 keep   10 toks:   "<-SENT-BR->Sentence 3a.<-SENT-BR->Sentence 3b."
+        at pos   54 del     5 toks: - "<-SENT-BR->Sentence 3c."
         """
     ).strip()
 
-    assert str(diff) == expected_diff
+    assert str(diff.as_diff_str(True)) == expected_diff
 
 
 def test_apply_to():

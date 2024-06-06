@@ -16,7 +16,7 @@ from rich import print as rprint
 from rich.text import Text
 from xonsh import xontribs
 from xonsh.tools import XonshError
-from litellm.exceptions import APIError
+import litellm
 from kmd.config.setup import setup
 from kmd.config.settings import media_cache_dir
 from kmd.config.logger import get_logger
@@ -33,8 +33,7 @@ setup()
 log = get_logger(__name__)
 
 # Common exceptions that don't merit a full stack trace.
-# Might not want this for
-_common_exceptions = (SelfExplanatoryError, IOError, XonshError, APIError)
+_common_exceptions = (SelfExplanatoryError, IOError, XonshError, litellm.exceptions.APIError)
 
 
 def _elide_traceback(exception_str: str) -> str:

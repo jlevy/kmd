@@ -83,11 +83,11 @@ def filtered_transform(
             # Note any rejections.
             rejected_changes = rejected_diff.changes()
             if rejected_changes:
-                log.warning(
+                log.message(
                     "%s Rejected changes: %s:\n%s",
                     EMOJI_WARN,
                     rejected_diff.stats(),
-                    format_lines(str(rejected_diff).splitlines()),
+                    format_lines(rejected_diff.as_diff_str(False).splitlines()),
                 )
 
             # Apply only the accepted changes.
