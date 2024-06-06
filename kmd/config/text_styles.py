@@ -11,7 +11,7 @@ COLOR_PLAIN = "default"
 
 ## Emojis
 
-EMOJI_DEBUG = "▼"
+EMOJI_SAVED = "⩣"
 
 EMOJI_TIME = "⏱️"
 

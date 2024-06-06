@@ -7,8 +7,8 @@ from kmd.text_handling.text_doc import TextDoc
 
 class TokenMapping:
     """
-    Given two documents doc1 and doc2 as a sequence of word tokens, create a mapping from offsets
-    in doc2 back to doc1.
+    Given two documents `doc1` and `doc2` as a sequence of word tokens, create a mapping from offsets
+    in `doc2` back to `doc1`.
     """
 
     def __init__(

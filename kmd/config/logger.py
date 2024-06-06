@@ -1,12 +1,13 @@
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 import warnings
 import logging
 from logging import INFO, WARNING, Formatter
 import sys
+from slugify import slugify
 from strif import new_timestamped_uid, atomic_output_file
-from kmd.config.text_styles import EMOJI_DEBUG
+from kmd.config.text_styles import EMOJI_SAVED
 
 LOG_ROOT = Path("./.kmd_logs")
 
@@ -60,14 +61,15 @@ class CustomLogger:
     def message(self, *args, **kwargs):
         self.logger.warning(*args, **kwargs)
 
-    def save_object(self, description: str, prefix_slug: str, obj: Any):
-        filename = f"{prefix_slug}.{new_timestamped_uid()}.txt"
+    def save_object(self, description: str, prefix_slug: Optional[str], obj: Any):
+        prefix = prefix_slug + "." if prefix_slug else ""
+        filename = f"{prefix}{slugify(description, separator="_")}.{new_timestamped_uid()}.txt"
         path = LOG_OBJECTS / filename
         with atomic_output_file(path) as tmp_filename:
             with open(tmp_filename, "w") as f:
                 f.write(str(obj))
 
-        self.message("%s %s saved: %s", EMOJI_DEBUG, description, path)
+        self.message("%s %s saved: %s", EMOJI_SAVED, description, path)
 
     def __getattr__(self, attr):
         return getattr(self.logger, attr)

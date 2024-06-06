@@ -56,8 +56,8 @@ def llm_completion(model: str, system_message: str, template: str, input: str) -
     model_slug = slugify(model, separator="_")
 
     log.info("LLM completion input to model %s:\n%s", model, indent(user_message, "    "))
-    log.save_object("LLM system message", f"llm.{model_slug}.system_message", system_message)
-    log.save_object("LLM user message", f"llm.{model_slug}.user_message", user_message)
+    log.save_object("System message", f"llm.{model_slug}", system_message)
+    log.save_object("User message", f"llm.{model_slug}", user_message)
 
     text_output = completion(
         model,
@@ -68,7 +68,7 @@ def llm_completion(model: str, system_message: str, template: str, input: str) -
     )
 
     log.info("LLM completion output:\n%s", indent(text_output, "    "))
-    log.save_object("LLM output", f"llm.{model_slug}.output", text_output)
+    log.save_object("LLM output", f"llm.{model_slug}", text_output)
 
     return text_output
 
