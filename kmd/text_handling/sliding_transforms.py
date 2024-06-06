@@ -8,7 +8,9 @@ from math import ceil
 from textwrap import dedent
 from typing import Callable, List, Optional
 from kmd.config.logger import get_logger
+from kmd.config.text_styles import EMOJI_PROCESS, EMOJI_WARN
 from kmd.model.items_model import Format
+from kmd.text_handling.markdown_normalization import normalize_markdown
 from kmd.text_handling.sliding_windows import sliding_para_window, sliding_word_window
 from kmd.text_handling.text_diffs import ALL_CHANGES, DiffOpFilter, diff_docs, find_best_alignment
 from kmd.text_handling.text_doc import (
@@ -67,6 +69,10 @@ def filtered_transform(
             diff = diff_docs(input_doc, result_doc)
             accepted_diff, rejected_diff = diff.filter(diff_filter)
 
+            assert diff.left_size() == input_doc.size(Unit.WORDTOKS)
+            assert accepted_diff.left_size() == input_doc.size(Unit.WORDTOKS)
+            assert rejected_diff.left_size() == input_doc.size(Unit.WORDTOKS)
+
             log.info(
                 "Accepted changes: %s:\n%s",
                 accepted_diff.stats(),
@@ -77,7 +83,8 @@ def filtered_transform(
             rejected_changes = rejected_diff.changes()
             if rejected_changes:
                 log.warning(
-                    "Rejected changes: %s:\n%s",
+                    "%s Rejected changes: %s:\n%s",
+                    EMOJI_WARN,
                     rejected_diff.stats(),
                     format_lines(str(rejected_diff).splitlines()),
                 )
@@ -91,6 +98,22 @@ def filtered_transform(
                     [f"Accepted: {accepted_diff.stats()}", f"Rejected: {rejected_diff.stats()}"]
                 ),
             )
+
+            log.save_object(
+                "Input doc normalized",
+                "transform_and_check_diff",
+                normalize_markdown(input_doc.reassemble()),
+            )
+            log.save_object(
+                "Result doc normalized",
+                "transform_and_check_diff",
+                normalize_markdown(result_doc.reassemble()),
+            )
+            log.save_object("Transform diff", "transform_and_check_diff", diff)
+            log.save_object("Accepted diff", "transform_and_check_diff", accepted_diff)
+            log.save_object("Rejected diff", "transform_and_check_diff", rejected_diff)
+            log.save_object("Final doc", "transform_and_check_diff", final_doc.reassemble())
+
             return final_doc
 
         transformed_doc = sliding_window_transform(
@@ -137,7 +160,8 @@ def sliding_wordtok_window_transform(
     sep_wordtoks = [settings.separator] if settings.separator else []
 
     log.message(
-        "Sliding word transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
+        "%s Sliding word transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
+        EMOJI_PROCESS,
         nwordtoks,
         nbytes,
         nwindows,
@@ -147,23 +171,29 @@ def sliding_wordtok_window_transform(
     output_wordtoks = []
     for i, window in enumerate(windows):
         log.message(
-            "Sliding word transform: Window %s of %s (%s wordtoks, %s bytes), at %s wordtoks so far",
-            i + 1,
+            "%s Sliding word transform: Window %s of %s (%s wordtoks, %s bytes), at %s wordtoks so far",
+            EMOJI_PROCESS,
+            i,
             nwindows,
             window.size(Unit.WORDTOKS),
             window.size(Unit.BYTES),
             len(output_wordtoks),
         )
+
         transformed_window = transform_func(window)
+
         new_wordtoks = transformed_window.as_wordtoks()
+
         if not output_wordtoks:
             output_wordtoks = new_wordtoks
         else:
             offset, (score, diff) = find_best_alignment(
                 output_wordtoks, new_wordtoks, settings.min_overlap
             )
+
             log.message(
-                "Sliding word transform: Best alignment of window %s is at token offset %s (score %s, %s)",
+                "%s Sliding word transform: Best alignment of window %s is at token offset %s (score %s, %s)",
+                EMOJI_PROCESS,
                 i,
                 offset,
                 score,
@@ -172,7 +202,11 @@ def sliding_wordtok_window_transform(
 
             output_wordtoks = output_wordtoks[:offset] + sep_wordtoks + new_wordtoks
 
-    log.message("Sliding word transform: Done, output total %s wordtoks", len(output_wordtoks))
+    log.message(
+        "%s Sliding word transform: Done, output total %s wordtoks",
+        EMOJI_PROCESS,
+        len(output_wordtoks),
+    )
 
     # An alternate approach would be to accumulate the document sentences instead of wordtoks to
     # avoid re-parsing, but this probably a little simpler.

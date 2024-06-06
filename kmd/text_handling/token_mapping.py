@@ -1,7 +1,6 @@
 from textwrap import dedent
 from typing import Dict
 from kmd.text_handling.text_diffs import DiffTag, diff_wordtoks
-
 from kmd.text_handling.text_doc import TextDoc
 
 
@@ -20,11 +19,11 @@ class TokenMapping:
         self.wordtoks2 = doc2.as_wordtoks()
         self.diff = diff_wordtoks(self.wordtoks1, self.wordtoks2)
         self._validate(min_wordtoks, max_diff_frac)
-        self.map: Dict[int, int] = {}
+        self.backmap: Dict[int, int] = {}
         self._create_mapping()
 
     def map_back(self, offset2: int) -> int:
-        return self.map[offset2]
+        return self.backmap[offset2]
 
     def _validate(self, min_wordtoks: int, max_diff_frac: float):
         if len(self.wordtoks1) < min_wordtoks or len(self.wordtoks2) < min_wordtoks:
@@ -43,30 +42,37 @@ class TokenMapping:
 
         for op in self.diff.ops:
             if op.action == DiffTag.EQUAL:
-                for _ in op.wordtoks:
-                    self.map[offset2] = offset1
+                for _ in op.left:
+                    self.backmap[offset2] = offset1
                     last_offset1 = offset1
                     offset1 += 1
                     offset2 += 1
             elif op.action == DiffTag.DELETE:
-                for _ in op.wordtoks:
-                    self.map[offset2] = last_offset1
+                for _ in op.left:
+                    last_offset1 = offset1
                     offset1 += 1
             elif op.action == DiffTag.INSERT:
-                for _ in op.wordtoks:
-                    self.map[offset2] = last_offset1
+                for _ in op.right:
+                    self.backmap[offset2] = last_offset1
+                    offset2 += 1
+            elif op.action == DiffTag.REPLACE:
+                for _ in op.right:
+                    self.backmap[offset2] = last_offset1
+                    offset1 += 1
                     offset2 += 1
 
     def __str__(self):
-        return f"OffsetMapping(doc1 len {len(self.wordtoks1)}, doc2 len {len(self.wordtoks2)}, mapping len {len(self.map)})"
+        return f"OffsetMapping(doc1 len {len(self.wordtoks1)}, doc2 len {len(self.wordtoks2)}, mapping len {len(self.backmap)})"
 
 
 ## Tests
 
 
 def test_offset_mapping():
-    doc1 = TextDoc.from_text("This is a simple test.")
-    doc2 = TextDoc.from_text("This is a simpler pytest.")
+    doc1 = TextDoc.from_text("This is a simple test with some words.")
+    doc2 = TextDoc.from_text(
+        "This is<-PARA-BR->a simple pytest adding other words.<-SENT-BR->And another sentence."
+    )
 
     mapping = TokenMapping(doc1, doc2)
     wordtoks1 = mapping.wordtoks1
@@ -77,7 +83,7 @@ def test_offset_mapping():
         for i in range(len(wordtoks2))
     )
     print(mapping)
-    print(mapping.map)
+    print(mapping.backmap)
 
     print(mapping_str)
 
@@ -88,13 +94,26 @@ def test_offset_mapping():
             0 (This) -> 0 (This)
             1 ( ) -> 1 ( )
             2 (is) -> 2 (is)
-            3 ( ) -> 3 ( )
+            3 (<-PARA-BR->) -> 2 (is)
             4 (a) -> 4 (a)
             5 ( ) -> 5 ( )
-            6 (simpler) -> 5 ( )
+            6 (simple) -> 6 (simple)
             7 ( ) -> 7 ( )
             8 (pytest) -> 7 ( )
-            9 (.) -> 9 (.)
+            9 ( ) -> 9 ( )
+            10 (adding) -> 9 ( )
+            11 ( ) -> 11 ( )
+            12 (other) -> 11 ( )
+            13 ( ) -> 13 ( )
+            14 (words) -> 14 (words)
+            15 (.) -> 15 (.)
+            16 (<-SENT-BR->) -> 15 (.)
+            17 (And) -> 15 (.)
+            18 ( ) -> 15 (.)
+            19 (another) -> 15 (.)
+            20 ( ) -> 15 (.)
+            21 (sentence) -> 15 (.)
+            22 (.) -> 15 (.)
             """
         ).strip()
     )

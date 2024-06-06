@@ -16,24 +16,61 @@ class DiffTag(Enum):
     EQUAL = "equal"
     INSERT = "insert"
     DELETE = "delete"
+    REPLACE = "replace"
 
-    def as_plus_minus(self):
-        return "+" if self == DiffTag.INSERT else "-" if self == DiffTag.DELETE else "="
+    def as_symbol(self):
+        abbrev = {
+            DiffTag.EQUAL: "=",
+            DiffTag.INSERT: "+",
+            DiffTag.DELETE: "-",
+            DiffTag.REPLACE: "±",
+        }
+        return abbrev[self]
 
 
-@dataclass
+@dataclass(frozen=True)
 class DiffOp:
     action: DiffTag
-    wordtoks: List[str]
+    left: List[str]
+    right: List[str]
+
+    def __post_init__(self):
+        if self.action == DiffTag.REPLACE:
+            assert self.left and self.right
+        elif self.action == DiffTag.EQUAL:
+            assert self.left == self.right
+        elif self.action == DiffTag.INSERT:
+            assert not self.left
+        elif self.action == DiffTag.DELETE:
+            assert not self.right
+
+    def __len__(self):
+        return max(len(self.left), len(self.right))
+
+    def left_str(self) -> str:
+        return f"-{len(self.left):4} toks: \"{''.join(tok for tok in self.left)}\""
+
+    def right_str(self) -> str:
+        return f"+{len(self.right):4} toks: \"{''.join(tok for tok in self.right)}\""
+
+    def equal_str(self) -> str:
+        return f"={len(self.left):4} toks: \"{''.join(tok for tok in self.left)}\""
 
     def __str__(self):
-        if self.wordtoks:
-            return f"{self.action.as_plus_minus()}{len(self.wordtoks):4} toks: \"{''.join(tok for tok in self.wordtoks)}\""
-        else:
+        if not self.left and not self.right:
             return "(empty DiffOp)"
 
+        if self.action == DiffTag.EQUAL:
+            return f"{self.equal_str()}"
+        elif self.action == DiffTag.INSERT:
+            return f"{self.right_str()}"
+        elif self.action == DiffTag.DELETE:
+            return f"{self.left_str()}"
+        elif self.action == DiffTag.REPLACE:
+            return f"{self.left_str()} -> {self.right_str()}"
 
-@dataclass
+
+@dataclass(frozen=True)
 class DiffStats:
     added: int
     removed: int
@@ -48,12 +85,12 @@ class DiffStats:
 DiffOpFilter = Callable[[DiffOp], bool]
 
 ONLY_BREAKS_AND_SPACES: DiffOpFilter = lambda diff_op: all(
-    is_break_or_space(tok) for tok in diff_op.wordtoks
+    is_break_or_space(tok) for tok in diff_op.left + diff_op.right
 )
 """Only accepts changes to sentence and paragraph breaks and whitespace."""
 
 ONLY_PUNCT_AND_SPACES: DiffOpFilter = lambda diff_op: all(
-    not is_word(tok) for tok in diff_op.wordtoks
+    not is_word(tok) for tok in diff_op.left + diff_op.right
 )
 """Only accepts changes to punctuation and whitespace."""
 
@@ -69,41 +106,46 @@ class TextDiff:
 
     ops: List[DiffOp]
 
+    def left_size(self) -> int:
+        return sum(len(op.left) for op in self.ops)
+
+    def right_size(self) -> int:
+        return sum(len(op.right) for op in self.ops)
+
     def changes(self) -> List[DiffOp]:
         return [op for op in self.ops if op.action != DiffTag.EQUAL]
 
     def stats(self) -> DiffStats:
-        wordtoks_added = sum(len(op.wordtoks) for op in self.ops if op.action == DiffTag.INSERT)
-        wordtoks_removed = sum(len(op.wordtoks) for op in self.ops if op.action == DiffTag.DELETE)
+        wordtoks_added = sum(len(op.right) for op in self.ops if op.action != DiffTag.EQUAL)
+        wordtoks_removed = sum(len(op.left) for op in self.ops if op.action != DiffTag.EQUAL)
         return DiffStats(wordtoks_added, wordtoks_removed)
 
     def apply_to(self, original_wordtoks: List[str]) -> List[str]:
         """
-        Apply the diff to a list of wordtoks.
+        Apply a complete diff (including equality ops) to a list of wordtoks.
         """
         result = []
         original_index = 0
 
-        for op in self.ops:
-            if op.action == DiffTag.EQUAL:
-                result.extend(original_wordtoks[original_index : original_index + len(op.wordtoks)])
-                original_index += len(op.wordtoks)
-            elif op.action == DiffTag.DELETE:
-                original_index += len(op.wordtoks)
-            elif op.action == DiffTag.INSERT:
-                result.extend(op.wordtoks)
+        if len(original_wordtoks) != self.left_size():
+            raise ValueError(
+                f"Diff should be complete: original wordtoks length {len(original_wordtoks)} != diff length {self.left_size()}"
+            )
 
-        result.extend(original_wordtoks[original_index:])
+        for op in self.ops:
+            if op.left:
+                original_index += len(op.left)
+            if op.right:
+                result.extend(op.right)
 
         return result
 
     def filter(self, accept_fn: DiffOpFilter) -> Tuple["TextDiff", "TextDiff"]:
         """
-        Return two diffs, one that only applies accepted operations and one that only applies
+        Return two diffs, one that only has accepted operations and one that only has
         rejected operations.
         """
-        accepted_ops = []
-        rejected_ops = []
+        accepted_ops, rejected_ops = [], []
 
         for op in self.ops:
             if op.action == DiffTag.EQUAL:
@@ -111,31 +153,46 @@ class TextDiff:
                 accepted_ops.append(op)
                 rejected_ops.append(op)
             else:
-                # We take the DiffOp as a whole, not token by token, since token by token yields odd results,
-                # like deleting words but leaving whitespace.
+                # We accapt or reject the DiffOp as a whole, not token by token, since token by
+                # token would give odd results, like deleting words but leaving whitespace.
                 if accept_fn(op):
                     accepted_ops.append(op)
-                    rejected_ops.append(DiffOp(DiffTag.EQUAL, op.wordtoks))
+                    rejected_ops.append(DiffOp(DiffTag.EQUAL, op.left, op.left))
                 else:
-                    accepted_ops.append(DiffOp(DiffTag.EQUAL, op.wordtoks))
+                    accepted_ops.append(DiffOp(DiffTag.EQUAL, op.left, op.left))
                     rejected_ops.append(op)
 
-        return TextDiff(accepted_ops), TextDiff(rejected_ops)
+        assert len(accepted_ops) == len(self.ops)
+        assert len(accepted_ops) == len(rejected_ops)
+
+        accepted_diff, rejected_diff = TextDiff(accepted_ops), TextDiff(rejected_ops)
+
+        assert accepted_diff.left_size() == self.left_size()
+        assert rejected_diff.left_size() == self.left_size()
+
+        return accepted_diff, rejected_diff
 
     def line_summary(self) -> str:
-        toks = 0
+        pos = 0
         lines = []
         for op in self.ops:
-            if op.action != DiffTag.EQUAL:
-                lines.append(f"at pos {toks:4}: {op}")
-            toks += len(op.wordtoks)
+            if op.action == DiffTag.EQUAL:
+                lines.append(f"at pos {pos:4} {op.equal_str()}")
+            elif op.action == DiffTag.INSERT:
+                lines.append(f"at pos {pos:4} {op.right_str()}")
+            elif op.action == DiffTag.DELETE:
+                lines.append(f"at pos {pos:4} {op.left_str()}")
+            elif op.action == DiffTag.REPLACE:
+                lines.append(f"at pos {pos:4} {op.left_str()}")
+                lines.append(f"       {'':4} {op.right_str()}")
+            pos += len(op)
         return "\n".join(lines)
 
     def __str__(self):
         if len(self.changes()) == 0:
             return "TextDiff: No changes"
         else:
-            return "TextDiff:\n" + self.line_summary()
+            return f"TextDiff on {self.left_size()} tokens:\n" + self.line_summary()
 
 
 def diff_docs(doc1: TextDoc, doc2: TextDoc) -> TextDiff:
@@ -166,14 +223,14 @@ def diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
 
     for tag, i1, i2, j1, j2 in s.get_opcodes():
         if tag == "equal":
-            diff.append(DiffOp(DiffTag.EQUAL, wordtoks1[i1:i2]))
+            assert wordtoks1[i1:i2] == wordtoks2[j1:j2]
+            diff.append(DiffOp(DiffTag.EQUAL, wordtoks1[i1:i2], wordtoks2[j1:j2]))
         elif tag == "insert":
-            diff.append(DiffOp(DiffTag.INSERT, wordtoks2[j1:j2]))
+            diff.append(DiffOp(DiffTag.INSERT, [], wordtoks2[j1:j2]))
         elif tag == "delete":
-            diff.append(DiffOp(DiffTag.DELETE, wordtoks1[i1:i2]))
+            diff.append(DiffOp(DiffTag.DELETE, wordtoks1[i1:i2], []))
         elif tag == "replace":
-            diff.append(DiffOp(DiffTag.DELETE, wordtoks1[i1:i2]))
-            diff.append(DiffOp(DiffTag.INSERT, wordtoks2[j1:j2]))
+            diff.append(DiffOp(DiffTag.REPLACE, wordtoks1[i1:i2], wordtoks2[j1:j2]))
 
     return TextDiff(diff)
 
@@ -196,7 +253,7 @@ def scored_diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> ScoredDi
     return score, diff
 
 
-@log_calls(level="message", if_slower_than=0.5)
+@log_calls(level="message", if_slower_than=0.25)
 def find_best_alignment(
     list1: List[str],
     list2: List[str],
@@ -286,8 +343,23 @@ def test_lcs_diff_wordtoks():
     print(diff.stats())
     assert diff.stats() == DiffStats(added=4, removed=7)
 
-    assert diff.ops[1] == DiffOp(DiffTag.DELETE, ["<-PARA-BR->"])
-    assert diff.ops[-1] == DiffOp(DiffTag.DELETE, ["<-SENT-BR->", "Sentence", " ", "3c", "."])
+    expected_diff = dedent(
+        """
+        TextDiff on 59 tokens:
+        at pos    0 =  19 toks: "Paragraph one.<-SENT-BR->Sentence 1a.<-SENT-BR->Sentence 1b.<-SENT-BR->Sentence 1c."
+        at pos   19 -   1 toks: "<-PARA-BR->"
+                    +   1 toks: "<-SENT-BR->"
+        at pos   20 =   3 toks: "Paragraph two"
+        at pos   23 +   2 toks: " blah"
+        at pos   25 =  20 toks: ".<-SENT-BR->Sentence 2a.<-SENT-BR->Sentence 2b.<-SENT-BR->Sentence 2c.<-PARA-BR->Paragraph three"
+        at pos   45 -   1 toks: "."
+                    +   1 toks: "!"
+        at pos   46 =  10 toks: "<-SENT-BR->Sentence 3a.<-SENT-BR->Sentence 3b."
+        at pos   56 -   5 toks: "<-SENT-BR->Sentence 3c."
+        """
+    ).strip()
+
+    assert str(diff) == expected_diff
 
 
 def test_apply_to():
@@ -295,11 +367,15 @@ def test_apply_to():
     wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks_iter())
 
     diff = diff_wordtoks(wordtoks1, wordtoks2)
-    result = diff.apply_to(wordtoks1)
-    print(f"---Applied diff:")
+
+    print(f"---Before apply:")
     print("/".join(wordtoks1))
     print(diff)
+    result = diff.apply_to(wordtoks1)
+    print(f"---Result of apply:")
     print("/".join(result))
+    print(f"---Expected:")
+    print("/".join(wordtoks2))
     assert result == wordtoks2
 
     wordtoks3 = ["a", "b", "c", "d", "e"]
