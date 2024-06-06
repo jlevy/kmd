@@ -1,10 +1,9 @@
 from kmd.media.video import video_download_audio, youtube
 from kmd.actions.action_registry import kmd_action
-from kmd.media import web
 from kmd.media.video import video_transcription
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
+from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, FileExt, Format, Item, ItemType
-from kmd.util.type_utils import not_none
 from kmd.util.url import Url
 from kmd.config.logger import get_logger
 
@@ -23,9 +22,9 @@ class ListChannelVideos(Action):
     def run(self, items: ActionInput) -> ActionResult:
         item = items[0]
         if not item.url:
-            raise ValueError("Item must have a URL")
+            raise InvalidInput("Item must have a URL")
         if not youtube.canonicalize(item.url):
-            raise ValueError("Only YouTube download currently supported")
+            raise InvalidInput("Only YouTube download currently supported")
 
         video_meta_list = youtube.list_channel_videos(item.url)
 
@@ -69,7 +68,7 @@ class DownloadVideo(Action):
         result_items = []
         for item in items:
             if not item.url:
-                raise ValueError("Item must have a URL")
+                raise InvalidInput("Item must have a URL")
 
             video_download_audio(item.url)
 
@@ -93,7 +92,7 @@ class TranscribeVideo(Action):
         result_items = []
         for item in items:
             if not item.url:
-                raise ValueError("Item must have a URL")
+                raise InvalidInput("Item must have a URL")
 
             transcription = video_transcription(item.url)
             title = item.title or UNTITLED  # This shouldn't happen normally.

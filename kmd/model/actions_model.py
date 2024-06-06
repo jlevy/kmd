@@ -6,6 +6,7 @@ from abc import abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
+from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item
 from kmd.model.language_models import MODEL_LIST
 from kmd.util.obj_utils import abbreviate_obj
@@ -74,15 +75,15 @@ class Action:
 
     def validate_args(self, args: List[str]) -> None:
         if len(args) != 0 and self.expected_args == NO_ARGS:
-            raise ValueError(f"Action {self.name} does not expect any arguments")
+            raise InvalidInput(f"Action {self.name} does not expect any arguments")
         if len(args) != 1 and self.expected_args == ONE_ARG:
-            raise ValueError(f"Action {self.name} expects exactly one argument")
+            raise InvalidInput(f"Action {self.name} expects exactly one argument")
         if self.expected_args.max_args is not None and len(args) > self.expected_args.max_args:
-            raise ValueError(
+            raise InvalidInput(
                 f"Action {self.name} expects at most {self.expected_args.max_args} arguments"
             )
         if self.expected_args.min_args is not None and len(args) < self.expected_args.min_args:
-            raise ValueError(
+            raise InvalidInput(
                 f"Action {self.name} expects at least {self.expected_args.min_args} arguments"
             )
 

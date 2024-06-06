@@ -1,7 +1,7 @@
-from kmd.file_storage.workspaces import current_workspace
 from kmd.actions.action_registry import kmd_action
 from kmd.actions.action_registry import kmd_action
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, ONE_ARG, Action, ActionInput, ActionResult
+from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.web_gen.tabbed_web_page import configure_web_page, generate_web_page
@@ -22,7 +22,7 @@ class ConfigureWebPage(Action):
     def run(self, items: ActionInput) -> ActionResult:
         for item in items:
             if not item.body:
-                raise ValueError(f"Item must have a body: {item}")
+                raise InvalidInput(f"Item must have a body: {item}")
 
         # Determine item title etc from first item.
         first_item = items[0]

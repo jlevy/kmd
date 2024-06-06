@@ -5,6 +5,7 @@ from slugify import slugify
 from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.llms.completion import completion
 from kmd.model.actions_model import Action, ActionInput, ActionResult, ONE_OR_MORE_ARGS
+from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item
 from kmd.config import setup
 from kmd.config.logger import get_logger
@@ -104,9 +105,9 @@ def run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
     result_items: List[Item] = []
     for item in items:
         if not item.body:
-            raise ValueError(f"LLM actions expect a body: {action.name} on {item}")
+            raise InvalidInput(f"LLM actions expect a body: {action.name} on {item}")
         if not action.model or not action.system_message or not action.template:
-            raise ValueError(
+            raise InvalidInput(
                 f"LLM actions expect a model, system_message, and template: {action.name}"
             )
 

@@ -2,6 +2,7 @@ from os.path import join
 from kmd.file_storage.workspaces import current_workspace
 from kmd.actions.action_registry import kmd_action
 from kmd.model.actions_model import ONE_ARG, Action, ActionInput, ActionResult
+from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import FileExt, Format, ItemType
 from kmd.pdf.pdf_output import markdown_to_pdf
 from kmd.config.logger import get_logger
@@ -22,7 +23,7 @@ class CreatePDF(Action):
     def run(self, items: ActionInput) -> ActionResult:
         item = items[0]
         if not item.body:
-            raise ValueError(f"Item must have a body: {item}")
+            raise InvalidInput(f"Item must have a body: {item}")
 
         pdf_item = item.derived_copy(type=ItemType.export, format=Format.pdf, file_ext=FileExt.pdf)
         pdf_path, _old_pdf_path = current_workspace().find_path_for(pdf_item)

@@ -9,6 +9,7 @@ from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
 from kmd.file_storage.filenames import parse_filename
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.yaml_util import custom_key_sort
+from kmd.model.errors_model import InvalidStoreState
 from kmd.model.locators import StorePath
 from kmd.model.items_model import ITEM_FIELDS, FileExt, Format, Item, ItemId, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
@@ -59,8 +60,6 @@ def skippable_file(filename: str) -> bool:
     return len(filename) > 1 and filename.startswith(".")
 
 
-class StoreStateError(ValueError):
-    pass
 
 
 ARCHIVE_DIR = ".archive"
@@ -379,7 +378,7 @@ class FileStore:
         try:
             return self.selection.read()
         except OSError:
-            raise StoreStateError("No selection in workspace")
+            raise InvalidStoreState("No selection saved in workspace")
 
     def get_action_params(self) -> Dict[str, str]:
         try:

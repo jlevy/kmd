@@ -13,6 +13,7 @@ from kmd.config.settings import KMD_WRAP_WIDTH
 from kmd.file_storage.file_store import skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info
 from kmd.model.actions_model import ACTION_PARAMS
+from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath
 from kmd.text_handling.text_formatting import format_lines
 from kmd.text_handling.inflection import plural
@@ -74,7 +75,7 @@ def workspace(workspace_name: Optional[str] = None) -> None:
     if workspace_name:
         ws_name, ws_dir = canon_workspace_name(workspace_name)
         if not re.match(r"^\w+$", ws_name):
-            raise ValueError(
+            raise InvalidInput(
                 "Use an alphanumeric name (no spaces or special characters) for the workspace"
             )
         os.makedirs(ws_dir, exist_ok=True)
@@ -116,7 +117,7 @@ def unselect(*paths: str) -> None:
     """
     workspace = current_workspace()
     if not paths:
-        raise ValueError("No paths provided to unselect")
+        raise InvalidInput("No paths provided to unselect")
 
     previous_selection = workspace.get_selection()
     new_selection = workspace.unselect([StorePath(path) for path in paths])
@@ -140,7 +141,7 @@ def show(path: Optional[str] = None) -> None:
     else:
         selection = workspace.get_selection()
         if not selection:
-            raise ValueError("No selection")
+            raise InvalidInput("No selection")
         open_platform_specific(selection[0])
 
 
@@ -155,12 +156,12 @@ def param(*args: str) -> None:
 
         for key in new_key_vals:
             if key not in ACTION_PARAMS:
-                raise ValueError(f"Unknown action parameter: {key}")
+                raise InvalidInput(f"Unknown action parameter: {key}")
 
         for key, value in new_key_vals.items():
             action_param = ACTION_PARAMS[key]
             if value and action_param.valid_values and value not in action_param.valid_values:
-                raise ValueError(f"Unrecognized value for action parameter {key}: {value}")
+                raise InvalidInput(f"Unrecognized value for action parameter {key}: {value}")
 
         current_params = workspace.get_action_params()
         new_params = {**current_params, **new_key_vals}
@@ -195,7 +196,7 @@ def add_resource(*files_or_urls: str) -> None:
     """
     workspace = current_workspace()
     if not files_or_urls:
-        raise ValueError("No files or URLs provided to import")
+        raise InvalidInput("No files or URLs provided to import")
 
     store_paths = [workspace.add_resource(r) for r in files_or_urls]
     command_output(
@@ -218,7 +219,7 @@ def archive(*paths: str) -> None:
     else:
         store_paths = workspace.get_selection()
         if not store_paths:
-            raise ValueError("No selection")
+            raise InvalidInput("No selection")
 
     for store_path in store_paths:
         workspace.archive(store_path)
@@ -236,7 +237,7 @@ def unarchive(*paths: str) -> None:
     else:
         store_paths = workspace.get_selection()
         if not store_paths:
-            raise ValueError("No selection")
+            raise InvalidInput("No selection")
 
     for path in paths:
         store_path = workspace.unarchive(StorePath(path))
@@ -302,7 +303,7 @@ def canonicalize(*paths: str) -> None:
     else:
         store_paths = workspace.get_selection()
         if not store_paths:
-            raise ValueError("No selection")
+            raise InvalidInput("No selection")
 
     canon_paths = []
     for store_path in store_paths:
@@ -310,7 +311,7 @@ def canonicalize(*paths: str) -> None:
         for item_store_path in workspace.walk_items(store_path):
             try:
                 workspace.canonicalize(item_store_path)
-            except ValueError as e:
+            except InvalidInput as e:
                 log.warning("%s Could not canonicalize %s: %s", EMOJI_WARN, item_store_path, e)
             canon_paths.append(item_store_path)
 

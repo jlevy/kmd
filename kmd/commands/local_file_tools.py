@@ -64,7 +64,7 @@ def open_platform_specific(file_or_url: str):
         # TODO: Consider making this a list of files.
         _native_open(file_or_url)
     else:
-        raise ValueError("File does not exist")
+        raise IOError(f"File does not exist: {file_or_url}")
 
 
 def view_file(file_path: str, use_less: bool = True):

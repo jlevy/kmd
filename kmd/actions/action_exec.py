@@ -2,10 +2,10 @@ from typing import List, cast
 from strif import abbreviate_str
 from kmd.actions.action_registry import look_up_action
 from kmd.actions.system_actions import FETCH_ACTION, FETCH_ACTION_NAME
-from kmd.file_storage.file_store import StoreStateError
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.model.actions_model import Action, ActionResult
 from kmd.model.canon_url import canonicalize_url
+from kmd.model.errors_model import InvalidInput, InvalidStoreState
 from kmd.model.items_model import Item
 from kmd.model.locators import StorePath
 from kmd.text_handling.text_formatting import format_lines
@@ -22,7 +22,7 @@ def collect_args(*args: str) -> List[str]:
         try:
             selection_args = current_workspace().get_selection()
             return cast(List[str], selection_args)
-        except StoreStateError:
+        except InvalidStoreState:
             return []
     else:
         return list(args)
@@ -33,7 +33,7 @@ def fetch_url_items(item: Item) -> Item:
         return item
 
     if not item.store_path:
-        raise ValueError("URL item should already be stored: %s", item)
+        raise InvalidInput("URL item should already be stored: %s", item)
 
     item.url = canonicalize_url(item.url)
     log.message("Fetching URL for metadata: %s", item.url)

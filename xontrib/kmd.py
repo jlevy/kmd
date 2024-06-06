@@ -6,6 +6,8 @@ This should make use of kmd much easier as it makes all actions available as xon
 
 import warnings
 
+from kmd.model.errors_model import CommonError
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import time
@@ -32,7 +34,7 @@ log = get_logger(__name__)
 
 # Common exceptions that don't merit a full stack trace.
 # Might not want this for
-_common_exceptions = (ValueError, IOError, XonshError, APIError)
+_common_exceptions = (CommonError, IOError, XonshError, APIError)
 
 
 def _elide_traceback(exception_str: str) -> str:

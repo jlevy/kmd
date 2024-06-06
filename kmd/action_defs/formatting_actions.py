@@ -1,5 +1,6 @@
 from kmd.actions.action_registry import kmd_action
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
+from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, ItemType
 from kmd.config.logger import get_logger
 from kmd.text_handling.text_formatting import html_to_plaintext
@@ -21,7 +22,7 @@ class StripHtml(Action):
         result_items = []
         for item in items:
             if not item.body:
-                raise ValueError(f"Item must have a body: {item}")
+                raise InvalidInput(f"Item must have a body: {item}")
 
             clean_body = html_to_plaintext(item.body)
             new_title = f"{item.title} (clean text)"
