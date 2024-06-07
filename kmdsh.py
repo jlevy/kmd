@@ -1,5 +1,5 @@
 """
-Run xonsh with kmd extensions auto-loaded.
+Launch xonsh with kmd extensions auto-loaded.
 """
 
 import sys

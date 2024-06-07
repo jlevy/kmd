@@ -1,12 +1,14 @@
 """
 Xonsh extension for kmd.
 
-This should make use of kmd much easier as it makes all actions available as xonsh commands.
+Sets up all commands and functions for use in xonsh. This makes using kmd far easier
+for interactive use than calling actions from a regular shell command line.
 """
 
 import warnings
 
 from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState
+from kmd.util.log_calls import log_tallies
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -69,6 +71,7 @@ class CallableAction:
             elapsed = end_time - start_time
             if elapsed > 5.0:
                 log.message("%s Action %s took %.1fs.", EMOJI_TIME, self.action.name, elapsed)
+            log_tallies(if_slower_than=1.0)
 
     def __repr__(self):
         return f"CallableAction({repr(self.action)})"

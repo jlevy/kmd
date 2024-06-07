@@ -13,6 +13,8 @@ LOG_ROOT = Path("./.kmd_logs")
 
 LOG_FILE = "kmd.log"
 
+LOG_PATH = LOG_ROOT / LOG_FILE
+
 LOG_OBJECTS = LOG_ROOT / "objects"
 
 
@@ -23,7 +25,7 @@ def logging_setup():
     os.makedirs(LOG_OBJECTS, exist_ok=True)
 
     # Verbose logging to file, important logging to console.
-    file_handler = logging.FileHandler(LOG_ROOT / LOG_FILE)
+    file_handler = logging.FileHandler(LOG_PATH)
     file_handler.setLevel(INFO)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(WARNING)

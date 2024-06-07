@@ -1,6 +1,7 @@
 import os
 from os.path import getmtime, basename, getsize, join
 import re
+import subprocess
 import textwrap
 from typing import Callable, List, Optional
 from datetime import datetime
@@ -17,7 +18,7 @@ from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath
 from kmd.text_handling.text_formatting import format_lines
 from kmd.text_handling.inflection import plural
-from kmd.config.logger import get_logger
+from kmd.config.logger import LOG_PATH, get_logger
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
 
@@ -70,7 +71,8 @@ def kmd_help() -> None:
 @kmd_command
 def workspace(workspace_name: Optional[str] = None) -> None:
     """
-    Show info on the current workspace.
+    Show info on the current workspace (if no arg given), or switch to a new workspace,
+    creating it if it doesn't exist. Equivalent to `mkdir some_name.kb`.
     """
     if workspace_name:
         ws_name, ws_dir = canon_workspace_name(workspace_name)
@@ -82,6 +84,14 @@ def workspace(workspace_name: Optional[str] = None) -> None:
         os.chdir(ws_dir)
         command_output("Changed to workspace: %s", ws_name)
     show_workspace_info()
+
+
+@kmd_command
+def logs() -> None:
+    """
+    Page through the logs for the current workspace.
+    """
+    subprocess.run(["less", "+G", LOG_PATH])
 
 
 @kmd_command

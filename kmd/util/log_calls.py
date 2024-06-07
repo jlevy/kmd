@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 import functools
 import time
-from typing import Any, Callable
+from typing import Any, Callable, Dict
 import regex
 from strif import abbreviate_str
 from kmd.config.logger import get_logger
@@ -38,13 +39,13 @@ def abbreviate_arg(
 
 def format_duration(seconds: float) -> str:
     if seconds < 100.0 / 1000.0:
-        return f"{seconds * 1000:.3f}ms"
+        return f"{seconds * 1000:.2f}ms"
     elif seconds < 1.0:
-        return f"{seconds * 1000:.1f}ms"
+        return f"{seconds * 1000:.0f}ms"
     elif seconds < 100.0:
-        return f"{seconds:.3f}s"
+        return f"{seconds:.2f}s"
     else:
-        return f"{seconds:.1f}s"
+        return f"{seconds:.0f}s"
 
 
 def log_calls(
@@ -110,3 +111,89 @@ def log_calls(
         return wrapper
 
     return decorator
+
+
+@dataclass
+class Tally:
+    calls: int = 0
+    total_time: float = 0.0
+    last_logged_count: int = 0
+    last_logged_total_time: float = 0.0
+
+
+tally: Dict[str, Tally] = {}
+
+
+def tally_calls(
+    level: str = "info",
+    min_total_runtime: float = 0.0,
+    periodic_ratio: float = 2.0,
+    if_slower_than: float = float("inf"),
+):
+    """
+    Decorator to monitor performancy by tallying function calls and total runtime, only logging
+    periodically (every time calls exceed `logging_ratio` times the last time it was logged or
+    are greater than `if_slower_than` seconds).
+    """
+
+    log_func = getattr(log, level.lower())
+
+    def decorator(func):
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+
+            result = func(*args, **kwargs)
+
+            end_time = time.time()
+            elapsed = end_time - start_time
+
+            short_module = func.__module__.split(".")[-1]
+            fkey = f"{short_module}.{func.__name__}"
+
+            if fkey not in tally:
+                tally[fkey] = Tally()
+
+            tally[fkey].calls += 1
+            tally[fkey].total_time += elapsed
+
+            if tally[fkey].total_time >= min_total_runtime and (
+                elapsed > if_slower_than
+                or tally[fkey].calls >= periodic_ratio * tally[fkey].last_logged_count
+                or tally[fkey].total_time >= periodic_ratio * tally[fkey].last_logged_total_time
+            ):
+                log_func(
+                    "%s %s() took %s, now called %d times, %s avg per call, total time %s",
+                    EMOJI_TIME,
+                    fkey,
+                    format_duration(elapsed),
+                    tally[fkey].calls,
+                    format_duration(tally[fkey].total_time / tally[fkey].calls),
+                    format_duration(tally[fkey].total_time),
+                )
+                tally[fkey].last_logged_count = tally[fkey].calls
+                tally[fkey].last_logged_total_time = tally[fkey].total_time
+
+            return result
+
+        return wrapper
+
+    return decorator
+
+
+def log_tallies(if_slower_than: float = 0.0):
+    """
+    Log all tallies and runtimes of tallied functions.
+    """
+    tallies_to_log = {k: t for k, t in tally.items() if t.total_time >= if_slower_than}
+    if tallies_to_log:
+        log.message("%s Function tallies:", EMOJI_TIME)
+        for fkey, t in tally.items():
+            log.message(
+                "    %s() was called %d times, total time %s, avg per call %s",
+                fkey,
+                t.calls,
+                format_duration(t.total_time),
+                format_duration(t.total_time / t.calls) if t.calls else "N/A",
+            )
