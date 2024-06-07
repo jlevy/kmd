@@ -12,6 +12,10 @@ COLOR_PLAIN = "default"
 
 SYMBOL_SEP = "⎪"
 
+SYMBOL_PARA = "¶"
+
+SYMBOL_SENT = "S"
+
 ## Emojis
 
 EMOJI_PROCESS = "⛭"

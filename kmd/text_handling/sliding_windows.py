@@ -10,7 +10,7 @@ from kmd.model.errors_model import ContentError, UnexpectedError
 from kmd.model.items_model import Format
 from kmd.text_handling.doc_formatting import normalize_formatting
 from kmd.text_handling.text_doc import (
-    DocIndex,
+    SentIndex,
     Sentence,
     TextDoc,
     Unit,
@@ -28,7 +28,7 @@ from kmd.text_handling.wordtoks import (
 log = get_logger(__name__)
 
 
-def seek_doc(doc: TextDoc, offset: int, unit: Unit) -> DocIndex:
+def seek_doc(doc: TextDoc, offset: int, unit: Unit) -> SentIndex:
     """
     Find the last sentence that starts before a given offset.
     """
@@ -50,7 +50,7 @@ def seek_doc(doc: TextDoc, offset: int, unit: Unit) -> DocIndex:
     for para_index, para in enumerate(doc.paragraphs):
         for sent_index, sent in enumerate(para.sentences):
             sentence_size = sent.size(unit)
-            last_fit_index = DocIndex(para_index, sent_index)
+            last_fit_index = SentIndex(para_index, sent_index)
             if current_size + sentence_size + size_sent_break <= offset:
                 current_size += sentence_size
                 if sent_index < len(para.sentences) - 1:
@@ -82,7 +82,7 @@ def truncate_at_wordtok_offset(doc: TextDoc, offset: int) -> TextDoc:
     """
     index = seek_doc(doc, offset, Unit.WORDTOKS)
     try:
-        sub_doc = doc.sub_doc(DocIndex(0, 0), doc.prev_sent(index))
+        sub_doc = doc.sub_doc(SentIndex(0, 0), doc.prev_sent(index))
     except ValueError:
         # Offset is within the first sentence.
         sub_doc = TextDoc([])
@@ -134,7 +134,7 @@ def sliding_para_window(
     """
     for i in range(0, len(doc.paragraphs), nparas):
         end_index = min(i + nparas - 1, len(doc.paragraphs) - 1)
-        sub_doc = doc.sub_doc(DocIndex(i, 0), DocIndex(end_index, 0))
+        sub_doc = doc.sub_doc(SentIndex(i, 0), SentIndex(end_index, 0))
         # XXX It's important we re-normalize especially because LLMs like itemized lists with just
         # one newline, but we want separate paragraphs for each list item.
         formatted_sub_doc = TextDoc.from_text(normalize_formatting(sub_doc.reassemble(), format))
@@ -160,29 +160,29 @@ def test_seek_doc():
     offset = 1
     index = seek_doc(doc, offset, Unit.BYTES)
     print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == DocIndex(para_index=0, sent_index=0)
+    assert index == SentIndex(para_index=0, sent_index=0)
 
     offset = len("This is the first paragraph.")
     index = seek_doc(doc, offset, Unit.BYTES)
     print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == DocIndex(para_index=0, sent_index=0)
+    assert index == SentIndex(para_index=0, sent_index=0)
 
     offset = len("This is the first paragraph. ")
     index = seek_doc(doc, offset, Unit.BYTES)
     print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == DocIndex(para_index=0, sent_index=1)
+    assert index == SentIndex(para_index=0, sent_index=1)
 
     offset = len(
         "This is the first paragraph. It has multiple sentences.\n\nThis is the second paragraph."
     )
     index = seek_doc(doc, offset, Unit.BYTES)
     print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == DocIndex(para_index=1, sent_index=0)
+    assert index == SentIndex(para_index=1, sent_index=0)
 
     offset = len(_example_text) + 10
     index = seek_doc(doc, offset, Unit.BYTES)
     print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == DocIndex(para_index=2, sent_index=2)
+    assert index == SentIndex(para_index=2, sent_index=2)
 
 
 def test_sliding_window():

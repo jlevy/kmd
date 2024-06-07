@@ -10,6 +10,7 @@ from textwrap import dedent
 from typing import Generator, Iterable, List, Optional, Tuple
 import regex
 from kmd.config.logger import get_logger
+from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
 from kmd.model.errors_model import UnexpectedError
 from kmd.text_handling.sentence_split_spacy import split_sentences
 from kmd.text_handling.wordtoks import (
@@ -52,12 +53,16 @@ def size(text: str, unit: Unit) -> int:
 
 
 @dataclass(frozen=True, order=True)
-class DocIndex:
+class SentIndex:
+    """
+    Point to a sentence in a TextDoc.
+    """
+
     para_index: int
     sent_index: int
 
     def __str__(self):
-        return f"¶{self.para_index},S{self.sent_index}"
+        return f"{SYMBOL_PARA}{self.para_index},{SYMBOL_SENT}{self.sent_index}"
 
 
 @dataclass
@@ -154,20 +159,20 @@ class TextDoc:
         for para in self.paragraphs:
             para.replace_str(old, new)
 
-    def first_index(self) -> DocIndex:
-        return DocIndex(0, 0)
+    def first_index(self) -> SentIndex:
+        return SentIndex(0, 0)
 
-    def last_index(self) -> DocIndex:
-        return DocIndex(len(self.paragraphs) - 1, len(self.paragraphs[-1].sentences) - 1)
+    def last_index(self) -> SentIndex:
+        return SentIndex(len(self.paragraphs) - 1, len(self.paragraphs[-1].sentences) - 1)
 
-    def sentence_iter(self, reverse: bool = False) -> Iterable[Tuple[DocIndex, Sentence]]:
+    def sentence_iter(self, reverse: bool = False) -> Iterable[Tuple[SentIndex, Sentence]]:
         enum_paras = list(enumerate(self.paragraphs))
         for para_index, para in reversed(enum_paras) if reverse else enum_paras:
             enum_sents = list(enumerate(para.sentences))
             for sent_index, sent in reversed(enum_sents) if reverse else enum_sents:
-                yield DocIndex(para_index, sent_index), sent
+                yield SentIndex(para_index, sent_index), sent
 
-    def sub_doc(self, first: DocIndex, last: Optional[DocIndex] = None) -> "TextDoc":
+    def sub_doc(self, first: SentIndex, last: Optional[SentIndex] = None) -> "TextDoc":
         """
         Get a sub-document. Inclusive ranges. Preserves original paragraph and sentence offsets.
         """
@@ -210,11 +215,11 @@ class TextDoc:
 
         return TextDoc(sub_paras)
 
-    def prev_sent(self, index: DocIndex) -> "DocIndex":
+    def prev_sent(self, index: SentIndex) -> "SentIndex":
         if index.sent_index > 0:
-            return DocIndex(index.para_index, index.sent_index - 1)
+            return SentIndex(index.para_index, index.sent_index - 1)
         elif index.para_index > 0:
-            return DocIndex(
+            return SentIndex(
                 index.para_index - 1, len(self.paragraphs[index.para_index - 1].sentences) - 1
             )
         else:
@@ -334,8 +339,8 @@ def test_sub_doc():
 
     doc = TextDoc.from_text(_short_text)
 
-    sub_doc_start = DocIndex(1, 1)
-    sub_doc_end = DocIndex(2, 1)
+    sub_doc_start = SentIndex(1, 1)
+    sub_doc_end = SentIndex(2, 1)
     sub_doc = doc.sub_doc(sub_doc_start, sub_doc_end)
 
     expected_text = dedent(
@@ -361,7 +366,7 @@ def test_sub_doc():
     assert orig_sentences[5:10] == sub_sentences
 
     # Confirm indexing and reverse iteration.
-    assert doc.sub_doc(DocIndex(0, 0), None) == doc
+    assert doc.sub_doc(SentIndex(0, 0), None) == doc
     reversed_sentences = [sent for _index, sent in doc.sentence_iter(reverse=True)]
     assert reversed_sentences == list(reversed(orig_sentences))
 
