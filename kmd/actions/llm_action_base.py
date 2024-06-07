@@ -4,7 +4,13 @@ from typing import List, Optional
 from slugify import slugify
 from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.llms.completion import completion
-from kmd.model.actions_model import Action, ActionInput, ActionResult, ONE_OR_MORE_ARGS
+from kmd.model.actions_model import (
+    Action,
+    ActionInput,
+    ActionResult,
+    ONE_OR_MORE_ARGS,
+    EachItemAction,
+)
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item
 from kmd.config import setup
@@ -18,38 +24,6 @@ from kmd.text_handling.sliding_transforms import (
 from kmd.util.log_calls import log_calls
 
 log = get_logger(__name__)
-
-
-@dataclass
-class LLMAction(Action):
-    def __init__(
-        self,
-        name,
-        friendly_name,
-        description,
-        model,
-        system_message,
-        title_template,
-        template,
-        windowing: Optional[WindowSettings] = None,
-        diff_filter: Optional[DiffOpFilter] = None,
-    ):
-        super().__init__(
-            name,
-            friendly_name,
-            description,
-            model=model,
-            system_message=system_message,
-            title_template=title_template,
-            template=template,
-            expected_args=ONE_OR_MORE_ARGS,
-        )
-        self.implementation: str = "llm"
-        self.windowing = windowing
-        self.diff_filter = diff_filter
-
-    def run(self, items: ActionInput) -> ActionResult:
-        return run_llm_action(self, items)
 
 
 @log_calls(level="message")
@@ -100,43 +74,71 @@ def _sliding_llm_transform(
     return result_doc.reassemble()
 
 
+@dataclass
+class LLMAction(EachItemAction):
+    def __init__(
+        self,
+        name,
+        friendly_name,
+        description,
+        model,
+        system_message,
+        title_template,
+        template,
+        windowing: Optional[WindowSettings] = None,
+        diff_filter: Optional[DiffOpFilter] = None,
+    ):
+        super().__init__(
+            name,
+            friendly_name,
+            description,
+            model=model,
+            system_message=system_message,
+            title_template=title_template,
+            template=template,
+            expected_args=ONE_OR_MORE_ARGS,
+        )
+        self.implementation: str = "llm"
+        self.windowing = windowing
+        self.diff_filter = diff_filter
+
+    def run_item(self, item: Item) -> Item:
+        return run_llm_action(self, item)
+
+
 @log_calls(level="message")
-def run_llm_action(action: LLMAction, items: ActionInput) -> ActionResult:
-    result_items: List[Item] = []
-    for item in items:
-        if not item.body:
-            raise InvalidInput(f"LLM actions expect a body: {action.name} on {item}")
-        if not action.model or not action.system_message or not action.template:
-            raise InvalidInput(
-                f"LLM actions expect a model, system_message, and template: {action.name}"
-            )
-
-        setup.api_setup()
-
-        log.message(
-            "%s Running LLM action %s with model %s: %s %s",
-            EMOJI_PROCESS,
-            action.name,
-            action.model,
-            action.windowing,
-            "with filter" if action.diff_filter else "without filter",  # TODO: Give filters names.
-        )
-        log.info("Input item: %s", item)
-
-        result_item = item.derived_copy(body=None)
-        result_item.body = _sliding_llm_transform(
-            action.model,
-            action.system_message,
-            action.template,
-            item.body,
-            action.windowing,
-            action.diff_filter or ALL_CHANGES,
+def run_llm_action(action: LLMAction, item: Item) -> Item:
+    if not item.body:
+        raise InvalidInput(f"LLM actions expect a body: {action.name} on {item}")
+    if not action.model or not action.system_message or not action.template:
+        raise InvalidInput(
+            f"LLM actions expect a model, system_message, and template: {action.name}"
         )
 
-        if action.title_template:
-            result_item.title = action.title_template.format(title=item.abbrev_title())
-        result_item.format = Format.markdown
+    setup.api_setup()
 
-        result_items.append(result_item)
+    log.message(
+        "%s Running LLM action %s with model %s: %s %s",
+        EMOJI_PROCESS,
+        action.name,
+        action.model,
+        action.windowing,
+        "with filter" if action.diff_filter else "without filter",  # TODO: Give filters names.
+    )
+    log.info("Input item: %s", item)
 
-    return ActionResult(result_items)
+    result_item = item.derived_copy(body=None)
+    result_item.body = _sliding_llm_transform(
+        action.model,
+        action.system_message,
+        action.template,
+        item.body,
+        action.windowing,
+        action.diff_filter or ALL_CHANGES,
+    )
+
+    if action.title_template:
+        result_item.title = action.title_template.format(title=item.abbrev_title())
+    result_item.format = Format.markdown
+
+    return result_item

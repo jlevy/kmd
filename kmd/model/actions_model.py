@@ -1,15 +1,21 @@
 """
-The model for Actions and other types associated with actions.
+The base classes for Actions and other types associated with actions.
 """
 
 from abc import abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
-from kmd.model.errors_model import InvalidInput
+from kmd.config.logger import get_logger
+from kmd.config.text_styles import EMOJI_WARN
+from kmd.model.errors_model import ContentError, InvalidInput
 from kmd.model.items_model import Item
 from kmd.model.language_models import MODEL_LIST
+from kmd.text_handling.inflection import plural
 from kmd.util.obj_utils import abbreviate_obj
+
+
+log = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -105,3 +111,40 @@ class Action:
 
     def __str__(self):
         return abbreviate_obj(self)
+
+
+@dataclass
+class EachItemAction(Action):
+    """
+    An action that simply processes each arg one after the other. It does not abort for
+    content-related errors but will fail on other errors.
+    """
+
+    def run(self, items: ActionInput) -> ActionResult:
+        result_items = []
+        errors = []
+        for item in items:
+            try:
+                result_item = self.run_item(item)
+                result_items.append(result_item)
+            except ContentError as e:
+                errors.append(e)
+                log.error(
+                    "%s Error processing item (will continue with others): %s: %s",
+                    EMOJI_WARN,
+                    e,
+                    item,
+                )
+
+        if errors:
+            log.error(
+                "%s %s %s occurred while processing items. See above!",
+                EMOJI_WARN,
+                len(errors),
+                plural("error", len(errors)),
+            )
+        return ActionResult(result_items)
+
+    @abstractmethod
+    def run_item(self, item: Item) -> Item:
+        pass

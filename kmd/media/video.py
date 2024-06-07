@@ -3,7 +3,7 @@ from typing import List, Optional
 from strif import atomic_output_file
 from kmd.config.settings import media_cache_dir
 from kmd.media.media_services import VideoService
-from kmd.model.errors_model import InvalidInput, InvalidStoreState
+from kmd.model.errors_model import InvalidInput, UnexpectedError
 from kmd.util.url import Url
 from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
 from kmd.media.video_youtube import YouTube
@@ -45,7 +45,7 @@ class VideoCache(DirStore):
                 return f.read()
         return None
 
-    def _do_downsample(self, url):
+    def _do_downsample(self, url) -> str:
         downsampled_audio_file = self.find(url, suffix=SUFFIX_16KMP3)
         if not downsampled_audio_file:
             full_audio_file = self.find(url, suffix=SUFFIX_MP3)
@@ -58,7 +58,7 @@ class VideoCache(DirStore):
             downsample_to_16khz(full_audio_file, downsampled_audio_file)
         return downsampled_audio_file
 
-    def _do_transcription(self, url):
+    def _do_transcription(self, url) -> str:
         downsampled_audio_file = self._do_downsample(url)
         log.message("Transcribing audio for video: %s: %s", url, downsampled_audio_file)
         transcript = transcribe_audio(downsampled_audio_file)
@@ -91,10 +91,9 @@ class VideoCache(DirStore):
                 return transcript
         self.download(url, no_cache=no_cache)
         transcript = self._do_transcription(url)
-        if transcript:
-            return transcript
-        else:
-            raise InvalidStoreState("No transcript found for: %s" % url)
+        if not transcript:
+            raise UnexpectedError("No transcript found for: %s" % url)
+        return transcript
 
 
 _video_cache = VideoCache(media_cache_dir())

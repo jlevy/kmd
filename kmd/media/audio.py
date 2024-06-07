@@ -7,6 +7,7 @@ from strif import atomic_output_file
 
 from kmd.config import setup
 from kmd.config.logger import get_logger
+from kmd.model.errors_model import ContentError
 
 log = get_logger(__name__)
 
@@ -87,7 +88,13 @@ def deepgram_transcribe_audio(audio_file_path: str) -> str:
     diarized_segments = _deepgram_diarized_segments(response)
     log.debug("Diarized response: %s", diarized_segments)
 
+    if not diarized_segments:
+        raise ContentError(
+            f"No speaker segments found in Deepgram response (are voices silent or missing?): {audio_file_path}"
+        )
+
     formatted_segments = format_speaker_segments(diarized_segments)
+
     return formatted_segments
 
 

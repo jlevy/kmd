@@ -1,7 +1,13 @@
 from kmd.media.video import video_download_audio, youtube
 from kmd.actions.action_registry import kmd_action
 from kmd.media.video import video_transcription
-from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
+from kmd.model.actions_model import (
+    ONE_OR_MORE_ARGS,
+    Action,
+    ActionInput,
+    ActionResult,
+    EachItemAction,
+)
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, FileExt, Format, Item, ItemType
 from kmd.util.url import Url
@@ -55,7 +61,7 @@ class ListChannelVideos(Action):
 
 
 @kmd_action
-class DownloadVideo(Action):
+class DownloadVideo(EachItemAction):
     def __init__(self):
         super().__init__(
             name="download_video",
@@ -64,22 +70,18 @@ class DownloadVideo(Action):
             expected_args=ONE_OR_MORE_ARGS,
         )
 
-    def run(self, items: ActionInput) -> ActionResult:
-        result_items = []
-        for item in items:
-            if not item.url:
-                raise InvalidInput("Item must have a URL")
+    def run_item(self, item: Item) -> Item:
+        if not item.url:
+            raise InvalidInput("Item must have a URL")
 
-            video_download_audio(item.url)
+        video_download_audio(item.url)
 
-            # Actually return the same item since the video is actually saved to cache.
-            result_items.append(item)
-
-        return ActionResult(result_items)
+        # Actually return the same item since the video is actually saved to cache.
+        return item
 
 
 @kmd_action
-class TranscribeVideo(Action):
+class TranscribeVideo(EachItemAction):
     def __init__(self):
         super().__init__(
             name="transcribe_video",
@@ -88,23 +90,19 @@ class TranscribeVideo(Action):
             expected_args=ONE_OR_MORE_ARGS,
         )
 
-    def run(self, items: ActionInput) -> ActionResult:
-        result_items = []
-        for item in items:
-            if not item.url:
-                raise InvalidInput("Item must have a URL")
+    def run_item(self, item: Item) -> Item:
+        if not item.url:
+            raise InvalidInput("Item must have a URL")
 
-            transcription = video_transcription(item.url)
-            title = item.title or UNTITLED  # This shouldn't happen normally.
-            result_title = f"{title} (transcription)"
-            result_item = item.derived_copy(
-                type=ItemType.note,
-                title=result_title,
-                body=transcription,
-                format=Format.md_html,  # Important to note this since we put in timestamp spans.
-                file_ext=FileExt.md,
-            )
+        transcription = video_transcription(item.url)
+        title = item.title or UNTITLED  # This shouldn't happen normally.
+        result_title = f"{title} (transcription)"
+        result_item = item.derived_copy(
+            type=ItemType.note,
+            title=result_title,
+            body=transcription,
+            format=Format.md_html,  # Important to note this since we put in timestamp spans.
+            file_ext=FileExt.md,
+        )
 
-            result_items.append(result_item)
-
-        return ActionResult(result_items)
+        return result_item
