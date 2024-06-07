@@ -11,11 +11,22 @@ log = get_logger(__name__)
 
 
 # Sliding, overlapping word-based window. 2K wordtoks is several paragraphs.
-WINDOW_2K_WORDTOKS = WindowSettings(Unit.WORDTOKS, 2048, 2048 - 256, 8, separator=WINDOW_BR)
+WINDOW_2K_WORDTOKS = WindowSettings(
+    Unit.WORDTOKS, size=2048, shift=2048 - 256, min_overlap=8, separator=WINDOW_BR
+)
+
+# Process 1 paragraph at a time.
+WINDOW_1_PARA = WindowSettings(Unit.PARAGRAPHS, size=1, shift=1, min_overlap=0, separator=WINDOW_BR)
 
 # Process 4 paragraphs at a time.
-WINDOW_4_PARAS = WindowSettings(Unit.PARAGRAPHS, 4, 4, 0, separator=WINDOW_BR)
+WINDOW_4_PARAS = WindowSettings(
+    unit=Unit.PARAGRAPHS, size=4, shift=4, min_overlap=0, separator=WINDOW_BR
+)
 
+# Process 8 paragraphs at a time.
+WINDOW_8_PARAS = WindowSettings(
+    unit=Unit.PARAGRAPHS, size=8, shift=8, min_overlap=0, separator=WINDOW_BR
+)
 
 define_llm_action(
     name="break_into_paragraphs",
@@ -131,7 +142,7 @@ define_llm_action(
         Bullet points:
         """
     ),
-    windowing=WINDOW_4_PARAS,
+    windowing=WINDOW_1_PARA,
 )
 
 define_llm_action(

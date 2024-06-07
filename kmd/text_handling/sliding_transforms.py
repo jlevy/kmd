@@ -75,7 +75,7 @@ def filtered_transform(
             assert rejected_diff.left_size() == input_doc.size(Unit.WORDTOKS)
 
             log.info(
-                "Accepted changes: %s:\n%s",
+                "Accepted proposed word token changes: %s:\n%s",
                 accepted_diff.stats(),
                 format_lines(str(accepted_diff).splitlines()),
             )
@@ -84,7 +84,7 @@ def filtered_transform(
             rejected_changes = rejected_diff.changes()
             if rejected_changes:
                 log.message(
-                    "%s Rejected changes: %s:\n%s",
+                    "%s Rejecting proposed word token changes: %s:\n%s",
                     EMOJI_WARN,
                     rejected_diff.stats(),
                     format_lines(rejected_diff.as_diff_str(False).splitlines()),
@@ -157,7 +157,7 @@ def sliding_wordtok_window_transform(
 
     nwordtoks = doc.size(Unit.WORDTOKS)
     nbytes = doc.size(Unit.BYTES)
-    nwindows = ceil(nwordtoks / settings.size)
+    nwindows = ceil(nwordtoks / settings.shift)
     sep_wordtoks = [settings.separator] if settings.separator else []
 
     log.message(
@@ -174,7 +174,7 @@ def sliding_wordtok_window_transform(
         log.message(
             "%s Sliding word transform: Window %s of %s (%s wordtoks, %s bytes), at %s wordtoks so far",
             EMOJI_PROCESS,
-            i,
+            i + 1,
             nwindows,
             window.size(Unit.WORDTOKS),
             window.size(Unit.BYTES),

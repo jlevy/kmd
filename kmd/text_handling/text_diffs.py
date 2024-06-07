@@ -4,10 +4,11 @@ from enum import Enum
 from textwrap import dedent
 from typing import Callable, List, Optional, Tuple
 from kmd.config.logger import get_logger
+from kmd.config.text_styles import SYMBOL_SEP
 from kmd.model.errors_model import UnexpectedError
 from kmd.text_handling.text_doc import DocIndex, TextDoc
 from kmd.text_handling.wordtoks import is_break_or_space, is_word
-from kmd.util.log_calls import log_calls
+from kmd.util.log_calls import log_calls, tally_calls
 
 
 log = get_logger(__name__)
@@ -57,19 +58,19 @@ class DiffOp:
     def left_str(self, show_toks=True) -> str:
         s = f"{self.action.as_abbrev()} {len(self.left):4} toks"
         if show_toks:
-            s += f": - \"{''.join(tok for tok in self.left)}\""
+            s += f": - {SYMBOL_SEP}{''.join(tok for tok in self.left)}{SYMBOL_SEP}"
         return s
 
     def right_str(self, show_toks=True) -> str:
         s = f"{self.action.as_abbrev()} {len(self.right):4} toks"
         if show_toks:
-            s += f": + \"{''.join(tok for tok in self.right)}\""
+            s += f": + {SYMBOL_SEP}{''.join(tok for tok in self.right)}{SYMBOL_SEP}"
         return s
 
     def equal_str(self, show_toks=True) -> str:
         s = f"{self.action.as_abbrev()} {len(self.left):4} toks"
         if show_toks:
-            s += f":   \"{''.join(tok for tok in self.left)}\""
+            s += f":   {SYMBOL_SEP}{''.join(tok for tok in self.left)}{SYMBOL_SEP}"
         return s
 
     def __str__(self):
@@ -85,7 +86,7 @@ class DiffStats:
         return self.added + self.removed
 
     def __str__(self):
-        return f"+{self.added} added, -{self.removed} removed"
+        return f"+{self.added}/-{self.removed} additions/removals"
 
 
 DiffOpFilter = Callable[[DiffOp], bool]
@@ -178,9 +179,9 @@ class TextDiff:
 
         return accepted_diff, rejected_diff
 
-    def _line_diff_str(self, include_equal=False) -> str:
+    def _diff_lines(self, include_equal=False) -> List[str]:
         if len(self.ops) == 0:
-            return "(No changes)"
+            return ["(No changes)"]
 
         pos = 0
         lines = []
@@ -197,12 +198,11 @@ class TextDiff:
                 lines.append(f"       {'':4} {op.right_str()}")
 
             pos += len(op.left)
-        return "\n".join(lines)
+        return lines
 
     def as_diff_str(self, include_equal=True) -> str:
-        return f"TextDiff on {self.left_size()} tokens:\n" + self._line_diff_str(
-            include_equal=include_equal
-        )
+        diff_str = "\n".join(self._diff_lines(include_equal=include_equal))
+        return f"TextDiff on {self.left_size()} tokens:\n{diff_str}"
 
     def __str__(self):
         return self.as_diff_str()
@@ -215,13 +215,14 @@ def diff_docs(doc1: TextDoc, doc2: TextDoc) -> TextDiff:
 
     diff = diff_wordtoks(doc1.as_wordtoks(), doc2.as_wordtoks())
 
-    log.save_object("doc1 wordtoks", "diff_docs", "\n".join(doc1.as_wordtoks()))
-    log.save_object("doc2 wordtoks", "diff_docs", "\n".join(doc2.as_wordtoks()))
-    log.save_object("diff", "diff_docs", diff)
+    # log.save_object("doc1 wordtoks", "diff_docs", "\n".join(doc1.as_wordtoks()))
+    # log.save_object("doc2 wordtoks", "diff_docs", "\n".join(doc2.as_wordtoks()))
+    # log.save_object("diff", "diff_docs", diff)
 
     return diff
 
 
+@tally_calls(level="warning", min_total_runtime=5)
 def diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
     """
     Perform an LCS-style diff on two lists of wordtoks.
@@ -236,8 +237,9 @@ def diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
 
     for tag, i1, i2, j1, j2 in s.get_opcodes():
         if tag == "equal":
-            assert wordtoks1[i1:i2] == wordtoks2[j1:j2]
-            diff.append(DiffOp(DiffTag.EQUAL, wordtoks1[i1:i2], wordtoks2[j1:j2]))
+            slice1 = wordtoks1[i1:i2]
+            assert slice1 == wordtoks2[j1:j2]
+            diff.append(DiffOp(DiffTag.EQUAL, slice1, slice1))
         elif tag == "insert":
             diff.append(DiffOp(DiffTag.INSERT, [], wordtoks2[j1:j2]))
         elif tag == "delete":
@@ -273,6 +275,8 @@ def find_best_alignment(
     min_overlap: int,
     max_overlap: Optional[int] = None,
     scored_diff: Callable[[List[str], List[str]], ScoredDiff] = scored_diff_wordtoks,
+    give_up_score: float = 0.75,
+    give_up_count: int = 30,
 ) -> Tuple[int, ScoredDiff]:
     """
     Find the best alignment of two lists of values, where edit distance is smallest but overlap is
@@ -289,8 +293,21 @@ def find_best_alignment(
             f"Minimum overlap {min_overlap} should never exceed the length of one of the lists ({len1}, {len2})"
         )
 
+    log.message(
+        f"Finding best alignment: List lengths: lengths %s and %s with overlap of %s to %s",
+        len1,
+        len2,
+        min_overlap,
+        max_overlap,
+    )
+
+    # To make this a bit more efficient we check if we have a run of increasing scores and
+    # give up if we have many in a row.
+    scores_increasing = 0
+    prev_score = float("-inf")
+
     # Slide the second list over the first list, starting from the end of the first list.
-    # TODO: This could be much more efficient by being cleverer about reusing diff calculations.
+    # TODO: This could be much more efficient by being cleverer about reusing diff calculations.s
     for overlap in range(min_overlap, max_overlap + 1):
         start1 = len1 - overlap
         end1 = len1
@@ -299,10 +316,25 @@ def find_best_alignment(
 
         score, diff = scored_diff(list1[start1:end1], list2[start2:end2])
 
+        log.info("Offset %s: Overlap %s: Score %f", start1, overlap, score)
+
         if score < best_score:
             best_score = score
             best_offset = start1
             best_diff = diff
+            scores_increasing = 0
+        elif score >= give_up_score and score >= prev_score:
+            scores_increasing += 1
+            if scores_increasing >= give_up_count:
+                log.info(
+                    "Giving up after %s increasing scores, last score %s > %s",
+                    give_up_count,
+                    score,
+                    give_up_score,
+                )
+                break
+
+        prev_score = score
 
     if best_diff is None:
         raise ValueError("No alignment found")
@@ -359,16 +391,16 @@ def test_lcs_diff_wordtoks():
     expected_diff = dedent(
         """
         TextDiff on 59 tokens:
-        at pos    0 keep   19 toks:   "Paragraph one.<-SENT-BR->Sentence 1a.<-SENT-BR->Sentence 1b.<-SENT-BR->Sentence 1c."
-        at pos   19 repl    1 toks: - "<-PARA-BR->"
-                    repl    1 toks: + "<-SENT-BR->"
-        at pos   20 keep    3 toks:   "Paragraph two"
-        at pos   23 add     2 toks: + " blah"
-        at pos   23 keep   20 toks:   ".<-SENT-BR->Sentence 2a.<-SENT-BR->Sentence 2b.<-SENT-BR->Sentence 2c.<-PARA-BR->Paragraph three"
-        at pos   43 repl    1 toks: - "."
-                    repl    1 toks: + "!"
-        at pos   44 keep   10 toks:   "<-SENT-BR->Sentence 3a.<-SENT-BR->Sentence 3b."
-        at pos   54 del     5 toks: - "<-SENT-BR->Sentence 3c."
+        at pos    0 keep   19 toks:   ⎪Paragraph one.<-SENT-BR->Sentence 1a.<-SENT-BR->Sentence 1b.<-SENT-BR->Sentence 1c.⎪
+        at pos   19 repl    1 toks: - ⎪<-PARA-BR->⎪
+                    repl    1 toks: + ⎪<-SENT-BR->⎪
+        at pos   20 keep    3 toks:   ⎪Paragraph two⎪
+        at pos   23 add     2 toks: + ⎪ blah⎪
+        at pos   23 keep   20 toks:   ⎪.<-SENT-BR->Sentence 2a.<-SENT-BR->Sentence 2b.<-SENT-BR->Sentence 2c.<-PARA-BR->Paragraph three⎪
+        at pos   43 repl    1 toks: - ⎪.⎪
+                    repl    1 toks: + ⎪!⎪
+        at pos   44 keep   10 toks:   ⎪<-SENT-BR->Sentence 3a.<-SENT-BR->Sentence 3b.⎪
+        at pos   54 del     5 toks: - ⎪<-SENT-BR->Sentence 3c.⎪
         """
     ).strip()
 

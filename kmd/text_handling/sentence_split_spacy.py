@@ -4,7 +4,7 @@ import spacy
 from spacy.language import Language
 from spacy.cli.download import download
 from kmd.config.logger import get_logger
-from kmd.util.log_calls import log_calls
+from kmd.util.log_calls import tally_calls
 
 log = get_logger(__name__)
 
@@ -34,7 +34,7 @@ class _Spacy:
 nlp = _Spacy()
 
 
-@log_calls(level="message", if_slower_than=0.1)
+@tally_calls(level="warning", min_total_runtime=5)
 def split_sentences(text: str) -> List[str]:
     """
     Split text into sentences using Spacy. (English.)

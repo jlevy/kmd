@@ -8,6 +8,9 @@ COLOR_OUTPUT = "yellow"
 
 COLOR_PLAIN = "default"
 
+## Symbols
+
+SYMBOL_SEP = "⎪"
 
 ## Emojis
 
