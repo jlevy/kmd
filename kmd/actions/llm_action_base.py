@@ -1,13 +1,10 @@
 from dataclasses import dataclass
 from textwrap import indent
-from typing import List, Optional
+from typing import Optional
 from slugify import slugify
 from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.llms.completion import completion
 from kmd.model.actions_model import (
-    Action,
-    ActionInput,
-    ActionResult,
     ONE_OR_MORE_ARGS,
     EachItemAction,
 )

@@ -94,6 +94,10 @@ class Paragraph:
     def reassemble(self) -> str:
         return SENT_BR_STR.join(sent.text for sent in self.sentences)
 
+    def replace_str(self, old: str, new: str):
+        for sent in self.sentences:
+            sent.text = sent.text.replace(old, new)
+
     def size(self, unit: Unit) -> int:
         if unit == Unit.PARAGRAPHS:
             return 1
@@ -145,6 +149,10 @@ class TextDoc:
 
     def reassemble(self) -> str:
         return PARA_BR_STR.join(paragraph.reassemble() for paragraph in self.paragraphs)
+
+    def replace_str(self, old: str, new: str):
+        for para in self.paragraphs:
+            para.replace_str(old, new)
 
     def first_index(self) -> DocIndex:
         return DocIndex(0, 0)

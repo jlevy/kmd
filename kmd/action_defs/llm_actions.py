@@ -2,31 +2,14 @@ from textwrap import dedent
 from kmd.actions.action_registry import define_llm_action
 from kmd.config.logger import get_logger
 from kmd.model.language_models import LLM
-from kmd.text_handling.sliding_transforms import WindowSettings, WINDOW_BR
+from kmd.text_handling.sliding_transforms import WindowSettings, WINDOW_BR_SEP
 from kmd.text_handling.text_diffs import ONLY_BREAKS_AND_SPACES
 from kmd.text_handling.text_doc import Unit
+from kmd.text_handling.window_settings import WINDOW_1_PARA, WINDOW_2K_WORDTOKS, WINDOW_4_PARA
 
 
 log = get_logger(__name__)
 
-
-# Sliding, overlapping word-based window. 2K wordtoks is several paragraphs.
-WINDOW_2K_WORDTOKS = WindowSettings(
-    Unit.WORDTOKS, size=2048, shift=2048 - 256, min_overlap=8, separator=WINDOW_BR
-)
-
-# Process 1 paragraph at a time.
-WINDOW_1_PARA = WindowSettings(Unit.PARAGRAPHS, size=1, shift=1, min_overlap=0, separator=WINDOW_BR)
-
-# Process 4 paragraphs at a time.
-WINDOW_4_PARAS = WindowSettings(
-    unit=Unit.PARAGRAPHS, size=4, shift=4, min_overlap=0, separator=WINDOW_BR
-)
-
-# Process 8 paragraphs at a time.
-WINDOW_8_PARAS = WindowSettings(
-    unit=Unit.PARAGRAPHS, size=8, shift=8, min_overlap=0, separator=WINDOW_BR
-)
 
 define_llm_action(
     name="break_into_paragraphs",
@@ -107,7 +90,7 @@ define_llm_action(
         Corrected text:
         """
     ),
-    windowing=WINDOW_4_PARAS,
+    windowing=WINDOW_1_PARA,
 )
 
 
@@ -133,7 +116,7 @@ define_llm_action(
 
         - It is very important you do not add any details that are not directly stated in the original text. Do not change any numbers or alter its meaning in any way.
 
-        - Format your response as a list of bullet points in Markdown format, with newlines between the bullets, like this.
+        - Format your response as a list of bullet points in Markdown format.
 
         Input text:
 
@@ -142,7 +125,7 @@ define_llm_action(
         Bullet points:
         """
     ),
-    windowing=WINDOW_1_PARA,
+    windowing=WINDOW_4_PARA,
 )
 
 define_llm_action(
@@ -161,13 +144,13 @@ define_llm_action(
         """
         You are collecting concepts for the glossary of a book.
         
-        - Identify and list any concepts from the following text.
+        - Identify and list names and key concepts from the following text.
 
-        - Only include named entities or unusual or technical terms or names of companies or people. Do not include common concepts or general ideas.
+        - Only include names of companies or people, other named entities, or specific or unusual or technical terms. Do not include common concepts or general ideas.
 
-        - Each concept should be a single word or noun phrase, with each word or phrase in Title Case.
+        - Each concept should be a single word or noun phrase.
 
-        - Format your response as a list of bullet points in Markdown format, with newlines between the bullets, like this.
+        - Format your response as a list of bullet points in Markdown format.
 
         Input text:
 
@@ -176,5 +159,5 @@ define_llm_action(
         Concepts:
         """
     ),
-    windowing=WINDOW_4_PARAS,
+    windowing=WINDOW_4_PARA,
 )

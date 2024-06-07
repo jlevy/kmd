@@ -28,7 +28,17 @@ log = get_logger(__name__)
 
 TextDocTransform = Callable[[TextDoc], TextDoc]
 
-WINDOW_BR = "\n<!--window-br-->\n"
+WINDOW_BR = "<!--window-br-->"
+"""Marker inserted into result documents to show where window breaks have occurred."""
+
+WINDOW_BR_SEP = f"\n{WINDOW_BR}\n"
+
+
+def remove_window_br(doc: TextDoc):
+    """
+    Remove `<!--window-br-->` markers in a document.
+    """
+    doc.replace_str(WINDOW_BR, "")
 
 
 @dataclass
@@ -64,6 +74,9 @@ def filtered_transform(
     else:
 
         def transform_and_check_diff(input_doc: TextDoc) -> TextDoc:
+            # Avoid having window breaks build up after multiple transforms.
+            remove_window_br(input_doc)
+
             transformed_doc = transform_func(input_doc)
 
             # Check the transform did what it should have.
@@ -318,7 +331,7 @@ def test_sliding_para_window_transform():
             Unit.PARAGRAPHS,
             3,
             3,
-            separator=WINDOW_BR,
+            separator=WINDOW_BR_SEP,
         ),
     )
 
