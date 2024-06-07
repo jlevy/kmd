@@ -409,8 +409,8 @@ def test_lcs_diff_wordtoks():
 
 
 def test_apply_to():
-    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks_iter())
-    wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks_iter())
+    wordtoks1 = TextDoc.from_text(_short_text1).as_wordtoks()
+    wordtoks2 = TextDoc.from_text(_short_text2).as_wordtoks()
 
     diff = diff_wordtoks(wordtoks1, wordtoks2)
 

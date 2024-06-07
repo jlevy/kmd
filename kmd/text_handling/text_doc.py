@@ -3,11 +3,12 @@ Tools for handling documents consisting of sentences and paragraphs of text.
 Compatible with Markdown.
 """
 
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pprint import pprint
 from textwrap import dedent
-from typing import Generator, Iterable, List, Optional, Tuple
+from typing import Dict, Generator, Iterable, List, Optional, Tuple
 import regex
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
@@ -65,6 +66,13 @@ class SentIndex:
         return f"{SYMBOL_PARA}{self.para_index},{SYMBOL_SENT}{self.sent_index}"
 
 
+WordtokMapping = Dict[int, SentIndex]
+"""A mapping from wordtok index to sentences in a TextDoc."""
+
+SentenceMapping = Dict[SentIndex, List[int]]
+"""A mapping from sentence index to wordtoks in a TextDoc."""
+
+
 @dataclass
 class Sentence:
     text: str
@@ -119,15 +127,16 @@ class Paragraph:
 
         raise ValueError(f"Unsupported unit for Paragraph: {unit}")
 
-    def as_wordtoks_iter(self) -> Generator[str, None, None]:
+    def as_wordtok_to_sent(self) -> Generator[Tuple[str, int], None, None]:
         last_sent_index = len(self.sentences) - 1
-        for i, sent in enumerate(self.sentences):
-            yield from sent.as_wordtoks()
-            if i != last_sent_index:
-                yield SENT_BR_TOK
+        for sent_index, sent in enumerate(self.sentences):
+            for wordtok in sent.as_wordtoks():
+                yield wordtok, sent_index
+            if sent_index != last_sent_index:
+                yield SENT_BR_TOK, sent_index
 
     def as_wordtoks(self) -> List[str]:
-        return list(self.as_wordtoks_iter())
+        return [wordtok for wordtok, _ in self.as_wordtok_to_sent()]
 
 
 @dataclass
@@ -253,15 +262,30 @@ class TextDoc:
     def size_summary(self) -> str:
         return f"{self.size(Unit.BYTES)} bytes ({self.size(Unit.PARAGRAPHS)} paragraphs, {self.size(Unit.SENTENCES)} sentences)"
 
-    def as_wordtoks_iter(self) -> Generator[str, None, None]:
+    def as_wordtok_to_sent(self) -> Generator[Tuple[str, SentIndex], None, None]:
         last_para_index = len(self.paragraphs) - 1
-        for i, para in enumerate(self.paragraphs):
-            yield from para.as_wordtoks_iter()
-            if i != last_para_index:
-                yield PARA_BR_TOK
+        for para_index, para in enumerate(self.paragraphs):
+            for wordtok, sent_index in para.as_wordtok_to_sent():
+                yield wordtok, SentIndex(para_index, sent_index)
+            if para_index != last_para_index:
+                yield PARA_BR_TOK, SentIndex(para_index, len(para.sentences) - 1)
 
     def as_wordtoks(self) -> List[str]:
-        return list(self.as_wordtoks_iter())
+        return [wordtok for wordtok, _sent_index in self.as_wordtok_to_sent()]
+
+    def wordtok_mappings(self) -> Tuple[WordtokMapping, SentenceMapping]:
+        """
+        Get mappings between wordtok indexes and sentence indexes.
+        """
+        sent_indexes = [sent_index for _wordtok, sent_index in self.as_wordtok_to_sent()]
+
+        wordtok_mapping = {i: sent_index for i, sent_index in enumerate(sent_indexes)}
+
+        sent_mapping = defaultdict(list)
+        for i, sent_index in enumerate(sent_indexes):
+            sent_mapping[sent_index].append(i)
+
+        return wordtok_mapping, sent_mapping
 
     def __str__(self):
         return f"TextDoc({self.size_summary()})"
@@ -392,3 +416,20 @@ def test_tokenization():
     assert join_wordtoks(wordtoks) == _short_text.replace(
         "\n", " ", 1
     )  # First \n is not a para break.
+
+
+def test_wordtok_mappings():
+    doc = TextDoc.from_text(_short_text)
+
+    print("\n---Mapping:")
+    wordtok_mapping, sent_mapping = doc.wordtok_mappings()
+    pprint(wordtok_mapping)
+    pprint(sent_mapping)
+
+    assert wordtok_mapping[0] == SentIndex(0, 0)
+    assert wordtok_mapping[1] == SentIndex(0, 0)
+    assert wordtok_mapping[4] == SentIndex(0, 0)
+    assert wordtok_mapping[5] == SentIndex(0, 1)
+
+    assert sent_mapping[SentIndex(0, 0)] == [0, 1, 2, 3, 4]
+    assert sent_mapping[SentIndex(2, 3)] == [55, 56, 57, 58]
