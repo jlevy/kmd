@@ -81,12 +81,13 @@ class DiffOp:
 class DiffStats:
     added: int
     removed: int
+    input_size: int
 
     def nchanges(self) -> int:
         return self.added + self.removed
 
     def __str__(self):
-        return f"+{self.added}/-{self.removed} additions/removals"
+        return f"add/remove +{self.added}/-{self.removed} out of {self.input_size} total"
 
 
 DiffOpFilter = Callable[[DiffOp], bool]
@@ -125,7 +126,7 @@ class TextDiff:
     def stats(self) -> DiffStats:
         wordtoks_added = sum(len(op.right) for op in self.ops if op.action != DiffTag.EQUAL)
         wordtoks_removed = sum(len(op.left) for op in self.ops if op.action != DiffTag.EQUAL)
-        return DiffStats(wordtoks_added, wordtoks_removed)
+        return DiffStats(wordtoks_added, wordtoks_removed, self.left_size())
 
     def apply_to(self, original_wordtoks: List[str]) -> List[str]:
         """
@@ -202,7 +203,7 @@ class TextDiff:
 
     def as_diff_str(self, include_equal=True) -> str:
         diff_str = "\n".join(self._diff_lines(include_equal=include_equal))
-        return f"TextDiff on {self.left_size()} tokens:\n{diff_str}"
+        return f"TextDiff: {self.stats()}:\n{diff_str}"
 
     def __str__(self):
         return self.as_diff_str()
@@ -386,11 +387,11 @@ def test_lcs_diff_wordtoks():
 
     print("---Diff stats:")
     print(diff.stats())
-    assert diff.stats() == DiffStats(added=4, removed=7)
+    assert diff.stats() == DiffStats(added=4, removed=7, input_size=59)
 
     expected_diff = dedent(
         """
-        TextDiff on 59 tokens:
+        TextDiff: add/remove +4/-7 out of 59 total:
         at pos    0 keep   19 toks:   ⎪Paragraph one.<-SENT-BR->Sentence 1a.<-SENT-BR->Sentence 1b.<-SENT-BR->Sentence 1c.⎪
         at pos   19 repl    1 toks: - ⎪<-PARA-BR->⎪
                     repl    1 toks: + ⎪<-SENT-BR->⎪

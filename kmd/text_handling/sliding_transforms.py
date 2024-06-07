@@ -64,10 +64,10 @@ def filtered_transform(
     else:
 
         def transform_and_check_diff(input_doc: TextDoc) -> TextDoc:
-            result_doc = transform_func(input_doc)
+            transformed_doc = transform_func(input_doc)
 
             # Check the transform did what it should have.
-            diff = diff_docs(input_doc, result_doc)
+            diff = diff_docs(input_doc, transformed_doc)
             accepted_diff, rejected_diff = diff.filter(diff_filter)
 
             assert diff.left_size() == input_doc.size(Unit.WORDTOKS)
@@ -75,8 +75,7 @@ def filtered_transform(
             assert rejected_diff.left_size() == input_doc.size(Unit.WORDTOKS)
 
             log.info(
-                "Accepted proposed word token changes: %s:\n%s",
-                accepted_diff.stats(),
+                "Accepted proposed word token changes:\n%s",
                 format_lines(str(accepted_diff).splitlines()),
             )
 
@@ -84,9 +83,8 @@ def filtered_transform(
             rejected_changes = rejected_diff.changes()
             if rejected_changes:
                 log.message(
-                    "%s Rejecting proposed word token changes: %s:\n%s",
+                    "%s Rejecting proposed word token changes:\n%s",
                     EMOJI_WARN,
-                    rejected_diff.stats(),
                     format_lines(rejected_diff.as_diff_str(False).splitlines()),
                 )
 
@@ -106,12 +104,12 @@ def filtered_transform(
                 normalize_markdown(input_doc.reassemble()),
             )
             log.save_object(
-                "Result doc normalized",
+                "Transformed doc normalized",
                 "transform_and_check_diff",
-                normalize_markdown(result_doc.reassemble()),
+                normalize_markdown(transformed_doc.reassemble()),
             )
             log.save_object("Transform diff", "transform_and_check_diff", diff)
-            log.save_object("Accepted diff", "transform_and_check_diff", accepted_diff)
+            # log.save_object("Accepted diff", "transform_and_check_diff", accepted_diff)
             log.save_object("Rejected diff", "transform_and_check_diff", rejected_diff)
             log.save_object("Final doc", "transform_and_check_diff", final_doc.reassemble())
 
