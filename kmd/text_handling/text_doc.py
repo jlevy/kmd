@@ -114,6 +114,10 @@ class Paragraph:
         for sent in self.sentences:
             sent.text = sent.text.replace(old, new)
 
+    def sent_iter(self, reverse: bool = False) -> Iterable[Tuple[int, Sentence]]:
+        enum_sents = list(enumerate(self.sentences))
+        return reversed(enum_sents) if reverse else enum_sents
+
     def size(self, unit: Unit) -> int:
         if unit == Unit.PARAGRAPHS:
             return 1
@@ -177,11 +181,13 @@ class TextDoc:
     def last_index(self) -> SentIndex:
         return SentIndex(len(self.paragraphs) - 1, len(self.paragraphs[-1].sentences) - 1)
 
-    def sentence_iter(self, reverse: bool = False) -> Iterable[Tuple[SentIndex, Sentence]]:
+    def para_iter(self, reverse: bool = False) -> Iterable[Tuple[int, Paragraph]]:
         enum_paras = list(enumerate(self.paragraphs))
-        for para_index, para in reversed(enum_paras) if reverse else enum_paras:
-            enum_sents = list(enumerate(para.sentences))
-            for sent_index, sent in reversed(enum_sents) if reverse else enum_sents:
+        return reversed(enum_paras) if reverse else enum_paras
+
+    def sent_iter(self, reverse: bool = False) -> Iterable[Tuple[SentIndex, Sentence]]:
+        for para_index, para in self.para_iter(reverse=reverse):
+            for sent_index, sent in para.sent_iter(reverse=reverse):
                 yield SentIndex(para_index, sent_index), sent
 
     def get_sent(self, index: SentIndex) -> Sentence:
@@ -477,13 +483,13 @@ def test_sub_doc():
     assert sub_doc.reassemble() == expected_sub_doc.reassemble()
 
     # Confirm sentences and offsets are preserved in sub-doc.
-    orig_sentences = [sent for _index, sent in doc.sentence_iter()]
-    sub_sentences = [sent for _index, sent in sub_doc.sentence_iter()]
+    orig_sentences = [sent for _index, sent in doc.sent_iter()]
+    sub_sentences = [sent for _index, sent in sub_doc.sent_iter()]
     assert orig_sentences[5:10] == sub_sentences
 
     # Confirm indexing and reverse iteration.
     assert doc.sub_doc(SentIndex(0, 0), None) == doc
-    reversed_sentences = [sent for _index, sent in doc.sentence_iter(reverse=True)]
+    reversed_sentences = [sent for _index, sent in doc.sent_iter(reverse=True)]
     assert reversed_sentences == list(reversed(orig_sentences))
 
 

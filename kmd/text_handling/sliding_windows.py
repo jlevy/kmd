@@ -6,7 +6,7 @@ from textwrap import dedent
 from typing import Generator, Optional
 from pprint import pprint
 from kmd.config.logger import get_logger
-from kmd.model.errors_model import ContentError, UnexpectedError
+from kmd.model.errors_model import ContentError
 from kmd.model.items_model import Format
 from kmd.text_handling.doc_formatting import normalize_formatting
 from kmd.text_handling.text_doc import (
@@ -15,11 +15,8 @@ from kmd.text_handling.text_doc import (
     TextDoc,
     Unit,
     size,
-    size_in_bytes,
 )
 from kmd.text_handling.wordtoks import (
-    PARA_BR_STR,
-    SENT_BR_STR,
     join_wordtoks,
     sentence_as_wordtoks,
 )
