@@ -28,44 +28,6 @@ from kmd.text_handling.wordtoks import (
 log = get_logger(__name__)
 
 
-def seek_doc(doc: TextDoc, offset: int, unit: Unit) -> SentIndex:
-    """
-    Find the last sentence that starts before a given offset.
-    """
-    current_size = 0
-    last_fit_index = None
-
-    if unit == Unit.BYTES:
-        size_sent_break = size_in_bytes(SENT_BR_STR)
-        size_para_break = size_in_bytes(PARA_BR_STR)
-    elif unit == Unit.CHARS:
-        size_sent_break = len(SENT_BR_STR)
-        size_para_break = len(PARA_BR_STR)
-    elif unit == Unit.WORDTOKS:
-        size_sent_break = 1
-        size_para_break = 1
-    else:
-        raise UnexpectedError(f"Unsupported unit for seek_doc: {unit}")
-
-    for para_index, para in enumerate(doc.paragraphs):
-        for sent_index, sent in enumerate(para.sentences):
-            sentence_size = sent.size(unit)
-            last_fit_index = SentIndex(para_index, sent_index)
-            if current_size + sentence_size + size_sent_break <= offset:
-                current_size += sentence_size
-                if sent_index < len(para.sentences) - 1:
-                    current_size += size_sent_break
-            else:
-                return last_fit_index
-        if para_index < len(doc.paragraphs) - 1:
-            current_size += size_para_break
-
-    if last_fit_index is None:
-        raise ValueError("Cannot seek into empty document")
-
-    return last_fit_index
-
-
 def _truncate_sent_at_wordtok_offset(sent: Sentence, offset: int) -> Sentence:
     """
     Truncate a sentence to the given number of wordtoks.
@@ -80,7 +42,7 @@ def truncate_at_wordtok_offset(doc: TextDoc, offset: int) -> TextDoc:
     """
     Truncate a document at a given wordtok offset.
     """
-    index = seek_doc(doc, offset, Unit.WORDTOKS)
+    index = doc.seek(offset, Unit.WORDTOKS)
     try:
         sub_doc = doc.sub_doc(SentIndex(0, 0), doc.prev_sent(index))
     except ValueError:
@@ -103,11 +65,11 @@ def sliding_word_window(
     """
     total_size = doc.size(unit)
     start_offset = 0
-    start_index = seek_doc(doc, start_offset, unit)
+    start_index = doc.seek(start_offset, unit)
 
     while start_offset < total_size:
         end_offset = start_offset + window_size
-        end_index = seek_doc(doc, end_offset, unit)
+        end_index = doc.seek(end_offset, unit)
 
         # Sentence may extend past the window, so back up to ensure it fits.
         sub_doc = doc.sub_doc(start_index, end_index)
@@ -152,37 +114,6 @@ _example_text = dedent(
     Here is the third paragraph. More sentences follow. And here is another one.
     """
 ).strip()
-
-
-def test_seek_doc():
-    doc = TextDoc.from_text(_example_text)
-
-    offset = 1
-    index = seek_doc(doc, offset, Unit.BYTES)
-    print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == SentIndex(para_index=0, sent_index=0)
-
-    offset = len("This is the first paragraph.")
-    index = seek_doc(doc, offset, Unit.BYTES)
-    print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == SentIndex(para_index=0, sent_index=0)
-
-    offset = len("This is the first paragraph. ")
-    index = seek_doc(doc, offset, Unit.BYTES)
-    print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == SentIndex(para_index=0, sent_index=1)
-
-    offset = len(
-        "This is the first paragraph. It has multiple sentences.\n\nThis is the second paragraph."
-    )
-    index = seek_doc(doc, offset, Unit.BYTES)
-    print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == SentIndex(para_index=1, sent_index=0)
-
-    offset = len(_example_text) + 10
-    index = seek_doc(doc, offset, Unit.BYTES)
-    print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == SentIndex(para_index=2, sent_index=2)
 
 
 def test_sliding_window():

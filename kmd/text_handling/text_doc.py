@@ -181,6 +181,43 @@ class TextDoc:
             for sent_index, sent in reversed(enum_sents) if reverse else enum_sents:
                 yield SentIndex(para_index, sent_index), sent
 
+    def seek(self, offset: int, unit: Unit) -> SentIndex:
+        """
+        Find the last sentence that starts before a given offset.
+        """
+        current_size = 0
+        last_fit_index = None
+
+        if unit == Unit.BYTES:
+            size_sent_break = size_in_bytes(SENT_BR_STR)
+            size_para_break = size_in_bytes(PARA_BR_STR)
+        elif unit == Unit.CHARS:
+            size_sent_break = len(SENT_BR_STR)
+            size_para_break = len(PARA_BR_STR)
+        elif unit == Unit.WORDTOKS:
+            size_sent_break = 1
+            size_para_break = 1
+        else:
+            raise UnexpectedError(f"Unsupported unit for seek_doc: {unit}")
+
+        for para_index, para in enumerate(self.paragraphs):
+            for sent_index, sent in enumerate(para.sentences):
+                sentence_size = sent.size(unit)
+                last_fit_index = SentIndex(para_index, sent_index)
+                if current_size + sentence_size + size_sent_break <= offset:
+                    current_size += sentence_size
+                    if sent_index < len(para.sentences) - 1:
+                        current_size += size_sent_break
+                else:
+                    return last_fit_index
+            if para_index < len(self.paragraphs) - 1:
+                current_size += size_para_break
+
+        if last_fit_index is None:
+            raise ValueError("Cannot seek into empty document")
+
+        return last_fit_index
+
     def sub_doc(self, first: SentIndex, last: Optional[SentIndex] = None) -> "TextDoc":
         """
         Get a sub-document. Inclusive ranges. Preserves original paragraph and sentence offsets.
@@ -357,6 +394,48 @@ _short_text = dedent(
     Paragraph three. Sentence 3a. Sentence 3b. Sentence 3c.
     """
 ).strip()
+
+
+simple_test_doc = dedent(
+    """
+    This is the first paragraph. It has multiple sentences.
+
+    This is the second paragraph. It also has multiple sentences. And it continues.
+    
+    Here is the third paragraph. More sentences follow. And here is another one.
+    """
+).strip()
+
+
+def test_seek_doc():
+    doc = TextDoc.from_text(simple_test_doc)
+
+    offset = 1
+    index = doc.seek(offset, Unit.BYTES)
+    print(f"Seeked to {index} for offset {offset} bytes")
+    assert index == SentIndex(para_index=0, sent_index=0)
+
+    offset = len("This is the first paragraph.")
+    index = doc.seek(offset, Unit.BYTES)
+    print(f"Seeked to {index} for offset {offset} bytes")
+    assert index == SentIndex(para_index=0, sent_index=0)
+
+    offset = len("This is the first paragraph. ")
+    index = doc.seek(offset, Unit.BYTES)
+    print(f"Seeked to {index} for offset {offset} bytes")
+    assert index == SentIndex(para_index=0, sent_index=1)
+
+    offset = len(
+        "This is the first paragraph. It has multiple sentences.\n\nThis is the second paragraph."
+    )
+    index = doc.seek(offset, Unit.BYTES)
+    print(f"Seeked to {index} for offset {offset} bytes")
+    assert index == SentIndex(para_index=1, sent_index=0)
+
+    offset = len(simple_test_doc) + 10
+    index = doc.seek(offset, Unit.BYTES)
+    print(f"Seeked to {index} for offset {offset} bytes")
+    assert index == SentIndex(para_index=2, sent_index=2)
 
 
 def test_sub_doc():

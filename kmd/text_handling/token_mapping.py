@@ -1,23 +1,25 @@
 from textwrap import dedent
-from typing import Dict
-from kmd.text_handling.text_diffs import DiffTag, diff_wordtoks
+from typing import Dict, List, Optional
+from kmd.text_handling.text_diffs import DiffTag, TextDiff, diff_wordtoks
 from kmd.text_handling.text_doc import TextDoc
 
 
 class TokenMapping:
     """
-    Given two documents `doc1` and `doc2` as a sequence of word tokens, create a mapping from offsets
-    in `doc2` back to `doc1`.
+    Given two sequences of word tokens, create a mapping from offsets
     """
 
     def __init__(
-        self, doc1: TextDoc, doc2: TextDoc, min_wordtoks: int = 8, max_diff_frac: float = 0.4
+        self,
+        wordtoks1: List[str],
+        wordtoks2: List[str],
+        diff: Optional[TextDiff] = None,
+        min_wordtoks: int = 10,
+        max_diff_frac: float = 0.4,
     ):
-        self.doc1 = doc1
-        self.doc2 = doc2
-        self.wordtoks1 = doc1.as_wordtoks()
-        self.wordtoks2 = doc2.as_wordtoks()
-        self.diff = diff_wordtoks(self.wordtoks1, self.wordtoks2)
+        self.wordtoks1 = wordtoks1
+        self.wordtoks2 = wordtoks2
+        self.diff = diff or diff_wordtoks(self.wordtoks1, self.wordtoks2)
         self._validate(min_wordtoks, max_diff_frac)
         self.backmap: Dict[int, int] = {}
         self._create_mapping()
@@ -74,7 +76,7 @@ def test_offset_mapping():
         "This is<-PARA-BR->a simple pytest adding other words.<-SENT-BR->And another sentence."
     )
 
-    mapping = TokenMapping(doc1, doc2)
+    mapping = TokenMapping(doc1.as_wordtoks(), doc2.as_wordtoks())
     wordtoks1 = mapping.wordtoks1
     wordtoks2 = mapping.wordtoks2
 
