@@ -42,7 +42,7 @@ def truncate_at_wordtok_offset(doc: TextDoc, offset: int) -> TextDoc:
     """
     Truncate a document at a given wordtok offset.
     """
-    index = doc.seek(offset, Unit.WORDTOKS)
+    index, _ = doc.seek_to_sent(offset, Unit.WORDTOKS)
     try:
         sub_doc = doc.sub_doc(SentIndex(0, 0), doc.prev_sent(index))
     except ValueError:
@@ -65,11 +65,11 @@ def sliding_word_window(
     """
     total_size = doc.size(unit)
     start_offset = 0
-    start_index = doc.seek(start_offset, unit)
+    start_index, _ = doc.seek_to_sent(start_offset, unit)
 
     while start_offset < total_size:
         end_offset = start_offset + window_size
-        end_index = doc.seek(end_offset, unit)
+        end_index, _ = doc.seek_to_sent(end_offset, unit)
 
         # Sentence may extend past the window, so back up to ensure it fits.
         sub_doc = doc.sub_doc(start_index, end_index)

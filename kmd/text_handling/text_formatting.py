@@ -43,6 +43,13 @@ def clean_title(text: str) -> str:
     return regex.sub(r"[^\p{L}\p{N},./:;'!?/@%&()+“”‘’…–—-]+", " ", text).strip()
 
 
+def clean_description(text: str) -> str:
+    """
+    Clean up txt to make it suitable for a description. Convert all whitespace to spaces.
+    """
+    return regex.sub(r"\s+", " ", text).strip()
+
+
 def _trim_trailing_punctuation(text: str) -> str:
     return regex.sub(r"[.,;:!?]+$", "", text)
 

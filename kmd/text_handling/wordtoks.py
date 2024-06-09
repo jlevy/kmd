@@ -19,6 +19,10 @@ SPACE_TOK = " "
 # TODO: Could add nicer support for Markdown formatting as well.
 _wordtok_pattern = regex.compile(r"(<.{0,1024}?>|\w+|[^\w\s]|[\s]+)")
 
+_tag_pattern = regex.compile(r"<.{0,1024}?>")
+
+_word_pat = regex.compile(r"\w+")
+
 
 def wordtok_to_str(wordtok: str) -> str:
     """
@@ -63,9 +67,6 @@ def is_break_or_space(wordtok: str) -> bool:
     return wordtok == PARA_BR_TOK or wordtok == SENT_BR_TOK or wordtok.isspace()
 
 
-_word_pat = regex.compile(r"\w+")
-
-
 def is_word(wordtok: str) -> bool:
     """
     Is this wordtok a word, not punctuation or whitespace?
@@ -73,57 +74,8 @@ def is_word(wordtok: str) -> bool:
     return bool(_word_pat.match(wordtok))
 
 
-## Tests
-
-
-def test_wordtokization():
-    test_cases = [
-        "Hello, world!",
-        "This is an example sentence with punctuation.",
-        "And here's another one!",
-        "Special characters: @#%^&*()",
-    ]
-    html_test_case = 'This is <span data-timestamp="1.234">a test</span>.'
-
-    for sentence in test_cases:
-        wordtoks = sentence_as_wordtoks(sentence)
-        reassembled_sentence = "".join(wordtoks)
-        assert reassembled_sentence == sentence
-
-    assert sentence_as_wordtoks("Multiple     spaces and tabs\tand\nnewlines in between.") == [
-        "Multiple",
-        " ",
-        "spaces",
-        " ",
-        "and",
-        " ",
-        "tabs",
-        " ",
-        "and",
-        " ",
-        "newlines",
-        " ",
-        "in",
-        " ",
-        "between",
-        ".",
-    ]
-    assert sentence_as_wordtoks("") == []
-    assert sentence_as_wordtoks("   ") == [" "]
-
-    assert sentence_as_wordtoks(html_test_case) == [
-        "This",
-        " ",
-        "is",
-        " ",
-        '<span data-timestamp="1.234">',
-        "a",
-        " ",
-        "test",
-        "</span>",
-        ".",
-    ]
-
-    assert len(html_test_case) == sum(
-        wordtok_len(wordtok) for wordtok in sentence_as_wordtoks(html_test_case)
-    )
+def is_tag(wordtok: str) -> bool:
+    """
+    Is this wordtok an HTML tag?
+    """
+    return bool(_tag_pattern.match(wordtok))

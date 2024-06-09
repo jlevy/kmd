@@ -12,6 +12,7 @@ from kmd.model.errors_model import ContentError, InvalidInput
 from kmd.model.items_model import Item
 from kmd.model.language_models import MODEL_LIST
 from kmd.text_handling.inflection import plural
+from kmd.text_handling.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
 
 
@@ -78,6 +79,10 @@ class Action:
     template: Optional[str] = None
     system_message: Optional[str] = None
     expected_args: ExpectedArgs = field(default_factory=lambda: ONE_ARG)
+
+    def __post_init__(self):
+        self.friendly_name = clean_description(self.friendly_name)
+        self.description = clean_description(self.description)
 
     def validate_args(self, args: List[str]) -> None:
         if len(args) != 0 and self.expected_args == NO_ARGS:

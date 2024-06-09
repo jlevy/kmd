@@ -15,12 +15,15 @@ from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
 from kmd.model.errors_model import UnexpectedError
 from kmd.text_handling.sentence_split_spacy import split_sentences
 from kmd.text_handling.wordtoks import (
+    is_break_or_space,
+    is_tag,
     join_wordtoks,
     sentence_as_wordtoks,
     SENT_BR_STR,
     SENT_BR_TOK,
     PARA_BR_STR,
     PARA_BR_TOK,
+    wordtok_len,
 )
 
 log = get_logger(__name__)
@@ -181,12 +184,17 @@ class TextDoc:
             for sent_index, sent in reversed(enum_sents) if reverse else enum_sents:
                 yield SentIndex(para_index, sent_index), sent
 
-    def seek(self, offset: int, unit: Unit) -> SentIndex:
+    def get_sent(self, index: SentIndex) -> Sentence:
+        return self.paragraphs[index.para_index].sentences[index.sent_index]
+
+    def seek_to_sent(self, offset: int, unit: Unit) -> Tuple[SentIndex, int]:
         """
-        Find the last sentence that starts before a given offset.
+        Find the last sentence that starts before a given offset. Returns the SentIndex
+        and the offset of the sentence start in the original document.
         """
         current_size = 0
         last_fit_index = None
+        last_fit_offset = 0
 
         if unit == Unit.BYTES:
             size_sent_break = size_in_bytes(SENT_BR_STR)
@@ -204,19 +212,20 @@ class TextDoc:
             for sent_index, sent in enumerate(para.sentences):
                 sentence_size = sent.size(unit)
                 last_fit_index = SentIndex(para_index, sent_index)
+                last_fit_offset = current_size
                 if current_size + sentence_size + size_sent_break <= offset:
                     current_size += sentence_size
                     if sent_index < len(para.sentences) - 1:
                         current_size += size_sent_break
                 else:
-                    return last_fit_index
+                    return last_fit_index, last_fit_offset
             if para_index < len(self.paragraphs) - 1:
                 current_size += size_para_break
 
         if last_fit_index is None:
             raise ValueError("Cannot seek into empty document")
 
-        return last_fit_index
+        return last_fit_index, last_fit_offset
 
     def sub_doc(self, first: SentIndex, last: Optional[SentIndex] = None) -> "TextDoc":
         """
@@ -384,19 +393,7 @@ def test_document_parse_reassemble():
     assert last_para.char_offset == last_para_char_offset
 
 
-_short_text = dedent(
-    """
-    Paragraph one.
-    Sentence 1a. Sentence 1b. Sentence 1c.
-    
-    Paragraph two. Sentence 2a. Sentence 2b. Sentence 2c.
-    
-    Paragraph three. Sentence 3a. Sentence 3b. Sentence 3c.
-    """
-).strip()
-
-
-simple_test_doc = dedent(
+_simple_test_doc = dedent(
     """
     This is the first paragraph. It has multiple sentences.
 
@@ -408,39 +405,55 @@ simple_test_doc = dedent(
 
 
 def test_seek_doc():
-    doc = TextDoc.from_text(simple_test_doc)
+    doc = TextDoc.from_text(_simple_test_doc)
 
     offset = 1
-    index = doc.seek(offset, Unit.BYTES)
-    print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == SentIndex(para_index=0, sent_index=0)
+    sent_index, sent_offset = doc.seek_to_sent(offset, Unit.BYTES)
+    print(f"Seeked to {sent_index} offset {sent_offset} for offset {offset} bytes")
+    assert sent_index == SentIndex(para_index=0, sent_index=0)
+    assert sent_offset == 0
 
     offset = len("This is the first paragraph.")
-    index = doc.seek(offset, Unit.BYTES)
-    print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == SentIndex(para_index=0, sent_index=0)
+    sent_index, sent_offset = doc.seek_to_sent(offset, Unit.BYTES)
+    print(f"Seeked to {sent_index} offset {sent_offset} for offset {offset} bytes")
+    assert sent_index == SentIndex(para_index=0, sent_index=0)
+    assert sent_offset == 0
 
     offset = len("This is the first paragraph. ")
-    index = doc.seek(offset, Unit.BYTES)
-    print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == SentIndex(para_index=0, sent_index=1)
+    sent_index, sent_offset = doc.seek_to_sent(offset, Unit.BYTES)
+    print(f"Seeked to {sent_index} offset {sent_offset} for offset {offset} bytes")
+    assert sent_index == SentIndex(para_index=0, sent_index=1)
+    assert sent_offset == offset
 
     offset = len(
         "This is the first paragraph. It has multiple sentences.\n\nThis is the second paragraph."
     )
-    index = doc.seek(offset, Unit.BYTES)
-    print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == SentIndex(para_index=1, sent_index=0)
+    sent_index, sent_offset = doc.seek_to_sent(offset, Unit.BYTES)
+    print(f"Seeked to {sent_index} offset {sent_offset} for offset {offset} bytes")
+    assert sent_index == SentIndex(para_index=1, sent_index=0)
+    assert sent_offset == len("This is the first paragraph. It has multiple sentences.\n\n")
 
-    offset = len(simple_test_doc) + 10
-    index = doc.seek(offset, Unit.BYTES)
-    print(f"Seeked to {index} for offset {offset} bytes")
-    assert index == SentIndex(para_index=2, sent_index=2)
+    offset = len(_simple_test_doc) + 10
+    sent_index, sent_offset = doc.seek_to_sent(offset, Unit.BYTES)
+    print(f"Seeked to {sent_index} offset {sent_offset} for offset {offset} bytes")
+    assert sent_index == SentIndex(para_index=2, sent_index=2)
+
+
+_short_test_doc = dedent(
+    """
+    Paragraph one.
+    Sentence 1a. Sentence 1b. Sentence 1c.
+    
+    Paragraph two. Sentence 2a. Sentence 2b. Sentence 2c.
+    
+    Paragraph three. Sentence 3a. Sentence 3b. Sentence 3c.
+    """
+).strip()
 
 
 def test_sub_doc():
 
-    doc = TextDoc.from_text(_short_text)
+    doc = TextDoc.from_text(_short_test_doc)
 
     sub_doc_start = SentIndex(1, 1)
     sub_doc_end = SentIndex(2, 1)
@@ -475,7 +488,7 @@ def test_sub_doc():
 
 
 def test_tokenization():
-    doc = TextDoc.from_text(_short_text)
+    doc = TextDoc.from_text(_short_test_doc)
     wordtoks = doc.as_wordtoks()
 
     print("\n---Tokens:")
@@ -492,13 +505,13 @@ def test_tokenization():
         ".",
     ]
     assert wordtoks.count(PARA_BR_TOK) == 2
-    assert join_wordtoks(wordtoks) == _short_text.replace(
+    assert join_wordtoks(wordtoks) == _short_test_doc.replace(
         "\n", " ", 1
     )  # First \n is not a para break.
 
 
 def test_wordtok_mappings():
-    doc = TextDoc.from_text(_short_text)
+    doc = TextDoc.from_text(_short_test_doc)
 
     print("\n---Mapping:")
     wordtok_mapping, sent_mapping = doc.wordtok_mappings()
@@ -512,3 +525,104 @@ def test_wordtok_mappings():
 
     assert sent_mapping[SentIndex(0, 0)] == [0, 1, 2, 3, 4]
     assert sent_mapping[SentIndex(2, 3)] == [55, 56, 57, 58]
+
+
+_sentence_tests = [
+    "Hello, world!",
+    "This is an example sentence with punctuation.",
+    "And here's another one!",
+    "Special characters: @#%^&*()",
+]
+
+_sentence_test_html = 'This is <span data-timestamp="1.234">a test</span>.'
+
+
+def test_wordtokization():
+
+    for sentence in _sentence_tests:
+        wordtoks = sentence_as_wordtoks(sentence)
+        reassembled_sentence = "".join(wordtoks)
+        assert reassembled_sentence == sentence
+
+    assert sentence_as_wordtoks("Multiple     spaces and tabs\tand\nnewlines in between.") == [
+        "Multiple",
+        " ",
+        "spaces",
+        " ",
+        "and",
+        " ",
+        "tabs",
+        " ",
+        "and",
+        " ",
+        "newlines",
+        " ",
+        "in",
+        " ",
+        "between",
+        ".",
+    ]
+    assert sentence_as_wordtoks("") == []
+    assert sentence_as_wordtoks("   ") == [" "]
+
+    assert sentence_as_wordtoks(_sentence_test_html) == [
+        "This",
+        " ",
+        "is",
+        " ",
+        '<span data-timestamp="1.234">',
+        "a",
+        " ",
+        "test",
+        "</span>",
+        ".",
+    ]
+
+    assert len(_sentence_test_html) == sum(
+        wordtok_len(wordtok) for wordtok in sentence_as_wordtoks(_sentence_test_html)
+    )
+
+
+def test_html_tokenization():
+    doc = TextDoc.from_text(_sentence_test_html)
+
+    print("\n---HTML Tokens:")
+    pprint(doc.as_wordtoks())
+
+    wordtoks = doc.as_wordtoks()
+    assert wordtoks == [
+        "This",
+        " ",
+        "is",
+        " ",
+        '<span data-timestamp="1.234">',
+        "a",
+        " ",
+        "test",
+        "</span>",
+        ".",
+    ]
+    assert list(map(is_tag, wordtoks)) == [
+        False,
+        False,
+        False,
+        False,
+        True,
+        False,
+        False,
+        False,
+        True,
+        False,
+    ]
+    assert list(map(is_break_or_space, wordtoks)) == [
+        False,
+        True,
+        False,
+        True,
+        False,
+        False,
+        True,
+        False,
+        False,
+        False,
+    ]
