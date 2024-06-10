@@ -7,11 +7,11 @@ for interactive use than calling actions from a regular shell command line.
 
 import warnings
 
-from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState
-from kmd.util.log_calls import log_tallies
-
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+
+from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState
+from kmd.util.log_calls import log_tallies
 import time
 from typing import Callable, List
 from rich import print as rprint

@@ -10,7 +10,7 @@ from typing import Any, Dict, List
 import yt_dlp
 from kmd.config.text_styles import EMOJI_WARN
 from kmd.file_storage.yaml_util import write_yaml_file
-from kmd.model.errors_model import ApiResultError
+from kmd.model.errors_model import ApiResultError, InvalidInput
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
 from .media_services import VideoService
@@ -72,6 +72,12 @@ class YouTube(VideoService):
                 return Url(f"https://www.youtube.com/watch?v={video_id}")
 
         return None
+
+    def timestamp_url(self, url: Url, timestamp: float) -> str:
+        canon_url = self.canonicalize(url)
+        if not canon_url:
+            raise InvalidInput(f"Unrecognized YouTube URL: {url}")
+        return canon_url + f"&t={timestamp}s"
 
     def download_audio(self, url: Url, target_dir: Optional[str] = None) -> str:
         """Download and convert to mp3 using yt_dlp, which seems like the best library for this."""

@@ -22,6 +22,9 @@ class Vimeo(VideoService):
         else:
             return None
 
+    def timestamp_url(self, url: Url, timestamp: float) -> str:
+        raise NotImplementedError()  # TODO
+
     def download_audio(self, url: Url) -> str:
         temp_dir = tempfile.mkdtemp()
         v = VimeoDownloader(url)

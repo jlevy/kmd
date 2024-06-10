@@ -8,6 +8,10 @@ COLOR_OUTPUT = "yellow"
 
 COLOR_PLAIN = "default"
 
+## Formatting
+
+NBSP = "\u00A0"
+
 ## Symbols
 
 SYMBOL_SEP = "⎪"

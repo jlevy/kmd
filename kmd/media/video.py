@@ -134,3 +134,14 @@ def canonicalize_video_url(url: Url) -> Optional[Url]:
         if canonical_url:
             return canonical_url
     return None
+
+
+def timestamp_video_url(url: Url, timestamp: float) -> Url:
+    """
+    Return a URL that links to the video at the given timestamp.
+    """
+    for service in video_services:
+        canonical_url = service.canonicalize(url)
+        if canonical_url:
+            return service.timestamp_url(url, timestamp)
+    raise InvalidInput(f"Unrecognized video URL: {url}")
