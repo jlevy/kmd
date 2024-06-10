@@ -6,6 +6,7 @@ import openai
 from cachetools import cached
 from kmd.config.logger import logging_setup
 from kmd.config.settings import find_in_cwd_or_parents
+from kmd.util.stack_traces import add_stacktrace_handler
 from kmd.util.thread_utils import synchronized
 
 
@@ -14,6 +15,8 @@ def setup():
     """One-time setup of essential keys, directories, and configs. Idempotent."""
 
     logging_setup()
+
+    add_stacktrace_handler()
 
     api_setup()
 
