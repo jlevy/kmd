@@ -48,6 +48,11 @@ def format_duration(seconds: float) -> str:
         return f"{seconds:.0f}s"
 
 
+def func_and_module_name(func: Callable):
+    short_module = func.__module__.split(".")[-1] if func.__module__ else None
+    return f"{short_module}.{func.__qualname__}" if short_module else func.__qualname__
+
+
 def log_calls(
     level: str = "info",
     show_args=True,
@@ -68,11 +73,11 @@ def log_calls(
             [to_str(arg) for arg in args] + [f"{k}={to_str(v)}" for k, v in kwargs.items()]
         )
 
-    def format_call(func, args, kwargs):
+    def format_call(func_name: str, args, kwargs):
         if show_args:
-            return f"{func.__name__}({format_args(args, kwargs)})"
+            return f"{func_name}({format_args(args, kwargs)})"
         else:
-            return func.__name__
+            return func_name
 
     log_func = getattr(log, level.lower())
 
@@ -83,8 +88,10 @@ def log_calls(
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            func_name = func_and_module_name(func)
+
             if show_call:
-                log_func(f"≫ Call: {format_call(func, args, kwargs)}")
+                log_func(f"≫ Call: {format_call(func_name, args, kwargs)}")
 
             start_time = time.time()
 
@@ -94,16 +101,14 @@ def log_calls(
             elapsed = end_time - start_time
 
             if show_call:
-                call_msg = f"≪ Call done: {func.__name__} in {format_duration(elapsed)}"
+                call_msg = f"≪ Call done: {func_name} in {format_duration(elapsed)}"
                 if show_return:
                     log_func("%s: %s", call_msg, to_str(result))
                 else:
                     log_func("%s", call_msg)
             else:
                 if elapsed > if_slower_than:
-                    call_msg = (
-                        f"{EMOJI_TIME} Call to {func.__name__} took {format_duration(elapsed)}."
-                    )
+                    call_msg = f"{EMOJI_TIME} Call to {func_name} took {format_duration(elapsed)}."
                     log_func("%s", call_msg)
 
             return result
@@ -132,8 +137,8 @@ def tally_calls(
 ):
     """
     Decorator to monitor performancy by tallying function calls and total runtime, only logging
-    periodically (every time calls exceed `logging_ratio` times the last time it was logged or
-    are greater than `if_slower_than` seconds).
+    periodically (every time calls exceed `periodic_ratio` more in count or runtime than the last
+    time it was logged) or if runtime is greater than `if_slower_than` seconds).
     """
 
     log_func = getattr(log, level.lower())
@@ -149,31 +154,31 @@ def tally_calls(
             end_time = time.time()
             elapsed = end_time - start_time
 
-            short_module = func.__module__.split(".")[-1]
-            fkey = f"{short_module}.{func.__name__}"
+            func_name = func_and_module_name(func)
 
-            if fkey not in tally:
-                tally[fkey] = Tally()
+            if func_name not in tally:
+                tally[func_name] = Tally()
 
-            tally[fkey].calls += 1
-            tally[fkey].total_time += elapsed
+            tally[func_name].calls += 1
+            tally[func_name].total_time += elapsed
 
-            if tally[fkey].total_time >= min_total_runtime and (
+            if tally[func_name].total_time >= min_total_runtime and (
                 elapsed > if_slower_than
-                or tally[fkey].calls >= periodic_ratio * tally[fkey].last_logged_count
-                or tally[fkey].total_time >= periodic_ratio * tally[fkey].last_logged_total_time
+                or tally[func_name].calls >= periodic_ratio * tally[func_name].last_logged_count
+                or tally[func_name].total_time
+                >= periodic_ratio * tally[func_name].last_logged_total_time
             ):
                 log_func(
                     "%s %s() took %s, now called %d times, %s avg per call, total time %s",
                     EMOJI_TIME,
-                    fkey,
+                    func_name,
                     format_duration(elapsed),
-                    tally[fkey].calls,
-                    format_duration(tally[fkey].total_time / tally[fkey].calls),
-                    format_duration(tally[fkey].total_time),
+                    tally[func_name].calls,
+                    format_duration(tally[func_name].total_time / tally[func_name].calls),
+                    format_duration(tally[func_name].total_time),
                 )
-                tally[fkey].last_logged_count = tally[fkey].calls
-                tally[fkey].last_logged_total_time = tally[fkey].total_time
+                tally[func_name].last_logged_count = tally[func_name].calls
+                tally[func_name].last_logged_total_time = tally[func_name].total_time
 
             return result
 
@@ -189,7 +194,7 @@ def log_tallies(if_slower_than: float = 0.0):
     tallies_to_log = {k: t for k, t in tally.items() if t.total_time >= if_slower_than}
     if tallies_to_log:
         log.message("%s Function tallies:", EMOJI_TIME)
-        for fkey, t in tally.items():
+        for fkey, t in sorted(tally.items(), key=lambda item: item[1].total_time, reverse=True):
             log.message(
                 "    %s() was called %d times, total time %s, avg per call %s",
                 fkey,
