@@ -15,6 +15,8 @@ from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
 from kmd.model.errors_model import UnexpectedError
 from kmd.lang_tools.sentence_split_spacy import split_sentences
 from kmd.text_docs.wordtoks import (
+    BOF_TOK,
+    EOF_TOK,
     is_break_or_space,
     is_tag,
     join_wordtoks,
@@ -326,7 +328,10 @@ class TextDoc:
     def size_summary(self) -> str:
         return f"{self.size(Unit.BYTES)} bytes ({self.size(Unit.WORDTOKS)} wordtoks, {self.size(Unit.PARAGRAPHS)} paragraphs, {self.size(Unit.SENTENCES)} sentences)"
 
-    def as_wordtok_to_sent(self) -> Generator[Tuple[str, SentIndex], None, None]:
+    def as_wordtok_to_sent(self, bof_eof=False) -> Generator[Tuple[str, SentIndex], None, None]:
+        if bof_eof:
+            yield BOF_TOK, self.first_index()
+
         last_para_index = len(self.paragraphs) - 1
         for para_index, para in enumerate(self.paragraphs):
             for wordtok, sent_index in para.as_wordtok_to_sent():
@@ -334,8 +339,11 @@ class TextDoc:
             if para_index != last_para_index:
                 yield PARA_BR_TOK, SentIndex(para_index, len(para.sentences) - 1)
 
-    def as_wordtoks(self) -> List[str]:
-        return [wordtok for wordtok, _sent_index in self.as_wordtok_to_sent()]
+        if bof_eof:
+            yield EOF_TOK, self.last_index()
+
+    def as_wordtoks(self, bof_eof=False) -> List[str]:
+        return [wordtok for wordtok, _sent_index in self.as_wordtok_to_sent(bof_eof=bof_eof)]
 
     def wordtok_mappings(self) -> Tuple[WordtokMapping, SentenceMapping]:
         """

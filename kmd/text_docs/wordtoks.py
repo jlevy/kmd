@@ -4,15 +4,19 @@ word tokens ("wordtoks").
 """
 
 from textwrap import dedent
-from typing import List
+from typing import List, Callable, Union
 import regex
 from kmd.config.text_styles import SYMBOL_SEP
 
 SENT_BR_TOK = "<-SENT-BR->"
 PARA_BR_TOK = "<-PARA-BR->"
+BOF_TOK = "<-BOF->"
+EOF_TOK = "<-EOF->"
 
 SENT_BR_STR = " "
 PARA_BR_STR = "\n\n"
+BOF_STR = ""
+EOF_STR = ""
 
 SPACE_TOK = " "
 
@@ -34,6 +38,10 @@ def wordtok_to_str(wordtok: str) -> str:
         return SENT_BR_STR
     if wordtok == PARA_BR_TOK:
         return PARA_BR_STR
+    if wordtok == BOF_TOK:
+        return BOF_STR
+    if wordtok == EOF_TOK:
+        return EOF_STR
     return wordtok
 
 
@@ -44,7 +52,7 @@ def wordtok_len(wordtok: str) -> int:
     return len(wordtok_to_str(wordtok))
 
 
-def raw_text_to_wordtoks(sentence: str) -> List[str]:
+def raw_text_to_wordtoks(sentence: str, bof_eof=False) -> List[str]:
     """
     Break text into word tokens, including words, whitespace, and punctuation.
     Does not parse paragraphs or sentence breaks to avoid any need for these heuristics.
@@ -52,7 +60,10 @@ def raw_text_to_wordtoks(sentence: str) -> List[str]:
     """
     wordtoks = _wordtok_pattern.findall(sentence)
     wordtoks = [wordtok if not wordtok.isspace() else SPACE_TOK for wordtok in wordtoks]
-    return wordtoks
+    if bof_eof:
+        return [BOF_TOK, *wordtoks, EOF_TOK]
+    else:
+        return wordtoks
 
 
 def join_wordtoks(wordtoks: List[str]) -> str:
@@ -84,6 +95,55 @@ def is_tag(wordtok: str) -> bool:
     return bool(_tag_pattern.match(wordtok))
 
 
+Predicate = Union[Callable[[str], bool], List[str]]
+
+
+class _TokenSearcher:
+    def __init__(self, wordtoks: List[str]):
+        self.wordtoks = wordtoks
+        self.current_idx = 0
+
+    def at(self, index: int):
+        if index is None:
+            raise KeyError("Index cannot be None")
+        # Convert negative indices to positive ones.
+        self.current_idx = index if index >= 0 else len(self.wordtoks) + index
+        return self
+
+    def seek_back(self, predicate: Predicate):
+        if isinstance(predicate, list):
+            allowed: List[str] = predicate
+            predicate = lambda x: x in allowed
+        for idx in range(self.current_idx - 1, -1, -1):
+            if predicate(self.wordtoks[idx]):
+                self.current_idx = idx
+                return self
+        raise KeyError("No matching token found before the current index")
+
+    def seek_forward(self, predicate: Predicate):
+        if isinstance(predicate, list):
+            allowed: List[str] = predicate
+            predicate = lambda x: x in allowed
+        for idx in range(self.current_idx + 1, len(self.wordtoks)):
+            if predicate(self.wordtoks[idx]):
+                self.current_idx = idx
+                return self
+        raise KeyError("No matching token found after the current index")
+
+    def get_index(self):
+        return self.current_idx
+
+    def get_token(self):
+        return self.current_idx, self.wordtoks[self.current_idx]
+
+
+def search_tokens(wordtoks: List[str]) -> _TokenSearcher:
+    """
+    Convenience function to search for offsets in an array of tokens.
+    """
+    return _TokenSearcher(wordtoks)
+
+
 ## Tests
 
 _test_doc = dedent(
@@ -99,12 +159,24 @@ _test_doc = dedent(
 
 
 def test_html_doc():
-    wordtoks = raw_text_to_wordtoks(_test_doc)
+    wordtoks = raw_text_to_wordtoks(_test_doc, bof_eof=True)
 
     print("\n---Longer HTML Doc:")
     print(SYMBOL_SEP.join(wordtoks))
 
     assert (
         SYMBOL_SEP.join(wordtoks)
-        == """Hello⎪,⎪ ⎪world⎪!⎪ ⎪This⎪ ⎪is⎪ ⎪an⎪ ⎪"⎪example⎪ ⎪sentence⎪ ⎪with⎪ ⎪punctuation⎪.⎪ ⎪"⎪Special⎪ ⎪characters⎪:⎪ ⎪@⎪#⎪%⎪^⎪&⎪*⎪(⎪)⎪"⎪ ⎪<span data-timestamp="5.60">⎪Alright⎪,⎪ ⎪guys⎪.⎪</span>⎪ ⎪<span data-timestamp="6.16">⎪Here⎪'⎪s⎪ ⎪the⎪ ⎪deal⎪.⎪</span>⎪ ⎪<span data-timestamp="7.92">⎪You⎪ ⎪can⎪ ⎪follow⎪ ⎪me⎪ ⎪on⎪ ⎪my⎪ ⎪daily⎪ ⎪workouts⎪."""
+        == """<-BOF->⎪Hello⎪,⎪ ⎪world⎪!⎪ ⎪This⎪ ⎪is⎪ ⎪an⎪ ⎪"⎪example⎪ ⎪sentence⎪ ⎪with⎪ ⎪punctuation⎪.⎪ ⎪"⎪Special⎪ ⎪characters⎪:⎪ ⎪@⎪#⎪%⎪^⎪&⎪*⎪(⎪)⎪"⎪ ⎪<span data-timestamp="5.60">⎪Alright⎪,⎪ ⎪guys⎪.⎪</span>⎪ ⎪<span data-timestamp="6.16">⎪Here⎪'⎪s⎪ ⎪the⎪ ⎪deal⎪.⎪</span>⎪ ⎪<span data-timestamp="7.92">⎪You⎪ ⎪can⎪ ⎪follow⎪ ⎪me⎪ ⎪on⎪ ⎪my⎪ ⎪daily⎪ ⎪workouts⎪.⎪<-EOF->"""
     )
+
+    print("\n---Searching tokens")
+
+    print(search_tokens(wordtoks).at(0).seek_forward(["example"]).get_token())
+    print(search_tokens(wordtoks).at(-1).seek_back(["follow"]).get_token())
+    print(search_tokens(wordtoks).at(-1).seek_back(["Special"]).seek_forward(is_tag).get_token())
+
+    assert search_tokens(wordtoks).at(0).seek_forward(["example"]).get_token() == (14, "example")
+    assert search_tokens(wordtoks).at(-1).seek_back(["follow"]).get_token() == (63, "follow")
+    assert search_tokens(wordtoks).at(-1).seek_back(["Special"]).seek_forward(
+        is_tag
+    ).get_token() == (39, '<span data-timestamp="5.60">')

@@ -184,8 +184,7 @@ def param(*args: str) -> None:
 
     for ap in ACTION_PARAMS.values():
         rprint(format_docstr(ap.name, ap.full_description()))
-
-    rprint()
+        rprint()
 
     params = workspace.get_action_params()
     if not params:
