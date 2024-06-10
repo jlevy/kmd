@@ -1,34 +1,21 @@
 from textwrap import indent
 from kmd.action_exec.action_registry import kmd_action
 from kmd.config.text_styles import EMOJI_PROCESS
-from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     EachItemAction,
 )
-from kmd.model.errors_model import InvalidInput
+from kmd.model.errors_model import InvalidInput, PreconditionFailure
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
-from kmd.model.locators import StorePath
+from kmd.provenance.source_items import get_source_item
 from kmd.text_formatting.citations import add_citation_to_text, cite_video_timestamp
-from kmd.extractors.extractors import TimestampExtractor
+from kmd.provenance.extractors import TimestampExtractor
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.token_mapping import TokenMapping
 from kmd.text_docs.wordtoks import SENT_BR_TOK
 
 log = get_logger(__name__)
-
-
-def get_source_item(item: Item) -> Item:
-    # TODO: Generalize this to traverse backwards until preconditions are met on a source item.
-
-    if not item.relations.derived_from:
-        raise InvalidInput(f"Item must be derived from another item: {item}")
-    workspace = current_workspace()
-    source_item = workspace.load(StorePath(item.relations.derived_from[0]))
-    if not source_item.body:
-        raise InvalidInput(f"Source item must have a body: {source_item}")
-    return source_item
 
 
 @kmd_action
@@ -50,7 +37,13 @@ class PullSourceTimestamps(EachItemAction):
 
     def run_item(self, item: Item) -> Item:
 
-        source_item = get_source_item(item)
+        def validate_source(source_item: Item) -> None:
+            if not source_item.body:
+                raise PreconditionFailure(f"Source item has no body: {source_item}")
+            extractor = self.extractor(source_item.body)
+            extractor.precondition_check()
+
+        source_item = get_source_item(item, validate_source)
         source_url = source_item.url
         if not item.body:
             raise InvalidInput(f"Item must have a body: {item}")

@@ -53,6 +53,12 @@ class ContentError(SkipperError):
     pass
 
 
+class PreconditionFailure(ContentError):
+    """Raised when content is not suitable for the requested operation."""
+
+    pass
+
+
 class FileFormatError(ContentError):
     """Raised when a file's content format is invalid."""
 

@@ -2,7 +2,7 @@ from abc import abstractmethod
 from textwrap import dedent
 from typing import Any
 import regex
-from kmd.model.errors_model import ContentError
+from kmd.model.errors_model import ContentError, PreconditionFailure
 from kmd.text_docs.wordtoks import SENT_BR_TOK, is_tag, raw_text_to_wordtoks
 
 
@@ -38,7 +38,7 @@ class TimestampExtractor(Extractor):
 
     def precondition_check(self) -> None:
         if not self.TIMESTAMP_RE.search(self.doc_str):
-            raise ContentError(
+            raise PreconditionFailure(
                 'Document has no timestamps of the form `<span data-timestamp="123.45">`'
             )
 
