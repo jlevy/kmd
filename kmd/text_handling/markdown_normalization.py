@@ -8,7 +8,7 @@ from typing import Generator, cast
 import marko
 from marko.renderer import Renderer
 from marko import block, inline
-from kmd.text_handling.sentence_split_regex import split_sentences_fast
+from kmd.lang_tools.sentence_split_regex import split_sentences_fast
 
 
 class MarkdownNormalizer(Renderer):

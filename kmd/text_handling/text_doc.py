@@ -13,7 +13,7 @@ import regex
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
 from kmd.model.errors_model import UnexpectedError
-from kmd.text_handling.sentence_split_spacy import split_sentences
+from kmd.lang_tools.sentence_split_spacy import split_sentences
 from kmd.text_handling.wordtoks import (
     is_break_or_space,
     is_tag,

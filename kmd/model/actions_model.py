@@ -11,7 +11,7 @@ from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ContentError, InvalidInput
 from kmd.model.items_model import Item
 from kmd.model.language_models import MODEL_LIST
-from kmd.text_handling.inflection import plural
+from kmd.lang_tools.inflection import plural
 from kmd.text_handling.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
 

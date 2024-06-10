@@ -16,7 +16,7 @@ from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.model.canon_url import canonicalize_url
 from kmd.text_handling.text_formatting import format_lines
 from kmd.text_handling.doc_formatting import normalize_formatting
-from kmd.text_handling.inflection import plural
+from kmd.lang_tools.inflection import plural
 from kmd.util.file_utils import move_file
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier

@@ -9,9 +9,6 @@ import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-
-from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState
-from kmd.util.log_calls import log_tallies
 import time
 from typing import Callable, List
 from rich import print as rprint
@@ -28,6 +25,8 @@ from kmd.actions.action_exec import run_action
 from kmd.actions.action_registry import load_all_actions
 from kmd.commands import commands
 from kmd.model.actions_model import Action
+from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState
+from kmd.util.log_calls import log_tallies
 
 
 setup()
