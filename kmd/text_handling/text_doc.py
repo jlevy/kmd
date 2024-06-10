@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pprint import pprint
 from textwrap import dedent
-from typing import Dict, Generator, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Generator, Iterable, List, Optional, Tuple
 import regex
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
@@ -18,13 +18,14 @@ from kmd.text_handling.wordtoks import (
     is_break_or_space,
     is_tag,
     join_wordtoks,
-    sentence_as_wordtoks,
+    raw_text_to_wordtoks,
     SENT_BR_STR,
     SENT_BR_TOK,
     PARA_BR_STR,
     PARA_BR_TOK,
     wordtok_len,
 )
+from kmd.util.log_calls import tally_calls
 
 log = get_logger(__name__)
 
@@ -34,7 +35,7 @@ def size_in_bytes(text: str) -> int:
 
 
 def size_in_wordtoks(text: str) -> int:
-    return len(sentence_as_wordtoks(text))
+    return len(raw_text_to_wordtoks(text))
 
 
 class Unit(Enum):
@@ -85,7 +86,7 @@ class Sentence:
         return size(self.text, unit)
 
     def as_wordtoks(self) -> List[str]:
-        return sentence_as_wordtoks(self.text)
+        return raw_text_to_wordtoks(self.text)
 
     def __str__(self):
         return repr(self.text)
@@ -98,6 +99,7 @@ class Paragraph:
     char_offset: int  # Offset of the paragraph in the original text.
 
     @classmethod
+    @tally_calls(level="warning", min_total_runtime=5)
     def from_text(cls, text: str, char_offset: int = -1) -> "Paragraph":
         sent_values = split_sentences(text)
         sent_offset = 0
@@ -153,6 +155,7 @@ class TextDoc:
     # TODO: Could lazily compute paragraphs and wordtoks only for better performance.
 
     @classmethod
+    @tally_calls(level="warning", min_total_runtime=5)
     def from_text(cls, text: str) -> "TextDoc":
         text = text.strip()
         paragraphs = []
@@ -192,6 +195,15 @@ class TextDoc:
 
     def get_sent(self, index: SentIndex) -> Sentence:
         return self.paragraphs[index.para_index].sentences[index.sent_index]
+
+    def set_sent(self, index: SentIndex, sent_str: str) -> None:
+        old_sent = self.get_sent(index)
+        self.paragraphs[index.para_index].sentences[index.sent_index] = Sentence(
+            sent_str, old_sent.char_offset
+        )
+
+    def update_sent(self, index: SentIndex, transform: Callable[[str], str]) -> None:
+        self.set_sent(index, transform(self.get_sent(index).text))
 
     def seek_to_sent(self, offset: int, unit: Unit) -> Tuple[SentIndex, int]:
         """
@@ -546,11 +558,11 @@ _sentence_test_html = 'This is <span data-timestamp="1.234">a test</span>.'
 def test_wordtokization():
 
     for sentence in _sentence_tests:
-        wordtoks = sentence_as_wordtoks(sentence)
+        wordtoks = raw_text_to_wordtoks(sentence)
         reassembled_sentence = "".join(wordtoks)
         assert reassembled_sentence == sentence
 
-    assert sentence_as_wordtoks("Multiple     spaces and tabs\tand\nnewlines in between.") == [
+    assert raw_text_to_wordtoks("Multiple     spaces and tabs\tand\nnewlines in between.") == [
         "Multiple",
         " ",
         "spaces",
@@ -568,10 +580,10 @@ def test_wordtokization():
         "between",
         ".",
     ]
-    assert sentence_as_wordtoks("") == []
-    assert sentence_as_wordtoks("   ") == [" "]
+    assert raw_text_to_wordtoks("") == []
+    assert raw_text_to_wordtoks("   ") == [" "]
 
-    assert sentence_as_wordtoks(_sentence_test_html) == [
+    assert raw_text_to_wordtoks(_sentence_test_html) == [
         "This",
         " ",
         "is",
@@ -585,7 +597,7 @@ def test_wordtokization():
     ]
 
     assert len(_sentence_test_html) == sum(
-        wordtok_len(wordtok) for wordtok in sentence_as_wordtoks(_sentence_test_html)
+        wordtok_len(wordtok) for wordtok in raw_text_to_wordtoks(_sentence_test_html)
     )
 
 

@@ -3,8 +3,10 @@ Support for treating text as a sequence of word, punctuation, or whitespace
 word tokens ("wordtoks").
 """
 
+from textwrap import dedent
 from typing import List
 import regex
+from kmd.config.text_styles import SYMBOL_SEP
 
 SENT_BR_TOK = "<-SENT-BR->"
 PARA_BR_TOK = "<-PARA-BR->"
@@ -42,10 +44,11 @@ def wordtok_len(wordtok: str) -> int:
     return len(wordtok_to_str(wordtok))
 
 
-def sentence_as_wordtoks(sentence: str) -> List[str]:
+def raw_text_to_wordtoks(sentence: str) -> List[str]:
     """
-    Break a sentence into word tokens, including words, whitespace, and punctuation.
-    Normalizes whitespace to a single space character.
+    Break text into word tokens, including words, whitespace, and punctuation.
+    Does not parse paragraphs or sentence breaks to avoid any need for these heuristics.
+    Normalizes all whitespace to a single space character.
     """
     wordtoks = _wordtok_pattern.findall(sentence)
     wordtoks = [wordtok if not wordtok.isspace() else SPACE_TOK for wordtok in wordtoks]
@@ -79,3 +82,29 @@ def is_tag(wordtok: str) -> bool:
     Is this wordtok an HTML tag?
     """
     return bool(_tag_pattern.match(wordtok))
+
+
+## Tests
+
+_test_doc = dedent(
+    """
+    Hello, world!
+    This is an "example sentence with punctuation.
+    "Special characters: @#%^&*()"
+    <span data-timestamp="5.60">Alright, guys.</span>
+    <span data-timestamp="6.16">Here's the deal.</span>
+    <span data-timestamp="7.92">You can follow me on my daily workouts.
+    """
+).strip()
+
+
+def test_html_doc():
+    wordtoks = raw_text_to_wordtoks(_test_doc)
+
+    print("\n---Longer HTML Doc:")
+    print(SYMBOL_SEP.join(wordtoks))
+
+    assert (
+        SYMBOL_SEP.join(wordtoks)
+        == """Hello⎪,⎪ ⎪world⎪!⎪ ⎪This⎪ ⎪is⎪ ⎪an⎪ ⎪"⎪example⎪ ⎪sentence⎪ ⎪with⎪ ⎪punctuation⎪.⎪ ⎪"⎪Special⎪ ⎪characters⎪:⎪ ⎪@⎪#⎪%⎪^⎪&⎪*⎪(⎪)⎪"⎪ ⎪<span data-timestamp="5.60">⎪Alright⎪,⎪ ⎪guys⎪.⎪</span>⎪ ⎪<span data-timestamp="6.16">⎪Here⎪'⎪s⎪ ⎪the⎪ ⎪deal⎪.⎪</span>⎪ ⎪<span data-timestamp="7.92">⎪You⎪ ⎪can⎪ ⎪follow⎪ ⎪me⎪ ⎪on⎪ ⎪my⎪ ⎪daily⎪ ⎪workouts⎪."""
+    )

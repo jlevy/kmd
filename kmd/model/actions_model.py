@@ -40,6 +40,12 @@ ACTION_PARAMS = {
     )
 }
 
+# TODO: Add params for:
+# - window settings
+# - source extractor
+# - citation formatter
+# - chunk size (e.g. citations per sentence or per pagagraph)
+
 
 @dataclass
 class ExpectedArgs:

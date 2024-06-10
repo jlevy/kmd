@@ -18,7 +18,7 @@ from kmd.text_handling.text_doc import (
 )
 from kmd.text_handling.wordtoks import (
     join_wordtoks,
-    sentence_as_wordtoks,
+    raw_text_to_wordtoks,
 )
 
 
@@ -29,7 +29,7 @@ def _truncate_sent_at_wordtok_offset(sent: Sentence, offset: int) -> Sentence:
     """
     Truncate a sentence to the given number of wordtoks.
     """
-    wordtoks = sentence_as_wordtoks(sent.text)
+    wordtoks = raw_text_to_wordtoks(sent.text)
     truncated_wordtoks = wordtoks[:offset]
     joined = join_wordtoks(truncated_wordtoks)
     return Sentence(joined, sent.char_offset)
