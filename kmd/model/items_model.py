@@ -12,8 +12,8 @@ from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import FileFormatError
 from kmd.model.locators import Locator
-from kmd.text_handling.markdown_util import markdown_to_html
-from kmd.text_handling.text_formatting import (
+from kmd.text_formatting.markdown_util import markdown_to_html
+from kmd.text_formatting.text_formatting import (
     abbreviate_phrase_in_middle,
     clean_title,
     plaintext_to_html,

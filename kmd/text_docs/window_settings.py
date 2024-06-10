@@ -1,5 +1,5 @@
-from kmd.text_handling.sliding_transforms import WINDOW_BR_SEP, WindowSettings
-from kmd.text_handling.text_doc import Unit
+from kmd.text_docs.sliding_transforms import WINDOW_BR_SEP, WindowSettings
+from kmd.text_docs.text_doc import Unit
 
 # Sliding, overlapping word-based window. 2K wordtoks is several paragraphs.
 WINDOW_2K_WORDTOKS = WindowSettings(

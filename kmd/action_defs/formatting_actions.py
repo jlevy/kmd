@@ -6,7 +6,7 @@ from kmd.model.actions_model import (
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
-from kmd.text_handling.text_formatting import html_to_plaintext
+from kmd.text_formatting.text_formatting import html_to_plaintext
 
 log = get_logger(__name__)
 

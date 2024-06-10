@@ -12,9 +12,9 @@ from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item
 from kmd.config import setup
 from kmd.config.logger import get_logger
-from kmd.text_handling.text_diffs import ALL_CHANGES, DiffOpFilter
-from kmd.text_handling.text_doc import TextDoc
-from kmd.text_handling.sliding_transforms import (
+from kmd.text_docs.text_diffs import ALL_CHANGES, DiffOpFilter
+from kmd.text_docs.text_doc import TextDoc
+from kmd.text_docs.sliding_transforms import (
     WindowSettings,
     filtered_transform,
 )

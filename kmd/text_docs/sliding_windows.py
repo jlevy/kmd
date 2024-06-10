@@ -8,15 +8,15 @@ from pprint import pprint
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError
 from kmd.model.items_model import Format
-from kmd.text_handling.doc_formatting import normalize_formatting
-from kmd.text_handling.text_doc import (
+from kmd.text_formatting.doc_formatting import normalize_formatting
+from kmd.text_docs.text_doc import (
     SentIndex,
     Sentence,
     TextDoc,
     Unit,
     size,
 )
-from kmd.text_handling.wordtoks import (
+from kmd.text_docs.wordtoks import (
     join_wordtoks,
     raw_text_to_wordtoks,
 )

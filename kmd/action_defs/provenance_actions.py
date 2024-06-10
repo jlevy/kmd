@@ -10,11 +10,11 @@ from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.model.locators import StorePath
-from kmd.text_handling.citations import add_citation_to_text, cite_video_timestamp
-from kmd.text_handling.extractors import TimestampExtractor
-from kmd.text_handling.text_doc import TextDoc
-from kmd.text_handling.token_mapping import TokenMapping
-from kmd.text_handling.wordtoks import SENT_BR_TOK
+from kmd.text_formatting.citations import add_citation_to_text, cite_video_timestamp
+from kmd.extractors.extractors import TimestampExtractor
+from kmd.text_docs.text_doc import TextDoc
+from kmd.text_docs.token_mapping import TokenMapping
+from kmd.text_docs.wordtoks import SENT_BR_TOK
 
 log = get_logger(__name__)
 

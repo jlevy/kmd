@@ -14,8 +14,8 @@ from kmd.model.locators import StorePath
 from kmd.model.items_model import ITEM_FIELDS, FileExt, Format, Item, ItemId, ItemType
 from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
 from kmd.model.canon_url import canonicalize_url
-from kmd.text_handling.text_formatting import format_lines
-from kmd.text_handling.doc_formatting import normalize_formatting
+from kmd.text_formatting.text_formatting import format_lines
+from kmd.text_formatting.doc_formatting import normalize_formatting
 from kmd.lang_tools.inflection import plural
 from kmd.util.file_utils import move_file
 from kmd.util.type_utils import not_none

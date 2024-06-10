@@ -11,16 +11,16 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_PROCESS, EMOJI_WARN
 from kmd.model.errors_model import UnexpectedError
 from kmd.model.items_model import Format
-from kmd.text_handling.markdown_normalization import normalize_markdown
-from kmd.text_handling.sliding_windows import sliding_para_window, sliding_word_window
-from kmd.text_handling.text_diffs import ALL_CHANGES, DiffOpFilter, diff_docs, find_best_alignment
-from kmd.text_handling.text_doc import (
+from kmd.text_formatting.markdown_normalization import normalize_markdown
+from kmd.text_docs.sliding_windows import sliding_para_window, sliding_word_window
+from kmd.text_docs.text_diffs import ALL_CHANGES, DiffOpFilter, diff_docs, find_best_alignment
+from kmd.text_docs.text_doc import (
     Paragraph,
     TextDoc,
     Unit,
 )
-from kmd.text_handling.text_formatting import format_lines
-from kmd.text_handling.wordtoks import (
+from kmd.text_formatting.text_formatting import format_lines
+from kmd.text_docs.wordtoks import (
     join_wordtoks,
 )
 

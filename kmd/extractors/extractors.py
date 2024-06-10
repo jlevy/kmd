@@ -1,10 +1,9 @@
 from abc import abstractmethod
 from textwrap import dedent
 from typing import Any
-
 import regex
 from kmd.model.errors_model import ContentError
-from kmd.text_handling.wordtoks import SENT_BR_TOK, is_tag, raw_text_to_wordtoks
+from kmd.text_docs.wordtoks import SENT_BR_TOK, is_tag, raw_text_to_wordtoks
 
 
 class Extractor:

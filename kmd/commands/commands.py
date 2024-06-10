@@ -16,7 +16,7 @@ from kmd.file_storage.workspaces import canon_workspace_name, current_workspace,
 from kmd.model.actions_model import ACTION_PARAMS
 from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath
-from kmd.text_handling.text_formatting import format_lines
+from kmd.text_formatting.text_formatting import format_lines
 from kmd.lang_tools.inflection import plural
 from kmd.config.logger import LOG_PATH, get_logger
 from kmd.util.obj_utils import remove_values

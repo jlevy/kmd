@@ -8,7 +8,7 @@ from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidStoreState
 from kmd.model.items_model import Item
 from kmd.model.locators import StorePath
-from kmd.text_handling.text_formatting import format_lines
+from kmd.text_formatting.text_formatting import format_lines
 from kmd.util.parse_utils import format_key_value
 from kmd.util.type_utils import not_none
 from kmd.commands import commands
