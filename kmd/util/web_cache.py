@@ -100,7 +100,7 @@ class WebCacheMode(Enum):
     UPDATE = 3
 
 
-class TestingModeException(Exception):
+class InvalidCacheState(RuntimeError):
     pass
 
 
@@ -149,7 +149,7 @@ class WebCache(DirStore):
 
     def _download(self, url):
         if self.mode == WebCacheMode.TEST:
-            raise TestingModeException("_download called in test mode")
+            raise InvalidCacheState("_download called in test mode")
 
         url = normalize_url(url)
         local_path = self.path_for(url, folder=self.folder, suffix=self.suffix)
