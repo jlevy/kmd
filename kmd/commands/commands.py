@@ -52,7 +52,7 @@ def kmd_help() -> None:
     """
     kmd help. Lists all available actions.
     """
-    from kmd.actions.action_registry import load_all_actions
+    from kmd.action_exec.action_registry import load_all_actions
 
     rprint(Text("\nAvailable kmd commands:\n", style=COLOR_HEADING))
 

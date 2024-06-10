@@ -1,5 +1,5 @@
 from textwrap import dedent
-from kmd.actions.action_registry import define_llm_action
+from kmd.action_exec.action_registry import define_llm_action
 from kmd.config.logger import get_logger
 from kmd.model.language_models import LLM
 from kmd.text_docs.sliding_transforms import WindowSettings, WINDOW_BR_SEP

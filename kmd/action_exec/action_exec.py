@@ -1,7 +1,7 @@
 from typing import List, cast
 from strif import abbreviate_str
-from kmd.actions.action_registry import look_up_action
-from kmd.actions.system_actions import FETCH_ACTION, FETCH_ACTION_NAME
+from kmd.action_exec.action_registry import look_up_action
+from kmd.action_exec.system_actions import FETCH_ACTION, FETCH_ACTION_NAME
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.model.actions_model import Action, ActionResult
 from kmd.model.canon_url import canonicalize_url

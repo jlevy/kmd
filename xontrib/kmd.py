@@ -21,8 +21,8 @@ from kmd.config.settings import media_cache_dir
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_TIME, EMOJI_WARN
 from kmd.file_storage.workspaces import current_workspace
-from kmd.actions.action_exec import run_action
-from kmd.actions.action_registry import load_all_actions
+from kmd.action_exec.action_exec import run_action
+from kmd.action_exec.action_registry import load_all_actions
 from kmd.commands import commands
 from kmd.model.actions_model import Action
 from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState

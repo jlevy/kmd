@@ -1,6 +1,6 @@
 from typing import Dict, Type
 from cachetools import cached
-from kmd.actions.llm_action_base import LLMAction
+from kmd.action_exec.llm_action_base import LLMAction
 from kmd.model.actions_model import Action
 from kmd.action_defs import import_all_actions
 from kmd.config.logger import get_logger

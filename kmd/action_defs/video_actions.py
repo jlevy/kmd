@@ -1,5 +1,5 @@
 from kmd.media.video import video_download_audio, youtube
-from kmd.actions.action_registry import kmd_action
+from kmd.action_exec.action_registry import kmd_action
 from kmd.media.video import video_transcription
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,

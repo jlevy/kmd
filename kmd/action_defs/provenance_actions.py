@@ -1,5 +1,5 @@
 from textwrap import indent
-from kmd.actions.action_registry import kmd_action
+from kmd.action_exec.action_registry import kmd_action
 from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import (

@@ -1,4 +1,4 @@
-from kmd.actions.action_registry import look_up_action
+from kmd.action_exec.action_registry import look_up_action
 
 FETCH_ACTION_NAME = "fetch_page"
 

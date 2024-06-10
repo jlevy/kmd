@@ -1,5 +1,5 @@
-from kmd.actions.action_registry import kmd_action
-from kmd.actions.action_registry import kmd_action
+from kmd.action_exec.action_registry import kmd_action
+from kmd.action_exec.action_registry import kmd_action
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, ONE_ARG, Action, ActionInput, ActionResult
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import FileExt, Format, Item, ItemType
