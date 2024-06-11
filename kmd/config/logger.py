@@ -18,6 +18,12 @@ LOG_PATH = LOG_ROOT / LOG_FILE
 LOG_OBJECTS = LOG_ROOT / "objects"
 
 
+class FlushingStreamHandler(logging.StreamHandler):
+    def emit(self, record):
+        super().emit(record)
+        self.flush()
+
+
 def logging_setup():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -27,11 +33,10 @@ def logging_setup():
     # Verbose logging to file, important logging to console.
     file_handler = logging.FileHandler(LOG_PATH)
     file_handler.setLevel(INFO)
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(WARNING)
-
     file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
-    # TODO: Add colors!
+
+    console_handler = FlushingStreamHandler(sys.stdout)
+    console_handler.setLevel(WARNING)
     console_handler.setFormatter(Formatter("%(message)s"))
 
     root_logger = logging.getLogger()
