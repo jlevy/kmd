@@ -85,7 +85,9 @@ def get_secret(name) -> str:
 def api_setup():
     secret_openai = get_secret("secret_openai")
     os.environ["OPENAI_API_KEY"] = secret_openai
-    openai.api_key = secret_openai
+
+    secret_anthropic = get_secret("secret_anthropic")
+    os.environ["ANTHROPIC_API_KEY"] = secret_anthropic
 
     secret_deepgram = get_secret("secret_deepgram")
     os.environ["DEEPGRAM_API_KEY"] = secret_deepgram

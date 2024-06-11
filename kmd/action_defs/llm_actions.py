@@ -55,7 +55,7 @@ define_llm_action(
     name="proofread",
     friendly_name="Proofread and Correct",
     description="Proofread text, only fixing spelling, punctuation, and grammar.",
-    model=LLM.gpt_3_5_turbo_16k_0613.value,
+    model=LLM.gpt_3_5_turbo.value,
     system_message=dedent(
         """
         You are a careful and precise editor.
