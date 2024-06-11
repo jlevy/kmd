@@ -4,10 +4,14 @@ from typing import Any, Optional
 import warnings
 import logging
 from logging import INFO, WARNING, Formatter
-import sys
+from rich import reconfigure
 from slugify import slugify
 from strif import new_timestamped_uid, atomic_output_file
-from kmd.config.text_styles import EMOJI_SAVED
+from rich.logging import RichHandler
+from rich.highlighter import RegexHighlighter, _combine_regex
+from rich.theme import Theme
+from rich.console import Console
+from kmd.config.text_styles import EMOJI_SAVED, RICH_STYLES
 
 LOG_ROOT = Path("./.kmd_logs")
 
@@ -18,10 +22,36 @@ LOG_PATH = LOG_ROOT / LOG_FILE
 LOG_OBJECTS = LOG_ROOT / "objects"
 
 
-class FlushingStreamHandler(logging.StreamHandler):
-    def emit(self, record):
-        super().emit(record)
-        self.flush()
+class KmdHighlighter(RegexHighlighter):
+    """Highlights the text typically produced from ``__repr__`` methods."""
+
+    base_style = "kmd."
+    highlights = [
+        r"(?P<tag_start><)(?P<tag_name>[-\w.:|]*)(?P<tag_contents>[\w\W]*)(?P<tag_end>>)",
+        r'(?P<attrib_name>[\w_]{1,50})=(?P<attrib_value>"?[\w_]+"?)?',
+        r"(?P<brace>[][{}()])",
+        _combine_regex(
+            r"(?P<ipv4>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+            r"(?P<ipv6>([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})",
+            r"(?P<eui64>(?:[0-9A-Fa-f]{1,2}-){7}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{1,2}:){7}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{4}\.){3}[0-9A-Fa-f]{4})",
+            r"(?P<eui48>(?:[0-9A-Fa-f]{1,2}-){5}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{1,2}:){5}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{4}\.){2}[0-9A-Fa-f]{4})",
+            r"(?P<uuid>[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})",
+            r"(?P<call>[\w.]*?)\(",
+            r"\b(?P<bool_true>True)\b|\b(?P<bool_false>False)\b|\b(?P<none>None)\b",
+            r"(?P<ellipsis>\.\.\.)",
+            r"(?P<number_complex>(?<!\w)(?:\-?[0-9]+\.?[0-9]*(?:e[-+]?\d+?)?)(?:[-+](?:[0-9]+\.?[0-9]*(?:e[-+]?\d+)?))?j)",
+            r"(?P<number>(?<!\w)\-?[0-9]+\.?[0-9]*(e[-+]?\d+?)?\b|0x[0-9a-fA-F]*)",
+            r"(?P<path>\B(/[-\w._+]+)*\/)(?P<filename>[-\w._+]*)?",
+            r"(?<![\\\w])(?P<str>b?'''.*?(?<!\\)'''|b?'.*?(?<!\\)'|b?\"\"\".*?(?<!\\)\"\"\"|b?\".*?(?<!\\)\")",
+            r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
+        ),
+    ]
+
+_custom_theme = Theme(RICH_STYLES)
+
+console = Console(theme=_custom_theme)
+
+reconfigure(theme=_custom_theme)
 
 
 def logging_setup():
@@ -35,8 +65,7 @@ def logging_setup():
     file_handler.setLevel(INFO)
     file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
 
-    console_handler = FlushingStreamHandler(sys.stdout)
-    console_handler.setLevel(WARNING)
+    console_handler = RichHandler(level=WARNING, show_time=False, show_path=False, show_level=False, highlighter=KmdHighlighter())
     console_handler.setFormatter(Formatter("%(message)s"))
 
     root_logger = logging.getLogger()
