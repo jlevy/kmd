@@ -5,62 +5,18 @@ The base classes for Actions and other types associated with actions.
 from abc import abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Dict, List, Optional
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ContentError, InvalidInput
 from kmd.model.items_model import Item
-from kmd.model.language_models import MODEL_LIST
 from kmd.lang_tools.inflection import plural
+from kmd.model.params_model import ACTION_PARAMS, ChunkSize
 from kmd.text_formatting.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
 
 
 log = get_logger(__name__)
-
-
-class ChunkSize(Enum):
-    """
-    The size of a chunk used by different actions.
-    TODO: Could add a quantity to offer more flexibility.
-    """
-
-    PARAGRAPH = "paragraph"
-    SENTENCE = "sentence"
-
-
-@dataclass(frozen=True)
-class ActionParam:
-    name: str
-    description: str
-    valid_values: Optional[list[str]]
-
-    def full_description(self) -> str:
-        desc = self.description
-        if self.valid_values:
-            desc += f" Allowed values are: {', '.join(self.valid_values)}"
-        return desc
-
-
-ACTION_PARAMS = {
-    "model": ActionParam(
-        "model",
-        "The name of the LLM.",
-        MODEL_LIST,
-    ),
-    "chunk_size": ActionParam(
-        "chunk_size",
-        "Process what size chunks?",
-        [chunk_size.value for chunk_size in ChunkSize],
-    ),
-}
-
-# TODO: Add params for:
-# - window settings
-# - source extractor
-# - citation formatter
-# - chunk size (e.g. citations per sentence or per pagagraph)
 
 
 @dataclass
