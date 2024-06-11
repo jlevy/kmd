@@ -234,6 +234,8 @@ def archive(*paths: str) -> None:
         workspace.archive(store_path)
     command_output("Archived:\n%s", format_lines(store_paths))
 
+    select()
+
 
 @kmd_command
 def unarchive(*paths: str) -> None:

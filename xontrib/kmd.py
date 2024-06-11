@@ -49,7 +49,7 @@ def _elide_traceback(exception_str: str) -> str:
             and not line.lstrip().startswith("The above exception")
             and not line.startswith("    ")
         ]
-        + ["See log for more details."]
+        + ["Run `logs` for more details."]
     )
 
 
@@ -64,7 +64,7 @@ class CallableAction:
             # We don't return the result to keep the shell output clean.
         except _common_exceptions as e:
             rprint(Text(f"Action error: {_elide_traceback(str(e))}", "bright_red"))
-            log.info("Action error: %s", e)
+            log.info("Action error: %s", e, exc_info=True)
         finally:
             end_time = time.time()
             elapsed = end_time - start_time

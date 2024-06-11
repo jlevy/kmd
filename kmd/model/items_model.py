@@ -170,6 +170,11 @@ class Item:
     NON_METADATA_FIELDS = ["file_ext", "body", "external_path", "is_binary", "store_path"]
     OPTIONAL_FIELDS = ["extra"]
 
+    def __post_init__(self):
+        assert type(self.type) == ItemType
+        assert self.format is None or type(self.format) == Format
+        assert self.file_ext is None or type(self.file_ext) == FileExt
+
     @classmethod
     def from_dict(cls, item_dict: dict[str, Any], **kwargs) -> "Item":
         """
@@ -261,7 +266,7 @@ class Item:
             raise FileFormatError(f"Item is not a config: {self}")
         if not self.body:
             raise FileFormatError(f"Config item has no body: {self}")
-        if self.format != Format.yaml.value:
+        if self.format != Format.yaml:
             raise FileFormatError(f"Config item is not YAML: {self.format}: {self}")
         return from_yaml_string(self.body)
 
@@ -291,21 +296,17 @@ class Item:
         return self.body or ""
 
     def body_as_html(self) -> str:
-        if str(self.format) == str(Format.html):
+        if self.format == Format.html:
             return self.body_text()
-        elif str(self.format) == str(Format.plaintext):
+        elif self.format == Format.plaintext:
             return plaintext_to_html(self.body_text())
-        elif str(self.format) == str(Format.markdown):
+        elif self.format == Format.markdown:
             return markdown_to_html(self.body_text())
 
         raise ValueError(f"Cannot convert item of type {self.format} to HTML: {self}")
 
     def is_url_resource(self) -> bool:
-        return (
-            self.type == ItemType.resource
-            and self.format == Format.url.value
-            and self.url is not None
-        )
+        return self.type == ItemType.resource and self.format == Format.url and self.url is not None
 
     def new_copy_with(self, **kwargs) -> "Item":
         """
