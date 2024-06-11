@@ -32,10 +32,14 @@ def find_upstream_item(item: Item, predicate: Callable[[Item], None]) -> Item:
     for source_item in source_items:
         try:
             predicate(source_item)
-            log.message("Source item passes validator: %s", source_item.store_path)
+            log.message("Found source item that matches requirements: %s", source_item.store_path)
             return source_item
         except PreconditionFailure as e:
-            log.message("Source item failed validator: %s: %s", source_item.store_path, e)
+            log.message(
+                "Skipping source item that does not match requirements: %s: %s",
+                source_item.store_path,
+                e,
+            )
 
     for source_item in source_items:
         try:

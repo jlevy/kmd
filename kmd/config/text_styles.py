@@ -69,14 +69,15 @@ RICH_STYLES = {
     "kmd.attrib_name": Style(color=COLOR_KEY, italic=False),
     "kmd.attrib_equal": Style(bold=True),
     "kmd.attrib_value": Style(color=COLOR_VALUE, italic=False),
-    "kmd.number": Style(color=COLOR_KEY, bold=True, italic=False),
-    "kmd.number_complex": Style(color=COLOR_KEY, bold=True, italic=False),  # same
+    "kmd.number": Style(color=COLOR_KEY, italic=False),
+    "kmd.duration": Style(color=COLOR_KEY, italic=False),
+    "kmd.number_complex": Style(color=COLOR_KEY, italic=False),  # same
     "kmd.bool_true": Style(color=COLOR_SUCCESSS, italic=True),
     "kmd.bool_false": Style(color=COLOR_ERROR, italic=True),
     "kmd.none": Style(color=COLOR_VALUE, italic=True),
     "kmd.url": Style(underline=True, color=COLOR_VALUE, italic=False, bold=False),
     "kmd.uuid": Style(color=COLOR_LITERAL, bold=False),
-    "kmd.call": Style(color=COLOR_VALUE, bold=True),
+    "kmd.call": Style(color=COLOR_VALUE),
     "kmd.path": Style(color=COLOR_VALUE),
     "kmd.filename": Style(color=COLOR_VALUE),
 }
