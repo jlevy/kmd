@@ -16,7 +16,13 @@ def format_timestamp(timestamp: float) -> str:
         return f"{int(minutes):02}:{int(seconds):02}"
 
 
-def cite_video_timestamp(base_url: Url, timestamp: float) -> str:
+def format_citation(citation: str) -> str:
+    return f"""<span class="citation">〔{citation}〕</span>"""  # Other options:〔〘⟦〚❲⟪〖⟬
+
+
+def format_timestamp_citation(base_url: Url, timestamp: float) -> str:
     formatted_timestamp = format_timestamp(timestamp)
     timestamp_url = timestamp_video_url(base_url, timestamp)
-    return f"[{formatted_timestamp}]({timestamp_url})"
+    return (
+        f"""<a href="{timestamp_url}"><span class="citation">〔{formatted_timestamp}〕</span></a>"""
+    )

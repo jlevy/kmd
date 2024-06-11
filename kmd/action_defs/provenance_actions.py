@@ -6,11 +6,11 @@ from kmd.model.actions_model import (
     ChunkSize,
     EachItemAction,
 )
-from kmd.model.errors_model import InvalidInput, PreconditionFailure, UnexpectedError
+from kmd.model.errors_model import InvalidInput, UnexpectedError
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.provenance.source_items import find_upstream_item, is_timestamped_text
-from kmd.text_formatting.citations import add_citation_to_text, cite_video_timestamp
+from kmd.text_formatting.citations import add_citation_to_text, format_timestamp_citation
 from kmd.provenance.extractors import TimestampExtractor
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.token_mapping import TokenMapping
@@ -126,7 +126,7 @@ class PullSourceTimestamps(EachItemAction):
                     item_doc.update_sent(
                         sent_index,
                         lambda old_sent: add_citation_to_text(
-                            old_sent, cite_video_timestamp(source_url, timestamp)
+                            old_sent, format_timestamp_citation(source_url, timestamp)
                         ),
                     )
 

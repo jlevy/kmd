@@ -20,9 +20,10 @@
         --color-primary: #488189;
         --color-primary-light: #79bbc5;
         --color-secondary: #6b7280;
-        --color-hover: #d1d5db;
         --color-bg: #f3f4f6;
         --color-text: #111827;
+        --color-hover: #d1d5db;
+        --color-hover-bg: #eff0f1;
       }
 
       body {
@@ -165,6 +166,22 @@
 
       .hidden {
         display: none;
+      }
+
+      /* Content styles: */
+
+      .citation {
+        font-family: "Varta", sans-serif;
+        color: var(--color-secondary);
+        display: inline-block;
+        height: 1.3rem;
+        transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        border-radius: 0.2rem;
+      }
+
+      .citation:hover {
+        background-color: var(--color-hover-bg);
+        color: var(--color-primary);
       }
     </style>
   </head>
