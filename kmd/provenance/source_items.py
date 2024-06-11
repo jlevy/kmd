@@ -4,11 +4,19 @@ from kmd.model.errors_model import InvalidInput, PreconditionFailure
 from kmd.model.items_model import Item
 from kmd.config.logger import get_logger
 from kmd.model.locators import StorePath
+from kmd.provenance.extractors import TimestampExtractor
 
 log = get_logger(__name__)
 
 
-def get_source_item(item: Item, validator: Callable[[Item], None]) -> Item:
+def is_timestamped_text(source_item: Item) -> None:
+    if not source_item.body:
+        raise PreconditionFailure(f"Source item has no body: {source_item}")
+    extractor = TimestampExtractor(source_item.body)
+    extractor.precondition_check()
+
+
+def find_upstream_item(item: Item, predicate: Callable[[Item], None]) -> Item:
     """
     Breadth-first search up the `derived_from` provenance tree to find the first item that
     the validator accepts. Validator should throw `PreconditionFailure`.
@@ -23,7 +31,7 @@ def get_source_item(item: Item, validator: Callable[[Item], None]) -> Item:
 
     for source_item in source_items:
         try:
-            validator(source_item)
+            predicate(source_item)
             log.message("Source item passes validator: %s", source_item.store_path)
             return source_item
         except PreconditionFailure as e:
@@ -31,7 +39,7 @@ def get_source_item(item: Item, validator: Callable[[Item], None]) -> Item:
 
     for source_item in source_items:
         try:
-            return get_source_item(source_item, validator)
+            return find_upstream_item(source_item, predicate)
         except InvalidInput:
             pass
 

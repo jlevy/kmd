@@ -5,6 +5,7 @@ The base classes for Actions and other types associated with actions.
 from abc import abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Dict, List, Optional
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_WARN
@@ -17,6 +18,16 @@ from kmd.util.obj_utils import abbreviate_obj
 
 
 log = get_logger(__name__)
+
+
+class ChunkSize(Enum):
+    """
+    The size of a chunk used by different actions.
+    TODO: Could add a quantity to offer more flexibility.
+    """
+
+    PARAGRAPH = "paragraph"
+    SENTENCE = "sentence"
 
 
 @dataclass(frozen=True)
@@ -37,7 +48,12 @@ ACTION_PARAMS = {
         "model",
         "The name of the LLM.",
         MODEL_LIST,
-    )
+    ),
+    "chunk_size": ActionParam(
+        "chunk_size",
+        "Process what size chunks?",
+        [chunk_size.value for chunk_size in ChunkSize],
+    ),
 }
 
 # TODO: Add params for:
@@ -81,6 +97,7 @@ class Action:
     description: str
     implementation: str = "builtin"
     model: Optional[str] = None
+    chunk_size: Optional[ChunkSize] = None
     title_template: Optional[str] = None
     template: Optional[str] = None
     system_message: Optional[str] = None

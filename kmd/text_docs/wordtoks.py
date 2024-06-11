@@ -8,6 +8,7 @@ from typing import List, Callable, Union
 import regex
 from kmd.config.text_styles import SYMBOL_SEP
 
+# Note these parse like as tokens like HTML, so they can safely be mixed into inputs if desired.
 SENT_BR_TOK = "<-SENT-BR->"
 PARA_BR_TOK = "<-PARA-BR->"
 BOF_TOK = "<-BOF->"
@@ -23,7 +24,9 @@ SPACE_TOK = " "
 # Currently break on words, spaces, or any single other/punctuation character.
 # HTML tags (of length <1024 chars) are also a single token.
 # TODO: Could add nicer support for Markdown formatting as well.
-_wordtok_pattern = regex.compile(r"(<.{0,1024}?>|\w+|[^\w\s]|[\s]+)")
+_wordtok_pattern = regex.compile(r"(<.{0,1024}?>|\w+|[^\w\s]|\s+)")
+
+_para_br_pattern = regex.compile(r"\s*\n\n\s*")
 
 _tag_pattern = regex.compile(r"<.{0,1024}?>")
 
@@ -52,14 +55,18 @@ def wordtok_len(wordtok: str) -> int:
     return len(wordtok_to_str(wordtok))
 
 
-def raw_text_to_wordtoks(sentence: str, bof_eof=False) -> List[str]:
+def raw_text_to_wordtoks(text: str, parse_para_br=False, bof_eof=False) -> List[str]:
     """
-    Break text into word tokens, including words, whitespace, and punctuation.
-    Does not parse paragraphs or sentence breaks to avoid any need for these heuristics.
-    Normalizes all whitespace to a single space character.
+    Fast breaking of text into word tokens, including words, whitespace, and punctuation.
+    Does not look for paragraph breaks unless `parse_para_br` is True. Does not parse
+    sentence breaks. Normalizes all other whitespace to a single space character.
     """
-    wordtoks = _wordtok_pattern.findall(sentence)
+    if parse_para_br:
+        text = _para_br_pattern.sub(PARA_BR_TOK, text)
+
+    wordtoks = _wordtok_pattern.findall(text)
     wordtoks = [wordtok if not wordtok.isspace() else SPACE_TOK for wordtok in wordtoks]
+
     if bof_eof:
         return [BOF_TOK, *wordtoks, EOF_TOK]
     else:
@@ -72,6 +79,13 @@ def join_wordtoks(wordtoks: List[str]) -> str:
     """
     wordtoks = [wordtok_to_str(wordtok) for wordtok in wordtoks]
     return "".join(wordtoks)
+
+
+def visualize_wordtoks(wordtoks: List[str]) -> str:
+    """
+    Visualize wordtoks for debugging.
+    """
+    return SYMBOL_SEP + SYMBOL_SEP.join(wordtoks) + SYMBOL_SEP
 
 
 def is_break_or_space(wordtok: str) -> bool:
@@ -130,6 +144,18 @@ class _TokenSearcher:
                 return self
         raise KeyError("No matching token found after the current index")
 
+    def prev(self):
+        if self.current_idx - 1 < 0:
+            raise KeyError("No previous token available")
+        self.current_idx -= 1
+        return self
+
+    def next(self):
+        if self.current_idx + 1 >= len(self.wordtoks):
+            raise KeyError("No next token available")
+        self.current_idx += 1
+        return self
+
     def get_index(self):
         return self.current_idx
 
@@ -152,6 +178,7 @@ _test_doc = dedent(
     This is an "example sentence with punctuation.
     "Special characters: @#%^&*()"
     <span data-timestamp="5.60">Alright, guys.</span>
+
     <span data-timestamp="6.16">Here's the deal.</span>
     <span data-timestamp="7.92">You can follow me on my daily workouts.
     """
@@ -161,12 +188,20 @@ _test_doc = dedent(
 def test_html_doc():
     wordtoks = raw_text_to_wordtoks(_test_doc, bof_eof=True)
 
-    print("\n---Longer HTML Doc:")
-    print(SYMBOL_SEP.join(wordtoks))
+    print("\n---Wordtoks test:")
+    print(visualize_wordtoks(wordtoks))
+
+    wordtoks_with_para = raw_text_to_wordtoks(_test_doc, parse_para_br=True, bof_eof=True)
+    print(visualize_wordtoks(wordtoks_with_para))
 
     assert (
-        SYMBOL_SEP.join(wordtoks)
-        == """<-BOF->⎪Hello⎪,⎪ ⎪world⎪!⎪ ⎪This⎪ ⎪is⎪ ⎪an⎪ ⎪"⎪example⎪ ⎪sentence⎪ ⎪with⎪ ⎪punctuation⎪.⎪ ⎪"⎪Special⎪ ⎪characters⎪:⎪ ⎪@⎪#⎪%⎪^⎪&⎪*⎪(⎪)⎪"⎪ ⎪<span data-timestamp="5.60">⎪Alright⎪,⎪ ⎪guys⎪.⎪</span>⎪ ⎪<span data-timestamp="6.16">⎪Here⎪'⎪s⎪ ⎪the⎪ ⎪deal⎪.⎪</span>⎪ ⎪<span data-timestamp="7.92">⎪You⎪ ⎪can⎪ ⎪follow⎪ ⎪me⎪ ⎪on⎪ ⎪my⎪ ⎪daily⎪ ⎪workouts⎪.⎪<-EOF->"""
+        visualize_wordtoks(wordtoks)
+        == """⎪<-BOF->⎪Hello⎪,⎪ ⎪world⎪!⎪ ⎪This⎪ ⎪is⎪ ⎪an⎪ ⎪"⎪example⎪ ⎪sentence⎪ ⎪with⎪ ⎪punctuation⎪.⎪ ⎪"⎪Special⎪ ⎪characters⎪:⎪ ⎪@⎪#⎪%⎪^⎪&⎪*⎪(⎪)⎪"⎪ ⎪<span data-timestamp="5.60">⎪Alright⎪,⎪ ⎪guys⎪.⎪</span>⎪ ⎪<span data-timestamp="6.16">⎪Here⎪'⎪s⎪ ⎪the⎪ ⎪deal⎪.⎪</span>⎪ ⎪<span data-timestamp="7.92">⎪You⎪ ⎪can⎪ ⎪follow⎪ ⎪me⎪ ⎪on⎪ ⎪my⎪ ⎪daily⎪ ⎪workouts⎪.⎪<-EOF->⎪"""
+    )
+
+    assert (
+        visualize_wordtoks(wordtoks_with_para)
+        == """⎪<-BOF->⎪Hello⎪,⎪ ⎪world⎪!⎪ ⎪This⎪ ⎪is⎪ ⎪an⎪ ⎪"⎪example⎪ ⎪sentence⎪ ⎪with⎪ ⎪punctuation⎪.⎪ ⎪"⎪Special⎪ ⎪characters⎪:⎪ ⎪@⎪#⎪%⎪^⎪&⎪*⎪(⎪)⎪"⎪ ⎪<span data-timestamp="5.60">⎪Alright⎪,⎪ ⎪guys⎪.⎪</span>⎪<-PARA-BR->⎪<span data-timestamp="6.16">⎪Here⎪'⎪s⎪ ⎪the⎪ ⎪deal⎪.⎪</span>⎪ ⎪<span data-timestamp="7.92">⎪You⎪ ⎪can⎪ ⎪follow⎪ ⎪me⎪ ⎪on⎪ ⎪my⎪ ⎪daily⎪ ⎪workouts⎪.⎪<-EOF->⎪"""
     )
 
     print("\n---Searching tokens")

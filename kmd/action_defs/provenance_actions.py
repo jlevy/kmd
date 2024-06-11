@@ -3,17 +3,18 @@ from kmd.action_exec.action_registry import kmd_action
 from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
+    ChunkSize,
     EachItemAction,
 )
-from kmd.model.errors_model import InvalidInput, PreconditionFailure
+from kmd.model.errors_model import InvalidInput, PreconditionFailure, UnexpectedError
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
-from kmd.provenance.source_items import get_source_item
+from kmd.provenance.source_items import find_upstream_item, is_timestamped_text
 from kmd.text_formatting.citations import add_citation_to_text, cite_video_timestamp
 from kmd.provenance.extractors import TimestampExtractor
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.token_mapping import TokenMapping
-from kmd.text_docs.wordtoks import SENT_BR_TOK
+from kmd.text_docs.wordtoks import BOF_TOK, EOF_TOK, PARA_BR_TOK, SENT_BR_TOK, search_tokens
 
 log = get_logger(__name__)
 
@@ -29,21 +30,20 @@ class PullSourceTimestamps(EachItemAction):
               into the text of the current doc. Source must have similar tokens.
             """,
             expected_args=ONE_OR_MORE_ARGS,
+            chunk_size=ChunkSize.PARAGRAPH,
         )
 
-        # TODO: Make settable:
-        self.citation_tokens = [SENT_BR_TOK]
-        self.extractor = TimestampExtractor
+        if self.chunk_size == ChunkSize.SENTENCE:
+            self.citation_tokens = [SENT_BR_TOK, PARA_BR_TOK, EOF_TOK]
+        elif self.chunk_size == ChunkSize.PARAGRAPH:
+            self.citation_tokens = [PARA_BR_TOK, EOF_TOK]
+        else:
+            raise UnexpectedError(f"Invalid text unit: {self.chunk_size}")
 
     def run_item(self, item: Item) -> Item:
 
-        def validate_source(source_item: Item) -> None:
-            if not source_item.body:
-                raise PreconditionFailure(f"Source item has no body: {source_item}")
-            extractor = self.extractor(source_item.body)
-            extractor.precondition_check()
+        source_item = find_upstream_item(item, is_timestamped_text)
 
-        source_item = get_source_item(item, validate_source)
         source_url = source_item.url
         if not item.body:
             raise InvalidInput(f"Item must have a body: {item}")
@@ -58,10 +58,10 @@ class PullSourceTimestamps(EachItemAction):
 
         # Parse current doc.
         item_doc = TextDoc.from_text(item.body)
-        item_wordtoks = item_doc.as_wordtoks()
+        item_wordtoks = item_doc.as_wordtoks(bof_eof=True)
 
         # Don't bother parsing sentences on the source document, which may be long and with HTML.
-        extractor = self.extractor(source_item.body)
+        extractor = TimestampExtractor(source_item.body)
         extractor.precondition_check()
         source_wordtoks = extractor.wordtoks
 
@@ -84,8 +84,31 @@ class PullSourceTimestamps(EachItemAction):
         output_item = item.derived_copy(type=ItemType.note, title=new_title, format=Format.markdown)
 
         timestamps_found = []
-        for wordtok_offset, (wordtok, sent_index) in enumerate(item_doc.as_wordtok_to_sent()):
+        for wordtok_offset, (wordtok, sent_index) in enumerate(
+            item_doc.as_wordtok_to_sent(bof_eof=True)
+        ):
             if wordtok in self.citation_tokens:
+                # If we're inserting citations at paragraph breaks, we need to back up to the beginning of the paragraph.
+                # If we're inserting citations at sentence breaks, we can just use the per-sentence timestamps.
+                if self.chunk_size == ChunkSize.PARAGRAPH:
+                    start_para_index, start_para_wordtok = (
+                        search_tokens(item_wordtoks)
+                        .at(wordtok_offset)
+                        .seek_back([BOF_TOK, PARA_BR_TOK])
+                        .next()
+                        .get_token()
+                    )
+
+                    log.info(
+                        "Searching to previous para break behind %s (%s) got %s (%s)",
+                        wordtok_offset,
+                        wordtok,
+                        start_para_index,
+                        start_para_wordtok,
+                    )
+
+                    wordtok_offset = start_para_index
+
                 source_wordtok_offset = token_mapping.map_back(wordtok_offset)
 
                 log.info(
