@@ -18,7 +18,7 @@ class TabInfo:
 
 
 @dataclass
-class TabbedWebPage:
+class TabbedWebpage:
     title: str
     tabs: List[TabInfo]
 
@@ -29,7 +29,7 @@ def _fill_in_ids(tabs: List[TabInfo]):
             tab.id = f"tab_{i}"
 
 
-def configure_web_page(title: str, items: List[Item]) -> Item:
+def configure_webpage(title: str, items: List[Item]) -> Item:
     """
     Get an item with the config for a tabbed web page.
     """
@@ -41,7 +41,7 @@ def configure_web_page(title: str, items: List[Item]) -> Item:
         TabInfo(label=item.abbrev_title(max_len=20), store_path=item.store_path) for item in items
     ]
     _fill_in_ids(tabs)
-    config = TabbedWebPage(title=title, tabs=tabs)
+    config = TabbedWebpage(title=title, tabs=tabs)
 
     config_item = Item(
         title=f"Config for {title}",
@@ -53,7 +53,7 @@ def configure_web_page(title: str, items: List[Item]) -> Item:
     return config_item
 
 
-def _load_tab_content(config: TabbedWebPage):
+def _load_tab_content(config: TabbedWebpage):
     """
     Load the content for each tab.
     """
@@ -62,22 +62,22 @@ def _load_tab_content(config: TabbedWebPage):
         tab.content_html = html
 
 
-def generate_web_page(config_item: Item) -> str:
+def generate_webpage(config_item: Item) -> str:
     """
     Generate a web page using the supplied config.
     """
     config = config_item.read_as_config()
-    tabbed_web_page = as_dataclass(config, TabbedWebPage)  # Checks the format.
+    tabbed_webpage = as_dataclass(config, TabbedWebpage)  # Checks the format.
 
-    _load_tab_content(tabbed_web_page)
-    return render_web_template("tabbed_web_page.template.html", asdict(tabbed_web_page))
+    _load_tab_content(tabbed_webpage)
+    return render_web_template("tabbed_webpage.template.html", asdict(tabbed_webpage))
 
 
 ## Tests
 
 
 def test_render():
-    config = TabbedWebPage(
+    config = TabbedWebpage(
         title="An Elegant Web Page",
         tabs=[
             TabInfo(
@@ -90,21 +90,21 @@ def test_render():
     )
 
     os.makedirs("tmp", exist_ok=True)
-    write_yaml_file(asdict(config), "tmp/web_page_config.yaml")
-    print("\nWrote config to tmp/web_page_config.yaml")
+    write_yaml_file(asdict(config), "tmp/webpage_config.yaml")
+    print("\nWrote config to tmp/webpage_config.yaml")
 
     # Check config reads correctly.
-    new_config = as_dataclass(read_yaml_file("tmp/web_page_config.yaml"), TabbedWebPage)
+    new_config = as_dataclass(read_yaml_file("tmp/webpage_config.yaml"), TabbedWebpage)
     assert new_config == config
 
     html = render_web_template(
-        "tabbed_web_page.template.html",
+        "tabbed_webpage.template.html",
         asdict(config),
     )
-    with open("tmp/web_page.html", "w") as f:
+    with open("tmp/webpage.html", "w") as f:
         f.write(html)
-    print("Rendered tabbed web_page to tmp/web_page.html")
+    print("Rendered tabbed webpage to tmp/webpage.html")
 
-    lines = open("tmp/web_page.html", "r").readlines()
+    lines = open("tmp/webpage.html", "r").readlines()
     assert any("Home &lt;escaped HTML chars&gt;" in line for line in lines)
     assert any("<b>this is HTML</b>" in line for line in lines)
