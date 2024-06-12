@@ -42,10 +42,13 @@ EMOJI_WARN = "⚠️"
 
 EMOJI_SAVED = "⩣"
 
-EMOJI_TIME = "⏱️"
+EMOJI_TIMING = "⏱️"
 
 EMOJI_SUCCESS = "✔️"
 
+EMOJI_CALL_BEGIN = "≫"
+
+EMOJI_CALL_END = "≪"
 
 ## Rich setup
 
@@ -80,4 +83,11 @@ RICH_STYLES = {
     "kmd.call": Style(color=COLOR_VALUE),
     "kmd.path": Style(color=COLOR_VALUE),
     "kmd.filename": Style(color=COLOR_VALUE),
+    # Emoji colors:
+    "kmd.process": Style(color="magenta", bold=True),
+    "kmd.success": Style(color="green", bold=True),
+    "kmd.timing": Style(color="blue", bold=True),
+    "kmd.warn": Style(color="red", bold=True),
+    "kmd.saved": Style(color="blue", bold=True),
+    "kmd.log_call": Style(color="yellow", bold=True),
 }

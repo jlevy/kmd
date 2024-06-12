@@ -11,7 +11,7 @@ from rich.logging import RichHandler
 from rich.highlighter import RegexHighlighter, _combine_regex
 from rich.theme import Theme
 from rich.console import Console
-from kmd.config.text_styles import EMOJI_SAVED, RICH_STYLES
+from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_PROCESS, EMOJI_SAVED, EMOJI_SUCCESS, EMOJI_TIMING, EMOJI_WARN, RICH_STYLES
 
 LOG_ROOT = Path("./.kmd_logs")
 
@@ -45,6 +45,13 @@ class KmdHighlighter(RegexHighlighter):
             r"(?P<path>\B(/[-\w._+]+)*\/)(?P<filename>[-\w._+]*)?",
             r"(?<![\\\w])(?P<str>b?'''.*?(?<!\\)'''|b?'.*?(?<!\\)'|b?\"\"\".*?(?<!\\)\"\"\"|b?\".*?(?<!\\)\")",
             r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
+            # Emoji colors:
+            f"(?P<process>^{EMOJI_PROCESS})",
+            f"(?P<success>^{EMOJI_SUCCESS})",
+            f"(?P<timing>^{EMOJI_TIMING})",
+            f"(?P<warn>^{EMOJI_WARN})",
+            f"(?P<saved>^{EMOJI_SAVED})",
+            f"(?P<log_call>^{EMOJI_CALL_BEGIN}|{EMOJI_CALL_END})",         
         ),
     ]
 
@@ -54,6 +61,11 @@ console = Console(theme=_custom_theme)
 
 reconfigure(theme=_custom_theme)
 
+# TODO: Need this to enforce flushing of stream?
+# class FlushingStreamHandler(logging.StreamHandler):
+#     def emit(self, record):
+#         super().emit(record)
+#         self.flush()
 
 def logging_setup():
     warnings.filterwarnings("ignore", category=DeprecationWarning)

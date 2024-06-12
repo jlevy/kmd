@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict
 import regex
 from strif import abbreviate_str
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import EMOJI_TIME
+from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 
 log = get_logger(__name__)
 
@@ -91,7 +91,7 @@ def log_calls(
             func_name = func_and_module_name(func)
 
             if show_call:
-                log_func(f"≫ Call: {format_call(func_name, args, kwargs)}")
+                log_func(f"{EMOJI_CALL_BEGIN} Call: {format_call(func_name, args, kwargs)}")
 
             start_time = time.time()
 
@@ -101,14 +101,16 @@ def log_calls(
             elapsed = end_time - start_time
 
             if show_call:
-                call_msg = f"≪ Call done: {func_name} in {format_duration(elapsed)}"
+                call_msg = f"{EMOJI_CALL_END} Call done: {func_name} in {format_duration(elapsed)}"
                 if show_return:
                     log_func("%s: %s", call_msg, to_str(result))
                 else:
                     log_func("%s", call_msg)
             else:
                 if elapsed > if_slower_than:
-                    call_msg = f"{EMOJI_TIME} Call to {func_name} took {format_duration(elapsed)}."
+                    call_msg = (
+                        f"{EMOJI_TIMING} Call to {func_name} took {format_duration(elapsed)}."
+                    )
                     log_func("%s", call_msg)
 
             return result
@@ -170,7 +172,7 @@ def tally_calls(
             ):
                 log_func(
                     "%s %s() took %s, now called %d times, %s avg per call, total time %s",
-                    EMOJI_TIME,
+                    EMOJI_TIMING,
                     func_name,
                     format_duration(elapsed),
                     tally[func_name].calls,
@@ -193,7 +195,7 @@ def log_tallies(if_slower_than: float = 0.0):
     """
     tallies_to_log = {k: t for k, t in tally.items() if t.total_time >= if_slower_than}
     if tallies_to_log:
-        log.message("%s Function tallies:", EMOJI_TIME)
+        log.message("%s Function tallies:", EMOJI_TIMING)
         for fkey, t in sorted(tally.items(), key=lambda item: item[1].total_time, reverse=True):
             log.message(
                 "    %s() was called %d times, total time %s, avg per call %s",

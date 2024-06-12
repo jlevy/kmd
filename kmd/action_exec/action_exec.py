@@ -3,7 +3,7 @@ from typing import List, cast
 from strif import abbreviate_str
 from kmd.action_exec.action_registry import look_up_action
 from kmd.action_exec.system_actions import FETCH_ACTION, FETCH_ACTION_NAME
-from kmd.config.text_styles import EMOJI_TIME
+from kmd.config.text_styles import EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
 from kmd.model.actions_model import Action, ActionResult
@@ -104,7 +104,7 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
         len(result.items),
         plural("item", len(result.items)),
     )
-    log.message("%s Action %s took %.1fs.", EMOJI_TIME, action_name, elapsed)
+    log.message("%s Action %s took %.1fs.", EMOJI_TIMING, action_name, elapsed)
 
     # Save the result items. This is done here so the action need not worry about saving.
     for item in result.items:
