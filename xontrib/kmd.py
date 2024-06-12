@@ -9,9 +9,8 @@ import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-import time
 from typing import Callable, List
-from rich import print as rprint
+from rich import get_console, print as rprint
 from rich.text import Text
 from xonsh import xontribs
 from xonsh.tools import XonshError
@@ -19,7 +18,7 @@ import litellm
 from kmd.config.setup import setup
 from kmd.config.settings import media_cache_dir
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import EMOJI_TIME, EMOJI_WARN
+from kmd.config.text_styles import EMOJI_WARN
 from kmd.file_storage.workspaces import current_workspace
 from kmd.action_exec.action_exec import run_action
 from kmd.action_exec.action_registry import load_all_actions
@@ -58,19 +57,17 @@ class CallableAction:
         self.action = action
 
     def __call__(self, args):
-        start_time = time.time()
         try:
-            run_action(self.action, *args)
-            # We don't return the result to keep the shell output clean.
+            with get_console().status(
+                f"[bright_green]Running action {self.action.name}…", spinner="dots"
+            ):
+                run_action(self.action, *args)
+            # We don't return the result to keep the xonsh shell output clean.
         except _common_exceptions as e:
             rprint(Text(f"Action error: {_elide_traceback(str(e))}", "bright_red"))
             log.info("Action error: %s", e, exc_info=True)
         finally:
-            end_time = time.time()
-            elapsed = end_time - start_time
-            if elapsed > 5.0:
-                log.message("%s Action %s took %.1fs.", EMOJI_TIME, self.action.name, elapsed)
-            log_tallies(if_slower_than=1.0)
+            log_tallies(if_slower_than=10.0)
 
     def __repr__(self):
         return f"CallableAction({repr(self.action)})"
