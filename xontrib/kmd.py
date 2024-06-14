@@ -5,134 +5,143 @@ Sets up all commands and functions for use in xonsh. This makes using kmd far ea
 for interactive use than calling actions from a regular shell command line.
 """
 
-import warnings
+import sys
 
-warnings.filterwarnings("ignore", category=DeprecationWarning)
+# We want the kmd xontrib to always be loadable, but only activate if it's been invoked as kmdsh.
+if sys.argv[0].endswith("/kmdsh"):
+    import warnings
 
-from typing import Callable, List
-from rich import get_console, print as rprint
-from rich.text import Text
-from xonsh import xontribs
-from xonsh.tools import XonshError
-import litellm
-from kmd.config.setup import setup
-from kmd.config.settings import media_cache_dir
-from kmd.config.logger import get_logger
-from kmd.config.text_styles import EMOJI_WARN
-from kmd.file_storage.workspaces import current_workspace
-from kmd.action_exec.action_exec import run_action
-from kmd.action_exec.action_registry import load_all_actions
-from kmd.commands import commands
-from kmd.model.actions_model import Action
-from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState
-from kmd.util.log_calls import log_tallies
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+    from typing import Callable, List
+    from rich import get_console, print as rprint
+    from rich.text import Text
+    from xonsh.tools import XonshError
+    import litellm
+    from kmd.config.setup import setup
+    from kmd.config.settings import media_cache_dir
+    from kmd.config.logger import get_logger
+    from kmd.config.text_styles import EMOJI_WARN
+    from kmd.file_storage.workspaces import current_workspace
+    from kmd.action_exec.action_exec import run_action
+    from kmd.action_exec.action_registry import load_all_actions
+    from kmd.commands import commands
+    from kmd.model.actions_model import Action
+    from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState
+    from kmd.util.log_calls import log_tallies
 
-setup()
+    setup()
 
-log = get_logger(__name__)
+    log = get_logger(__name__)
 
-# Common exceptions that don't merit a full stack trace.
-_common_exceptions = (SelfExplanatoryError, IOError, XonshError, litellm.exceptions.APIError)
+    # Common exceptions that don't merit a full stack trace.
+    _common_exceptions = (SelfExplanatoryError, IOError, XonshError, litellm.exceptions.APIError)
 
+    def _elide_traceback(exception_str: str) -> str:
+        lines = exception_str.splitlines()
+        return "\n".join(
+            [
+                line
+                for line in lines
+                if line.strip()
+                and not line.lstrip().startswith("Traceback")
+                and not line.lstrip().startswith("File ")
+                and not line.lstrip().startswith("The above exception")
+                and not line.startswith("    ")
+            ]
+            + ["Run `logs` for more details."]
+        )
 
-def _elide_traceback(exception_str: str) -> str:
-    lines = exception_str.splitlines()
-    return "\n".join(
-        [
-            line
-            for line in lines
-            if line.strip()
-            and not line.lstrip().startswith("Traceback")
-            and not line.lstrip().startswith("File ")
-            and not line.lstrip().startswith("The above exception")
-            and not line.startswith("    ")
-        ]
-        + ["Run `logs` for more details."]
-    )
+    class CallableAction:
+        def __init__(self, action: Action):
+            self.action = action
 
-
-class CallableAction:
-    def __init__(self, action: Action):
-        self.action = action
-
-    def __call__(self, args):
-        try:
-            with get_console().status(
-                f"[bright_green]Running action {self.action.name}…", spinner="dots"
-            ):
-                run_action(self.action, *args)
-            # We don't return the result to keep the xonsh shell output clean.
-        except _common_exceptions as e:
-            rprint(Text(f"Action error: {_elide_traceback(str(e))}", "bright_red"))
-            log.info("Action error: %s", e, exc_info=True)
-        finally:
-            log_tallies(if_slower_than=10.0)
-
-    def __repr__(self):
-        return f"CallableAction({repr(self.action)})"
-
-
-def initialize():
-
-    actions = load_all_actions()
-
-    kmd_aliases = {}
-
-    # Load all actions as xonsh commands.
-    for action in actions.values():
-        kmd_aliases[action.name] = CallableAction(action)
-
-    # Additional commmands
-    kmd_aliases["kmd_help"] = commands.kmd_help
-
-    def xonsh_command_for(func: Callable):
-        def command(args: List[str]):
+        def __call__(self, args):
             try:
-                func(*args)
+                with get_console().status(
+                    f"[bright_green]Running action {self.action.name}…", spinner="dots"
+                ):
+                    run_action(self.action, *args)
+                # We don't return the result to keep the xonsh shell output clean.
             except _common_exceptions as e:
-                rprint(Text(f"Command error: {_elide_traceback(str(e))}", "bright_red"))
-                log.info("Command error: %s", e)
+                rprint(Text(f"Action error: {_elide_traceback(str(e))}", "bright_red"))
+                log.info("Action error: %s", e, exc_info=True)
+            finally:
+                log_tallies(if_slower_than=10.0)
 
-        command.__doc__ = func.__doc__
-        return command
+        def __repr__(self):
+            return f"CallableAction({repr(self.action)})"
 
-    for func in commands.all_commands():
-        kmd_aliases[func.__name__] = xonsh_command_for(func)
+    def initialize():
 
-    aliases.update(kmd_aliases)  # type: ignore
+        kmd_aliases = {}
 
-    # Conveniene to reload module.
-    # TODO: Doesn't seem to reload modified Python?
-    def reload() -> None:
-        xontribs.xontribs_reload(["kmd"], verbose=True)
+        # kmd command aliases.
+        kmd_aliases["kmd_help"] = commands.kmd_help
 
-    aliases["reload"] = reload  # type: ignore
+        # TODO: Figure out how to get this to work:
+        # kmd_aliases["py_help"] = help
+        # kmd_aliases["help"] = commands.kmd_help
 
+        # TODO: Doesn't seem to reload modified Python?
+        # def reload() -> None:
+        #     xontribs.xontribs_reload(["kmd"], verbose=True)
+        #
+        # aliases["reload"] = reload  # type: ignore
 
-rprint(
-    Text.assemble(
-        ("\n🄺\n", "bright_blue"),
-        ("\nWelcome to kmd.\n", "bright_green"),
-        "\nUse `kmd_help` for available kmd commands and actions.\n",
-        "Use `xonfig tutorial` for xonsh help and `help()` for Python help.\n",
-        f"Using media cache directory: {media_cache_dir()}\n",
-    )
-    # TODO: Replace help() with kmd_help.
-)
+        def xonsh_command_for(func: Callable):
+            def command(args: List[str]):
+                try:
+                    func(*args)
+                except _common_exceptions as e:
+                    rprint(Text(f"Command error: {_elide_traceback(str(e))}", "bright_red"))
+                    log.info("Command error: %s", e)
 
-initialize()
+            command.__doc__ = func.__doc__
+            return command
 
-try:
-    current_workspace()
-except InvalidStoreState as e:
+        for func in commands.all_commands():
+            kmd_aliases[func.__name__] = xonsh_command_for(func)
+
+        aliases.update(kmd_aliases)  # type: ignore
+
+        # Load all actions as xonsh commands.
+        actions = load_all_actions()
+
+        for action in actions.values():
+            kmd_aliases[action.name] = CallableAction(action)
+
     rprint(
-        f"{EMOJI_WARN} The current directory is not a workspace. Create or switch to a workspace with the `workspace` command."
+        Text.assemble(
+            ("\n🄺\n", "bright_blue"),
+            ("\nWelcome to kmd.\n", "bright_green"),
+            "\nUse `kmd_help` for available kmd commands and actions.\n",
+            "Use `xonfig tutorial` for xonsh help and `help()` for Python help.\n",
+            f"Using media cache directory: {media_cache_dir()}\n",
+        )
+        # TODO: Replace help() with kmd_help.
     )
-print()
 
+    initialize()
 
-# TODO: Completion for actions, e.g. known URLs, resource titles, concepts, parameters and values, etc.
-# def _action_completer(cls, prefix, line, begidx, endidx, ctx):
-#     return ["https://"]
-# __xonsh__.completers["foo"] = _action_completer
+    try:
+        current_workspace()
+    except InvalidStoreState as e:
+        rprint(
+            f"{EMOJI_WARN} The current directory is not a workspace. Create or switch to a workspace with the `workspace` command."
+        )
+    print()
+
+    # TODO: Completion for actions, e.g. known URLs, resource titles, concepts, parameters and values, etc.
+    # def _action_completer(cls, prefix, line, begidx, endidx, ctx):
+    #     return ["https://"]
+    # __xonsh__.completers["foo"] = _action_completer
+
+    def _kmd_xonsh_prompt():
+        from kmd.file_storage.workspaces import current_workspace_name
+
+        name = current_workspace_name()
+        workspace_str = "{BOLD_GREEN}" + name if name else "{INTENSE_YELLOW}(no workspace)"
+        return "%s {BOLD_GREEN}❯{RESET} " % workspace_str
+
+    __xonsh__.env["PROMPT"] = _kmd_xonsh_prompt  # type: ignore
