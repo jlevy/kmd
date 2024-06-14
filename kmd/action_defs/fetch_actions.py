@@ -6,7 +6,6 @@ from kmd.model.actions_model import (
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item
-from kmd.util.type_utils import not_none
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
@@ -26,7 +25,7 @@ class FetchPage(EachItemAction):
         if not item.url:
             raise InvalidInput(f"Item must have a URL: {item}")
 
-        page_data = web.fetch_extract(not_none(item.url))
+        page_data = web.fetch_extract(item.url)
         fetched_item = item.new_copy_with(
             title=page_data.title, description=page_data.description, body=page_data.content
         )

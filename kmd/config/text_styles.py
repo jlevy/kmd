@@ -4,19 +4,23 @@ Settings that define the visual appearance of text outputs.
 
 ## Text styles
 
-COLOR_HEADING = "cyan"
-
-COLOR_EMPH = "bright_blue"
-
-COLOR_OUTPUT = "yellow"
+COLOR_LOGO = "bold magenta"
 
 COLOR_PLAIN = "default"
+
+COLOR_HEADING = "bold bright_green"
+
+COLOR_EMPH = "bright_green"
+
+COLOR_OUTPUT = "yellow"
 
 COLOR_LITERAL = "yellow"
 
 COLOR_KEY = "cyan"
 
 COLOR_VALUE = "bright_blue"
+
+COLOR_PATH = "bright_blue"
 
 COLOR_HINT = "bright_black"
 
@@ -56,7 +60,51 @@ EMOJI_CALL_END = "≪"
 
 ## Rich setup
 
+from rich.highlighter import RegexHighlighter, _combine_regex
 from rich.style import Style
+
+
+class KmdHighlighter(RegexHighlighter):
+    """
+    Highlighter based on the repr highighter with additions.
+    """
+
+    base_style = "kmd."
+    highlights = [
+        r"(?P<tag_start><)(?P<tag_name>[-\w.:|]*)(?P<tag_contents>[\w\W]*)(?P<tag_end>>)",
+        r'(?P<attrib_name>[\w_-]{1,50})=(?P<attrib_value>"?[\w_]+"?)?',
+        r"(?P<brace>[][{}()])",
+        _combine_regex(
+            r"(?P<ipv4>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+            r"(?P<ipv6>([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})",
+            r"(?P<eui64>(?:[0-9A-Fa-f]{1,2}-){7}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{1,2}:){7}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{4}\.){3}[0-9A-Fa-f]{4})",
+            r"(?P<eui48>(?:[0-9A-Fa-f]{1,2}-){5}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{1,2}:){5}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{4}\.){2}[0-9A-Fa-f]{4})",
+            r"(?P<uuid>[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})",
+            r"(?P<call>[\w.]*?)\(",
+            r"\b(?P<bool_true>True)\b|\b(?P<bool_false>False)\b|\b(?P<none>None)\b",
+            r"(?P<ellipsis>(\.\.\.|…))",
+            r"(?P<number_complex>(?<!\w)(?:\-?[0-9]+\.?[0-9]*(?:e[-+]?\d+?)?)(?:[-+](?:[0-9]+\.?[0-9]*(?:e[-+]?\d+)?))?j)",
+            r"(?P<number>(?<!\w)\-?[0-9]+\.?[0-9]*(e[-+]?\d+?)?\b(?!\-\w)|0x[0-9a-fA-F]*)",
+            r"(?P<duration>(?<!\w)\-?[0-9]+\.?[0-9]*(ms|s)\b(?!\-\w))",
+            r"(?P<path>\B(/[-\w._+]+)*\/)(?P<filename>[-\w._+]*)?",
+            r"(?<![\\\w])(?P<str>b?'''.*?(?<!\\)'''|b?'.*?(?<!\\)'|b?\"\"\".*?(?<!\\)\"\"\"|b?\".*?(?<!\\)\")",
+            r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
+            r"(?P<code_span>`[^`]+`)",
+            # Emoji colors:
+            f"(?P<process>^{EMOJI_PROCESS})",
+            f"(?P<success>^{EMOJI_SUCCESS})",
+            f"(?P<timing>^{EMOJI_TIMING})",
+            f"(?P<warn>^{EMOJI_WARN})",
+            f"(?P<saved>^{EMOJI_SAVED})",
+            f"(?P<log_call>^{EMOJI_CALL_BEGIN}|{EMOJI_CALL_END})",
+        ),
+    ]
+
+    # TODO: Recognize file sizes, "5 days ago" etc, relative paths.
+    # r"(?P<time_ago>(?<!\w)[0-9]+ \w+ ago\b)"
+    # r"(?P<file_size>(?<!\w)[0-9]+ ?([kKmMgGtTpP]B|Bytes|bytes)\b)",
+    # r"(?P<relpath>\B([\w._+][-\w._+]*)*(/\w[-\w._+]*)+)*\.(html|htm|pdf|yaml|yml|md|txt)",
+
 
 RICH_STYLES = {
     "kmd.ellipsis": Style(color=COLOR_HINT),
@@ -78,6 +126,9 @@ RICH_STYLES = {
     "kmd.attrib_value": Style(color=COLOR_VALUE, italic=False),
     "kmd.number": Style(color=COLOR_KEY, italic=False),
     "kmd.duration": Style(color=COLOR_KEY, italic=False),
+    "kmd.time_ago": Style(color=COLOR_KEY, italic=False),
+    "kmd.file_size": Style(color=COLOR_VALUE, italic=False),
+    "kmd.code_span": Style(color=COLOR_KEY, italic=False),
     "kmd.number_complex": Style(color=COLOR_KEY, italic=False),  # same
     "kmd.bool_true": Style(color=COLOR_SUCCESSS, italic=True),
     "kmd.bool_false": Style(color=COLOR_ERROR, italic=True),
@@ -85,7 +136,7 @@ RICH_STYLES = {
     "kmd.url": Style(underline=True, color=COLOR_VALUE, italic=False, bold=False),
     "kmd.uuid": Style(color=COLOR_LITERAL, bold=False),
     "kmd.call": Style(color=COLOR_VALUE),
-    "kmd.path": Style(color=COLOR_VALUE),
+    "kmd.path": Style(color=COLOR_PATH),
     "kmd.filename": Style(color=COLOR_VALUE),
     # Emoji colors:
     "kmd.process": Style(color="magenta", bold=True),

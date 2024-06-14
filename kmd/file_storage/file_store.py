@@ -372,6 +372,10 @@ class FileStore:
         return StorePath(store_path)
 
     def set_selection(self, selection: list[StorePath]):
+        for store_path in selection:
+            if not (self.base_dir / store_path).exists():
+                raise FileNotFoundError(f"Selection not found: {store_path}")
+
         self.selection.set(selection)
 
     def get_selection(self) -> list[StorePath]:

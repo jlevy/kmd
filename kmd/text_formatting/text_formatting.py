@@ -9,7 +9,7 @@ def format_lines(values: Iterable[Any], prefix: str = "    ", line_break: str = 
     """
     Simple indented or prefixed formatting of values one per line.
     """
-    return indent(line_break.join(str(value) for value in values), prefix)
+    return indent(line_break.join(str(value) for value in values), prefix).rstrip()
 
 
 def plaintext_to_html(text: str):

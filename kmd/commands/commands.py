@@ -2,15 +2,15 @@ import os
 from os.path import getmtime, basename, getsize, join
 import re
 import subprocess
-import textwrap
 from typing import Callable, List, Optional
 from datetime import datetime
 from humanize import naturaltime, naturalsize
-from rich import print as rprint
-from rich.text import Text
+from kmd.commands.command_output import Wrap, format_docstr, output, output_heading, output_status
 from kmd.commands.local_file_tools import open_platform_specific
-from kmd.config.text_styles import COLOR_EMPH, COLOR_HEADING, COLOR_OUTPUT, COLOR_PLAIN, EMOJI_WARN
-from kmd.config.settings import KMD_WRAP_WIDTH
+from kmd.config.text_styles import (
+    COLOR_EMPH,
+    EMOJI_WARN,
+)
 from kmd.file_storage.file_store import skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info
 from kmd.model.actions_model import ACTION_PARAMS
@@ -37,16 +37,6 @@ def all_commands():
     return sorted(_commands, key=lambda cmd: cmd.__name__)
 
 
-def command_output(message: str, *args, color=COLOR_OUTPUT):
-    rprint(Text(message % args, color))
-
-
-def format_docstr(name: str, doc: str) -> Text:
-    doc = textwrap.dedent(doc).strip()
-    wrapped = textwrap.fill(doc, width=KMD_WRAP_WIDTH, initial_indent="", subsequent_indent="    ")
-    return Text.assemble((name, COLOR_EMPH), (": ", COLOR_EMPH), (wrapped, COLOR_PLAIN))
-
-
 @kmd_command
 def kmd_help() -> None:
     """
@@ -54,18 +44,24 @@ def kmd_help() -> None:
     """
     from kmd.action_exec.action_registry import load_all_actions
 
-    rprint(Text("\nAvailable kmd commands:\n", style=COLOR_HEADING))
+    output_heading("Available kmd commands:")
 
     for command in all_commands():
         doc = command.__doc__ if command.__doc__ else ""
-        rprint(format_docstr(command.__name__, doc))
-        rprint()
+        output(format_docstr(command.__name__, doc))
+        output()
 
-    rprint(Text("\nAvailable kmd actions:\n", style=COLOR_HEADING))
+    output_heading("Available kmd actions:")
     actions = load_all_actions()
     for action in actions.values():
-        rprint(format_docstr(action.name, action.description))
-        rprint()
+        output(format_docstr(action.name, action.description))
+        output()
+
+    output_heading("More help:")
+    output(
+        "Use `kmd_help` for this list. Use `xonfig tutorial` for xonsh help and `help()` for Python help."
+    )
+    output()
 
 
 @kmd_command
@@ -82,7 +78,7 @@ def workspace(workspace_name: Optional[str] = None) -> None:
             )
         os.makedirs(ws_dir, exist_ok=True)
         os.chdir(ws_dir)
-        command_output("Changed to workspace: %s", ws_name)
+        output_status(f"Changed to workspace: {ws_name}")
     show_workspace_info()
 
 
@@ -106,17 +102,15 @@ def select(*paths: str) -> None:
         selection = store_paths
     else:
         selection = workspace.get_selection()
-    rprint()
     if not selection:
-        command_output("No selection.")
+        output_status("No selection.")
     else:
-        command_output(
+        output_status(
             "Selected %s %s:\n%s",
             len(selection),
             plural("item", len(selection)),
             format_lines(selection),
         )
-    rprint()
 
 
 @kmd_command
@@ -127,17 +121,20 @@ def unselect(*paths: str) -> None:
     """
     workspace = current_workspace()
     if not paths:
-        raise InvalidInput("No paths provided to unselect")
+        workspace.set_selection([])
 
-    previous_selection = workspace.get_selection()
-    new_selection = workspace.unselect([StorePath(path) for path in paths])
-    command_output(
-        "Unselected %s %s, %s now selected:\n%s",
-        len(previous_selection) - len(new_selection),
-        plural("item", len(previous_selection) - len(new_selection)),
-        len(new_selection),
-        format_lines(new_selection),
-    )
+        output_status("Cleared selection.")
+    else:
+        previous_selection = workspace.get_selection()
+        new_selection = workspace.unselect([StorePath(path) for path in paths])
+
+        output_status(
+            "Unselected %s %s, %s now selected:\n%s",
+            len(previous_selection) - len(new_selection),
+            plural("item", len(previous_selection) - len(new_selection)),
+            len(new_selection),
+            format_lines(new_selection),
+        )
 
 
 @kmd_command
@@ -180,22 +177,20 @@ def param(*args: str) -> None:
         new_params = remove_values(new_params, deletes)
         workspace.set_action_params(new_params)
 
-    rprint(Text("\nAvailable action parameters:\n", style=COLOR_HEADING))
+    output_heading("Available action parameters:")
 
     for ap in ACTION_PARAMS.values():
-        rprint(format_docstr(ap.name, ap.full_description()))
-        rprint()
+        output(format_docstr(ap.name, ap.full_description()))
+        output()
 
     params = workspace.get_action_params()
     if not params:
-        command_output("No action parameters set.")
+        output_status("No action parameters set.")
     else:
-        rprint(Text("Action parameters:\n", style=COLOR_HEADING))
+        output_heading("Action parameters:")
 
         for key, value in params.items():
-            command_output(format_key_value(key, value))
-
-    rprint()
+            output(format_key_value(key, value))
 
 
 @kmd_command
@@ -208,7 +203,7 @@ def add_resource(*files_or_urls: str) -> None:
         raise InvalidInput("No files or URLs provided to import")
 
     store_paths = [workspace.add_resource(r) for r in files_or_urls]
-    command_output(
+    output_status(
         "Imported %s %s:\n%s",
         len(store_paths),
         plural("item", len(store_paths)),
@@ -232,7 +227,8 @@ def archive(*paths: str) -> None:
 
     for store_path in store_paths:
         workspace.archive(store_path)
-    command_output("Archived:\n%s", format_lines(store_paths))
+
+    output_status(f"Archived:\n{format_lines(store_paths)}")
 
     select()
 
@@ -252,7 +248,7 @@ def unarchive(*paths: str) -> None:
 
     for path in paths:
         store_path = workspace.unarchive(StorePath(path))
-        command_output("Unarchived %s", store_path)
+        output_status(f"Unarchived: {store_path}")
 
 
 @kmd_command
@@ -274,7 +270,7 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
             # Show tally for this directory.
             nfiles = len(filenames)
             if nfiles > 0:
-                command_output(f"\n{store_dirname} - {nfiles} files", color=COLOR_EMPH)
+                output(f"\n{store_dirname} - {nfiles} files", color=COLOR_EMPH)
 
             for filename in filenames:
                 full_path = join(workspace.base_dir, store_dirname, filename)
@@ -294,12 +290,18 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
                     display_name = f"{parent_dir}/{filename}" if parent_dir != "." else filename
 
                     # TODO: Show actual lines and words of body text as well as size with wc. Indicate if body is empty.
-                    command_output("  %-10s %-14s  %s" % (file_size, file_mod_time, display_name))
+                    output(
+                        "  %-10s %-14s  %s",
+                        file_size,
+                        file_mod_time,
+                        display_name,
+                        text_wrap=Wrap.NONE,
+                    )
 
             total_folders += 1
             total_files += nfiles
 
-        command_output(f"\n{total_files} items total in {total_files} folders", color=COLOR_EMPH)
+        output(f"\n{total_files} items total in {total_files} folders", color=COLOR_EMPH)
 
 
 @kmd_command
@@ -330,3 +332,9 @@ def canonicalize(*paths: str) -> None:
         select(*canon_paths)
 
     # TODO: Also consider implementing duplicate elimination here.
+
+
+# TODO:
+# def define_action_sequence(name: str, *action_names: str):
+#     action_registry.define_action_sequence(name, *action_names)
+#     log.message("Registered action sequence: %s of actions: %s", name, action_names)
