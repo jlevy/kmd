@@ -23,8 +23,8 @@ log = get_logger(__name__)
 class PullSourceTimestamps(EachItemAction):
     def __init__(self):
         super().__init__(
-            name="pull_source_timestamps",
-            friendly_name="Pull timestamps from a source document.",
+            name="backfill_source_timestamps",
+            friendly_name="Backfill timestamps from a source document.",
             description="""
               Seeks through the document this doc is derived from for timestamps and inserts them
               into the text of the current doc. Source must have similar tokens.

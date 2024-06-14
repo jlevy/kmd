@@ -1,3 +1,7 @@
+"""
+Settings that define the visual appearance of text outputs.
+"""
+
 ## Text styles
 
 COLOR_HEADING = "cyan"
