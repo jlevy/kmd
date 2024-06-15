@@ -7,9 +7,6 @@ APP_NAME = "kmd"
 
 CACHE_NAME = "kmd_cache"
 
-KMD_WRAP_WIDTH = 80
-"""Wrap width for kmd output."""
-
 
 def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
     """

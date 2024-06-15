@@ -12,8 +12,8 @@ from kmd.config.text_styles import (
     COLOR_KEY,
     COLOR_OUTPUT,
     COLOR_PLAIN,
+    KMD_WRAP_WIDTH,
 )
-from kmd.config.settings import KMD_WRAP_WIDTH
 
 
 class Wrap(Enum):

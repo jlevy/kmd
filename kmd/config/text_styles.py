@@ -2,6 +2,11 @@
 Settings that define the visual appearance of text outputs.
 """
 
+## Settings
+
+KMD_WRAP_WIDTH = 80
+"""Wrap width for kmd output."""
+
 ## Text styles
 
 COLOR_LOGO = "bold magenta"
@@ -43,7 +48,7 @@ COLOR_CALL = "yellow"
 
 NBSP = "\u00A0"
 
-HRULE = ("⋯ " * 36).strip()
+HRULE = ("⋯ " * (KMD_WRAP_WIDTH // 2)).strip()
 
 ## Symbols
 
@@ -104,12 +109,12 @@ class KmdHighlighter(RegexHighlighter):
             r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
             r"(?P<code_span>`[^`]+`)",
             # Emoji colors:
-            f"(?P<process>^{EMOJI_PROCESS})",
-            f"(?P<success>^{EMOJI_SUCCESS})",
-            f"(?P<timing>^{EMOJI_TIMING})",
-            f"(?P<warn>^{EMOJI_WARN})",
-            f"(?P<saved>^{EMOJI_SAVED})",
-            f"(?P<log_call>^{EMOJI_CALL_BEGIN}|{EMOJI_CALL_END})",
+            f"(?P<process>{EMOJI_PROCESS})",
+            f"(?P<success>{EMOJI_SUCCESS})",
+            f"(?P<timing>{EMOJI_TIMING})",
+            f"(?P<warn>{EMOJI_WARN})",
+            f"(?P<saved>{EMOJI_SAVED})",
+            f"(?P<log_call>{EMOJI_CALL_BEGIN}|{EMOJI_CALL_END})",
             f"(?P<hrule>{HRULE})",
         ),
     ]
