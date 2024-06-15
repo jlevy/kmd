@@ -1,10 +1,8 @@
 from textwrap import dedent
-from kmd.action_exec.action_registry import define_llm_action
+from kmd.action_exec.action_builders import define_llm_action
 from kmd.config.logger import get_logger
 from kmd.model.language_models import LLM
-from kmd.text_docs.sliding_transforms import WindowSettings, WINDOW_BR_SEP
 from kmd.text_docs.text_diffs import ONLY_BREAKS_AND_SPACES
-from kmd.text_docs.text_doc import Unit
 from kmd.text_docs.window_settings import WINDOW_1_PARA, WINDOW_2K_WORDTOKS, WINDOW_4_PARA
 
 

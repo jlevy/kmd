@@ -172,8 +172,7 @@ def sliding_wordtok_window_transform(
     sep_wordtoks = [settings.separator] if settings.separator else []
 
     log.message(
-        "%s Sliding word transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
-        EMOJI_PROCESS,
+        "Sliding word transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
         nwordtoks,
         nbytes,
         nwindows,
@@ -183,8 +182,7 @@ def sliding_wordtok_window_transform(
     output_wordtoks = []
     for i, window in enumerate(windows):
         log.message(
-            "%s Sliding word transform: Window %s of %s (%s wordtoks, %s bytes), at %s wordtoks so far",
-            EMOJI_PROCESS,
+            "Sliding word transform: Window %s of %s (%s wordtoks, %s bytes), at %s wordtoks so far",
             i + 1,
             nwindows,
             window.size(Unit.WORDTOKS),
@@ -204,8 +202,7 @@ def sliding_wordtok_window_transform(
             )
 
             log.message(
-                "%s Sliding word transform: Best alignment of window %s is at token offset %s (score %s, %s)",
-                EMOJI_PROCESS,
+                "Sliding word transform: Best alignment of window %s is at token offset %s (score %s, %s)",
                 i,
                 offset,
                 score,
@@ -215,8 +212,7 @@ def sliding_wordtok_window_transform(
             output_wordtoks = output_wordtoks[:offset] + sep_wordtoks + new_wordtoks
 
     log.message(
-        "%s Sliding word transform: Done, output total %s wordtoks",
-        EMOJI_PROCESS,
+        "Sliding word transform: Done, output total %s wordtoks",
         len(output_wordtoks),
     )
 

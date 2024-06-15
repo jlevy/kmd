@@ -24,8 +24,8 @@ if sys.argv[0].endswith("/kmdsh"):
     from kmd.config.logger import get_logger
     from kmd.config.text_styles import EMOJI_WARN
     from kmd.file_storage.workspaces import current_workspace
+    from kmd.action_defs import load_all_actions
     from kmd.action_exec.action_exec import run_action
-    from kmd.action_exec.action_registry import load_all_actions
     from kmd.commands import commands
     from kmd.model.actions_model import Action
     from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState

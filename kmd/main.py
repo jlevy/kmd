@@ -6,7 +6,7 @@ import atexit
 import sys
 from typer import Typer
 from kmd.action_exec.action_exec import run_action
-from kmd.action_exec.action_registry import load_all_actions
+from kmd.action_defs import load_all_actions
 from kmd.config.setup import setup
 from kmd.config.settings import APP_NAME
 from kmd.tui import tui

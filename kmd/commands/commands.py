@@ -2,6 +2,7 @@ import os
 from os.path import getmtime, basename, getsize, join
 import re
 import subprocess
+from textwrap import dedent
 from typing import Callable, List, Optional
 from datetime import datetime
 from humanize import naturaltime, naturalsize
@@ -42,22 +43,86 @@ def kmd_help() -> None:
     """
     kmd help. Lists all available actions.
     """
-    from kmd.action_exec.action_registry import load_all_actions
+    from kmd.action_defs import load_all_actions
 
-    output_heading("Available kmd commands:")
+    output_heading("About kmd")
+
+    output(
+        dedent(
+            """
+            Kmd is an extensible command-line tool for exploring and organizing knowledge.
+            It includes tasks like editing and summarizing text, transcribing videos,
+            generating PDFs or webpages, and more.
+
+            As with the Unix shell, the philosophy is to have simple commands that can be
+            combined flexibly in complex and powerful ways. Inputs and outputs of commands
+            are stored as files, so you can easily chain commands together and inspect
+            intermediate results. When possible, slow actions produce cached outputs and
+            most actions are nondestructive and idempotent—that is, they will either create
+            new files or simply skip an operation if it's already complete.
+
+            kmd is built on top of xonsh, a Python-powered shell language. Most things are
+            invoked via kmd commands and kmd actions, but you also have access to the full
+            power of Python and the shell when needed.
+
+            kmd operates on "items", which are URLs, files, text or Markdown notes, or other
+            documents. These are stored as simple files, in a single directory, called a
+            "workspace". Typically, you want a workspace for a single topic or project. By
+            convention workspace directories have a `.kb` suffix, such as `fitness.kb`.
+
+            Within a workspace, files are organized into folders by type, including
+            resources, notes, configs, and exports. Whenever possible, text items are stored
+            in Markdown format with YAML front matter (the same format used by Jekyll or
+            other static site generators). Actions can produce export items in any other
+            format, like a PDF or a webpage.
+
+            All items have a "source path", which is simply the path of the file relative to
+            the workspace directory. Item files are named in a simple and readable way, that
+            reflects the title of the item, its type, its format, and in some cases its
+            provenance. For example,
+            `notes/day_1_workout_introduction_youtube_transcription_timestamps.note.md` is
+            an item that is a note (a text file) that is transcription of a YouTube video,
+            including timestamps, in Markdown format.
+
+            The actual name of the file is simply a convenient "handle" for the item, but
+            the metadata on text items is in YAML metadata at the top of each file.  The
+            metadata on items includes titles and item types, as you might expect, but also
+            provenance information, e.g. the URL where a page was downloaded from, or the
+            item.
+
+            kmd actions are a set of actions that can operate on one or more items and
+            produce new items. Actions can invoke APIs, use LLMs, or perform any other
+            operation that's scriptable in Python. You specify inputs to actions as URLs or
+            source paths.
+
+            Actions can be chained together in convenient ways. The output of any command is
+            always stored as a "selection", which is then automatically available for input
+            on a subsequent command. This is sort of like Unix pipes, but is more convenient
+            and incremental, and allows you to sequence actions, multiple output items
+            becoming the input of another action.
+
+            In addition, there are built-in kmd commands that are part of the kmd tool
+            itself. These allow you to list items in the workspace, see or change the
+            current selection, archive items, view logs, etc.
+            """,
+        ).strip(),
+        text_wrap=Wrap.WRAP_FULL,
+    )
+
+    output_heading("Available commands")
 
     for command in all_commands():
         doc = command.__doc__ if command.__doc__ else ""
         output(format_docstr(command.__name__, doc))
         output()
 
-    output_heading("Available kmd actions:")
+    output_heading("Available actions")
     actions = load_all_actions()
     for action in actions.values():
         output(format_docstr(action.name, action.description))
         output()
 
-    output_heading("More help:")
+    output_heading("More help")
     output(
         "Use `kmd_help` for this list. Use `xonfig tutorial` for xonsh help and `help()` for Python help."
     )
@@ -177,7 +242,7 @@ def param(*args: str) -> None:
         new_params = remove_values(new_params, deletes)
         workspace.set_action_params(new_params)
 
-    output_heading("Available action parameters:")
+    output_heading("Available action parameters")
 
     for ap in ACTION_PARAMS.values():
         output(format_docstr(ap.name, ap.full_description()))
@@ -185,10 +250,9 @@ def param(*args: str) -> None:
 
     params = workspace.get_action_params()
     if not params:
-        output_status("No action parameters set.")
+        output_status("No action parameters are set.")
     else:
-        output_heading("Action parameters:")
-
+        output_heading("Current action parameters")
         for key, value in params.items():
             output(format_key_value(key, value))
 

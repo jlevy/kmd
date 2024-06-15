@@ -52,9 +52,7 @@ class PullSourceTimestamps(EachItemAction):
         if not source_item.body:
             raise InvalidInput(f"Source item must have a body: {source_item}")
 
-        log.message(
-            "%s Pulling timestamps from source item: %s", EMOJI_PROCESS, source_item.store_path
-        )
+        log.message("Pulling timestamps from source item: %s", source_item.store_path)
 
         # Parse current doc.
         item_doc = TextDoc.from_text(item.body)

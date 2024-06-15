@@ -14,24 +14,36 @@ COLOR_EMPH = "bright_green"
 
 COLOR_OUTPUT = "yellow"
 
-COLOR_LITERAL = "yellow"
+COLOR_LITERAL = "bright_blue"
 
-COLOR_KEY = "cyan"
+COLOR_KEY = "bright_blue"
 
-COLOR_VALUE = "bright_blue"
+COLOR_VALUE = "cyan"
 
-COLOR_PATH = "bright_blue"
+COLOR_PATH = "cyan"
 
 COLOR_HINT = "bright_black"
 
-COLOR_SUCCESSS = "bright_green"
+COLOR_SUCCESSS = "green"
+
+COLOR_WARN = "bright_red"
 
 COLOR_ERROR = "bright_red"
+
+COLOR_PROCESS = "magenta"
+
+COLOR_SAVED = "blue"
+
+COLOR_TIMING = "blue"
+
+COLOR_CALL = "yellow"
+
 
 ## Formatting
 
 NBSP = "\u00A0"
 
+HRULE = ("⋯ " * 36).strip()
 
 ## Symbols
 
@@ -83,6 +95,7 @@ class KmdHighlighter(RegexHighlighter):
             r"(?P<call>[\w.]*?)\(",
             r"\b(?P<bool_true>True)\b|\b(?P<bool_false>False)\b|\b(?P<none>None)\b",
             r"(?P<ellipsis>(\.\.\.|…))",
+            r"(?P<part_count>\w+ \d+ of \d+(?!\-\w))",
             r"(?P<number_complex>(?<!\w)(?:\-?[0-9]+\.?[0-9]*(?:e[-+]?\d+?)?)(?:[-+](?:[0-9]+\.?[0-9]*(?:e[-+]?\d+)?))?j)",
             r"(?P<number>(?<!\w)\-?[0-9]+\.?[0-9]*(e[-+]?\d+?)?\b(?!\-\w)|0x[0-9a-fA-F]*)",
             r"(?P<duration>(?<!\w)\-?[0-9]+\.?[0-9]*(ms|s)\b(?!\-\w))",
@@ -97,6 +110,7 @@ class KmdHighlighter(RegexHighlighter):
             f"(?P<warn>^{EMOJI_WARN})",
             f"(?P<saved>^{EMOJI_SAVED})",
             f"(?P<log_call>^{EMOJI_CALL_BEGIN}|{EMOJI_CALL_END})",
+            f"(?P<hrule>{HRULE})",
         ),
     ]
 
@@ -126,6 +140,7 @@ RICH_STYLES = {
     "kmd.attrib_value": Style(color=COLOR_VALUE, italic=False),
     "kmd.number": Style(color=COLOR_KEY, italic=False),
     "kmd.duration": Style(color=COLOR_KEY, italic=False),
+    "kmd.part_count": Style(color=COLOR_LITERAL, italic=False),
     "kmd.time_ago": Style(color=COLOR_KEY, italic=False),
     "kmd.file_size": Style(color=COLOR_VALUE, italic=False),
     "kmd.code_span": Style(color=COLOR_KEY, italic=False),
@@ -139,10 +154,11 @@ RICH_STYLES = {
     "kmd.path": Style(color=COLOR_PATH),
     "kmd.filename": Style(color=COLOR_VALUE),
     # Emoji colors:
-    "kmd.process": Style(color="magenta", bold=True),
-    "kmd.success": Style(color="green", bold=True),
-    "kmd.timing": Style(color="blue", bold=True),
-    "kmd.warn": Style(color="red", bold=True),
-    "kmd.saved": Style(color="blue", bold=True),
-    "kmd.log_call": Style(color="yellow", bold=True),
+    "kmd.process": Style(color=COLOR_PROCESS, bold=True),
+    "kmd.success": Style(color=COLOR_SUCCESSS, bold=True),
+    "kmd.timing": Style(color=COLOR_TIMING, bold=True),
+    "kmd.warn": Style(color=COLOR_WARN, bold=True),
+    "kmd.saved": Style(color=COLOR_SAVED, bold=True),
+    "kmd.log_call": Style(color=COLOR_CALL, bold=True),
+    "kmd.hrule": Style(color=COLOR_HINT),
 }

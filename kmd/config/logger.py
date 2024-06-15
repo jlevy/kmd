@@ -10,7 +10,7 @@ from strif import new_timestamped_uid, atomic_output_file
 from rich.logging import RichHandler
 from rich.theme import Theme
 from rich.console import Console
-from kmd.config.text_styles import EMOJI_SAVED, RICH_STYLES, KmdHighlighter
+from kmd.config.text_styles import EMOJI_SAVED, HRULE, RICH_STYLES, KmdHighlighter
 
 LOG_ROOT = Path("./.kmd_logs")
 
@@ -75,6 +75,9 @@ class CustomLogger:
 
     def message(self, *args, **kwargs):
         self.logger.warning(*args, **kwargs)
+
+    def separator(self):
+        self.message(HRULE)
 
     def save_object(self, description: str, prefix_slug: Optional[str], obj: Any):
         prefix = prefix_slug + "." if prefix_slug else ""

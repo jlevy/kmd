@@ -1,13 +1,10 @@
-from typing import Dict, Type
-from cachetools import cached
-from kmd.action_exec.llm_action_base import LLMAction
+from typing import List, Type
 from kmd.model.actions_model import Action
-from kmd.action_defs import import_all_actions
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 
-_actions = []
+_actions: List[Type[Action]] = []
 
 
 def kmd_action(cls: Type[Action]):
@@ -22,53 +19,10 @@ def kmd_action(cls: Type[Action]):
     return cls
 
 
-def define_llm_action(
-    name,
-    friendly_name,
-    description,
-    model,
-    system_message,
-    title_template,
-    template,
-    windowing=None,
-    diff_filter=None,
-):
-    """
-    Convenience method to register an LLM action.
-    """
-
-    @kmd_action
-    class CustomLLMAction(LLMAction):
-        def __init__(self):
-            super().__init__(
-                name,
-                friendly_name,
-                description,
-                model=model,
-                system_message=system_message,
-                title_template=title_template,
-                template=template,
-                windowing=windowing,
-                diff_filter=diff_filter,
-            )
-
-    return CustomLLMAction
-
-
-@cached({})
-def load_all_actions() -> Dict[str, Action]:
-    import_all_actions()
-
+def instantiate_actions() -> dict[str, Action]:
     actions_map = {}
     for cls in _actions:
-        action = cls()
+        action: Action = cls()  # type: ignore
         actions_map[action.name] = action
 
-    actions_map = dict(sorted(actions_map.items()))
-    log.info("Registered actions: %s", list(actions_map.keys()))
-    return actions_map
-
-
-def look_up_action(action_name: str) -> Action:
-    actions = load_all_actions()
-    return actions[action_name]
+    return dict(sorted(actions_map.items()))
