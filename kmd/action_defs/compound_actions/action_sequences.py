@@ -1,4 +1,9 @@
-from kmd.action_exec.action_builders import define_action_combo, define_action_sequence
+from kmd.action_exec.action_builders import (
+    combine_with_divs,
+    define_action_combo,
+    define_action_sequence,
+)
+from kmd.text_formatting.html_in_md import DESCRIPTION, FULL_TEXT
 
 
 define_action_sequence(
@@ -18,6 +23,7 @@ define_action_combo(
     ["brief_description", "copy_items"],
     friendly_name="Add a Description",
     description="Add a brief summary at the top of the item.",
+    combiner=combine_with_divs(DESCRIPTION, FULL_TEXT),
 )
 
 

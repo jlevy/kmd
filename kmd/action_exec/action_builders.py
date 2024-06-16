@@ -1,5 +1,5 @@
 from typing import Callable, List, Optional
-from kmd.action_defs import look_up_action, reload_actions
+from kmd.action_defs import look_up_action
 from kmd.action_exec.action_exec import run_action
 from kmd.action_exec.action_registry import kmd_action
 from kmd.action_exec.llm_action_base import LLMAction
@@ -9,6 +9,11 @@ from kmd.config.logger import get_logger
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item, ItemRelations, ItemType
 from kmd.model.locators import StorePath
+from kmd.text_formatting.html_in_md import (
+    Wrapper,
+    div_wrapper,
+    identity_wrapper,
+)
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
@@ -109,37 +114,42 @@ A function that combines the outputs of multiple actions into a single Item.
 """
 
 
-def combine_outputs_default(
+def combine_with_wrappers(
     action: Action,
     inputs: List[Item],
     results: List[ActionResult],
+    wrappers: Optional[List[Wrapper]] = None,
     separator: str = "\n\n",
 ) -> Item:
     """
-    Combine the outputs of multiple actions into a single item using paragraph breaks.
+    Combine the outputs of multiple actions into a single item. Optionally wraps each item
+    by calling a function on the body before combining.
     """
 
     if len(inputs) < 1:
-        raise InvalidInput("Expect at least one input to combine: %s", inputs)
+        raise InvalidInput("Expected at least one input to combine: %s", inputs)
+    if wrappers and len(wrappers) != len(results):
+        raise InvalidInput("Expected as many wrappers as results: %s", wrappers)
 
     parts = []
-    for result in results:
+    for i, result in enumerate(results):
+        wrapper = wrappers[i] if wrappers else identity_wrapper
         for part in result.items:
             if not part.body:
                 raise InvalidInput("Item result must have a body: %s", part)
             if not part.store_path:
                 raise InvalidInput("Item result must have a store path: %s", part)
 
-            parts.append(part)
+            parts.append((part, wrapper))
 
-    combo_body = separator.join(part.body for part in parts)
+    combo_body = separator.join(wrapper(part.body) for part, wrapper in parts)
 
     combo_title = f"{inputs[0].title}"
     if len(inputs) > 1:
         combo_title += f" and {len(inputs) - 1} others"
     combo_title += f" ({action.friendly_name})"
 
-    relations = ItemRelations(derived_from=[StorePath(part.store_path) for part in parts])
+    relations = ItemRelations(derived_from=[StorePath(part.store_path) for part, _wrapper in parts])
     combo_result = Item(
         title=combo_title,
         body=combo_body,
@@ -151,12 +161,34 @@ def combine_outputs_default(
     return combo_result
 
 
+def combine_as_paragraphs(action: Action, inputs: List[Item], results: List[ActionResult]) -> Item:
+    """
+    Combine the outputs of multiple actions into a single item, separating each part with
+    paragraph breaks.
+    """
+    return combine_with_wrappers(action, inputs, results)
+
+
+def combine_with_divs(*class_names: str) -> Combiner:
+    """
+    Combine the outputs of multiple actions into a single item, wrapping each part in a div with
+    the corresponding name.
+    """
+
+    def combiner(action: Action, inputs: List[Item], results: List[ActionResult]) -> Item:
+        return combine_with_wrappers(
+            action, inputs, results, [div_wrapper(class_name) for class_name in class_names]
+        )
+
+    return combiner
+
+
 def define_action_combo(
     name,
     action_names: List[str],
     friendly_name: Optional[str] = None,
     description: Optional[str] = None,
-    combiner: Combiner = combine_outputs_default,
+    combiner: Combiner = combine_as_paragraphs,
 ) -> None:
     """
     Register an action that combines the results of other actions.
