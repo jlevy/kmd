@@ -7,7 +7,8 @@ from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import Item, ItemType
+from kmd.model.items_model import Item, ItemRelations, ItemType
+from kmd.model.locators import StorePath
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
@@ -126,6 +127,8 @@ def combine_outputs_default(
         for part in result.items:
             if not part.body:
                 raise InvalidInput("Item result must have a body: %s", part)
+            if not part.store_path:
+                raise InvalidInput("Item result must have a store path: %s", part)
 
             parts.append(part)
 
@@ -136,11 +139,13 @@ def combine_outputs_default(
         combo_title += f" and {len(inputs) - 1} others"
     combo_title += f" ({action.friendly_name})"
 
+    relations = ItemRelations(derived_from=[StorePath(part.store_path) for part in parts])
     combo_result = Item(
         title=combo_title,
         body=combo_body,
         type=ItemType.note,
         format=results[0].items[0].format,
+        relations=relations,
     )
 
     return combo_result
