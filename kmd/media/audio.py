@@ -4,10 +4,10 @@ from openai import OpenAI
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource, ClientOptionsFromEnv
 from pydub import AudioSegment
 from strif import atomic_output_file
-
 from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError
+from kmd.text_formatting.html_in_md import html_timestamp_span
 
 log = get_logger(__name__)
 
@@ -202,9 +202,7 @@ def _format_words(words: List[Tuple[float, str]], include_sentence_timestamps=Tr
     for timestamp, sentence in sentences:
         formatted_sentence = " ".join(sentence)
         if include_sentence_timestamps:
-            formatted_text.append(
-                f'<span data-timestamp="{timestamp:.2f}">{formatted_sentence}</span>'
-            )
+            formatted_text.append(html_timestamp_span(formatted_sentence, timestamp))
         else:
             formatted_text.append(formatted_sentence)
 

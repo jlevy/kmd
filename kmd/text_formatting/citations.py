@@ -1,6 +1,7 @@
 from kmd.config.text_styles import NBSP
 from kmd.media.video import timestamp_video_url
 from kmd.util.url import Url
+from kmd.text_formatting.html_in_md import CITATION, html_span, html_a
 
 
 def add_citation_to_text(text: str, citation: str) -> str:
@@ -22,10 +23,11 @@ CITE_RIGHT_BR = "〕"
 
 
 def format_citation(citation: str) -> str:
-    return f"""<span class="citation">{CITE_LEFT_BR}{citation}{CITE_RIGHT_BR}</span>"""
+    return html_span(f"{CITE_LEFT_BR}{citation}{CITE_RIGHT_BR}", CITATION)
 
 
 def format_timestamp_citation(base_url: Url, timestamp: float) -> str:
     formatted_timestamp = format_timestamp(timestamp)
+    citation = format_citation(formatted_timestamp)
     timestamp_url = timestamp_video_url(base_url, timestamp)
-    return f"""<a href="{timestamp_url}"><span class="citation">{CITE_LEFT_BR}{formatted_timestamp}{CITE_RIGHT_BR}</span></a>"""
+    return html_a(citation, timestamp_url)

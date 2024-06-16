@@ -76,6 +76,9 @@ transcribe_video 'https://www.youtube.com/watch?v=juD99_sPWGU'
 strip_html
 break_into_paragraphs
 summarize_as_bullets
+
+# Combine all the above into combo and sequence actions:
+transcribe_and_format_video_with_description 'https://www.youtube.com/watch?v=XRQnWomofIY'
 ```
 
 ## Other Ways to Run kmd
