@@ -63,13 +63,13 @@ SYMBOL_SENT = "S"
 
 EMOJI_PROCESS = "⛭"
 
-EMOJI_WARN = "⚠️"
+EMOJI_WARN = "△"
 
 EMOJI_SAVED = "⩣"
 
-EMOJI_TIMING = "⏱️"
+EMOJI_TIMING = "⏱"
 
-EMOJI_SUCCESS = "✔️"
+EMOJI_SUCCESS = "✓"
 
 EMOJI_CALL_BEGIN = "≫"
 
@@ -101,8 +101,8 @@ class KmdHighlighter(RegexHighlighter):
             r"\b(?P<bool_true>True)\b|\b(?P<bool_false>False)\b|\b(?P<none>None)\b",
             r"(?P<ellipsis>(\.\.\.|…))",
             r"(?P<part_count>\w+ \d+ of \d+(?!\-\w))",
-            r"(?P<number_complex>(?<!\w)(?:\-?[0-9]+\.?[0-9]*(?:e[-+]?\d+?)?)(?:[-+](?:[0-9]+\.?[0-9]*(?:e[-+]?\d+)?))?j)",
-            r"(?P<number>(?<!\w)\-?[0-9]+\.?[0-9]*(e[-+]?\d+?)?\b(?!\-\w)|0x[0-9a-fA-F]*)",
+            # r"(?P<number_complex>(?<!\w)(?:\-?[0-9]+\.?[0-9]*(?:e[-+]?\d+?)?)(?:[-+](?:[0-9]+\.?[0-9]*(?:e[-+]?\d+)?))?j)",
+            # r"(?P<number>(?<!\w)\-?[0-9]+\.?[0-9]*(e[-+]?\d+?)?\b(?!\-\w)|0x[0-9a-fA-F]*)",
             r"(?P<duration>(?<!\w)\-?[0-9]+\.?[0-9]*(ms|s)\b(?!\-\w))",
             r"(?P<path>\B(/[-\w._+]+)*\/)(?P<filename>[-\w._+]*)?",
             r"(?<![\\\w])(?P<str>b?'''.*?(?<!\\)'''|b?'.*?(?<!\\)'|b?\"\"\".*?(?<!\\)\"\"\"|b?\".*?(?<!\\)\")",
@@ -132,24 +132,24 @@ RICH_STYLES = {
     "kmd.str": Style(color=COLOR_LITERAL, italic=False, bold=False),
     "kmd.brace": Style(bold=True),
     "kmd.comma": Style(bold=True),
-    "kmd.ipv4": Style(bold=True, color=COLOR_KEY),
-    "kmd.ipv6": Style(bold=True, color=COLOR_KEY),
-    "kmd.eui48": Style(bold=True, color=COLOR_KEY),
-    "kmd.eui64": Style(bold=True, color=COLOR_KEY),
-    "kmd.tag_start": Style(bold=True),
-    "kmd.tag_name": Style(color=COLOR_VALUE, bold=True),
+    "kmd.ipv4": Style(color=COLOR_KEY),
+    "kmd.ipv6": Style(color=COLOR_KEY),
+    "kmd.eui48": Style(color=COLOR_KEY),
+    "kmd.eui64": Style(color=COLOR_KEY),
+    "kmd.tag_start": Style(),
+    "kmd.tag_name": Style(color=COLOR_VALUE),
     "kmd.tag_contents": Style(color="default"),
-    "kmd.tag_end": Style(bold=True),
+    "kmd.tag_end": Style(),
     "kmd.attrib_name": Style(color=COLOR_KEY, italic=False),
-    "kmd.attrib_equal": Style(bold=True),
+    "kmd.attrib_equal": Style(),
     "kmd.attrib_value": Style(color=COLOR_VALUE, italic=False),
-    "kmd.number": Style(color=COLOR_KEY, italic=False),
+    # "kmd.number": Style(color=COLOR_KEY, italic=False),
     "kmd.duration": Style(color=COLOR_KEY, italic=False),
     "kmd.part_count": Style(color=COLOR_LITERAL, italic=False),
     "kmd.time_ago": Style(color=COLOR_KEY, italic=False),
     "kmd.file_size": Style(color=COLOR_VALUE, italic=False),
     "kmd.code_span": Style(color=COLOR_KEY, italic=False),
-    "kmd.number_complex": Style(color=COLOR_KEY, italic=False),  # same
+    # "kmd.number_complex": Style(color=COLOR_KEY, italic=False),  # same
     "kmd.bool_true": Style(color=COLOR_SUCCESSS, italic=True),
     "kmd.bool_false": Style(color=COLOR_ERROR, italic=True),
     "kmd.none": Style(color=COLOR_VALUE, italic=True),
