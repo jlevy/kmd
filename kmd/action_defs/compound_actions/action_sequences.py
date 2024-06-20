@@ -1,4 +1,4 @@
-from kmd.action_exec.action_builders import (
+from kmd.action_exec.action_combinators import (
     combine_with_divs,
     define_action_combo,
     define_action_sequence,

@@ -6,7 +6,16 @@ from textwrap import dedent
 from typing import Callable, List, Optional
 from datetime import datetime
 from humanize import naturaltime, naturalsize
-from kmd.commands.command_output import Wrap, format_docstr, output, output_heading, output_status
+from rich import get_console
+from kmd.assistant.assistant import assistance
+from kmd.commands.command_output import (
+    Wrap,
+    format_action_description,
+    output,
+    output_assistance,
+    output_heading,
+    output_status,
+)
 from kmd.commands.local_file_tools import open_platform_specific
 from kmd.config.text_styles import (
     COLOR_EMPH,
@@ -17,6 +26,7 @@ from kmd.file_storage.workspaces import canon_workspace_name, current_workspace,
 from kmd.model.actions_model import ACTION_PARAMS
 from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath
+from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_lines
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.lang_tools.inflection import plural
 from kmd.config.logger import LOG_PATH, get_logger
@@ -47,18 +57,21 @@ def kmd_help() -> None:
     from kmd.action_defs import load_all_actions
 
     output_heading("About kmd")
-    output(dedent(about_kmd.__doc__).strip(), text_wrap=Wrap.WRAP_FULL)
+    output(
+        normalize_markdown(dedent(about_kmd.__doc__).strip(), line_wrapper=wrap_lines),
+        text_wrap=Wrap.NONE,
+    )
 
     output_heading("Available commands")
     for command in all_commands():
         doc = command.__doc__ if command.__doc__ else ""
-        output(format_docstr(command.__name__, doc))
+        output(format_action_description(command.__name__, doc))
         output()
 
     output_heading("Available actions")
     actions = load_all_actions()
     for action in actions.values():
-        output(format_docstr(action.name, action.description))
+        output(format_action_description(action.name, action.description))
         output()
 
     output_heading("More help")
@@ -67,6 +80,15 @@ def kmd_help() -> None:
     )
 
     output()
+
+
+@kmd_command
+def assist(input: str) -> None:
+    """
+    Invoke the kmd assistant.
+    """
+    with get_console().status(f"Thinking…", spinner="dots"):
+        output_assistance(assistance(input))
 
 
 @kmd_command
@@ -185,7 +207,7 @@ def param(*args: str) -> None:
     output_heading("Available action parameters")
 
     for ap in ACTION_PARAMS.values():
-        output(format_docstr(ap.name, ap.full_description()))
+        output(format_action_description(ap.name, ap.full_description()))
         output()
 
     params = workspace.get_action_params()

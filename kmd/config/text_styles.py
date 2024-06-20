@@ -19,6 +19,8 @@ COLOR_EMPH = "bright_green"
 
 COLOR_OUTPUT = "yellow"
 
+COLOR_ASSISTANCE = "italic bright_green"
+
 COLOR_LITERAL = "bright_blue"
 
 COLOR_KEY = "bright_blue"

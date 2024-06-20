@@ -1,9 +1,7 @@
 from dataclasses import dataclass
-from textwrap import indent
 from typing import Optional
-from slugify import slugify
+from kmd.action_exec.llm_completion import llm_completion
 from kmd.config.text_styles import EMOJI_PROCESS
-from kmd.llms.completion import completion
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     EachItemAction,
@@ -21,29 +19,6 @@ from kmd.text_docs.sliding_transforms import (
 from kmd.util.log_calls import log_calls
 
 log = get_logger(__name__)
-
-
-@log_calls(level="message")
-def llm_completion(model: str, system_message: str, template: str, input: str) -> str:
-    user_message = template.format(body=input)
-    model_slug = slugify(model, separator="_")
-
-    log.info("LLM completion input to model %s:\n%s", model, indent(user_message, "    "))
-    log.save_object("System message", f"llm.{model_slug}", system_message)
-    log.save_object("User message", f"llm.{model_slug}", user_message)
-
-    text_output = completion(
-        model,
-        messages=[
-            {"role": "system", "content": system_message},
-            {"role": "user", "content": user_message},
-        ],
-    )
-
-    log.info("LLM completion output:\n%s", indent(text_output, "    "))
-    log.save_object("LLM output", f"llm.{model_slug}", text_output)
-
-    return text_output
 
 
 def _sliding_llm_transform(

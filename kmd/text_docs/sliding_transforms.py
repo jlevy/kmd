@@ -8,7 +8,7 @@ from math import ceil
 from textwrap import dedent
 from typing import Callable, List, Optional
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import EMOJI_PROCESS, EMOJI_WARN
+from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import UnexpectedError
 from kmd.model.items_model import Format
 from kmd.text_formatting.markdown_normalization import normalize_markdown
@@ -68,7 +68,6 @@ def filtered_transform(
     Apply a transform with sliding window across the input doc, enforcing
     the changes it's allowed to make with `diff_filter`.
     """
-
     if not windowing:
         transformed_doc = transform_func(doc)
     else:
