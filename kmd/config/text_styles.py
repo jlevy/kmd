@@ -4,8 +4,8 @@ Settings that define the visual appearance of text outputs.
 
 ## Settings
 
-KMD_WRAP_WIDTH = 80
-"""Wrap width for kmd output."""
+CONSOLE_WRAP_WIDTH = 80
+"""Wrap width for console output."""
 
 ## Text styles
 
@@ -48,7 +48,7 @@ COLOR_CALL = "yellow"
 
 NBSP = "\u00A0"
 
-HRULE = ("⋯ " * (KMD_WRAP_WIDTH // 2)).strip()
+HRULE = ("⋯ " * (CONSOLE_WRAP_WIDTH // 2)).strip()
 
 ## Symbols
 

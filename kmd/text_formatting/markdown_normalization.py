@@ -8,6 +8,7 @@ from typing import Generator, cast
 import marko
 from marko.renderer import Renderer
 from marko import block, inline
+from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
 from kmd.lang_tools.sentence_split_regex import split_sentences_fast
 
 
@@ -187,6 +188,22 @@ DEFAULT_WRAP_WIDTH = 92
 # See https://github.com/jlevy/atom-flowmark/blob/master/lib/remark-smart-word-wrap.js#L13
 
 
+def wrap_lines(
+    text: str, initial_indent: str, subsequent_indent: str, width: int = CONSOLE_WRAP_WIDTH
+) -> str:
+    """
+    Wrap lines of text to a given width.
+    """
+    return textwrap.fill(
+        text,
+        width=width,
+        initial_indent=initial_indent,
+        subsequent_indent=subsequent_indent,
+        break_long_words=False,
+        break_on_hyphens=False,
+    )
+
+
 def wrap_lines_and_break_sentences(
     text: str,
     initial_indent: str,
@@ -220,7 +237,7 @@ def wrap_lines_and_break_sentences(
     return "\n".join(wrapped_lines)
 
 
-def normalize_markdown(markdown_text: str) -> str:
+def normalize_markdown(markdown_text: str, line_wrapper=wrap_lines_and_break_sentences) -> str:
     """
     Normalize Markdown text. Wraps lines and adds line breaks within paragraphs and on
     best-guess estimations of sentences, to make diffs more readable.
@@ -229,7 +246,7 @@ def normalize_markdown(markdown_text: str) -> str:
 
     # Normalize the markdown and wrap lines.
     parsed = marko.parse(markdown_text)
-    result = MarkdownNormalizer(wrap_lines_and_break_sentences).render(parsed)
+    result = MarkdownNormalizer(line_wrapper).render(parsed)
     return result
 
 

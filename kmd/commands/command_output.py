@@ -2,6 +2,9 @@
 Output methods. These are for user interaction, not logging.
 """
 
+import threading
+import sys
+from contextlib import contextmanager
 from enum import Enum
 import textwrap
 from rich import print as rprint
@@ -12,7 +15,7 @@ from kmd.config.text_styles import (
     COLOR_KEY,
     COLOR_OUTPUT,
     COLOR_PLAIN,
-    KMD_WRAP_WIDTH,
+    CONSOLE_WRAP_WIDTH,
 )
 
 
@@ -36,7 +39,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                 wrapped_paragraphs.append(
                     textwrap.fill(
                         paragraph,
-                        width=KMD_WRAP_WIDTH,
+                        width=CONSOLE_WRAP_WIDTH,
                         replace_whitespace=False,
                     )
                 )
@@ -44,7 +47,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                 wrapped_paragraphs.append(
                     textwrap.fill(
                         paragraph,
-                        width=KMD_WRAP_WIDTH,
+                        width=CONSOLE_WRAP_WIDTH,
                         replace_whitespace=True,
                     )
                 )
@@ -52,7 +55,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                 wrapped_paragraphs.append(
                     textwrap.fill(
                         paragraph,
-                        width=KMD_WRAP_WIDTH - 4,
+                        width=CONSOLE_WRAP_WIDTH - 4,
                         initial_indent="    ",
                         subsequent_indent="    ",
                         replace_whitespace=True,
@@ -62,7 +65,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                 wrapped_paragraphs.append(
                     textwrap.fill(
                         paragraph,
-                        width=KMD_WRAP_WIDTH - 8,
+                        width=CONSOLE_WRAP_WIDTH - 8,
                         initial_indent="",
                         subsequent_indent="    ",
                         replace_whitespace=True,
@@ -74,28 +77,50 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
         raise ValueError(f"Unknown text_wrap value: {text_wrap}")
 
 
-def output(message: str | Text = "", *args, text_wrap: Wrap = Wrap.WRAP, color=None):
-    if type(message) == str:
-        if color:
-            rprint(Text(fill_text(message % args, text_wrap), color))
-        else:
-            rprint(fill_text(message % args, text_wrap))
-    else:
-        rprint(message)
-
-
-def output_status(message: str, *args, text_wrap: Wrap = Wrap.NONE):
-    rprint()
-    rprint(Text(fill_text(message % args, text_wrap), COLOR_OUTPUT))
-
-
-def output_heading(message: str, *args, text_wrap: Wrap = Wrap.NONE):
-    rprint()
-    rprint(Text(fill_text(message % args, text_wrap).upper(), COLOR_HEADING))
-    rprint()
-
-
-def format_docstr(name: str, doc: str) -> Text:
+def format_action_description(name: str, doc: str) -> Text:
     doc = textwrap.dedent(doc).strip()
     wrapped = fill_text(doc, text_wrap=Wrap.INDENTED)
     return Text.assemble((name, COLOR_KEY), (": ", COLOR_HINT), "\n", (wrapped, COLOR_PLAIN))
+
+
+# Allow output stream to be customized if desired.
+_output_stream = threading.local()
+_output_stream.current = sys.stdout
+
+
+@contextmanager
+def redirect_output(new_output):
+    old_output = _output_stream.current
+    _output_stream.current = new_output
+    try:
+        yield
+    finally:
+        _output_stream.current = old_output
+
+
+def _current_output():
+    return getattr(_output_stream, "current", sys.stdout)
+
+
+def output(message: str | Text = "", *args, text_wrap: Wrap = Wrap.WRAP, color=None):
+    out = _current_output()
+    if type(message) == str:
+        if color:
+            rprint(Text(fill_text(message % args, text_wrap), color), file=out)
+        else:
+            rprint(fill_text(message % args, text_wrap), file=out)
+    else:
+        rprint(message, file=out)
+
+
+def output_status(message: str, *args, text_wrap: Wrap = Wrap.NONE):
+    out = _current_output()
+    rprint(file=out)
+    rprint(Text(fill_text(message % args, text_wrap), COLOR_OUTPUT), file=out)
+
+
+def output_heading(message: str, *args, text_wrap: Wrap = Wrap.NONE):
+    out = _current_output()
+    rprint(file=out)
+    rprint(Text(fill_text(message % args, text_wrap).upper(), COLOR_HEADING), file=out)
+    rprint(file=out)
