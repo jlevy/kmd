@@ -1,6 +1,6 @@
 from textwrap import dedent
 from kmd.action_exec.llm_completion import llm_completion
-from kmd.commands.command_output import output_as_string
+from kmd.text_ui.command_output import output_as_string
 from kmd.docs import assistant_instructions
 from kmd import model_sources_str
 from kmd.model.language_models import LLM

@@ -1,14 +1,12 @@
 from contextlib import contextmanager
 from textwrap import dedent
 import textwrap
-from typing import Callable, Generator, List
+from typing import Callable, Generator, List, cast
 import re
-from contextlib import contextmanager
-from typing import Generator, cast
 import marko
 from marko.renderer import Renderer
 from marko import block, inline
-from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
+from kmd.text_ui.text_styles import CONSOLE_WRAP_WIDTH
 from kmd.lang_tools.sentence_split_regex import split_sentences_fast
 
 

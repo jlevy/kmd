@@ -1,14 +1,12 @@
-from dataclasses import dataclass
 import re
 import tempfile
 import os
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from urllib.parse import urlparse, parse_qs
 from dataclasses import dataclass, fields
 from pprint import pprint
-from typing import Any, Dict, List
 import yt_dlp
-from kmd.config.text_styles import EMOJI_WARN
+from kmd.text_ui.text_styles import EMOJI_WARN
 from kmd.file_storage.yaml_util import write_yaml_file
 from kmd.model.errors_model import ApiResultError, InvalidInput
 from kmd.util.type_utils import not_none

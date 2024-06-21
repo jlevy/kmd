@@ -8,7 +8,7 @@ from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
 from kmd.assistant.assistant import assistance
-from kmd.commands.command_output import (
+from kmd.text_ui.command_output import (
     Wrap,
     format_action_description,
     output,
@@ -17,7 +17,7 @@ from kmd.commands.command_output import (
     output_status,
 )
 from kmd.commands.local_file_tools import open_platform_specific
-from kmd.config.text_styles import (
+from kmd.text_ui.text_styles import (
     COLOR_EMPH,
     EMOJI_WARN,
 )
@@ -87,7 +87,7 @@ def assist(input: str) -> None:
     """
     Invoke the kmd assistant.
     """
-    with get_console().status(f"Thinking…", spinner="dots"):
+    with get_console().status("Thinking…", spinner="dots"):
         output_assistance(assistance(input))
 
 

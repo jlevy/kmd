@@ -7,7 +7,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import EMOJI_WARN
+from kmd.text_ui.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ContentError, InvalidInput
 from kmd.model.items_model import Item
 from kmd.lang_tools.inflection import plural

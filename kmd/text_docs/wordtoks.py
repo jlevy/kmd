@@ -6,7 +6,7 @@ word tokens ("wordtoks").
 from textwrap import dedent
 from typing import List, Callable, Union
 import regex
-from kmd.config.text_styles import SYMBOL_SEP
+from kmd.text_ui.text_styles import SYMBOL_SEP
 
 # Note these parse like as tokens like HTML, so they can safely be mixed into inputs if desired.
 SENT_BR_TOK = "<-SENT-BR->"

@@ -3,7 +3,7 @@ from typing import List, cast
 from strif import abbreviate_str
 from kmd.action_defs import look_up_action
 from kmd.action_exec.system_actions import FETCH_ACTION, FETCH_ACTION_NAME
-from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
+from kmd.text_ui.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
 from kmd.model.actions_model import Action, ActionResult

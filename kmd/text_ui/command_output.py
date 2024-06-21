@@ -11,7 +11,7 @@ import textwrap
 from typing import Any, Callable
 from rich import print as rprint
 from rich.text import Text
-from kmd.config.text_styles import (
+from kmd.text_ui.text_styles import (
     COLOR_ASSISTANCE,
     COLOR_HEADING,
     COLOR_HINT,
@@ -140,7 +140,6 @@ def output_status(message: str, *args, text_wrap: Wrap = Wrap.NONE):
 
 
 def output_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE):
-    _output_message("ASSISTANT:", *args, text_wrap=text_wrap, color=COLOR_HEADING)
     _output_message(message, *args, text_wrap=text_wrap, color=COLOR_ASSISTANCE)
 
 

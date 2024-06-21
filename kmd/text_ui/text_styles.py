@@ -77,6 +77,8 @@ EMOJI_CALL_BEGIN = "≫"
 
 EMOJI_CALL_END = "≪"
 
+EMOJI_ASSISTANT = "🤖"
+
 ## Rich setup
 
 from rich.highlighter import RegexHighlighter, _combine_regex

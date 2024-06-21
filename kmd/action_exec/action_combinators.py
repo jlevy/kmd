@@ -2,7 +2,7 @@ from typing import Callable, List, Optional
 from kmd.action_defs import look_up_action
 from kmd.action_exec.action_exec import run_action
 from kmd.action_exec.action_registry import kmd_action
-from kmd.config.text_styles import EMOJI_PROCESS
+from kmd.text_ui.text_styles import EMOJI_PROCESS
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import InvalidInput

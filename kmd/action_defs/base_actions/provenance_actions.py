@@ -1,6 +1,5 @@
 from textwrap import indent
 from kmd.action_exec.action_registry import kmd_action
-from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     ChunkSize,

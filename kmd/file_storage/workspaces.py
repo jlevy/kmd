@@ -38,7 +38,7 @@ def current_workspace_dir() -> Path:
         path = path.parent
 
     raise InvalidStoreState(
-        f"No workspace found in `{cwd}`. A workspace directory should end in .kb; create one with the `workspace` command)"
+        f"No workspace found in `{cwd}`.\nA workspace directory should end in .kb; create one with the `workspace` command."
     )
 
 

@@ -4,7 +4,7 @@ from enum import Enum
 from textwrap import dedent
 from typing import Callable, List, Optional, Tuple
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import SYMBOL_SEP
+from kmd.text_ui.text_styles import SYMBOL_SEP
 from kmd.model.errors_model import UnexpectedError
 from kmd.text_docs.text_doc import SentIndex, TextDoc
 from kmd.text_docs.wordtoks import is_break_or_space, is_word
