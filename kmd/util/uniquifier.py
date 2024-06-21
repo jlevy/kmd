@@ -70,6 +70,9 @@ class Uniquifier:
         return len(self.keys)
 
 
+## Tests
+
+
 def test_uniquifier():
     uniquifier = Uniquifier()
 
@@ -89,7 +92,3 @@ def test_uniquifier():
 
     # Test length of uniquifier.
     assert len(uniquifier) == 8
-
-
-if __name__ == "__main__":
-    test_uniquifier()
