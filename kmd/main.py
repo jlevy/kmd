@@ -9,7 +9,6 @@ from kmd.action_exec.action_exec import run_action
 from kmd.action_defs import load_all_actions
 from kmd.config.setup import setup
 from kmd.config.settings import APP_NAME
-from kmd.tui import tui
 from kmd.commands import commands
 from kmd.config.logger import get_logger
 
@@ -56,13 +55,6 @@ if not "pytest" in sys.modules:
                 return command
 
             app.command(action_name)(dynamic_command(action_name, action))
-
-    @app.command()
-    def ui():
-        """
-        Run the text-based user interface.
-        """
-        tui.run()
 
     if __name__ == "__main__" or __name__.endswith(".main"):
         setup()

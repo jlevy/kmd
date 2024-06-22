@@ -117,7 +117,7 @@ def _current_output():
 
 def output(message: str | Text = "", *args, text_wrap: Wrap = Wrap.WRAP, color=None):
     out = _current_output()
-    if type(message) == str:
+    if isinstance(message, str):
         if color:
             rprint(Text(fill_text(message % args, text_wrap), color), file=out)
         else:

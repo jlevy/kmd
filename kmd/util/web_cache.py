@@ -9,7 +9,7 @@ from enum import Enum
 import requests
 import strif
 from kmd.util.download_url import download_url, user_agent_headers
-from kmd.util.identifier_utils import clean_alphanum_hash
+from strif import clean_alphanum_hash
 from kmd.util.url import normalize_url
 from kmd.config.logger import get_logger
 

@@ -22,7 +22,7 @@ define_action_combo(
     "add_description",
     ["brief_description", "copy_items"],
     friendly_name="Add a Description",
-    description="Add a brief summary at the top of the item.",
+    description="Add a brief description of the content above the full text of the item.",
     combiner=combine_with_divs(DESCRIPTION, FULL_TEXT),
 )
 

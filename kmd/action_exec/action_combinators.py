@@ -30,7 +30,7 @@ def define_action_sequence(
     description: Optional[str] = None,
 ) -> None:
     """
-    Register an action that combines the results of other actions.
+    Register a sequential action that chains the outputs of each action to the input of the next.
     """
 
     if not action_names or len(action_names) <= 1:

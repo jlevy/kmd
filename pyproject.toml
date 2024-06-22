@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 deepgram-sdk = "^3.2.7"
-strif = "^0.2.3"
+strif = "^1.0.0"
 marko = "^2.0.3"
 regex = "^2024.5.15"
 openai = "^1.33.0"
