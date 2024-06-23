@@ -24,6 +24,7 @@
         --color-text: #111827;
         --color-hover: #d1d5db;
         --color-hover-bg: #eff0f1;
+        --color-hint: #9ca3af;
       }
 
       body {
@@ -183,6 +184,16 @@
         background-color: var(--color-hover-bg);
         color: var(--color-primary);
       }
+
+      .description {
+        font-family: "Varta", sans-serif;
+        color: var(--color-secondary);
+        margin: 1rem 0;
+      }
+
+      .full-text {
+        margin: 1rem 0;
+      }
     </style>
   </head>
   <body>
@@ -190,6 +201,7 @@
       <h1 class="text-center text-4xl mt-6 mb-6">{{ title }}</h1>
       <div>
         <!-- Navigation Tabs -->
+        {% if show_tabs %}
         <nav>
           {% for tab in tabs %}
           <button
@@ -200,6 +212,7 @@
           </button>
           {% endfor %}
         </nav>
+        {% endif %}
         <div class="tab-content mt-8">
           <!-- Tab Content -->
           {% for tab in tabs %}

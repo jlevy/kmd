@@ -118,7 +118,7 @@ class YouTube(VideoService):
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             result = ydl.extract_info(str(url), download=False)
-            write_yaml_file(result, "yt_dlp_result.yaml")
+            # write_yaml_file(result, "yt_dlp_result.yaml")
 
         if not isinstance(result, dict):
             raise ApiResultError(f"Unexpected result from yt_dlp: {result}")

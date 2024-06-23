@@ -1,12 +1,16 @@
 import os
 from dataclasses import asdict, dataclass
 from typing import List, Optional
+from kmd.config.logger import get_logger
 from kmd.file_storage.workspaces import current_workspace
 from kmd.file_storage.yaml_util import read_yaml_file, to_yaml_string, write_yaml_file
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.model.locators import StorePath
 from kmd.util.type_utils import as_dataclass, not_none
 from kmd.web_gen.template_render import render_web_template
+
+
+log = get_logger(__name__)
 
 
 @dataclass
@@ -21,6 +25,7 @@ class TabInfo:
 class TabbedWebpage:
     title: str
     tabs: List[TabInfo]
+    show_tabs: bool = True
 
 
 def _fill_in_ids(tabs: List[TabInfo]):
@@ -41,7 +46,7 @@ def configure_webpage(title: str, items: List[Item]) -> Item:
         TabInfo(label=item.abbrev_title(max_len=20), store_path=item.store_path) for item in items
     ]
     _fill_in_ids(tabs)
-    config = TabbedWebpage(title=title, tabs=tabs)
+    config = TabbedWebpage(title=title, tabs=tabs, show_tabs=len(tabs) > 1)
 
     config_item = Item(
         title=f"Config for {title}",
