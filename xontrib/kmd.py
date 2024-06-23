@@ -18,7 +18,7 @@ import litellm
 from kmd.config.setup import setup
 from kmd.config.settings import media_cache_dir
 from kmd.config.logger import get_logger
-from kmd.text_ui.text_styles import EMOJI_WARN, COLOR_ERROR, COLOR_HEADING, COLOR_LOGO
+from kmd.text_ui.text_styles import EMOJI_WARN, COLOR_ERROR, COLOR_HEADING, COLOR_LOGO, LOGO
 from kmd.text_ui.command_output import output
 from kmd.file_storage.workspaces import current_workspace
 from kmd.action_defs import load_all_actions
@@ -118,7 +118,7 @@ def initialize():
     aliases.update(kmd_actions)  # type: ignore  # noqa: F821
 
     output()
-    output("🄺", color=COLOR_LOGO)
+    output(LOGO, color=COLOR_LOGO)
     output()
     output("Welcome to kmd.\n", color=COLOR_HEADING)
     output()

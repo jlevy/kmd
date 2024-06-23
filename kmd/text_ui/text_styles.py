@@ -9,6 +9,9 @@ CONSOLE_WRAP_WIDTH = 80
 
 ## Text styles
 
+LOGO = "⎪K⎪M⎪D⎪"
+
+
 COLOR_LOGO = "bold magenta"
 
 COLOR_PLAIN = "default"
