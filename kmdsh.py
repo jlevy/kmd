@@ -2,6 +2,7 @@
 Launch xonsh with kmd extensions and customizations.
 """
 
+import re
 import warnings
 
 from kmd.text_ui.text_styles import EMOJI_ASSISTANT
@@ -17,7 +18,7 @@ from xonsh.main import premain, postmain
 from xonsh.built_ins import XSH
 from xonsh.execer import Execer
 from xonsh.ptk_shell.shell import PromptToolkitShell
-from xonsh.readline_shell import ReadlineShell
+from xonsh.readline_shell import ReadlineShell  # noqa: F401
 from xonsh.xontribs import xontribs_load
 from kmd.config.logger import get_logger
 from kmd.text_ui.command_output import output, output_assistance
@@ -67,9 +68,10 @@ def install_to_xonsh():
 def assistant_command(line: str) -> Optional[str]:
     """
     Is this a query to the assistant?
+    Checks for word
     """
     line = line.strip()
-    if line.endswith(".") or line.endswith("?") or line.startswith("?"):
+    if re.search(r"\b\w+\.$", line) or re.search(r"\b\w+\?$", line) or line.startswith("?"):
         return line.lstrip("?").strip()
 
 
