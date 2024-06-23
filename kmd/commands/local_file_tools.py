@@ -10,8 +10,7 @@ import mimetypes
 import webbrowser
 from xonsh.platform import ON_WINDOWS, ON_DARWIN, ON_LINUX
 from kmd.config.logger import get_logger
-from kmd.file_storage.filenames import parse_filename
-from kmd.model.items_model import FileExt
+from kmd.file_storage.filenames import ext_is_text, parse_filename
 from kmd.util.url import is_url
 
 log = get_logger(__name__)
@@ -46,6 +45,10 @@ def _native_open(filename: str):
         raise NotImplementedError("Unsupported platform")
 
 
+def _in_kitty_terminal():
+    return os.environ.get("TERM") == "xterm-kitty"
+
+
 def open_platform_specific(file_or_url: str):
     if is_url(file_or_url) or file_or_url.endswith(".html"):
         if not is_url(file_or_url):
@@ -56,8 +59,11 @@ def open_platform_specific(file_or_url: str):
         file = file_or_url
         mime_type, file_size, num_lines = file_info(file)
         _dirname, _name, _item_type, ext = parse_filename(file)
-        if FileExt(ext).is_text() or mime_type and mime_type.startswith("text"):
+        if ext_is_text(ext) or mime_type and mime_type.startswith("text"):
             view_file(file, use_less=num_lines > 40 or file_size > 20 * 1024)
+        elif _in_kitty_terminal() and mime_type and mime_type.startswith("image"):
+            # Support kitty terminal image display, if we are running in kitty.
+            subprocess.run(["kitty", "+kitten", "icat", file])
         else:
             _native_open(file)
     elif os.path.isdir(file_or_url):

@@ -29,6 +29,10 @@ def parse_filename(filename: str, expect_type_ext=False) -> Tuple[str, str, str,
     return dirname, name, item_type, ext
 
 
+def ext_is_text(file_ext: str) -> bool:
+    return file_ext in ("txt", "md", "html", "htm", "json", "yaml", "yml")
+
+
 ## Tests
 
 
