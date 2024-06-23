@@ -10,6 +10,11 @@ class VideoService(ABC):
         pass
 
     @abstractmethod
+    def get_id(self, url: Url) -> str:
+        """Extract the video ID from a URL."""
+        pass
+
+    @abstractmethod
     def timestamp_url(self, url: Url, timestamp: float) -> Url:
         """Return a URL that links to the video at the given timestamp."""
         pass

@@ -12,15 +12,19 @@ log = get_logger(__name__)
 
 
 class Vimeo(VideoService):
-    def canonicalize(self, url: Url) -> Optional[str]:
+    def get_id(self, url: Url) -> Optional[str]:
         parsed_url = urlparse(url)
         if parsed_url.hostname == "vimeo.com":
             video_id = parsed_url.path[1:]
-            if not video_id:
-                return None
+            if video_id:
+                return video_id
+        return None
+
+    def canonicalize(self, url: Url) -> Optional[str]:
+        video_id = self.get_id(url)
+        if video_id:
             return f"https://vimeo.com/{video_id}"
-        else:
-            return None
+        return None
 
     def timestamp_url(self, url: Url, timestamp: float) -> str:
         raise NotImplementedError()  # TODO

@@ -41,11 +41,24 @@ class YoutubeVideoMeta:
 
 
 class YouTube(VideoService):
-    def canonicalize(self, url: Url) -> Optional[Url]:
+    def get_id(self, url: Url) -> Optional[str]:
         parsed_url = urlparse(url)
         if parsed_url.hostname == "youtu.be":
             video_id = parsed_url.path[1:]
             if VIDEO_ID_PATTERN.match(video_id):
+                return video_id
+        elif parsed_url.hostname in ("www.youtube.com", "youtube.com", "m.youtube.com"):
+            query = parse_qs(parsed_url.query)
+            video_id = query.get("v", [""])[0]
+            if video_id and VIDEO_ID_PATTERN.match(video_id):
+                return video_id
+        return None
+
+    def canonicalize(self, url: Url) -> Optional[Url]:
+        parsed_url = urlparse(url)
+        if parsed_url.hostname == "youtu.be":
+            video_id = self.get_id(url)
+            if video_id:
                 return Url(f"https://www.youtube.com/watch?v={video_id}")
         elif parsed_url.hostname in ("www.youtube.com", "youtube.com", "m.youtube.com"):
             # Check for channel URLs:
@@ -65,11 +78,9 @@ class YouTube(VideoService):
                 return Url(f"https://www.youtube.com/playlist?list={list_id}")
 
             # Check for video URLs:
-            video_id = query.get("v", [""])[0]
-            if video_id and VIDEO_ID_PATTERN.match(video_id):
+            video_id = self.get_id(url)
+            if video_id:
                 return Url(f"https://www.youtube.com/watch?v={video_id}")
-
-        return None
 
     def timestamp_url(self, url: Url, timestamp: float) -> str:
         canon_url = self.canonicalize(url)
