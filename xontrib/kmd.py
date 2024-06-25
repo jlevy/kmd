@@ -7,6 +7,7 @@ for interactive use than calling actions from a regular shell command line.
 Can run from kmdsh or from a regular xonsh shell.
 """
 
+from textwrap import dedent
 import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -19,7 +20,7 @@ from kmd.config.setup import setup
 from kmd.config.settings import media_cache_dir
 from kmd.config.logger import get_logger
 from kmd.text_ui.text_styles import EMOJI_WARN, COLOR_ERROR, COLOR_HEADING, COLOR_LOGO, LOGO
-from kmd.text_ui.command_output import output
+from kmd.text_ui.command_output import Wrap, output
 from kmd.file_storage.workspaces import current_workspace
 from kmd.action_defs import load_all_actions
 from kmd.action_exec.action_exec import run_action
@@ -123,12 +124,19 @@ def initialize():
     output("Welcome to kmd.\n", color=COLOR_HEADING)
     output()
     output(
-        f"{len(kmd_commands)} commands and {len(kmd_actions)} actions are available.\n"
-        "Use `kmd_help` for help.\n"
+        dedent(
+            f"""
+            {len(kmd_commands)} commands and {len(kmd_actions)} actions are available.
+
+            Use `kmd_help` for help. Or simply ask a question about kmd or what you want to do.
+            Any question (ending in ?) on the command line invokes the kmd assistant.
+            """
+        ).strip(),
+        text_wrap=Wrap.WRAP_FULL,
     )
 
     log.message(
-        "Using media cache directory: %s\n",
+        "\nUsing media cache directory: %s\n",
         media_cache_dir(),
     )
 

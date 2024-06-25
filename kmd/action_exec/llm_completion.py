@@ -7,10 +7,14 @@ from kmd.util.log_calls import log_calls
 log = get_logger(__name__)
 
 
-@log_calls(level="message")
+@log_calls(level="info")
 def llm_completion(
     model: str, system_message: str, template: str, input: str, save_objects: bool = True
 ) -> str:
+    """
+    Perform an LLM completion. Input is inserted into the template with a `body` parameter.
+    Use this function to interact with the LLMs for consistent logging.
+    """
     user_message = template.format(body=input)
     model_slug = slugify(model, separator="_")
 

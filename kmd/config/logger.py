@@ -10,7 +10,7 @@ from strif import new_timestamped_uid, atomic_output_file
 from rich.logging import RichHandler
 from rich.theme import Theme
 from rich.console import Console
-from kmd.text_ui.text_styles import EMOJI_SAVED, HRULE, RICH_STYLES, KmdHighlighter
+from kmd.text_ui.text_styles import EMOJI_SAVED, EMOJI_WARN, HRULE, RICH_STYLES, KmdHighlighter
 
 LOG_ROOT = Path("./.kmd_logs")
 
@@ -65,6 +65,11 @@ def logging_setup():
     # TODO: Improve ytdl logging setup.
 
 
+def prefix_with_warn_emoji(line: str, emoji: str = EMOJI_WARN):
+    if emoji not in line:
+        return f"{emoji} {line}"
+    return line
+
 class CustomLogger:
     """
     Custom logger to be clearer about user messages and allow saving objects.
@@ -74,6 +79,11 @@ class CustomLogger:
         self.logger = logging.getLogger(name)
 
     def message(self, *args, **kwargs):
+        self.logger.warning(*args, **kwargs)
+
+    def warning(self, *args, **kwargs):
+        if len(args) > 0:
+            args = (prefix_with_warn_emoji(args[0]),) + args[1:]
         self.logger.warning(*args, **kwargs)
 
     def separator(self):

@@ -307,7 +307,8 @@ class Item:
             return self.body_text()
         elif self.format == Format.plaintext:
             return plaintext_to_html(self.body_text())
-        elif self.format == Format.markdown:
+        elif self.format == Format.markdown or self.format == Format.md_html:
+            # TODO: Confirm html is unescaped.
             return markdown_to_html(self.body_text())
 
         raise ValueError(f"Cannot convert item of type {self.format} to HTML: {self}")
@@ -319,10 +320,9 @@ class Item:
         """
         Copy item with the given field updates. Resets store_path and updates timestamps.
         """
-        new_item = replace(self, **kwargs)
-        new_item.store_path = None
-        new_item.created_at = datetime.now()
-        new_item.modified_at = datetime.now()
+        defaults = {"store_path": None, "created_at": datetime.now(), "modified_at": datetime.now()}
+        new_item = replace(self, **defaults)
+        new_item = replace(new_item, **kwargs)
         return new_item
 
     def derived_copy(self, **kwargs) -> "Item":

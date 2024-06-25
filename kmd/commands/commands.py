@@ -54,6 +54,8 @@ def kmd_help() -> None:
     """
     kmd help. Lists all available actions.
     """
+    # TODO: Take an argument to show help for a specific command or action.
+
     from kmd.action_defs import load_all_actions
 
     output_heading("About kmd")
@@ -183,8 +185,8 @@ def show(path: Optional[str] = None) -> None:
 @kmd_command
 def edit(path: Optional[str] = None) -> None:
     """
-    Edit the contents of a file using the user's default editor. If multiple files are selected,
-    edit the first one.
+    Edit the contents of a file using the user's default editor (or defaulting to nano).
+    If multiple files are selected, edit the first one.
     """
     workspace = current_workspace()
     editor = os.getenv("EDITOR", "nano")

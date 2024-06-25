@@ -4,6 +4,7 @@ from typing import List, Optional
 from kmd.config.logger import get_logger
 from kmd.file_storage.workspaces import current_workspace
 from kmd.file_storage.yaml_util import read_yaml_file, to_yaml_string, write_yaml_file
+from kmd.lang_tools.clean_headings import clean_heading
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.model.locators import StorePath
 from kmd.util.type_utils import as_dataclass, not_none
@@ -43,13 +44,15 @@ def configure_webpage(title: str, items: List[Item]) -> Item:
             raise ValueError(f"Item has no store_path: {item}")
 
     tabs = [
-        TabInfo(label=item.abbrev_title(max_len=20), store_path=item.store_path) for item in items
+        TabInfo(label=clean_heading(item.abbrev_title(max_len=20)), store_path=item.store_path)
+        for item in items
     ]
     _fill_in_ids(tabs)
-    config = TabbedWebpage(title=title, tabs=tabs, show_tabs=len(tabs) > 1)
+    clean_title = clean_heading(title)
+    config = TabbedWebpage(title=clean_title, tabs=tabs, show_tabs=len(tabs) > 1)
 
     config_item = Item(
-        title=f"Config for {title}",
+        title=f"Config for {clean_title}",
         type=ItemType.config,
         format=Format.yaml,
         body=to_yaml_string(asdict(config)),
@@ -75,7 +78,11 @@ def generate_webpage(config_item: Item) -> str:
     tabbed_webpage = as_dataclass(config, TabbedWebpage)  # Checks the format.
 
     _load_tab_content(tabbed_webpage)
-    return render_web_template("tabbed_webpage.template.html", asdict(tabbed_webpage))
+    content = render_web_template("tabbed_webpage.template.html", asdict(tabbed_webpage))
+
+    return render_web_template(
+        "base_webpage.template.html", {"title": tabbed_webpage.title, "content": content}
+    )
 
 
 ## Tests

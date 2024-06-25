@@ -3,6 +3,7 @@ from typing import List, cast
 from strif import abbreviate_str
 from kmd.action_defs import look_up_action
 from kmd.action_exec.system_actions import FETCH_ACTION, FETCH_ACTION_NAME
+from kmd.text_ui.command_output import output
 from kmd.text_ui.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
@@ -128,6 +129,7 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
     if not internal_call:
         remaining_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
         current_workspace().set_selection(remaining_outputs)
+        output()
         commands.select()
 
     return result
