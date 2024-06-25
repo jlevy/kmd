@@ -4,7 +4,7 @@ from typing import List, Optional
 from kmd.config.logger import get_logger
 from kmd.file_storage.workspaces import current_workspace
 from kmd.file_storage.yaml_util import read_yaml_file, to_yaml_string, write_yaml_file
-from kmd.lang_tools.clean_headings import clean_heading
+from kmd.lang_tools.clean_headings import clean_heading, summary_heading
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.model.locators import StorePath
 from kmd.util.type_utils import as_dataclass, not_none
@@ -35,7 +35,7 @@ def _fill_in_ids(tabs: List[TabInfo]):
             tab.id = f"tab_{i}"
 
 
-def configure_webpage(title: str, items: List[Item]) -> Item:
+def configure_webpage(items: List[Item]) -> Item:
     """
     Get an item with the config for a tabbed web page.
     """
@@ -44,15 +44,15 @@ def configure_webpage(title: str, items: List[Item]) -> Item:
             raise ValueError(f"Item has no store_path: {item}")
 
     tabs = [
-        TabInfo(label=clean_heading(item.abbrev_title(max_len=20)), store_path=item.store_path)
+        TabInfo(label=clean_heading(item.abbrev_title(max_len=40)), store_path=item.store_path)
         for item in items
     ]
     _fill_in_ids(tabs)
-    clean_title = clean_heading(title)
-    config = TabbedWebpage(title=clean_title, tabs=tabs, show_tabs=len(tabs) > 1)
+    title = summary_heading([item.abbrev_title() for item in items])
+    config = TabbedWebpage(title=title, tabs=tabs, show_tabs=len(tabs) > 1)
 
     config_item = Item(
-        title=f"Config for {clean_title}",
+        title=f"Config for {title}",
         type=ItemType.config,
         format=Format.yaml,
         body=to_yaml_string(asdict(config)),
