@@ -248,6 +248,13 @@ def normalize_markdown(markdown_text: str, line_wrapper=wrap_lines_and_break_sen
     return result
 
 
+def wrap_markdown(markdown_text: str) -> str:
+    """
+    Normalize and wrap Markdown text for reading on the console.
+    """
+    return normalize_markdown(markdown_text, line_wrapper=wrap_lines)
+
+
 ## Tests
 
 

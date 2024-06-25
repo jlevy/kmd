@@ -85,7 +85,8 @@ def kmd_help() -> None:
 @kmd_command
 def assist(input: str) -> None:
     """
-    Invoke the kmd assistant.
+    Invoke the kmd assistant. You don't normally need this command as it is the same as just
+    asking a question (a question ending with ?) on the kmd console.
     """
     with get_console().status("Thinking…", spinner="dots"):
         output_assistance(assistance(input))

@@ -22,7 +22,7 @@ COLOR_EMPH = "bright_green"
 
 COLOR_OUTPUT = "yellow"
 
-COLOR_ASSISTANCE = "italic bright_green"
+COLOR_ASSISTANCE = "italic bright_blue"
 
 COLOR_LITERAL = "bright_blue"
 

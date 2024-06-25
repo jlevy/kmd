@@ -1,5 +1,6 @@
 from textwrap import dedent
 from kmd.action_exec.llm_completion import llm_completion
+from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.text_ui.command_output import output_as_string
 from kmd.docs import assistant_instructions
 from kmd import model_sources_str
@@ -41,10 +42,12 @@ def assistance(input: str) -> str:
     )
 
     # TODO: Stream response.
-    return llm_completion(
-        model,
-        system_message=system_message,
-        template=template,
-        input=input,
-        save_objects=False,
+    return wrap_markdown(
+        llm_completion(
+            model,
+            system_message=system_message,
+            template=template,
+            input=input,
+            save_objects=False,
+        )
     )

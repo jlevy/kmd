@@ -16,7 +16,6 @@ class FetchPage(EachItemAction):
     def __init__(self):
         super().__init__(
             name="fetch_page",
-            friendly_name="Fetch Page Details",
             description="Fetches the title, description, and body of a web page.",
             expected_args=ONE_OR_MORE_ARGS,
         )

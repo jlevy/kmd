@@ -91,6 +91,7 @@ class CustomShell(PromptToolkitShell):
                 output_assistance(assistance(line))
             except Exception as e:
                 log.error(f"Sorry, could not get assistance: {e}")
+                log.info(e, exc_info=True)
         else:
             # Call xonsh shell.
             super().default(line)

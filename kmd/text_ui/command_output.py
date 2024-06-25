@@ -24,9 +24,9 @@ from kmd.text_ui.text_styles import (
 
 class Wrap(Enum):
     NONE = "none"
-    WRAP = "wrap"
-    WRAP_FULL = "wrap_full"
-    INDENTED = "indented"
+    WRAP = "wrap"  # Basic wrapping but preserves whitespace.
+    WRAP_FULL = "wrap_full"  # Also replaces whitespace.
+    INDENTED = "indented"  # Wrap and indent.
     HANGING_INDENT = "hanging_indent"
 
 
