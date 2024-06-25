@@ -1,7 +1,11 @@
 from typing import Callable, List, Optional
 from kmd.action_defs import look_up_action
 from kmd.action_exec.action_exec import run_action
-from kmd.action_exec.action_registry import kmd_action
+from kmd.action_exec.action_registry import (
+    kmd_action_wrapped,
+    no_wrapper,
+    each_item_wrapper,
+)
 from kmd.text_ui.text_styles import EMOJI_PROCESS
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.config.logger import get_logger
@@ -28,24 +32,24 @@ def define_action_sequence(
     action_names: list[str],
     friendly_name: Optional[str] = None,
     description: Optional[str] = None,
+    on_each_input: bool = False,
 ) -> None:
     """
-    Register a sequential action that chains the outputs of each action to the input of the next.
+    Register a sequential action that chains the outputs of each action to the inputs of the next.
     """
 
     if not action_names or len(action_names) <= 1:
         raise InvalidInput("Action must have at least two sub-actions: %s", action_names)
 
-    seq_friendly_name = friendly_name or name
     extra_desc = "This action is a sequence of these actions: " + ", ".join(action_names) + "."
     seq_description = " ".join([description, extra_desc]) if description else extra_desc
 
-    @kmd_action
+    action_wrapper = each_item_wrapper if on_each_input else no_wrapper
+
+    @kmd_action_wrapped(wrapper=action_wrapper)
     class SequenceAction(Action):
         def __init__(self):
-            super().__init__(
-                name=name, friendly_name=seq_friendly_name, description=seq_description
-            )
+            super().__init__(name=name, friendly_name=friendly_name, description=seq_description)
 
             self.action_sequence = action_names
 
@@ -157,6 +161,7 @@ def define_action_combo(
     friendly_name: Optional[str] = None,
     description: Optional[str] = None,
     combiner: Combiner = combine_as_paragraphs,
+    on_each_input: Optional[bool] = False,
 ) -> None:
     """
     Register an action that combines the results of other actions.
@@ -169,7 +174,9 @@ def define_action_combo(
     extra_desc = "This action combines outputs of these actions: " + ", ".join(action_names) + "."
     combo_description = " ".join([description, extra_desc]) if description else extra_desc
 
-    @kmd_action
+    action_wrapper = each_item_wrapper if on_each_input else no_wrapper
+
+    @kmd_action_wrapped(wrapper=action_wrapper)
     class ComboAction(Action):
         def __init__(self):
             super().__init__(
