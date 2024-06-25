@@ -1,17 +1,45 @@
+import regex
+from textwrap import dedent
 from typing import List
 import marko
 from marko.inline import Link
-from marko.block import ListItem, Heading
+from marko.block import ListItem, Heading, HTMLBlock
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 
 
-def markdown_to_html(markdown: str) -> str:
+def as_bullet_points(values: List[str]) -> str:
     """
-    Convert Markdown to HTML.
+    Convert a list of strings to a Markdown bullet-point list.
     """
-    return marko.convert(markdown)
+    return "\n\n".join([f"- {point}" for point in values])
+
+
+class CustomHTMLRenderer(marko.HTMLRenderer):
+    """
+    When wrapping paragraphs as divs in Markdown we usually want them to be paragraphs.
+    This handles that.
+    """
+
+    div_pattern = regex.compile(r"^\s*<div\b", regex.IGNORECASE)
+
+    def render_html_block(self, element: HTMLBlock) -> str:
+        if self.div_pattern.match(element.body.strip()):
+            return f"\n<p>{element.body.strip()}</p>\n"
+        return element.body
+
+
+standard_markdown = marko.Markdown()
+
+custom_markdown = marko.Markdown(renderer=CustomHTMLRenderer)
+
+
+def markdown_to_html(markdown: str, converter: marko.Markdown = custom_markdown) -> str:
+    """
+    Convert Markdown to HTML. Markdown may contain embedded HTML.
+    """
+    return converter.convert(markdown)
 
 
 def _tree_links(element, include_internal=False):
@@ -72,3 +100,51 @@ def _extract_text(element):
     if isinstance(element, str):
         return element
     return "".join(_extract_text(child) for child in element.children)
+
+
+## Tests
+
+
+def test_markdown_to_html():
+    markdown = dedent(
+        """
+        # Heading
+
+        This is a paragraph and a [link](https://example.com).
+
+        - Item 1
+        - Item 2
+
+        ## Subheading
+
+        This is a paragraph with a <span>span</span> tag.
+        This is a paragraph with a <div>div</div> tag.
+        This is a paragraph with an <a href='https://example.com'>example link</a>.
+
+        <div class="div1">This is a div.</div>
+
+        <div class="div2">This is a second div.</div>
+        """
+    )
+    print(markdown_to_html(markdown))
+
+    expected_html = dedent(
+        """
+        <h1>Heading</h1>
+        <p>This is a paragraph and a <a href="https://example.com">link</a>.</p>
+        <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+        </ul>
+        <h2>Subheading</h2>
+        <p>This is a paragraph with a <span>span</span> tag.
+        This is a paragraph with a <div>div</div> tag.
+        This is a paragraph with an <a href='https://example.com'>example link</a>.</p>
+
+        <p><div class="div1">This is a div.</div></p>
+
+        <p><div class="div2">This is a second div.</div></p>
+        """
+    )
+
+    assert markdown_to_html(markdown).strip() == expected_html.strip()
