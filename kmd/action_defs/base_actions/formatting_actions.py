@@ -17,7 +17,6 @@ class StripHtml(EachItemAction):
     def __init__(self):
         super().__init__(
             name="strip_html",
-            friendly_name="Strip HTML Tags",
             description="Strip HTML tags from text or Markdown.",
             expected_args=ONE_OR_MORE_ARGS,
         )

@@ -2,6 +2,9 @@
 Tools for capitalizing words and phrases.
 """
 
+import re
+
+
 language_rules = {
     "en": {
         "small_words": [
@@ -28,18 +31,36 @@ language_rules = {
             "from",
         ],
         "name_particles": ["de", "la", "van", "von", "der", "den", "ter", "ten"],
+        "always_cap": [
+            "PDF",
+            "URL",
+            "HTML",
+            "CSS",
+            "API",
+            "XML",
+            "JSON",
+            "SQL",
+            "CSV",
+            "FTP",
+            "TCP",
+            "CLI",
+        ],
     },
 }
 
 
-def capitalize(word):
+def capitalize(word: str) -> str:
     """
     Cap first letter but leave rest unchanged.
     """
     return word[0].upper() + word[1:]
 
 
-def capitalize_cms(phrase: str, language: str = "en", lowercase_first: bool = False):
+def capitalize_cms(
+    phrase: str,
+    language: str = "en",
+    underscores_to_spaces: bool = False,
+) -> str:
     """
     Capitalize a word, phrase, or title according to the Chicago Manual of Style rules for titles.
 
@@ -50,17 +71,23 @@ def capitalize_cms(phrase: str, language: str = "en", lowercase_first: bool = Fa
     if language not in language_rules:
         raise ValueError(f"Unsupported language: {language}")
 
+    if underscores_to_spaces:
+        phrase = " ".join(re.split("_+", phrase))
+
     small_words = language_rules[language]["small_words"]
     name_particles = language_rules[language]["name_particles"]
+    always_cap = language_rules[language]["always_cap"]
 
     words = phrase.split()
     capitalized_title = []
 
     for i, word in enumerate(words):
-        if i == 0 or i == len(words) - 1 or word.lower() not in small_words + name_particles:
+        if word.upper() in always_cap:
+            capitalized_title.append(word.upper())
+        elif i == 0 or i == len(words) - 1 or word.lower() not in small_words + name_particles:
             capitalized_title.append(capitalize(word))
         else:
-            capitalized_title.append(word.lower() if lowercase_first else word)
+            capitalized_title.append(word)
 
     return " ".join(capitalized_title)
 
@@ -91,3 +118,6 @@ def test_capitalize_cms():
     assert capitalize_cms("the works of de la cruz") == "The Works of de la Cruz"
     assert capitalize_cms("ludwig van beethoven") == "Ludwig van Beethoven"
     assert capitalize_cms("the NASA mission to Mars") == "The NASA Mission to Mars"
+
+    assert capitalize_cms("generate_pdf", underscores_to_spaces=True) == "Generate PDF"
+    assert capitalize_cms("snake_case__1", underscores_to_spaces=True) == "Snake Case 1"

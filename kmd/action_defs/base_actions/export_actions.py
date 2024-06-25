@@ -15,7 +15,6 @@ class CreatePDF(Action):
     def __init__(self):
         super().__init__(
             name="create_pdf",
-            friendly_name="Create PDF",
             description="Create a PDF from text or Markdown.",
             expected_args=ONE_ARG,
         )

@@ -21,7 +21,6 @@ class ListChannelVideos(Action):
     def __init__(self):
         super().__init__(
             name="list_channel_videos",
-            friendly_name="List Channel Videos",
             description="Get the URL of every video in the given channel. YouTube only for now.",
         )
 
@@ -65,7 +64,6 @@ class DownloadVideo(EachItemAction):
     def __init__(self):
         super().__init__(
             name="download_video",
-            friendly_name="Download Video",
             description="Download and extract audio from a video. Only saves to media cache; does not create new items.",
             expected_args=ONE_OR_MORE_ARGS,
         )
@@ -85,7 +83,6 @@ class TranscribeVideo(EachItemAction):
     def __init__(self):
         super().__init__(
             name="transcribe_video",
-            friendly_name="Transcribe Video",
             description="Download and transcribe audio from a video.",
             expected_args=ONE_OR_MORE_ARGS,
         )

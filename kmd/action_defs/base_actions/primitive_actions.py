@@ -14,7 +14,6 @@ class CopyAction(EachItemAction):
     def __init__(self):
         super().__init__(
             name="copy_items",
-            friendly_name="Copy the input items",
             description="Identity action that copies the input items with no changes. Useful in combo actions.",
             expected_args=ANY_ARGS,
         )

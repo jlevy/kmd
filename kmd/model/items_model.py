@@ -14,6 +14,7 @@ from kmd.model.errors_model import FileFormatError
 from kmd.model.locators import Locator
 from kmd.text_formatting.markdown_util import markdown_to_html
 from kmd.text_formatting.text_formatting import (
+    abbreviate_on_words,
     abbreviate_phrase_in_middle,
     clean_title,
     plaintext_to_html,
@@ -257,6 +258,12 @@ class Item:
         )
 
         return clean_title(abbreviate_phrase_in_middle(full_title, max_len))
+
+    def abbrev_description(self, max_len: int = 1000) -> str:
+        """
+        Get or infer description.
+        """
+        return abbreviate_on_words(self.description or self.body or "", max_len)
 
     def read_as_config(self) -> Any:
         """

@@ -23,8 +23,8 @@ class PullSourceTimestamps(EachItemAction):
     def __init__(self):
         super().__init__(
             name="backfill_source_timestamps",
-            friendly_name="Backfill timestamps from a source document.",
             description="""
+              Backfill timestamps from a source document.
               Seeks through the document this doc is derived from for timestamps and inserts them
               into the text of the current doc. Source must have similar tokens.
             """,
