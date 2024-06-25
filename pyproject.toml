@@ -36,6 +36,8 @@ spacy = "^3.7.5"
 litellm = "^1.40.25"
 prompt-toolkit = "^3.0.47"
 setproctitle = "^1.3.3"
+tenacity = "^8.4.1"
+nlpia2-wikipedia = "^1.5.16"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
