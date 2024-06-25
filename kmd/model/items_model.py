@@ -308,7 +308,6 @@ class Item:
         elif self.format == Format.plaintext:
             return plaintext_to_html(self.body_text())
         elif self.format == Format.markdown or self.format == Format.md_html:
-            # TODO: Confirm html is unescaped.
             return markdown_to_html(self.body_text())
 
         raise ValueError(f"Cannot convert item of type {self.format} to HTML: {self}")

@@ -19,7 +19,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class PullSourceTimestamps(EachItemAction):
+class BackfillSourceTimestamps(EachItemAction):
     def __init__(self):
         super().__init__(
             name="backfill_source_timestamps",
@@ -129,7 +129,7 @@ class PullSourceTimestamps(EachItemAction):
 
                 else:
                     log.warning(
-                        f"Failed to extract timestamp at doc token offset %s: %s: %s",
+                        "Failed to extract timestamp at doc token offset %s: %s: %s",
                         wordtok_offset,
                         sent_index,
                         wordtok,

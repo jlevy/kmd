@@ -1,4 +1,4 @@
-from typing import List, Type, Tuple, Optional, Callable
+from typing import List, Type, Tuple, Callable
 from kmd.model.actions_model import ANY_ARGS, ONE_ARG, Action, EachItemAction
 from kmd.config.logger import get_logger
 from kmd.model.items_model import Item
