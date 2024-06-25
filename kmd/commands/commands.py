@@ -168,7 +168,7 @@ def unselect(*paths: str) -> None:
 @kmd_command
 def show(path: Optional[str] = None) -> None:
     """
-    Show the contents of a file.
+    Show the contents of a file if one is given, or the first file if multiple files are selected.
     """
     workspace = current_workspace()
     if path:
@@ -178,6 +178,23 @@ def show(path: Optional[str] = None) -> None:
         if not selection:
             raise InvalidInput("No selection")
         open_platform_specific(selection[0])
+
+
+@kmd_command
+def edit(path: Optional[str] = None) -> None:
+    """
+    Edit the contents of a file using the user's default editor. If multiple files are selected,
+    edit the first one.
+    """
+    workspace = current_workspace()
+    editor = os.getenv("EDITOR", "nano")
+    if path:
+        subprocess.run([editor, path])
+    else:
+        selection = workspace.get_selection()
+        if not selection:
+            raise InvalidInput("No selection")
+        subprocess.run([editor, selection[0]])
 
 
 @kmd_command

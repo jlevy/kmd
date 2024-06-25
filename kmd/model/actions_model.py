@@ -7,6 +7,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 from kmd.config.logger import get_logger
+from kmd.lang_tools.capitalization import capitalize_cms
 from kmd.text_ui.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ContentError, InvalidInput
 from kmd.model.items_model import Item
@@ -50,9 +51,9 @@ class ActionResult:
 @dataclass
 class Action:
     name: str
-    friendly_name: str
     description: str
     implementation: str = "builtin"
+    friendly_name: Optional[str] = None
     model: Optional[str] = None
     chunk_size: Optional[ChunkSize] = None
     title_template: Optional[str] = None
@@ -61,6 +62,9 @@ class Action:
     expected_args: ExpectedArgs = field(default_factory=lambda: ONE_ARG)
 
     def __post_init__(self):
+        self.friendly_name = self.friendly_name or capitalize_cms(
+            self.name, underscores_to_spaces=True
+        )
         self.friendly_name = clean_description(self.friendly_name)
         self.description = clean_description(self.description)
 
