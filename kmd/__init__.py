@@ -14,7 +14,7 @@ def _assemble_source_code(module_path: Path) -> str:
         with open(module_path / filename, "r") as file:
             file_content: str = file.read()
         header = f"\n\n# {filename}:)\n\n"
-        footer = f"\n\n"
+        footer = "\n\n"
 
         output.append(header + file_content + footer)
 

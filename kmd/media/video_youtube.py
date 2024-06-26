@@ -7,7 +7,6 @@ from dataclasses import dataclass, fields
 from pprint import pprint
 import yt_dlp
 from kmd.text_ui.text_styles import EMOJI_WARN
-from kmd.file_storage.yaml_util import write_yaml_file  # noqa: F401
 from kmd.model.errors_model import ApiResultError, InvalidInput
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
@@ -35,7 +34,7 @@ class YoutubeVideoMeta:
             field_names = {f.name for f in fields(cls)}
             filtered_data = {k: v for k, v in data.items() if k in field_names}
             return cls(**filtered_data)
-        except TypeError as e:
+        except TypeError:
             print(pprint(data))
             raise ApiResultError(f"Invalid data for YoutubeVideoMeta: {data}")
 
@@ -129,7 +128,7 @@ class YouTube(VideoService):
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             result = ydl.extract_info(str(url), download=False)
-            # write_yaml_file(result, "yt_dlp_result.yaml")
+            log.save_object("yt_dlp result", "yt_dlp_result", result)
 
         if not isinstance(result, dict):
             raise ApiResultError(f"Unexpected result from yt_dlp: {result}")

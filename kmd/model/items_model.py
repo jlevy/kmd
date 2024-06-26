@@ -235,14 +235,14 @@ class Item:
             for k, v in item_dict.items()
             if v is not None and k not in self.NON_METADATA_FIELDS
         }
-        for field in self.OPTIONAL_FIELDS:
-            if field in item_dict and field is None:
-                del item_dict[field]
+        for f in self.OPTIONAL_FIELDS:
+            if f in item_dict and f is None:
+                del item_dict[f]
 
         # Keep enum values as strings for simplicity with serialization to YAML.
-        for field in ["type", "format"]:
-            if item_dict.get(field):
-                item_dict[field] = str(item_dict[field])
+        for f in ["type", "format"]:
+            if item_dict.get(f):
+                item_dict[f] = str(item_dict[f])
 
         return item_dict
 

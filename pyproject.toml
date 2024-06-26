@@ -56,8 +56,11 @@ kmdsh = "kmdsh:main"
 [tool.black]
 line-length = 100
 
+[tool.ruff]
+line-length = 100
+
 [tool.ruff.lint]
-ignore = ["E402"]
+ignore = ["E402", "E731", "E712"]
 
 [tool.pytest.ini_options]
 python_files = ["*.py"]

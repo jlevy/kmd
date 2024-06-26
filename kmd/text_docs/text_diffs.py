@@ -295,7 +295,7 @@ def find_best_alignment(
         )
 
     log.message(
-        f"Finding best alignment: List lengths: lengths %s and %s with overlap of %s to %s",
+        "Finding best alignment: List lengths: lengths %s and %s with overlap of %s to %s",
         len1,
         len2,
         min_overlap,
@@ -414,13 +414,13 @@ def test_apply_to():
 
     diff = diff_wordtoks(wordtoks1, wordtoks2)
 
-    print(f"---Before apply:")
+    print("---Before apply:")
     print("/".join(wordtoks1))
     print(diff)
     result = diff.apply_to(wordtoks1)
-    print(f"---Result of apply:")
+    print("---Result of apply:")
     print("/".join(result))
-    print(f"---Expected:")
+    print("---Expected:")
     print("/".join(wordtoks2))
     assert result == wordtoks2
 
@@ -443,7 +443,7 @@ def test_filter_br_and_space():
     accepted_result = accepted.apply_to(wordtoks1)
     rejected_result = rejected.apply_to(wordtoks1)
 
-    print(f"---Filtered diff:")
+    print("---Filtered diff:")
     print("Original: " + "/".join(wordtoks1))
     print("Full diff:", diff)
     print("Accepted diff:", accepted)
