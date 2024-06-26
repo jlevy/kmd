@@ -44,16 +44,20 @@ on an original document), the sources are listed in a `derived_from` array
 within the `relations` metadata. This means actions can find citations or other
 data on the provenance of a given piece of information.
 
-Kmd actions are a set of actions that can operate on one or more items and
-produce new items. Actions can invoke APIs, use LLMs, or perform any other
-operation that's scriptable in Python. You specify inputs to actions as URLs or
-source paths.
+Kmd actions are a set of operations that can operate on one or more items and
+produce one or more new items. Actions can invoke APIs, use LLMs, or perform
+any other operation that's scriptable in Python. You specify inputs to actions
+as URLs or source paths.
+
+URLs that are provided as input and the output of actions are automatically
+stored as new items in the workspace. URLs or resources can be added manually,
+but this is normally not necessary.
 
 Actions can be chained together in convenient ways. The output of any command is
-always stored as a “selection”, which is then automatically available for input
-on a subsequent command. This is sort of like Unix pipes, but is more convenient
-and incremental, and allows you to sequence actions, multiple output items
-becoming the input of another action.
+always marked as the current “selection”, which is then automatically available
+for input on a subsequent command. This is sort of like Unix pipes, but is more
+convenient and incremental, and allows you to sequence actions, multiple output
+items becoming the input of another action.
 
 Kmd makes a few kinds of messy text manipulations easier:
 

@@ -27,7 +27,7 @@ def find_upstream_item(item: Item, precondition: Precondition) -> Item:
             return source_item
         else:
             log.message(
-                "Skipping source item that does not match requirements: %s: %s",
+                "Skipping source item that does not match requirements: %s",
                 source_item.store_path,
             )
 

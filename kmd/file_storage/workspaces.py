@@ -1,14 +1,11 @@
 from pathlib import Path
 from typing import Optional, Tuple
-from pathlib import Path
-from typing import Tuple
 from cachetools import cached
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidStoreState
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.file_storage.file_store import FileStore
 from kmd.model.locators import Locator, StorePath
-from kmd.model.items_model import Item
 from kmd.util.url import Url, is_url
 from kmd.config.logger import get_logger
 
