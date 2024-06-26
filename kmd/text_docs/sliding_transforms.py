@@ -262,7 +262,7 @@ def sliding_para_window_transform(
                 pass
         transformed_paras.extend(new_doc.paragraphs)
 
-    transformed_text = f"\n\n".join(para.reassemble() for para in transformed_paras)
+    transformed_text = "\n\n".join(para.reassemble() for para in transformed_paras)
     new_text_doc = TextDoc.from_text(transformed_text)
 
     log.message(
