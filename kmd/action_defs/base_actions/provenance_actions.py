@@ -8,7 +8,8 @@ from kmd.model.actions_model import (
 from kmd.model.errors_model import InvalidInput, UnexpectedError
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
-from kmd.provenance.source_items import find_upstream_item, is_timestamped_text
+from kmd.preconditions.common_preconditions import is_timestamped_text
+from kmd.provenance.source_items import find_upstream_item
 from kmd.text_formatting.citations import add_citation_to_text, format_timestamp_citation
 from kmd.provenance.extractors import TimestampExtractor
 from kmd.text_docs.text_doc import TextDoc

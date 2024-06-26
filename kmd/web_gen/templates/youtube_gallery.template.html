@@ -1,0 +1,15 @@
+<div class="container mx-auto bg-white py-8 px-16 shadow-lg">
+  <h1 class="text-center text-4xl mt-6 mb-6">{{ title }}</h1>
+  <div class="video-gallery">
+    {% for video in videos %}
+    <div class="video-item">
+      <iframe
+        src="https://www.youtube.com/embed/{{ video.youtube_id }}"
+        allowfullscreen
+      ></iframe>
+      <p class="description">{{ video.description }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  <!-- TODO: Footer info (match with pdf export) -->
+</div>

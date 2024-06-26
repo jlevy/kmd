@@ -17,6 +17,7 @@ from kmd.text_formatting.text_formatting import (
     abbreviate_on_words,
     abbreviate_phrase_in_middle,
     clean_title,
+    html_to_plaintext,
     plaintext_to_html,
 )
 from kmd.util.obj_utils import abbreviate_obj
@@ -257,13 +258,13 @@ class Item:
             or UNTITLED
         )
 
-        return clean_title(abbreviate_phrase_in_middle(full_title, max_len))
+        return clean_title(abbreviate_phrase_in_middle(html_to_plaintext(full_title), max_len))
 
     def abbrev_description(self, max_len: int = 1000) -> str:
         """
         Get or infer description.
         """
-        return abbreviate_on_words(self.description or self.body or "", max_len)
+        return abbreviate_on_words(html_to_plaintext(self.description or self.body or ""), max_len)
 
     def read_as_config(self) -> Any:
         """

@@ -145,3 +145,16 @@ def timestamp_video_url(url: Url, timestamp: float) -> Url:
         if canonical_url:
             return service.timestamp_url(url, timestamp)
     raise InvalidInput(f"Unrecognized video URL: {url}")
+
+
+def get_video_id(url: Url | None) -> Optional[str]:
+    """
+    Extract the video ID from a URL.
+    """
+    if not url:
+        return None
+    for service in video_services:
+        video_id = service.get_id(url)
+        if video_id:
+            return video_id
+    return None

@@ -7,7 +7,7 @@ from dataclasses import dataclass, fields
 from pprint import pprint
 import yt_dlp
 from kmd.text_ui.text_styles import EMOJI_WARN
-from kmd.file_storage.yaml_util import write_yaml_file
+from kmd.file_storage.yaml_util import write_yaml_file  # noqa: F401
 from kmd.model.errors_model import ApiResultError, InvalidInput
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
