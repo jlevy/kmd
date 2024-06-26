@@ -80,7 +80,7 @@ class TokenMapping:
 ## Tests
 
 
-def disable_test_offset_mapping():
+def test_offset_mapping():
     doc1 = TextDoc.from_text("This is a simple test with some words.")
     doc2 = TextDoc.from_text(
         "This is<-PARA-BR->a simple pytest adding other words.<-SENT-BR->And another sentence."
@@ -102,16 +102,16 @@ def disable_test_offset_mapping():
             0 ⎪This⎪ -> 0 ⎪This⎪
             1 ⎪ ⎪ -> 1 ⎪ ⎪
             2 ⎪is⎪ -> 2 ⎪is⎪
-            3 ⎪<-PARA-BR->⎪ -> 2 ⎪is⎪
+            3 ⎪<-PARA-BR->⎪ -> 3 ⎪ ⎪
             4 ⎪a⎪ -> 4 ⎪a⎪
             5 ⎪ ⎪ -> 5 ⎪ ⎪
             6 ⎪simple⎪ -> 6 ⎪simple⎪
             7 ⎪ ⎪ -> 7 ⎪ ⎪
-            8 ⎪pytest⎪ -> 7 ⎪ ⎪
+            8 ⎪pytest⎪ -> 8 ⎪test⎪
             9 ⎪ ⎪ -> 9 ⎪ ⎪
-            10 ⎪adding⎪ -> 9 ⎪ ⎪
+            10 ⎪adding⎪ -> 10 ⎪with⎪
             11 ⎪ ⎪ -> 11 ⎪ ⎪
-            12 ⎪other⎪ -> 11 ⎪ ⎪
+            12 ⎪other⎪ -> 12 ⎪some⎪
             13 ⎪ ⎪ -> 13 ⎪ ⎪
             14 ⎪words⎪ -> 14 ⎪words⎪
             15 ⎪.⎪ -> 15 ⎪.⎪
