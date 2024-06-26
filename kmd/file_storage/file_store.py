@@ -75,6 +75,8 @@ class FileStore:
     Store items on the filesystem, using a simple convention for filenames and folders.
     """
 
+    # TODO: Consider using a pluggable filesystem (fsspec AbstractFileSystem).
+    
     def __init__(self, base_dir: Path):
         self.base_dir = base_dir
         self.uniquifier = Uniquifier()

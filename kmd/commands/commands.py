@@ -32,7 +32,7 @@ from kmd.lang_tools.inflection import plural
 from kmd.config.logger import LOG_PATH, get_logger
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
-from kmd.docs import about_kmd
+from kmd.docs import about_kmd, workspace_and_file_formats
 
 log = get_logger(__name__)
 
@@ -58,11 +58,17 @@ def kmd_help() -> None:
 
     from kmd.action_defs import load_all_actions
 
+    def output_section(doc_str: str):
+        output(
+            normalize_markdown(dedent(doc_str).strip(), line_wrapper=wrap_lines),
+            text_wrap=Wrap.NONE,
+        )
+
     output_heading("About kmd")
-    output(
-        normalize_markdown(dedent(about_kmd.__doc__).strip(), line_wrapper=wrap_lines),
-        text_wrap=Wrap.NONE,
-    )
+    output_section(about_kmd.__doc__)
+
+    output_heading("Workspace and File Formats")
+    output_section(workspace_and_file_formats.__doc__)
 
     output_heading("Available commands")
     for command in all_commands():
