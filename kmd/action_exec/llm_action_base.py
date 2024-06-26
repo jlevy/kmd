@@ -51,20 +51,20 @@ class LLMAction(EachItemAction):
     def __init__(
         self,
         name,
-        friendly_name,
         description,
         model,
         system_message,
         title_template,
         template,
+        friendly_name: Optional[str] = None,
         windowing: Optional[WindowSettings] = None,
         diff_filter: Optional[DiffOpFilter] = None,
     ):
         super().__init__(
             name,
-            friendly_name,
             description,
             model=model,
+            friendly_name=friendly_name,
             system_message=system_message,
             title_template=title_template,
             template=template,

@@ -39,7 +39,6 @@ class Wordtokenize(EachItemAction):
     def __init__(self):
         super().__init__(
             name="wordtokenize",
-            friendly_name="Word Tokenize",
             description="For debugging: Break text into word tokens.",
             expected_args=ONE_OR_MORE_ARGS,
         )

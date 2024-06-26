@@ -32,7 +32,6 @@ class GenerateWebpage(Action):
     def __init__(self):
         super().__init__(
             name="generate_webpage",
-            friendly_name="Generate Web Page",
             description="Generate a web page from a configured web page item.",
             expected_args=ONE_ARG,
         )

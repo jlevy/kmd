@@ -7,12 +7,12 @@ log = get_logger(__name__)
 
 def define_llm_action(
     name,
-    friendly_name,
     description,
     model,
     system_message,
     title_template,
     template,
+    friendly_name=None,
     windowing=None,
     diff_filter=None,
 ):
@@ -25,12 +25,12 @@ def define_llm_action(
         def __init__(self):
             super().__init__(
                 name,
-                friendly_name,
                 description,
                 model=model,
                 system_message=system_message,
                 title_template=title_template,
                 template=template,
+                friendly_name=friendly_name,
                 windowing=windowing,
                 diff_filter=diff_filter,
             )

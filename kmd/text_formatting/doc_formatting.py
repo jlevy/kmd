@@ -6,7 +6,7 @@ from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH, norma
 
 def wrap_plaintext(text: str, width=80) -> str:
     """
-    When saving plaintext, wrap it by adding line breaks for readability.
+    Wrap lines with our standard settings.
     """
     paragraphs = text.split("\n\n")
     wrapped_paragraphs = [

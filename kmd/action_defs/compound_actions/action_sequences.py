@@ -14,14 +14,13 @@ define_action_sequence(
         "break_into_paragraphs",
         "backfill_source_timestamps",
     ],
-    friendly_name="Get a formatted video transcript, with timestamps",
-    description="Transcribe a video, format the video into paragraphs, and backfill source timestamps on each paragraph.",
+    description="Transcribe a video, format the transcript into paragraphs, and backfill source timestamps on each paragraph.",
     on_each_input=True,
 )
 
 define_action_combo(
     "add_description",
-    ["brief_description", "copy_items"],
+    ["describe_briefly", "copy_items"],
     description="Add a brief description of the content above the full text of the item.",
     combiner=combine_with_divs(DESCRIPTION, FULL_TEXT),
     on_each_input=True,

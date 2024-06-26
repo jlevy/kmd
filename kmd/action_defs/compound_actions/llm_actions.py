@@ -11,7 +11,6 @@ log = get_logger(__name__)
 
 define_llm_action(
     name="break_into_paragraphs",
-    friendly_name="Reformat Text as Paragraphs",
     description="Reformat text as paragraphs.",
     model=LLM.groq_llama3_70b_8192.value,
     system_message=dedent(
@@ -50,8 +49,7 @@ define_llm_action(
 
 
 define_llm_action(
-    name="proofread",
-    friendly_name="Proofread and Correct",
+    name="proofread_and_correct",
     description="Proofread text, only fixing spelling, punctuation, and grammar.",
     model=LLM.gpt_3_5_turbo.value,
     system_message=dedent(
@@ -92,8 +90,7 @@ define_llm_action(
 )
 
 define_llm_action(
-    name="brief_description",
-    friendly_name="Give a Brief Description of Text",
+    name="describe_briefly",
     description="Very brief description of text, in at most three sentences.",
     model=LLM.gpt_4o.value,
     system_message=dedent(
@@ -120,7 +117,6 @@ define_llm_action(
 
 define_llm_action(
     name="summarize_as_bullets",
-    friendly_name="Summarize as Bullet Points",
     description="Summarize text as bullet points.",
     model=LLM.gpt_4o.value,
     system_message=dedent(
@@ -154,7 +150,6 @@ define_llm_action(
 
 define_llm_action(
     name="extract_concepts",
-    friendly_name="Extract Concepts",
     description="Extract key concepts from text.",
     model=LLM.gpt_4o.value,
     system_message=dedent(

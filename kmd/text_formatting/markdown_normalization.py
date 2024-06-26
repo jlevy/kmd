@@ -14,7 +14,7 @@ class MarkdownNormalizer(Renderer):
     """
     Render Markdown in normalized form.
 
-    Also enforces that all line items have two newlines between them, so that items
+    Also enforces that all list items have two newlines between them, so that items
     are separate paragraphs when viewed as plaintext.
 
     Based on: https://github.com/frostming/marko/blob/master/marko/md_renderer.py
