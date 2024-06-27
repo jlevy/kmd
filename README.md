@@ -107,8 +107,12 @@ pip install --user dist/kmd-0.1.0-py3-none-any.whl
 ```
 # Run pytests:
 pytest
-pytest -s kmd/commands/command_parser.py
+# Just one file, with outputs:
+pytest -s kmd/text_docs/text_doc.py
 
 # Upgrade packages:
 poetry up
+
+# Poetry update:
+poetry self update
 ```
