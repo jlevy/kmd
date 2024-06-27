@@ -14,6 +14,7 @@ from kmd.text_ui.command_output import (
     output,
     output_assistance,
     output_heading,
+    output_markdown,
     output_status,
 )
 from kmd.commands.local_file_tools import open_platform_specific
@@ -26,7 +27,6 @@ from kmd.file_storage.workspaces import canon_workspace_name, current_workspace,
 from kmd.model.actions_model import ACTION_PARAMS
 from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath
-from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_lines
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.lang_tools.inflection import plural
 from kmd.config.logger import LOG_PATH, get_logger
@@ -58,17 +58,11 @@ def kmd_help() -> None:
 
     from kmd.action_defs import load_all_actions
 
-    def output_section(doc_str: str):
-        output(
-            normalize_markdown(dedent(doc_str).strip(), line_wrapper=wrap_lines),
-            text_wrap=Wrap.NONE,
-        )
-
     output_heading("About kmd")
-    output_section(about_kmd.__doc__)
+    output_markdown(about_kmd.__doc__)
 
     output_heading("Workspace and File Formats")
-    output_section(workspace_and_file_formats.__doc__)
+    output_markdown(workspace_and_file_formats.__doc__)
 
     output_heading("Available commands")
     for command in all_commands():

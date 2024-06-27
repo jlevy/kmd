@@ -20,8 +20,11 @@ def llm_completion(
 
     log.info("LLM completion input to model %s:\n%s", model, indent(user_message, "    "))
     if save_objects:
-        log.save_object("System message", f"llm.{model_slug}", system_message)
-        log.save_object("User message", f"llm.{model_slug}", user_message)
+        log.save_object(
+            "LLM request",
+            f"llm.{model_slug}",
+            f"""System message: {system_message}\n\nUser message: {user_message}\n""",
+        )
 
     text_output = completion(
         model,
@@ -33,6 +36,6 @@ def llm_completion(
 
     log.info("LLM completion output:\n%s", indent(text_output, "    "))
     if save_objects:
-        log.save_object("LLM output", f"llm.{model_slug}", text_output)
+        log.save_object("LLM response", f"llm.{model_slug}", text_output)
 
     return text_output

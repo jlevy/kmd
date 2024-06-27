@@ -186,7 +186,7 @@ DEFAULT_WRAP_WIDTH = 92
 # See https://github.com/jlevy/atom-flowmark/blob/master/lib/remark-smart-word-wrap.js#L13
 
 
-def wrap_lines(
+def wrap_lines_to_width(
     text: str, initial_indent: str, subsequent_indent: str, width: int = CONSOLE_WRAP_WIDTH
 ) -> str:
     """
@@ -252,7 +252,7 @@ def wrap_markdown(markdown_text: str) -> str:
     """
     Normalize and wrap Markdown text for reading on the console.
     """
-    return normalize_markdown(markdown_text, line_wrapper=wrap_lines)
+    return normalize_markdown(markdown_text, line_wrapper=wrap_lines_to_width)
 
 
 ## Tests

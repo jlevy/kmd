@@ -12,11 +12,16 @@ operation if it's already complete. Some slow actions (like downloading and
 transcribing videos) automatically produce cached outputs (stored in the
 `kmd_cache` directory) to make things faster.
 
-kmd is built on top of xonsh, a Python-powered shell language. Most things are
+Kmd is built on top of xonsh, a Python-powered shell language. Most things are
 invoked via kmd commands and kmd actions, but you also have access to the full
 power of Python and the shell when needed.
 
-kmd operates on “items”, which are URLs, files, text or Markdown notes, or other
+On top of this, kmd understands its own code and APIs and can help you use and
+even extend it. At any time you can ask a question and have the LLM-based assistant
+help you in how to use kmd. Anything you type that ends in a `?` is sent to the
+assistant.
+
+Kmd operates on “items”, which are URLs, files, text or Markdown notes, or other
 documents. These are stored as simple files, in a single directory, called a
 “workspace”. Typically, you want a workspace for a single topic or project. By
 convention, workspace directories should have a `.kb` suffix, such as

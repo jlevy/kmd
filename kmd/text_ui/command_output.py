@@ -8,9 +8,11 @@ import sys
 from contextlib import contextmanager
 from enum import Enum
 import textwrap
+from textwrap import dedent
 from typing import Any, Callable
 from rich import print as rprint
 from rich.text import Text
+from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_lines_to_width
 from kmd.text_ui.text_styles import (
     COLOR_ASSISTANCE,
     COLOR_HEADING,
@@ -80,6 +82,10 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
         raise ValueError(f"Unknown text_wrap value: {text_wrap}")
 
 
+def fill_markdown(doc_str: str):
+    return normalize_markdown(dedent(doc_str).strip(), line_wrapper=wrap_lines_to_width)
+
+
 def format_action_description(name: str, doc: str) -> Text:
     doc = textwrap.dedent(doc).strip()
     wrapped = fill_text(doc, text_wrap=Wrap.INDENTED)
@@ -124,6 +130,10 @@ def output(message: str | Text = "", *args, text_wrap: Wrap = Wrap.WRAP, color=N
             rprint(fill_text(message % args, text_wrap), file=out)
     else:
         rprint(message, file=out)
+
+
+def output_markdown(doc_str: str):
+    output(fill_markdown(doc_str), text_wrap=Wrap.NONE)
 
 
 def _output_message(

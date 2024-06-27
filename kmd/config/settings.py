@@ -7,6 +7,9 @@ APP_NAME = "kmd"
 
 CACHE_NAME = "kmd_cache"
 
+DEBUG_ASSISTANT = False
+"""Convenience to allow debugging of full assistant prompts."""
+
 
 def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
     """

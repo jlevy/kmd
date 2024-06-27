@@ -1,8 +1,4 @@
-"""
-The base classes for Actions and other types associated with actions.
-"""
-
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
@@ -49,7 +45,13 @@ class ActionResult:
 
 # TODO: frozen=True
 @dataclass
-class Action:
+class Action(ABC):
+    """
+    The base classes for Actions, which are arbitrary operations that can be
+    performedon Items. Instantiate this or a more specific subclass to create
+    an action.
+    """
+
     name: str
     description: str
     implementation: str = "builtin"

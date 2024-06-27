@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from functools import cached_property
 from textwrap import dedent
 from typing import Any, List
@@ -13,7 +13,7 @@ from kmd.text_docs.wordtoks import (
 log = get_logger(__name__)
 
 
-class Extractor:
+class Extractor(ABC):
     """
     Abstract base class for extractors that extract information from a document at a given location.
     """
