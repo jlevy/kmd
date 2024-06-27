@@ -9,31 +9,40 @@ from kmd.model.language_models import LLM
 
 
 @cached({})
-def assistant_preamble():
+def assistant_preamble(fast: bool = False):
     from kmd.commands.commands import kmd_help  # Avoid circular imports.
 
-    return dedent(
-        f"""
+    if fast:
+        return f"""
         {fill_markdown(assistant_instructions.__doc__)}
 
 
         {output_as_string(kmd_help)}
-
-
-        {api_docs.__doc__} 
         """
-    )
+    else:
+
+        return dedent(
+            f"""
+            {fill_markdown(assistant_instructions.__doc__)}
 
 
-def assistance(input: str) -> str:
+            {output_as_string(kmd_help)}
+
+
+            {api_docs.__doc__} 
+            """
+        )
+
+
+def assistance(input: str, fast: bool = False) -> str:
 
     from kmd.commands.commands import select  # Avoid circular imports.
 
-    model = LLM.gpt_4o.value
+    model = LLM.groq_llama3_70b_8192 if fast else LLM.gpt_4o
 
     system_message = dedent(
         f"""
-        {assistant_preamble()}
+        {assistant_preamble(fast=fast)}
 
         CURRENT USER STATE
 
@@ -57,7 +66,7 @@ def assistance(input: str) -> str:
     # TODO: Stream response.
     return wrap_markdown(
         llm_completion(
-            model,
+            model.value,
             system_message=system_message,
             template=template,
             input=input,

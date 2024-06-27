@@ -8,10 +8,6 @@ Can run from kmdsh or from a regular xonsh shell.
 """
 
 from textwrap import dedent
-import warnings
-
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
 from typing import Callable, List
 from rich import get_console
 from xonsh.tools import XonshError

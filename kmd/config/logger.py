@@ -1,7 +1,7 @@
+import kmd.config.suppress_warnings  # noqa: F401
 import os
 from pathlib import Path
 from typing import Any, Optional
-import warnings
 import logging
 from logging import INFO, WARNING, Formatter
 from rich import reconfigure
@@ -34,7 +34,7 @@ reconfigure(theme=_custom_theme)
 #         self.flush()
 
 def logging_setup():
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    kmd.config.suppress_warnings.filter_warnings()
 
     os.makedirs(LOG_ROOT, exist_ok=True)
     os.makedirs(LOG_OBJECTS, exist_ok=True)

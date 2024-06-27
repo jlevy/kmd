@@ -2,7 +2,6 @@ import os
 from os.path import getmtime, basename, getsize, join
 import re
 import subprocess
-from textwrap import dedent
 from typing import Callable, List, Optional
 from datetime import datetime
 from humanize import naturaltime, naturalsize

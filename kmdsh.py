@@ -3,14 +3,8 @@ Launch xonsh with kmd extensions and customizations.
 """
 
 import re
-import warnings
-
-from kmd.text_ui.text_styles import EMOJI_ASSISTANT
-
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
 from os.path import expanduser
-from typing import Optional
+from typing import List, Optional
 import xonsh.main
 from xonsh.main import events
 from xonsh.shell import Shell
@@ -22,6 +16,8 @@ from xonsh.readline_shell import ReadlineShell  # noqa: F401
 from xonsh.xontribs import xontribs_load
 from kmd.config.logger import get_logger
 from kmd.text_ui.command_output import output, output_assistance
+from kmd.assistant.assistant import assistance
+from kmd.text_ui.text_styles import EMOJI_ASSISTANT
 
 log = get_logger(__name__)
 
@@ -55,6 +51,7 @@ def is_xontrib_installed(file_path):
 def install_to_xonsh():
     """
     Script to add kmd xontrib to the .xonshrc file.
+    Not necessary if we are running our own customized shell (the default).
     """
     # Append the command to the file if not already present.
     if not is_xontrib_installed(xonshrc_path):
@@ -82,7 +79,6 @@ class CustomShell(PromptToolkitShell):
     """
 
     def default(self, line, raw_line=None):
-        from kmd.assistant.assistant import assistance
 
         assist_query = assistant_command(line)
         if assist_query:
@@ -95,6 +91,25 @@ class CustomShell(PromptToolkitShell):
         else:
             # Call xonsh shell.
             super().default(line)
+
+
+@events.on_command_not_found
+def not_found(cmd: List[str]):
+    output(f"{EMOJI_ASSISTANT} Command not found. Getting assistance…")
+    output_assistance(
+        assistance(
+            f"""
+            The user just typed the following command, but it was not found:
+
+            {" ".join(cmd)}
+
+            Please give them a brief suggestion of possible correct commands
+            and how they can get more help with `kmd_help` or any question
+            ending with ? in the terminal.
+            """,
+            fast=True,
+        )
+    )
 
 
 def start_custom_xonsh(argv=None):
