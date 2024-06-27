@@ -22,8 +22,8 @@ class MarkdownNormalizer(Renderer):
 
     def __init__(self, line_wrapper: Callable[[str, str, str], str]) -> None:
         super().__init__()
-        self._prefix: str = ""
-        self._second_prefix: str = ""
+        self._prefix: str = ""  # The prefix on the first line, with a bullet, such as `  - `.
+        self._second_prefix: str = ""  # The prefix on subsequent lines, such as `    `.
         self._suppress_item_break: bool = True
         self._line_wrapper = line_wrapper
 
@@ -121,7 +121,11 @@ class MarkdownNormalizer(Renderer):
         return self.render_heading(cast("block.Heading", element))
 
     def render_blank_line(self, element: block.BlankLine) -> str:
-        result = f"{self._prefix}\n"
+        if self._prefix.strip():
+            result = f"{self._prefix}\n"
+        else:
+            result = "\n"
+        self._suppress_item_break = True
         self._prefix = self._second_prefix
         return result
 
@@ -280,9 +284,11 @@ _original_doc = dedent(
         - A sub item
           - A sub sub item
     - This is a third list item with many words and words and words and words and words and words and words and words
+    
       - A sub item
       - Another sub item
 
+      
       - Another sub item (after a line break)
 
     A third paragraph.
