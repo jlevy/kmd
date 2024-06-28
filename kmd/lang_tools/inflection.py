@@ -1,11 +1,15 @@
 from typing import Optional
 from inflect import engine
+from lazyasd import lazyobject
 
-_inflect = engine()
+
+@lazyobject
+def inflect():
+    return engine()
 
 
 def plural(word: str, count: Optional[int] = None) -> str:
     """
     Pluralize a word.
     """
-    return _inflect.plural(word, count)  # type: ignore
+    return inflect.plural(word, count)  # type: ignore

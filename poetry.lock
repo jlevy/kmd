@@ -1685,6 +1685,16 @@ build = ["build", "twine"]
 test = ["pytest", "pytest-cov"]
 
 [[package]]
+name = "lazyasd"
+version = "0.1.4"
+description = "Lazy & self-destructive tools for speeding up module imports"
+optional = false
+python-versions = "*"
+files = [
+    {file = "lazyasd-0.1.4.tar.gz", hash = "sha256:a3196f05cff27f952ad05767e5735fd564b4ea4e89b23f5ea1887229c3db145b"},
+]
+
+[[package]]
 name = "linkify-it-py"
 version = "2.0.3"
 description = "Links recognition library with FULL unicode support."
@@ -5025,4 +5035,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "a4b82864328879bb6c295aab5f8d6367d5c90e47016acbf58e25123f0ddf57cc"
+content-hash = "1222a5c865fcd742b631bbdb70d0dee9de263ea2864230b320446ad15c7bd171"

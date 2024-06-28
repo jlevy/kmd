@@ -2,6 +2,7 @@
 Launch xonsh with kmd extensions and customizations.
 """
 
+import kmd.config.lazy_imports  # noqa: F401
 import re
 from os.path import expanduser
 from typing import List, Optional
@@ -11,8 +12,6 @@ from xonsh.shell import Shell
 from xonsh.main import premain, postmain
 from xonsh.built_ins import XSH
 from xonsh.execer import Execer
-from xonsh.ptk_shell.shell import PromptToolkitShell
-from xonsh.readline_shell import ReadlineShell  # noqa: F401
 from xonsh.xontribs import xontribs_load
 from kmd.config.logger import get_logger
 from kmd.text_ui.command_output import output, output_assistance
@@ -73,6 +72,9 @@ def assistant_command(line: str) -> Optional[str]:
 
 
 # Base shell can be ReadlineShell or PromptToolkitShell.
+from xonsh.ptk_shell.shell import PromptToolkitShell  # or ReadlineShell
+
+
 class CustomShell(PromptToolkitShell):
     """
     Note event hooks in xonsh don't let you disable xonsh's processing, so we use a custom shell.

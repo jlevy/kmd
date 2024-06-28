@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 import tomllib
 from typing import Any
-import openai
 from cachetools import cached
 from kmd.config.logger import logging_setup
 from kmd.config.settings import find_in_cwd_or_parents
@@ -83,6 +82,7 @@ def get_secret(name) -> str:
 
 @cached(cache={})
 def api_setup():
+    # TODO: Use the same key names for secrets.toml and for env.
     secret_openai = get_secret("secret_openai")
     os.environ["OPENAI_API_KEY"] = secret_openai
 

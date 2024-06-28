@@ -2,6 +2,7 @@
 kmd: A command line for knowledge exploration.
 """
 
+import kmd.config.lazy_imports  # noqa: F401
 import atexit
 import sys
 from typer import Typer
@@ -26,7 +27,7 @@ def _log_exit():
 
 
 # XXX: Typer breaks pytest so skip.
-if not "pytest" in sys.modules:
+if "pytest" not in sys.modules:
 
     app = Typer(help=__doc__)
 
