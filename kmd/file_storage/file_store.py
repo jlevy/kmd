@@ -12,7 +12,7 @@ from kmd.file_storage.yaml_util import custom_key_sort
 from kmd.model.errors_model import FileFormatError, InvalidFilename, InvalidStoreState
 from kmd.model.locators import StorePath
 from kmd.model.items_model import ITEM_FIELDS, FileExt, Format, Item, ItemId, ItemType
-from kmd.file_storage.frontmatter_format import fmf_read, fmf_write
+from kmd.file_storage.frontmatter_format import FmFormat, fmf_read, fmf_write
 from kmd.model.canon_url import canonicalize_url
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.text_formatting.doc_formatting import normalize_formatting
@@ -34,7 +34,13 @@ def item_type_to_folder(item_type: ItemType) -> str:
 
 
 def _parse_check_filename(filename: str) -> Tuple[str, ItemType, FileExt]:
-    dirname, name, item_type, ext = parse_filename(filename, expect_type_ext=True)
+    # Python files can have only one dot (like file.py) but others should have a type
+    # (like file.resource.yml).
+    if filename.endswith(".py"):
+        dirname, name, _, ext = parse_filename(filename, expect_type_ext=False)
+        item_type = ItemType.extension.value
+    else:
+        dirname, name, item_type, ext = parse_filename(filename, expect_type_ext=True)
     try:
         return name, ItemType[item_type], FileExt[ext]
     except KeyError as e:
@@ -48,6 +54,7 @@ def _format_from_ext(file_ext: FileExt) -> Optional[Format]:
         FileExt.txt: Format.plaintext,
         FileExt.pdf: Format.pdf,
         FileExt.yml: None,  # We will need to look at a YAML file to determine format.
+        FileExt.py: Format.python,
     }
     return file_ext_to_format[file_ext]
 
@@ -161,17 +168,17 @@ class FileStore:
         Also return the old filename if it's different.
         """
         slug = self._base_slug_for(item)
-
+        full_suffix = item.get_full_suffix()
         # Get a unique name per item type.
-        unique_slug, old_slugs = self.uniquifier.uniquify_historic(slug, item.get_full_suffix())
+        unique_slug, old_slugs = self.uniquifier.uniquify_historic(slug, full_suffix)
 
         type = item.type.value
         ext = item.get_file_ext().value
 
         # Suffix files with both item type and a suitable file extension.
-        new_unique_filename = f"{unique_slug}.{type}.{ext}"
+        new_unique_filename = f"{unique_slug}.{full_suffix}"
 
-        old_filename = f"{old_slugs[0]}.{type}.{ext}" if old_slugs else None
+        old_filename = f"{old_slugs[0]}.{full_suffix}" if old_slugs else None
 
         return new_unique_filename, old_filename
 
@@ -241,12 +248,18 @@ class FileStore:
 
                     formatted_body = normalize_formatting(item.body_text(), item.format)
 
-                    is_html = str(item.format) == str(Format.html)
+                    if str(item.format) == str(Format.html):
+                        fmformat = FmFormat.html
+                    elif str(item.format) == str(Format.python):
+                        fmformat = FmFormat.code
+                    else:
+                        fmformat = FmFormat.yaml
+
                     fmf_write(
                         full_path,
                         formatted_body,
                         item.metadata(),
-                        is_html=is_html,
+                        format=fmformat,
                         key_sort=ITEM_FIELD_SORT,
                     )
             except IOError as e:

@@ -34,6 +34,8 @@ class ItemType(Enum):
     resource = "resource"
     config = "config"
     export = "export"
+    instruction = "instruction"
+    extension = "extension"
 
 
 class Format(Enum):
@@ -48,6 +50,7 @@ class Format(Enum):
     plaintext = "plaintext"
     pdf = "pdf"
     yaml = "yaml"
+    python = "python"
 
     def is_text(self) -> bool:
         return self not in [Format.pdf]
@@ -63,6 +66,7 @@ class Format(Enum):
             FileExt.md.value: Format.markdown,
             FileExt.txt.value: Format.plaintext,
             FileExt.pdf.value: Format.pdf,
+            FileExt.py.value: Format.python,
         }
         return ext_to_format.get(file_ext.value, None)
 
@@ -80,6 +84,7 @@ class FileExt(Enum):
     md = "md"
     yml = "yml"
     html = "html"
+    py = "py"
 
     def is_text(self) -> bool:
         return self in [self.txt, self.md, self.yml, self.html]
@@ -97,6 +102,7 @@ class FileExt(Enum):
             Format.plaintext.value: FileExt.txt,
             Format.pdf.value: FileExt.pdf,
             Format.yaml.value: FileExt.yml,
+            Format.python.value: FileExt.py,
         }
 
         return format_to_file_ext.get(str(format), None)
@@ -108,7 +114,7 @@ class FileExt(Enum):
 @dataclass(frozen=True)
 class ItemId:
     """
-    Represents the identity of an an item. Used as a key to determine when to treat two items as
+    Represents the identity of an item. Used as a key to determine when to treat two items as
     the same object (same URL, same concept, etc.).
     """
 
@@ -296,7 +302,11 @@ class Item:
         Get the full file extension suffix (e.g. "note.md") for this item.
         """
 
-        return f"{self.type.value}.{self.get_file_ext().value}"
+        # Python files cannot have more than one . in them.
+        if self.type == ItemType.extension:
+            return f"{FileExt.py.value}"
+        else:
+            return f"{self.type.value}.{self.get_file_ext().value}"
 
     def body_text(self) -> str:
         if self.is_binary:
