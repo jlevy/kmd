@@ -28,13 +28,15 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Based on the xonsh implementation but with Python 3 type improvements:
+# https://github.com/xonsh/lazyasd/blob/main/lazyasd-py3.py
+# Updated by github.com/jlevy for kmd.
+
 from typing import Any, Callable, Dict, Generic, Iterator, TypeVar, Mapping, cast
 
 T = TypeVar("T")
 
 
-# Based on the xonsh implementation but with Python 3 type improvements:
-# https://github.com/xonsh/lazyasd/blob/main/lazyasd-py3.py
 class LazyObject(Generic[T]):
     def __init__(self, load: Callable[[], T], ctx: Mapping[str, T], name: str):
         """

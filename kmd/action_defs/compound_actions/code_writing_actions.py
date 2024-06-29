@@ -7,7 +7,7 @@ from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.model.actions_model import ONE_OR_NO_ARGS, Action, ActionInput, ActionResult
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.model.language_models import LLM
-from kmd.util.lazy_object import lazyobject
+from kmd.util.lazyobject import lazyobject
 
 
 @lazyobject

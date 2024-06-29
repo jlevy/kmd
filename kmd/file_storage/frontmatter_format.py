@@ -88,18 +88,18 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
     metadata_lines = []
     first_line = lines[0].strip()
     in_metadata = False
-    lstrip_chars = ""
+    prefix = ""
     end_pattern = FmFormat.yaml.end
     if first_line == FmFormat.yaml.start:
-        lstrip_chars = FmFormat.yaml.prefix
+        prefix = FmFormat.yaml.prefix
         in_metadata = True
     elif first_line == FmFormat.html.start:
         in_metadata = True
-        lstrip_chars = FmFormat.html.prefix
+        prefix = FmFormat.html.prefix
         end_pattern = FmFormat.html.end
     elif first_line == FmFormat.code.start:
         in_metadata = True
-        lstrip_chars = FmFormat.code.prefix
+        prefix = FmFormat.code.prefix
         end_pattern = FmFormat.code.end
 
     start_index = 1 if in_metadata else 0
@@ -108,9 +108,14 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
         line = lines[i]
         if line.strip() == end_pattern and in_metadata:
             try:
-                metadata = from_yaml_string(
-                    "".join(line.lstrip(lstrip_chars) for line in metadata_lines)
-                )
+                if prefix:
+                    remove_prefix = lambda mline: (
+                        mline[len(prefix) :] if mline.startswith(prefix) else mline
+                    )
+                else:
+                    remove_prefix = lambda mline: mline
+                metadata_str = "".join(remove_prefix(mline) for mline in metadata_lines)
+                metadata = from_yaml_string(metadata_str)
             except YAMLError as e:
                 raise FileFormatError(f"Error parsing YAML metadata on {file_path}: {e}")
             in_metadata = False

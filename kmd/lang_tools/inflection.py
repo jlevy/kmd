@@ -1,6 +1,6 @@
 from typing import Optional
 from inflect import engine
-from kmd.util.lazy_object import lazyobject
+from kmd.util.lazyobject import lazyobject
 
 
 @lazyobject

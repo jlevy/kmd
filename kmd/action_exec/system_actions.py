@@ -1,6 +1,6 @@
 from kmd.action_defs import look_up_action
 from kmd.model.actions_model import Action
-from kmd.util.lazy_object import lazyobject
+from kmd.util.lazyobject import lazyobject
 
 # This is used internally since we have special handling for URLs.
 FETCH_ACTION_NAME = "fetch_page"
