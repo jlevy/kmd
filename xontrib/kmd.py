@@ -1,12 +1,15 @@
 """
 Xonsh extension for kmd.
 
-Sets up all commands and functions for use in xonsh. This makes using kmd far easier
-for interactive use than calling actions from a regular shell command line.
+Sets up all commands and actions for use in xonsh. This makes using kmd far easier
+for interactive use than from a regular shell command line.
 
 Can run from kmdsh or from a regular xonsh shell.
 """
 
+import importlib
+import os
+import runpy
 from textwrap import dedent
 import threading
 from typing import Callable, List
@@ -19,9 +22,10 @@ from kmd.config.logger import get_logger
 from kmd.text_ui.text_styles import EMOJI_WARN, COLOR_ERROR, COLOR_HEADING, COLOR_LOGO, LOGO
 from kmd.text_ui.command_output import Wrap, output
 from kmd.file_storage.workspaces import current_workspace
-from kmd.action_defs import load_all_actions
+from kmd.action_defs import reload_all_actions
 from kmd.action_exec.action_exec import run_action
 from kmd.commands import commands
+from kmd.commands.commands import kmd_command
 from kmd.model.actions_model import Action
 from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState
 from kmd.util.log_calls import log_tallies
@@ -88,15 +92,37 @@ class CallableAction:
         return f"CallableAction({str(self.action)})"
 
 
-def load_commands():
+# We add action loading here direcctly in the xontrib so we can update the aliases.
+@kmd_command
+def load(*paths: str) -> None:
+    """
+    Load Python extensions into kmd. Simply imports and the defined actions should use
+    @kmd_action to register themselves.
+    """
+    for path in paths:
+        if os.path.isfile(path) and path.endswith(".py"):
+            runpy.run_path(path, run_name="__main__")
+        else:
+            importlib.import_module(path)
+
+    # Now reload all actions into the environment so the new action is visible.
+    reload_all_actions()
+    load_xonsh_actions()
+
+    log.message("Imported extensions and reloaded actions: %s", ", ".join(paths))
+    # TODO: Track and expose to the user which extensions are loaded.
+
+
+def load_xonsh_commands():
     kmd_commands = {}
 
-    # kmd command aliases.
+    # kmd command aliases in xonsh.
     kmd_commands["kmd_help"] = commands.kmd_help
+    kmd_commands["load"] = load
 
     # TODO: Figure out how to get this to work:
-    # kmd_aliases["py_help"] = help
-    # kmd_aliases["help"] = commands.kmd_help
+    # aliases["py_help"] = help
+    # aliases["help"] = commands.kmd_help
 
     # TODO: Doesn't seem to reload modified Python?
     # def reload() -> None:
@@ -110,10 +136,10 @@ def load_commands():
     aliases.update(kmd_commands)  # type: ignore  # noqa: F821
 
 
-def load_actions():
+def load_xonsh_actions():
     kmd_actions = {}
     # Load all actions as xonsh commands.
-    actions = load_all_actions()
+    actions = reload_all_actions()
 
     for action in actions.values():
         kmd_actions[action.name] = CallableAction(action)
@@ -141,8 +167,8 @@ def initialize():
 
     # Try to be a little faster starting up.
     def load():
-        load_commands()
-        load_actions()
+        load_xonsh_commands()
+        load_xonsh_actions()
 
     load_thread = threading.Thread(target=load)
     load_thread.start()
@@ -164,7 +190,7 @@ except InvalidStoreState:
     )
 output()
 
-# TODO: Completion for actions, e.g. known URLs, resource titles, concepts, parameters and values, etc.
+# TODO: Completion for action and command args, e.g. known URLs, resource titles, concepts, parameters and values, etc.
 # def _action_completer(cls, prefix, line, begidx, endidx, ctx):
 #     return ["https://"]
 # __xonsh__.completers["foo"] = _action_completer

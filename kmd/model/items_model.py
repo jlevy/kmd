@@ -256,7 +256,7 @@ class Item:
         """
         Get or infer title.
         """
-        full_title = (
+        title_raw_text = (
             self.title
             or self.url
             or self.description
@@ -264,7 +264,7 @@ class Item:
             or UNTITLED
         )
 
-        return clean_title(abbreviate_phrase_in_middle(html_to_plaintext(full_title), max_len))
+        return clean_title(abbreviate_phrase_in_middle(html_to_plaintext(title_raw_text), max_len))
 
     def abbrev_description(self, max_len: int = 1000) -> str:
         """

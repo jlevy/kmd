@@ -12,7 +12,7 @@ from kmd.util.lazyobject import lazyobject
 
 @lazyobject
 def assistant_coding_preamble():
-    return assistant_preamble(True)
+    return assistant_preamble(False, False)
 
 
 @kmd_action
