@@ -2,7 +2,7 @@ import time
 from typing import List, cast
 from strif import abbreviate_str
 from kmd.action_defs import look_up_action
-from kmd.action_exec.system_actions import FETCH_ACTION, FETCH_ACTION_NAME
+from kmd.action_exec.system_actions import fetch_action, FETCH_ACTION_NAME
 from kmd.text_ui.command_output import output
 from kmd.text_ui.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
@@ -41,7 +41,7 @@ def fetch_url_items(item: Item) -> Item:
 
     item.url = canonicalize_url(item.url)
     log.message("Fetching URL for metadata: %s", item.url)
-    enriched_item = run_action(FETCH_ACTION, item.store_path, internal_call=True)
+    enriched_item = run_action(fetch_action, item.store_path, internal_call=True)
     return enriched_item.items[0]
 
 

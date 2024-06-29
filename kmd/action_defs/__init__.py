@@ -13,7 +13,7 @@ log = get_logger(__name__)
 cache = Cache(maxsize=float("inf"))
 
 
-@cached({})
+@cached(cache)
 def load_all_actions(base_only: bool = False) -> Dict[str, Action]:
     import_base_actions()
     # Allow bootstrapping base actions before compound actions.
@@ -23,10 +23,9 @@ def load_all_actions(base_only: bool = False) -> Dict[str, Action]:
     actions_map = instantiate_actions()
 
     log.info(
-        "Registerd %s actions (base_only=%s): %s",
+        "Loaded %s actions (base_only=%s)",
         len(actions_map),
         base_only,
-        list(actions_map.keys()),
     )
 
     return actions_map
