@@ -1,6 +1,7 @@
 import os
 from dataclasses import asdict, dataclass
 from typing import List, Optional
+from kmd.config import colors
 from kmd.config.logger import get_logger
 from kmd.file_storage.workspaces import current_workspace
 from kmd.file_storage.yaml_util import read_yaml_file, to_yaml_string, write_yaml_file
@@ -81,7 +82,12 @@ def generate_webpage(config_item: Item) -> str:
     content = render_web_template("tabbed_webpage.template.html", asdict(tabbed_webpage))
 
     return render_web_template(
-        "base_webpage.template.html", {"title": tabbed_webpage.title, "content": content}
+        "base_webpage.template.html",
+        {
+            "title": tabbed_webpage.title,
+            "content": content,
+            "color_defs": colors.generate_css_variables(),
+        },
     )
 
 

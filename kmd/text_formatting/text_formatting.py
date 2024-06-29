@@ -24,6 +24,13 @@ def plaintext_to_html(text: str):
     )
 
 
+def single_line(text: str) -> str:
+    """
+    Convert newlines and other whitespace to spaces.
+    """
+    return regex.sub(r"\s+", " ", text).strip()
+
+
 def html_to_plaintext(text: str):
     """
     Convert HTML to plaintext, stripping tags and converting entities.

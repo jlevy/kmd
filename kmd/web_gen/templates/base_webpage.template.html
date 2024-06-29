@@ -27,6 +27,8 @@
         --color-hint: #9ca3af;
       }
 
+      {{ color_defs|safe }}
+
       body {
         font-family: "PT Serif", serif;
         color: var(--color-text);
@@ -136,6 +138,10 @@
 
       /* Content styles: */
 
+      .highlight {
+        border-radius: 0.5rem;
+        padding: 0 0.5rem;
+      }
       .citation {
         font-family: "Varta", sans-serif;
         color: var(--color-secondary);

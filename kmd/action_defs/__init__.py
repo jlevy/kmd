@@ -31,7 +31,7 @@ def load_all_actions(base_only: bool = False) -> Dict[str, Action]:
     return actions_map
 
 
-def reload_actions(base_only: bool = False) -> Dict[str, Action]:
+def reload_all_actions(base_only: bool = False) -> Dict[str, Action]:
     cache.clear()
     return load_all_actions(base_only=base_only)
 

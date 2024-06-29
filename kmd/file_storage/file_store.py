@@ -64,9 +64,10 @@ def _format_from_ext(file_ext: FileExt) -> Optional[Format]:
 def skippable_file(filename: str) -> bool:
     """
     Check if a file should be skipped when processing a directory.
-    This skipps .archive, .settings, etc.
+    This skips .archive, .settings, __pycache__ etc.
     """
-    return len(filename) > 1 and filename.startswith(".")
+    # TODO: Why is this not working with extensions/ dir?
+    return len(filename) > 1 and (filename.startswith(".") or filename.startswith("__"))
 
 
 
