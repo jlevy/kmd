@@ -4,6 +4,7 @@ from kmd.action_exec.llm_completion import llm_completion
 from kmd.text_ui.text_styles import EMOJI_PROCESS
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
+    Action,
     EachItemAction,
 )
 from kmd.model.errors_model import InvalidInput
@@ -75,11 +76,15 @@ class LLMAction(EachItemAction):
         self.diff_filter = diff_filter
 
     def run_item(self, item: Item) -> Item:
-        return run_llm_action(self, item)
+        return run_llm_transform_action(self, item)
 
 
 @log_calls(level="message")
-def run_llm_action(action: LLMAction, item: Item) -> Item:
+def run_llm_transform_action(action: LLMAction, item: Item) -> Item:
+    """
+    Run an LLM transform action as a sliding window on the input.
+    """
+
     if not item.body:
         raise InvalidInput(f"LLM actions expect a body: {action.name} on {item}")
     if not action.model or not action.system_message or not action.template:
@@ -88,9 +93,8 @@ def run_llm_action(action: LLMAction, item: Item) -> Item:
         )
 
     setup.api_setup()
-
     log.message(
-        "%s Running LLM action %s with model %s: %s %s",
+        "%s Running LLM sliding transform action %s with model %s: %s %s",
         EMOJI_PROCESS,
         action.name,
         action.model,
@@ -107,6 +111,42 @@ def run_llm_action(action: LLMAction, item: Item) -> Item:
         item.body,
         action.windowing,
         action.diff_filter or ALL_CHANGES,
+    )
+
+    if action.title_template:
+        result_item.title = action.title_template.format(title=item.abbrev_title())
+    result_item.format = Format.markdown
+
+    return result_item
+
+
+@log_calls(level="message")
+def run_llm_action(action: Action, item: Item) -> Item:
+    """
+    Run a simple LLM completion on the input.
+    """
+    if not item.body:
+        raise InvalidInput(f"LLM actions expect a body: {action.name} on {item}")
+    if not action.model or not action.system_message or not action.template:
+        raise InvalidInput(
+            f"LLM actions expect a model, system_message, and template: {action.name}"
+        )
+
+    setup.api_setup()
+    log.message(
+        "%s Running LLM completion action %s with model %s",
+        EMOJI_PROCESS,
+        action.name,
+        action.model,
+    )
+    log.info("Input item: %s", item)
+
+    result_item = item.derived_copy(body=None)
+    result_item.body = llm_completion(
+        action.model,
+        system_message=str(action.system_message),
+        template=action.template,
+        input=item.body,
     )
 
     if action.title_template:

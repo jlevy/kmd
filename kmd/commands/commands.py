@@ -48,13 +48,7 @@ def all_commands():
     return sorted(_commands, key=lambda cmd: cmd.__name__)
 
 
-@kmd_command
-def kmd_help() -> None:
-    """
-    kmd help. Lists all available actions.
-    """
-    # TODO: Take an argument to show help for a specific command or action.
-
+def output_help(base_only: bool = False) -> None:
     from kmd.action_defs import load_all_actions
 
     output_heading("About kmd")
@@ -70,7 +64,7 @@ def kmd_help() -> None:
         output()
 
     output_heading("Available actions")
-    actions = load_all_actions()
+    actions = load_all_actions(base_only=base_only)
     for action in actions.values():
         output(format_action_description(action.name, action.description))
         output()
@@ -81,6 +75,16 @@ def kmd_help() -> None:
     )
 
     output()
+
+
+@kmd_command
+def kmd_help() -> None:
+    """
+    kmd help. Lists all available actions.
+    """
+    # TODO: Take an argument to show help for a specific command or action.
+
+    output_help()
 
 
 @kmd_command
