@@ -24,6 +24,7 @@ USE_CUSTOM_SHELL = True
 
 INSTALL_TO_XONSH = False
 
+XONSH_SHOW_TRACEBACK = True
 
 xonshrc_init_script = """
 # Auto-load of kmd:
@@ -128,6 +129,7 @@ def start_custom_xonsh(argv=None):
     XSH.shell = Shell(execer=execer)  # type: ignore
     XSH.shell.shell = CustomShell(execer=execer, ctx=ctx)
     XSH.env["XONSH_INTERACTIVE"] = True  # type: ignore
+    XSH.env["XONSH_SHOW_TRACEBACK"] = XONSH_SHOW_TRACEBACK  # type: ignore
     ctx["__name__"] = "__main__"
     events.on_post_init.fire()
     events.on_pre_cmdloop.fire()

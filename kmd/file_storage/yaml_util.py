@@ -59,12 +59,12 @@ def read_yaml_file(filename: str) -> Any:
         return _new_yaml().load(f)
 
 
-def to_yaml_string(value: Any) -> str:
+def to_yaml_string(value: Any, key_sort: Optional[KeySort] = None) -> str:
     """
     Convert a Python object to a YAML string.
     """
     stream = StringIO()
-    _new_yaml().dump(value, stream)
+    _new_yaml(key_sort).dump(value, stream)
     return stream.getvalue()
 
 

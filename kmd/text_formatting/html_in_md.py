@@ -60,6 +60,9 @@ def html_span(
     attrs: Optional[Dict[str, str]] = None,
     safe: bool = False,
 ) -> str:
+    """
+    Write a span tag for use in Markdown, with the given text and optional class and attributes.
+    """
     return tag_with_attrs("span", text, class_name, attrs, safe)
 
 
@@ -69,6 +72,9 @@ def html_div(
     attrs: Optional[Dict[str, str]] = None,
     safe: bool = False,
 ) -> str:
+    """
+    Write a div tag for use in Markdown, with the given text and optional class and attributes.
+    """
     return tag_with_attrs("div", text, class_name, attrs, safe)
 
 

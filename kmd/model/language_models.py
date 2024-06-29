@@ -10,6 +10,7 @@ class LLM(Enum):
     gpt_4 = "gpt-4"
     gpt_3_5_turbo = "gpt-3.5-turbo"
 
+    claude_3_5_sonnet = "claude-3-5-sonnet-20240620"
     claude_3_opus = "claude-3-opus-20240229"
     claude_3_sonnet = "claude-3-sonnet-20240229"
     claude_3_haiku = "claude-3-haiku-20240307"
