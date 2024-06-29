@@ -371,15 +371,18 @@ class Item:
         """
         Check if two items have identical content, ignoring timestamps and store path.
         """
-        return (
-            replace(
-                self,
-                created_at=other.created_at,
-                modified_at=other.modified_at,
-                store_path=other.store_path,
-            )
-            == other
-        )
+        metadata_matches = replace(
+            self,
+            created_at=other.created_at,
+            modified_at=other.modified_at,
+            store_path=other.store_path,
+            body=None,
+        ) == replace(other, body=None)
+        # Trailing newlines don't matter.
+        body_matches = (
+            self.is_binary == other.is_binary and self.body == other.body
+        ) or self.body_text().rstrip() == other.body_text().rstrip()
+        return metadata_matches and body_matches
 
     def __str__(self):
         return abbreviate_obj(self)

@@ -24,6 +24,7 @@ class ExpectedArgs:
 
 NO_ARGS = ExpectedArgs(0, 0)
 ONE_ARG = ExpectedArgs(1, 1)
+ONE_OR_NO_ARGS = ExpectedArgs(0, 1)
 TWO_ARGS = ExpectedArgs(2, 2)
 ANY_ARGS = ExpectedArgs(0, None)
 ONE_OR_MORE_ARGS = ExpectedArgs(1, None)

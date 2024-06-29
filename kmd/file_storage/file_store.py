@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import time
 from typing import Dict, Generator, List, Optional, Tuple
 from os.path import join, relpath, commonpath
 from os import path
@@ -18,6 +19,7 @@ from kmd.text_formatting.text_formatting import format_lines
 from kmd.text_formatting.doc_formatting import normalize_formatting
 from kmd.lang_tools.inflection import plural
 from kmd.util.file_utils import move_file
+from kmd.util.log_calls import format_duration
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import Url, is_url
@@ -85,6 +87,7 @@ class FileStore:
     # TODO: Consider using a pluggable filesystem (fsspec AbstractFileSystem).
     
     def __init__(self, base_dir: Path):
+        self.start_time = time.time()
         self.base_dir = base_dir
         self.uniquifier = Uniquifier()
         self.id_map: dict[ItemId, StorePath] = {}
@@ -100,6 +103,7 @@ class FileStore:
 
         self.action_params = PersistedYaml(self.settings_dir / "action_params.yaml", init_value={})
 
+        self.end_time = time.time()
         self.log_store_info()
 
     def _initialize_index(self):
@@ -276,7 +280,8 @@ class FileStore:
             # Check if it's an exact duplicate of the previous file, to reduce clutter.
             if old_store_path:
                 old_item = self.load(old_store_path)
-                if item.content_equals(old_item):
+                new_item = self.load(store_path)  # Reload it to get normalized text.
+                if new_item.content_equals(old_item):
                     log.message(
                         "New item is identical to previous version, will keep old item: %s",
                         old_store_path,
@@ -420,6 +425,7 @@ class FileStore:
             path.abspath(self.base_dir),
             len(self.uniquifier),
         )
+        log.info("File store startup took %s.", format_duration(self.end_time - self.start_time))
         # TODO: Log more info like number of items by type.
 
     def walk_by_folder(

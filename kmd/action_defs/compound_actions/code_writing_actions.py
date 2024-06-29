@@ -1,14 +1,13 @@
 from textwrap import dedent
-from lazyasd import lazyobject
-from strif import abbreviate_str
 from kmd.action_exec.action_registry import kmd_action
 from kmd.action_exec.llm_action_base import run_llm_action
 from kmd.assistant.assistant import assistant_preamble
 from kmd.file_storage.workspaces import current_workspace
 from kmd.form_input.prompt_input import prompt_simple_string
-from kmd.model.actions_model import Action, ActionInput, ActionResult
+from kmd.model.actions_model import ONE_OR_NO_ARGS, Action, ActionInput, ActionResult
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.model.language_models import LLM
+from kmd.util.lazy_object import lazyobject
 
 
 @lazyobject
@@ -23,7 +22,7 @@ class WriteNewAction(Action):
             name="write_new_action",
             description="Create a new kmd action in Python, based on a description of the features.",
             model=LLM.gpt_4o.value,
-            system_message=assistant_coding_preamble,  # Give it context on kmd APIs. # type: ignore
+            system_message=assistant_coding_preamble,  # Give it context on kmd APIs.
             title_template="Action: {title}",
             template=dedent(
                 """
@@ -84,6 +83,7 @@ class WriteNewAction(Action):
                 
                 """
             ),
+            expected_args=ONE_OR_NO_ARGS,
             interactive_input=True,
         )
 
@@ -98,7 +98,6 @@ class WriteNewAction(Action):
             )
             description_item = Item(
                 ItemType.instruction,
-                title=abbreviate_str(action_description, 40),
                 body=action_description,
                 format=Format.markdown,
             )
