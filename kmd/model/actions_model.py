@@ -62,6 +62,7 @@ class Action(ABC):
     template: Optional[str] = None
     system_message: Optional[str] = None
     expected_args: ExpectedArgs = field(default_factory=lambda: ONE_ARG)
+    interactive_input: bool = False
 
     def __post_init__(self):
         self.friendly_name = self.friendly_name or capitalize_cms(

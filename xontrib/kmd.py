@@ -55,7 +55,10 @@ class CallableAction:
 
     def __call__(self, args):
         try:
-            with get_console().status(f"Running action {self.action.name}…", spinner="dots"):
+            if not self.action.interactive_input:
+                with get_console().status(f"Running action {self.action.name}…", spinner="dots"):
+                    run_action(self.action, *args)
+            else:
                 run_action(self.action, *args)
             # We don't return the result to keep the xonsh shell output clean.
         except _common_exceptions as e:
@@ -66,7 +69,7 @@ class CallableAction:
             output()
 
     def __repr__(self):
-        return f"CallableAction({repr(self.action)})"
+        return f"CallableAction({str(self.action)})"
 
 
 def initialize():

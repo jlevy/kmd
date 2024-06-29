@@ -7,9 +7,10 @@ A command line for knowledge exploration.
 Ensure you have a modern Python 3.12+ and Poetry (this part assumes MacOS):
 
 ```
-# Install pyenv if needed:
+# Install pyenv and pipx if needed:
 brew update
 brew install pyenv
+brew install pipx
 
 # Install ffmpeg if needed:
 brew install ffmpeg
@@ -19,7 +20,7 @@ brew install ffmpeg
 pyenv install
 
 # Install recent Poetry if needed:
-curl -sSL https://install.python-poetry.org | python3 -
+pipx install poetry
 # Plugin to help with upgrades:
 poetry self add poetry-plugin-up
 ```

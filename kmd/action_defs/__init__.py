@@ -22,7 +22,12 @@ def load_all_actions(base_only: bool = False) -> Dict[str, Action]:
 
     actions_map = instantiate_actions()
 
-    log.info("Registerd %s actions: %s", len(actions_map), list(actions_map.keys()))
+    log.info(
+        "Registerd %s actions (base_only=%s): %s",
+        len(actions_map),
+        base_only,
+        list(actions_map.keys()),
+    )
 
     return actions_map
 
