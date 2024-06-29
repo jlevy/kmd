@@ -8,6 +8,7 @@ Can run from kmdsh or from a regular xonsh shell.
 """
 
 from textwrap import dedent
+import threading
 from typing import Callable, List
 from rich import get_console
 from xonsh.tools import XonshError
@@ -49,6 +50,21 @@ def _summarize_traceback(exception: Exception) -> str:
     )
 
 
+def xonsh_command_for(func: Callable):
+    def command(args: List[str]):
+        try:
+            func(*args)
+        except _common_exceptions as e:
+            log.error(f"[{COLOR_ERROR}]Command error:[/{COLOR_ERROR}] %s", _summarize_traceback(e))
+
+            log.info("Command error details: %s", e, exc_info=True)
+        finally:
+            output()
+
+    command.__doc__ = func.__doc__
+    return command
+
+
 class CallableAction:
     def __init__(self, action: Action):
         self.action = action
@@ -72,9 +88,8 @@ class CallableAction:
         return f"CallableAction({str(self.action)})"
 
 
-def initialize():
-
-    kmd_commands, kmd_actions = {}, {}
+def load_commands():
+    kmd_commands = {}
 
     # kmd command aliases.
     kmd_commands["kmd_help"] = commands.kmd_help
@@ -89,50 +104,48 @@ def initialize():
     #
     # aliases["reload"] = reload  # type: ignore
 
-    def xonsh_command_for(func: Callable):
-        def command(args: List[str]):
-            try:
-                func(*args)
-            except _common_exceptions as e:
-                log.error(
-                    f"[{COLOR_ERROR}]Command error:[/{COLOR_ERROR}] %s", _summarize_traceback(e)
-                )
-
-                log.info("Command error details: %s", e, exc_info=True)
-            finally:
-                output()
-
-        command.__doc__ = func.__doc__
-        return command
-
     for func in commands.all_commands():
         kmd_commands[func.__name__] = xonsh_command_for(func)
 
+    aliases.update(kmd_commands)  # type: ignore  # noqa: F821
+
+
+def load_actions():
+    kmd_actions = {}
     # Load all actions as xonsh commands.
     actions = load_all_actions()
 
     for action in actions.values():
         kmd_actions[action.name] = CallableAction(action)
 
-    aliases.update(kmd_commands)  # type: ignore  # noqa: F821
     aliases.update(kmd_actions)  # type: ignore  # noqa: F821
+
+
+def initialize():
 
     output()
     output(LOGO, color=COLOR_LOGO)
     output()
     output("Welcome to kmd.\n", color=COLOR_HEADING)
     output()
+    # output(f"\n{len(kmd_commands)} commands and {len(kmd_actions)} actions are available.")
     output(
         dedent(
-            f"""
-            {len(kmd_commands)} commands and {len(kmd_actions)} actions are available.
-
+            """
             Use `kmd_help` for help. Or simply ask a question about kmd or what you want to do.
             Any question (ending in ?) on the command line invokes the kmd assistant.
             """
         ).strip(),
         text_wrap=Wrap.WRAP_FULL,
     )
+
+    # Try to be a little faster starting up.
+    def load():
+        load_commands()
+        load_actions()
+
+    load_thread = threading.Thread(target=load)
+    load_thread.start()
 
     log.message(
         "\nUsing media cache directory: %s\n",
@@ -143,10 +156,11 @@ def initialize():
 initialize()
 
 try:
-    current_workspace()
-except InvalidStoreState as e:
+    current_workspace()  # Validates and logs workspace info for user.
+except InvalidStoreState:
     output(
-        f"{EMOJI_WARN} The current directory is not a workspace. Create or switch to a workspace with the `workspace` command."
+        f"{EMOJI_WARN} The current directory is not a workspace. "
+        "Create or switch to a workspace with the `workspace` command."
     )
 output()
 
