@@ -43,6 +43,7 @@ def size_in_wordtoks(text: str) -> int:
 class Unit(Enum):
     BYTES = "bytes"
     CHARS = "chars"
+    WORDS = "words"
     WORDTOKS = "wordtoks"
     PARAGRAPHS = "paragraphs"
     SENTENCES = "sentences"
@@ -53,6 +54,8 @@ def size(text: str, unit: Unit) -> int:
         return size_in_bytes(text)
     elif unit == Unit.CHARS:
         return len(text)
+    elif unit == Unit.WORDS:
+        return len(text.split())
     elif unit == Unit.WORDTOKS:
         return size_in_wordtoks(text)
     else:
@@ -133,6 +136,8 @@ class Paragraph:
             return base_size + (len(self.sentences) - 1) * size_in_bytes(SENT_BR_STR)
         if unit == Unit.CHARS:
             return base_size + (len(self.sentences) - 1) * len(SENT_BR_STR)
+        if unit == Unit.WORDS:
+            return base_size
         if unit == Unit.WORDTOKS:
             return base_size + (len(self.sentences) - 1)
 
@@ -222,6 +227,9 @@ class TextDoc:
         elif unit == Unit.CHARS:
             size_sent_break = len(SENT_BR_STR)
             size_para_break = len(PARA_BR_STR)
+        elif unit == Unit.WORDS:
+            size_sent_break = 0
+            size_para_break = 0
         elif unit == Unit.WORDTOKS:
             size_sent_break = 1
             size_para_break = 1
@@ -320,13 +328,15 @@ class TextDoc:
             return base_size + (len(self.paragraphs) - 1) * size_in_bytes(PARA_BR_STR)
         if unit == Unit.CHARS:
             return base_size + (len(self.paragraphs) - 1) * len(PARA_BR_STR)
+        if unit == Unit.WORDS:
+            return base_size
         if unit == Unit.WORDTOKS:
             return base_size + (len(self.paragraphs) - 1)
 
         raise ValueError(f"Unsupported unit for TextDoc: {unit}")
 
     def size_summary(self) -> str:
-        return f"{self.size(Unit.BYTES)} bytes ({self.size(Unit.WORDTOKS)} wordtoks, {self.size(Unit.PARAGRAPHS)} paragraphs, {self.size(Unit.SENTENCES)} sentences)"
+        return f"{self.size(Unit.BYTES)} bytes ({self.size(Unit.PARAGRAPHS)} paragraphs, {self.size(Unit.SENTENCES)} sentences, {self.size(Unit.WORDS)} words, {self.size(Unit.WORDTOKS)} wordtoks)"
 
     def as_wordtok_to_sent(self, bof_eof=False) -> Generator[Tuple[str, SentIndex], None, None]:
         if bof_eof:
@@ -365,10 +375,8 @@ class TextDoc:
 
 ## Tests
 
-
-def test_document_parse_reassemble():
-    text = dedent(
-        """
+_med_test_doc = dedent(
+    """
         # Title
 
         Hello World. This is an example sentence. And here's another one!
@@ -396,8 +404,11 @@ def test_document_parse_reassemble():
 
         3. Item 3
         """
-    ).strip()
+).strip()
 
+
+def test_document_parse_reassemble():
+    text = _med_test_doc
     doc = TextDoc.from_text(text)
 
     print("\n---Original:")
@@ -428,6 +439,16 @@ _simple_test_doc = dedent(
     Here is the third paragraph. More sentences follow. And here is another one.
     """
 ).strip()
+
+
+def test_doc_sizes():
+    text = _med_test_doc
+    doc = TextDoc.from_text(text)
+    print("\n---Sizes:")
+    size_summary = doc.size_summary()
+    print(size_summary)
+
+    assert size_summary == "417 bytes (12 paragraphs, 17 sentences, 73 words, 182 wordtoks)"
 
 
 def test_seek_doc():
