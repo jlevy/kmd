@@ -1,10 +1,11 @@
 from os.path import join
 from kmd.file_storage.workspaces import current_workspace
 from kmd.action_exec.action_registry import kmd_action
+from kmd.lang_tools.clean_headings import clean_heading
 from kmd.model.actions_model import ONE_ARG, Action, ActionInput, ActionResult
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import FileExt, Format, ItemType
-from kmd.pdf.pdf_output import markdown_to_pdf
+from kmd.pdf.pdf_output import html_to_pdf
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
@@ -29,12 +30,19 @@ class CreatePDF(Action):
         base_dir = current_workspace().base_dir
         full_pdf_path = join(base_dir, pdf_path)
 
+        clean_title = clean_heading(item.abbrev_title())
+
+        content_html = f"""
+            <h1>{clean_title}</h1>
+
+            {item.body_as_html()}
+        """
+
         # Add directly to the store.
-        markdown_to_pdf(
-            item.body,
+        html_to_pdf(
+            content_html,
             full_pdf_path,
             title=item.title,
-            description=item.description,
         )
         pdf_item.external_path = full_pdf_path
 

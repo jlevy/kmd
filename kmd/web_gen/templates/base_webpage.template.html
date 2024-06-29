@@ -32,8 +32,7 @@
       body {
         font-family: "PT Serif", serif;
         color: var(--color-text);
-        background-color: var(--color-bg);
-        line-height: 1.6;
+        line-height: 1.5;
         padding: 2rem;
         margin: auto;
         max-width: 55rem;
@@ -47,27 +46,29 @@
       h2,
       h3,
       h4 {
-        font-family: "Varta", sans-serif;
-      }
-
-      h1,
-      h2 {
-        font-weight: 400;
+        line-height: 1.2;
       }
 
       h1 {
-        font-size: 2rem;
+        font-family: "Varta", sans-serif;
+        font-weight: 400;
+        font-size: 1.7rem;
         margin-top: 2rem;
         margin-bottom: 1rem;
       }
 
       h2 {
-        font-size: 1.5rem;
+        font-family: "Varta", sans-serif;
+        font-weight: 400;
+        font-style: italic;
+        font-size: 1.4rem;
         margin-top: 2rem;
         margin-bottom: 1rem;
       }
 
       h3 {
+        font-family: "PT Serif", serif;
+        font-style: italic;
         font-size: 1.15rem;
         text-transform: uppercase;
         font-weight: 600;
@@ -76,8 +77,16 @@
       }
 
       h4 {
+        font-family: "PT Serif", serif;
+        font-weight: 700;
         margin-top: 1rem;
         margin-bottom: 1rem;
+      }
+
+      .subtitle {
+        font-family: "PT Serif", serif;
+        font-style: italic;
+        font-size: 1rem;
       }
 
       ul {
@@ -136,7 +145,36 @@
         gap: 1rem; /* Add some space between the buttons */
       }
 
-      /* Content styles: */
+      /* PDF generation */
+
+      {% if footer %}
+      footer {
+        font-size: 1rem;
+        position: fixed;
+        bottom: 10px;
+        left: 0;
+        width: 100%;
+
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+      }
+
+      @page {
+        @bottom-right {
+          content: counter(page) " of " counter(pages);
+          font-family: "PT Serif", serif;
+          color: #666;
+        }
+        @bottom-left {
+          content: "{{ footer }}";
+          font-family: "PT Serif", serif;
+          color: #666;
+        }
+      }
+      {% endif %}
+
+      /* Content styles */
 
       .highlight {
         border-radius: 0.5rem;
@@ -158,6 +196,7 @@
 
       .description {
         font-family: "Varta", sans-serif;
+        font-size: 0.95rem;
         color: var(--color-secondary);
         margin: 1rem 0;
       }
