@@ -73,8 +73,19 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
     in Jekyll-style frontmatter format. Auto-detects variant formats for HTML and code
     (Python style) based on whether the prefix is `---` or `<!---` or `#---`.
     """
+    content, metadata_str = fmf_read_raw(file_path)
     metadata = None
+    if metadata_str:
+        try:
+            metadata = from_yaml_string(metadata_str)
+        except YAMLError as e:
+            raise FileFormatError(f"Error parsing YAML metadata on {file_path}: {e}")
+    return content, metadata
+
+
+def fmf_read_raw(file_path: Path | str) -> Tuple[str, Optional[str]]:
     content = []
+    metadata_str = None
 
     try:
         with open(file_path, "r") as f:
@@ -107,17 +118,13 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
     for i in range(start_index, len(lines)):
         line = lines[i]
         if line.strip() == end_pattern and in_metadata:
-            try:
-                if prefix:
-                    remove_prefix = lambda mline: (
-                        mline[len(prefix) :] if mline.startswith(prefix) else mline
-                    )
-                else:
-                    remove_prefix = lambda mline: mline
-                metadata_str = "".join(remove_prefix(mline) for mline in metadata_lines)
-                metadata = from_yaml_string(metadata_str)
-            except YAMLError as e:
-                raise FileFormatError(f"Error parsing YAML metadata on {file_path}: {e}")
+            if prefix:
+                remove_prefix = lambda mline: (
+                    mline[len(prefix) :] if mline.startswith(prefix) else mline
+                )
+            else:
+                remove_prefix = lambda mline: mline
+            metadata_str = "".join(remove_prefix(mline) for mline in metadata_lines)
             in_metadata = False
             continue
 
@@ -131,7 +138,7 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
             f"Error reading {file_path}: end of YAML front matter ('---') not found"
         )
 
-    return "".join(content), metadata
+    return "".join(content), metadata_str
 
 
 ## Tests

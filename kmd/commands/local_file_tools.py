@@ -17,15 +17,15 @@ log = get_logger(__name__)
 
 
 def file_info(
-    file_path: str, max_lines: int = 100, max_bytes: int = 50 * 1024
+    filename: str, max_lines: int = 100, max_bytes: int = 50 * 1024
 ) -> Tuple[str, int, int]:
     """
     Get file type, size, and lines by reading just first part of the file.
     """
-    mime_type, _ = mimetypes.guess_type(file_path)
-    file_size = os.path.getsize(file_path)
+    mime_type, _ = mimetypes.guess_type(filename)
+    file_size = os.path.getsize(filename)
     num_lines = 0
-    with open(file_path, "rb") as f:
+    with open(filename, "rb") as f:
         for i, _line in enumerate(f):
             if i >= max_lines or f.tell() > max_bytes:
                 break
@@ -49,6 +49,10 @@ def _in_kitty_terminal():
     return os.environ.get("TERM") == "xterm-kitty"
 
 
+def kitty_display_image(filename: str):
+    subprocess.run(["kitty", "+kitten", "icat", filename])
+
+
 def open_platform_specific(file_or_url: str):
     if is_url(file_or_url) or file_or_url.endswith(".html"):
         if not is_url(file_or_url):
@@ -63,25 +67,24 @@ def open_platform_specific(file_or_url: str):
             view_file(file, use_less=num_lines > 40 or file_size > 20 * 1024)
         elif _in_kitty_terminal() and mime_type and mime_type.startswith("image"):
             # Support kitty terminal image display, if we are running in kitty.
-            subprocess.run(["kitty", "+kitten", "icat", file])
+            kitty_display_image(file)
         else:
             _native_open(file)
     elif os.path.isdir(file_or_url):
-        # TODO: Consider making this a list of files.
         _native_open(file_or_url)
     else:
         raise FileNotFoundError(f"File does not exist: {file_or_url}")
 
 
-def view_file(file_path: str, use_less: bool = True):
+def view_file(filename: str, use_less: bool = True):
     """
     Displays a file in the console with pagination and syntax highlighting.
     """
     # TODO: Update this to handle YAML frontmatter more nicely.
     try:
         if use_less:
-            subprocess.run(f"pygmentize -g {file_path} | less -R", shell=True, check=True)
+            subprocess.run(f"pygmentize -g {filename} | less -R", shell=True, check=True)
         else:
-            subprocess.run(f"pygmentize -g {file_path}", shell=True, check=True)
+            subprocess.run(f"pygmentize -g {filename}", shell=True, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error displaying file: {e}", file=sys.stderr)

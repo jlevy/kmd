@@ -69,8 +69,35 @@ def skippable_file(filename: str) -> bool:
     # TODO: Why is this not working with extensions/ dir?
     return len(filename) > 1 and (filename.startswith(".") or filename.startswith("__"))
 
+def write_item(item: Item, full_path: Path):
+    if item.is_binary:
+        raise ValueError(f"Binary Items should be external files: {item}")
 
+    formatted_body = normalize_formatting(item.body_text(), item.format)
 
+    if str(item.format) == str(Format.html):
+        fmformat = FmFormat.html
+    elif str(item.format) == str(Format.python):
+        fmformat = FmFormat.code
+    else:
+        fmformat = FmFormat.yaml
+
+    fmf_write(
+        full_path,
+        formatted_body,
+        item.metadata(),
+        format=fmformat,
+        key_sort=ITEM_FIELD_SORT,
+    )
+
+def read_item(full_path: Path, base_dir: Optional[Path]):
+    # This is a known text format or a YAML file, so we can read the whole thing.
+    store_path = str(full_path.relative_to(base_dir)) if base_dir else None
+    body, metadata = fmf_read(full_path)
+    if not metadata:
+        raise FileFormatError(f"No metadata found in file: {store_path if store_path else full_path}")
+
+    return Item.from_dict(metadata, body=body, store_path=store_path)
 
 ARCHIVE_DIR = ".archive"
 SETTINGS_DIR = ".settings"
@@ -177,9 +204,6 @@ class FileStore:
         # Get a unique name per item type.
         unique_slug, old_slugs = self.uniquifier.uniquify_historic(slug, full_suffix)
 
-        type = item.type.value
-        ext = item.get_file_ext().value
-
         # Suffix files with both item type and a suitable file extension.
         new_unique_filename = f"{unique_slug}.{full_suffix}"
 
@@ -248,25 +272,7 @@ class FileStore:
                 if item.external_path:
                     copyfile_atomic(item.external_path, full_path)
                 else:
-                    if item.is_binary:
-                        raise ValueError(f"Binary Items should be external files: {item}")
-
-                    formatted_body = normalize_formatting(item.body_text(), item.format)
-
-                    if str(item.format) == str(Format.html):
-                        fmformat = FmFormat.html
-                    elif str(item.format) == str(Format.python):
-                        fmformat = FmFormat.code
-                    else:
-                        fmformat = FmFormat.yaml
-
-                    fmf_write(
-                        full_path,
-                        formatted_body,
-                        item.metadata(),
-                        format=fmformat,
-                        key_sort=ITEM_FIELD_SORT,
-                    )
+                    write_item(item, full_path)
             except IOError as e:
                 log.error("Error saving item: %s", e)
                 self.unarchive(store_path)
@@ -303,11 +309,7 @@ class FileStore:
         _name, item_type, file_ext = _parse_check_filename(store_path)
         if FileExt.is_text(file_ext):
             # This is a known text format or a YAML file, so we can read the whole thing.
-            body, metadata = fmf_read(self.base_dir / store_path)
-            if not metadata:
-                raise FileFormatError(f"No metadata found in file: {store_path}")
-
-            return Item.from_dict(metadata, body=body, store_path=store_path)
+            return read_item(self.base_dir / store_path, self.base_dir)
         else:
             # This is a PDF or other binary file, so we just return the metadata.
             format = _format_from_ext(file_ext)

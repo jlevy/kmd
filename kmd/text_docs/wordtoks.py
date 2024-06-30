@@ -8,7 +8,7 @@ from typing import List, Callable, Union
 import regex
 from kmd.text_ui.text_styles import SYMBOL_SEP
 
-# Note these parse like as tokens like HTML, so they can safely be mixed into inputs if desired.
+# Note these parse as tokens and like HTML tags, so they can safely be mixed into inputs if desired.
 SENT_BR_TOK = "<-SENT-BR->"
 PARA_BR_TOK = "<-PARA-BR->"
 BOF_TOK = "<-BOF->"
