@@ -27,7 +27,7 @@ def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
 
 
 @cached(cache={})
-def media_cache_dir() -> str:
+def cache_dir(name: str) -> Path:
     """
     The media cache directory. Set at load time and used for the entire session.
     """
@@ -35,4 +35,18 @@ def media_cache_dir() -> str:
     if not cache_dir:
         cache_dir = Path(".").absolute() / CACHE_NAME
 
-    return str(cache_dir / "media")
+    return cache_dir / name
+
+
+def media_cache_dir() -> Path:
+    """
+    The media cache directory. Set at load time and used for the entire session.
+    """
+    return cache_dir("media")
+
+
+def web_cache_dir() -> Path:
+    """
+    The web cache directory. Set at load time and used for the entire session.
+    """
+    return cache_dir("web")

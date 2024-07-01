@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Optional
 from kmd.util.url import Url
 
@@ -20,6 +21,6 @@ class VideoService(ABC):
         pass
 
     @abstractmethod
-    def download_audio(self, url: Url) -> str:
+    def download_audio(self, url: Url) -> Path:
         """Download video from URL and extract audio to mp3."""
         pass

@@ -1,4 +1,5 @@
 from os.path import getsize
+from pathlib import Path
 from typing import List, NamedTuple, Optional, Tuple
 from openai import OpenAI
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource, ClientOptionsFromEnv
@@ -12,7 +13,7 @@ from kmd.text_formatting.html_in_md import html_timestamp_span
 log = get_logger(__name__)
 
 
-def downsample_to_16khz(audio_file_path: str, downsampled_out_path: str) -> None:
+def downsample_to_16khz(audio_file_path: Path, downsampled_out_path: Path) -> None:
     audio = AudioSegment.from_mp3(audio_file_path)
     audio = audio.set_frame_rate(16000).set_channels(1).set_sample_width(2)
 
@@ -66,7 +67,7 @@ class SpeakerSegment(NamedTuple):
     average_confidence: float
 
 
-def deepgram_transcribe_audio(audio_file_path: str) -> str:
+def deepgram_transcribe_audio(audio_file_path: Path) -> str:
     """Transcribe an audio file using Deepgram."""
 
     size = getsize(audio_file_path)

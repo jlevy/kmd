@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import List, Optional
 from strif import atomic_output_file
 from kmd.config.settings import media_cache_dir
@@ -45,7 +46,7 @@ class VideoCache(DirStore):
                 return f.read()
         return None
 
-    def _do_downsample(self, url) -> str:
+    def _do_downsample(self, url) -> Path:
         downsampled_audio_file = self.find(url, suffix=SUFFIX_16KMP3)
         if not downsampled_audio_file:
             full_audio_file = self.find(url, suffix=SUFFIX_MP3)
@@ -65,7 +66,7 @@ class VideoCache(DirStore):
         self._write_transcript(url, transcript)
         return transcript
 
-    def download(self, url, no_cache=False) -> str:
+    def download(self, url, no_cache=False) -> Path:
         if not no_cache:
             full_audio_file = self.find(url, suffix=SUFFIX_MP3)
             if full_audio_file:
@@ -99,7 +100,7 @@ class VideoCache(DirStore):
 _video_cache = VideoCache(media_cache_dir())
 
 
-def _download_audio_with_service(url: Url) -> str:
+def _download_audio_with_service(url: Url) -> Path:
     for service in video_services:
         canonical_url = service.canonicalize(url)
         if canonical_url:
@@ -113,7 +114,7 @@ def video_transcription(url: Url, no_cache=False) -> str:
     return _video_cache.transcribe(url, no_cache=no_cache)
 
 
-def video_download_audio(url: Url, no_cache=False) -> str:
+def video_download_audio(url: Url, no_cache=False) -> Path:
     """Download audio of a video, saving in cache. If no_cache is True, force fresh download."""
 
     return _video_cache.download(url, no_cache=no_cache)

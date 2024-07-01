@@ -2,6 +2,7 @@
 Storage and caching of downloaded and processed web pages.
 """
 
+from pathlib import Path
 from typing import Callable, Optional
 import os
 from os import path
@@ -40,34 +41,36 @@ class DirStore:
     but uniquely hashed keys so it's possible to inspect the directory.
     """
 
-    def __init__(self, root: str, hash_func: Optional[Callable[[str], str]] = None) -> None:
-        self.root: str = root
+    def __init__(self, root: Path, hash_func: Optional[Callable[[str], str]] = None) -> None:
+        self.root: Path = root
         self.hash_func: Callable[[str], str] = hash_func or default_hash_func
         strif.make_all_dirs(root)
 
-    def path_for(self, key: str, folder: Optional[str] = None, suffix: Optional[str] = None) -> str:
+    def path_for(
+        self, key: str, folder: Optional[str] = None, suffix: Optional[str] = None
+    ) -> Path:
         """A unique file path with the given key.
 
         It's up to the client how to use it.
         """
-        full_path: str = self.hash_func(key)
+        full_path = self.hash_func(key)
         if suffix:
             full_path += suffix
         if folder:
             full_path = path.join(folder, full_path)
-        full_path = path.join(self.root, full_path)
+        full_path = self.root / full_path
 
         return full_path
 
     def find(
         self, key: str, folder: Optional[str] = None, suffix: Optional[str] = None
-    ) -> Optional[str]:
-        local_path: str = self.path_for(key, folder, suffix)
+    ) -> Optional[Path]:
+        local_path = self.path_for(key, folder, suffix)
         return local_path if path.exists(local_path) else None
 
     def find_all(
         self, keys: list[str], folder: Optional[str] = None, suffix: Optional[str] = None
-    ) -> dict[str, Optional[str]]:
+    ) -> dict[str, Optional[Path]]:
         """Look up all existing cached results for the set of keys.
 
         This should work fine but could be optimized for large batches.
@@ -76,11 +79,11 @@ class DirStore:
 
     def _restore(self, url: Url, folder: str = "") -> None:
         # We *don't* add '--delete' arg to delete remote files based on local status.
-        aws_cli("s3", "sync", path.join(url, folder), path.join(self.root, folder))
+        aws_cli("s3", "sync", path.join(url, folder), self.root / folder)
 
     def _backup(self, url: Url, folder: str = "") -> None:
         # We *don't* add '--delete' arg to delete local files based on remote status.
-        aws_cli("s3", "sync", path.join(self.root, folder), path.join(url, folder))
+        aws_cli("s3", "sync", self.root / folder, path.join(url, folder))
 
     # TODO: Consider other methods to purge or sync with --delete.
 
@@ -129,7 +132,7 @@ class WebCache(DirStore):
 
     def __init__(
         self,
-        root: str,
+        root: Path,
         default_expiration_sec: float = NEVER,
         folder: str = "raw",
         suffix: str = ".page",
@@ -152,11 +155,11 @@ class WebCache(DirStore):
 
     def find_url(
         self, url: Url, folder: Optional[str] = None, suffix: Optional[str] = None
-    ) -> Optional[str]:
+    ) -> Optional[Path]:
         url = normalize_url(url)
         return self.find(url, folder=folder or self.folder, suffix=suffix or self.suffix)
 
-    def _download(self, url: Url) -> str:
+    def _download(self, url: Url) -> Path:
         if self.mode == WebCacheMode.TEST:
             raise InvalidCacheState("_download called in test mode")
 
@@ -165,11 +168,11 @@ class WebCache(DirStore):
         download_url(url, local_path, silent=True, timeout=TIMEOUT, headers=user_agent_headers())
         return local_path
 
-    def _age_in_sec(self, local_path: str) -> float:
+    def _age_in_sec(self, local_path: Path) -> float:
         now = time.time()
         return now - read_mtime(local_path)
 
-    def _is_expired(self, local_path: str, expiration_sec: Optional[float] = None) -> bool:
+    def _is_expired(self, local_path: Path, expiration_sec: Optional[float] = None) -> bool:
         if self.mode in (WebCacheMode.TEST, WebCacheMode.UPDATE):
             return False
 
@@ -190,7 +193,7 @@ class WebCache(DirStore):
         local_path = self.find(url, folder=self.folder, suffix=self.suffix)
         return local_path is not None and not self._is_expired(local_path, expiration_sec)
 
-    def fetch(self, url: Url, expiration_sec: Optional[float] = None) -> tuple[str, bool]:
+    def fetch(self, url: Url, expiration_sec: Optional[float] = None) -> tuple[Path, bool]:
         """
         Returns cached download path of given URL and whether it was previously cached.
         """
