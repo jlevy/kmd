@@ -2,6 +2,7 @@
 Storage and caching of downloaded and processed web pages.
 """
 
+from typing import Callable, Optional
 import os
 from os import path
 import time
@@ -10,7 +11,7 @@ import requests
 import strif
 from kmd.util.download_url import download_url, user_agent_headers
 from strif import clean_alphanum_hash
-from kmd.util.url import normalize_url
+from kmd.util.url import Url, normalize_url
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
@@ -39,17 +40,17 @@ class DirStore:
     but uniquely hashed keys so it's possible to inspect the directory.
     """
 
-    def __init__(self, root, hash_func=None):
-        self.root = root
-        self.hash_func = hash_func or default_hash_func
+    def __init__(self, root: str, hash_func: Optional[Callable[[str], str]] = None) -> None:
+        self.root: str = root
+        self.hash_func: Callable[[str], str] = hash_func or default_hash_func
         strif.make_all_dirs(root)
 
-    def path_for(self, key, folder=None, suffix=None):
+    def path_for(self, key: str, folder: Optional[str] = None, suffix: Optional[str] = None) -> str:
         """A unique file path with the given key.
 
         It's up to the client how to use it.
         """
-        full_path = self.hash_func(key)
+        full_path: str = self.hash_func(key)
         if suffix:
             full_path += suffix
         if folder:
@@ -58,22 +59,26 @@ class DirStore:
 
         return full_path
 
-    def find(self, key, folder=None, suffix=None):
-        local_path = self.path_for(key, folder, suffix)
+    def find(
+        self, key: str, folder: Optional[str] = None, suffix: Optional[str] = None
+    ) -> Optional[str]:
+        local_path: str = self.path_for(key, folder, suffix)
         return local_path if path.exists(local_path) else None
 
-    def find_all(self, keys, folder=None, suffix=None):
+    def find_all(
+        self, keys: list[str], folder: Optional[str] = None, suffix: Optional[str] = None
+    ) -> dict[str, Optional[str]]:
         """Look up all existing cached results for the set of keys.
 
         This should work fine but could be optimized for large batches.
         """
         return {key: self.find(key, folder=folder, suffix=suffix) for key in keys}
 
-    def _restore(self, url, folder=""):
+    def _restore(self, url: Url, folder: str = "") -> None:
         # We *don't* add '--delete' arg to delete remote files based on local status.
         aws_cli("s3", "sync", path.join(url, folder), path.join(self.root, folder))
 
-    def _backup(self, url, folder=""):
+    def _backup(self, url: Url, folder: str = "") -> None:
         # We *don't* add '--delete' arg to delete local files based on remote status.
         aws_cli("s3", "sync", path.join(self.root, folder), path.join(url, folder))
 
@@ -109,45 +114,49 @@ class WebCache(DirStore):
     The web cache is a DirStore with a fetching mechanism based on a fixed object expiration time.
 
     Fetch timestamp is modification time on file. Thread safe since file creation is atomic.
+
+    Also supports a backup/restore mechanism to/from an S3 bucket. Supply `backup_url` to use.
     """
 
     # TODO: We don't fully handle fragments/sections of larger pages. It'd be preferable to extract
     # the part of the page at the anchor/fragment, but for now we ignore fragments and fetch/use
     # the whole page.
 
-    ALWAYS = 0
-    NEVER = -1
+    ALWAYS: float = 0
+    NEVER: float = -1
 
     # TODO: Save status codes and HTTP headers as well.
 
     def __init__(
         self,
-        root,
-        default_expiration=NEVER,
-        folder="raw",
-        suffix=".page",
-        mode=WebCacheMode.LIVE,
-        url=None,
-        verbose=False,
-    ):
+        root: str,
+        default_expiration_sec: float = NEVER,
+        folder: str = "raw",
+        suffix: str = ".page",
+        mode: WebCacheMode = WebCacheMode.LIVE,
+        backup_url: Optional[Url] = None,
+        verbose: bool = False,
+    ) -> None:
         """Expiration is in seconds, and can be NEVER or ALWAYS."""
         super().__init__(root)
-        self.default_expiration = default_expiration
+        self.default_expiration_sec = default_expiration_sec
         self.session = requests.Session()
         self.folder = folder
         self.suffix = suffix
         self.mode = mode
-        self.url = url
+        self.backup_url = backup_url
         self.verbose = verbose
 
-        if url and mode in (WebCacheMode.TEST, WebCacheMode.UPDATE):
-            self._restore(url, self.folder)
+        if backup_url and mode in (WebCacheMode.TEST, WebCacheMode.UPDATE):
+            self._restore(backup_url, self.folder)
 
-    def find_url(self, url, folder=None, suffix=None):
+    def find_url(
+        self, url: Url, folder: Optional[str] = None, suffix: Optional[str] = None
+    ) -> Optional[str]:
         url = normalize_url(url)
         return self.find(url, folder=folder or self.folder, suffix=suffix or self.suffix)
 
-    def _download(self, url):
+    def _download(self, url: Url) -> str:
         if self.mode == WebCacheMode.TEST:
             raise InvalidCacheState("_download called in test mode")
 
@@ -156,51 +165,63 @@ class WebCache(DirStore):
         download_url(url, local_path, silent=True, timeout=TIMEOUT, headers=user_agent_headers())
         return local_path
 
-    def _age(self, local_path):
+    def _age_in_sec(self, local_path: str) -> float:
         now = time.time()
         return now - read_mtime(local_path)
 
-    def _is_expired(self, local_path, expiration=None):
+    def _is_expired(self, local_path: str, expiration_sec: Optional[float] = None) -> bool:
         if self.mode in (WebCacheMode.TEST, WebCacheMode.UPDATE):
             return False
 
-        if expiration is None:
-            expiration = self.default_expiration
+        if expiration_sec is None:
+            expiration_sec = self.default_expiration_sec
 
-        if expiration == self.ALWAYS:
+        if expiration_sec == self.ALWAYS:
             return True
-        elif expiration == self.NEVER:
+        elif expiration_sec == self.NEVER:
             return False
 
-        return self._age(local_path) > expiration
+        return self._age_in_sec(local_path) > expiration_sec
 
-    def is_cached(self, url, expiration=None):
-        if expiration is None:
-            expiration = self.default_expiration
+    def is_cached(self, url: Url, expiration_sec: Optional[float] = None) -> bool:
+        if expiration_sec is None:
+            expiration_sec = self.default_expiration_sec
 
         local_path = self.find(url, folder=self.folder, suffix=self.suffix)
-        return local_path and not self._is_expired(local_path, expiration)
+        return local_path is not None and not self._is_expired(local_path, expiration_sec)
 
-    def fetch(self, url, expiration=None):
-        """Returns cached download path of given URL and whether it was
-        previously cached."""
+    def fetch(self, url: Url, expiration_sec: Optional[float] = None) -> tuple[str, bool]:
+        """
+        Returns cached download path of given URL and whether it was previously cached.
+        """
         url = normalize_url(url)
         local_path = self.find(url, folder=self.folder, suffix=self.suffix)
-        if local_path and not self._is_expired(local_path, expiration):
-            return True, local_path
+        if local_path and not self._is_expired(local_path, expiration_sec):
+            return local_path, True
         else:
             if self.verbose:
                 log.info("fetching: %s", url)
-            return False, self._download(url)
+            return (
+                self._download(url),
+                False,
+            )
 
-    def backup(self):
-        self._backup(self.url, self.folder)
+    def backup(self) -> None:
+        if not self.backup_url:
+            raise InvalidCacheState("Backup called without backup_url")
+        self._backup(self.backup_url, self.folder)
 
-    def backup_all(self):
-        self._backup(self.url, "")
+    def backup_all(self) -> None:
+        if not self.backup_url:
+            raise InvalidCacheState("Backup called without backup_url")
+        self._backup(self.backup_url, "")
 
-    def restore(self):
-        self._restore(self.url, self.folder)
+    def restore(self) -> None:
+        if not self.backup_url:
+            raise InvalidCacheState("Restore called without backup_url")
+        self._restore(self.backup_url, self.folder)
 
-    def restore_all(self):
-        self._restore(self.url, "")
+    def restore_all(self) -> None:
+        if not self.backup_url:
+            raise InvalidCacheState("Restore called without backup_url")
+        self._restore(self.backup_url, "")
