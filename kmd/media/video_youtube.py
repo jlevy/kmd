@@ -154,6 +154,29 @@ class YouTube(VideoService):
         return video_meta_list
 
 
+def best_thumbnail(data: Dict[str, Any]) -> Optional[Url]:
+    """
+    Get the best thumbnail from YouTube metadata, which is of the form:
+    {
+        'thumbnails': [
+            {'url': 'https://i.ytimg.com/vi/gc417NquXbk/hqdefault.jpg?sqp=-oaymwEbCKgBEF5IVfKriqkDDggBFQAAiEIYAXABwAEG&rs=AOn4CLC7F70CUSkwqkrgEwKX1AmXCJ8jsQ', 'height': 94, 'width': 168},
+            {'url': 'https://i.ytimg.com/vi/gc417NquXbk/hqdefault.jpg?sqp=-oaymwEbCMQBEG5IVfKriqkDDggBFQAAiEIYAXABwAEG&rs=AOn4CLA6pIOQRUlixQogTAR0NAv3zJgxqQ', 'height': 110, 'width': 196},
+            {'url': 'https://i.ytimg.com/vi/gc417NquXbk/hqdefault.jpg?sqp=-oaymwEcCPYBEIoBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLC7zW8Hu59MgQkRPX4WsVpc-tkxxQ', 'height': 138, 'width': 246},
+            {'url': 'https://i.ytimg.com/vi/gc417NquXbk/hqdefault.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLB7nBpvNKwCwrtr_lv85T0GITOFjA', 'height': 188, 'width': 336},
+        ],
+    }
+    """
+    try:
+        thumbnails = data["thumbnails"]
+        if not isinstance(thumbnails, list):
+            return None
+        largest_thumbnail = max(thumbnails, key=lambda x: x.get("width", 0))
+        url_str = largest_thumbnail.get("url", None)
+        return Url(url_str) if url_str else None
+    except (KeyError, TypeError):
+        return None
+
+
 ## Tests
 
 

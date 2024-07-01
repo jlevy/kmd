@@ -7,6 +7,8 @@ from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
 from kmd.assistant.assistant import assistance
+from kmd.media.web import fetch_and_cache
+from kmd.model.item_thumbnails import item_thumbnail_image
 from kmd.text_ui.command_output import (
     Wrap,
     format_action_description,
@@ -16,7 +18,10 @@ from kmd.text_ui.command_output import (
     output_markdown,
     output_status,
 )
-from kmd.commands.local_file_tools import open_platform_specific
+from kmd.commands.local_file_tools import (
+    show_file_platform_specific,
+    inline_show_image_platform_specific,
+)
 from kmd.text_ui.text_styles import (
     COLOR_EMPH,
     EMOJI_WARN,
@@ -105,14 +110,13 @@ def workspace(workspace_name: Optional[str] = None) -> None:
     """
     if workspace_name:
         ws_name, ws_dir = canon_workspace_name(workspace_name)
-        if not re.match(r"^\w+$", ws_name):
+        if not re.match(r"^[\w-]+$", ws_name):
             raise InvalidInput(
                 "Use an alphanumeric name (no spaces or special characters) for the workspace"
             )
         os.makedirs(ws_dir, exist_ok=True)
         os.chdir(ws_dir)
         output_status(f"Changed to workspace: {ws_name}")
-    show_workspace_info()
 
 
 @kmd_command
@@ -177,12 +181,21 @@ def show(path: Optional[str] = None) -> None:
     """
     workspace = current_workspace()
     if path:
-        open_platform_specific(path)
+        store_path = StorePath(path)
     else:
         selection = workspace.get_selection()
         if not selection:
             raise InvalidInput("No selection")
-        open_platform_specific(selection[0])
+        store_path = selection[0]
+
+    show_file_platform_specific(store_path)
+
+    # Optionally, if we can inline the image (like in kitty) above the text representation, do that.
+    item = workspace.load(store_path)
+    thumbnail_url = item_thumbnail_image(item)
+    if thumbnail_url:
+        local_path = fetch_and_cache(thumbnail_url)
+        inline_show_image_platform_specific(local_path)
 
 
 @kmd_command

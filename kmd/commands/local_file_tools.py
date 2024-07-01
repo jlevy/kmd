@@ -3,6 +3,7 @@ Platform-specific file handling utilities.
 """
 
 import os
+from pathlib import Path
 import subprocess
 import sys
 from typing import Tuple
@@ -17,11 +18,12 @@ log = get_logger(__name__)
 
 
 def file_info(
-    filename: str, max_lines: int = 100, max_bytes: int = 50 * 1024
+    filename: str | Path, max_lines: int = 100, max_bytes: int = 50 * 1024
 ) -> Tuple[str, int, int]:
     """
-    Get file type, size, and lines by reading just first part of the file.
+    Best effort to guess file type, size, and lines by reading just first part of the file.
     """
+    filename = str(filename)
     mime_type, _ = mimetypes.guess_type(filename)
     file_size = os.path.getsize(filename)
     num_lines = 0
@@ -33,7 +35,8 @@ def file_info(
     return mime_type or "unknown", file_size, num_lines
 
 
-def _native_open(filename: str):
+def _native_open(filename: str | Path):
+    filename = str(filename)
     log.message("Opening file: %s", filename)
     if ON_DARWIN:
         subprocess.run(["open", filename])
@@ -49,11 +52,12 @@ def _in_kitty_terminal():
     return os.environ.get("TERM") == "xterm-kitty"
 
 
-def kitty_display_image(filename: str):
+def kitty_display_image(filename: str | Path):
+    filename = str(filename)
     subprocess.run(["kitty", "+kitten", "icat", filename])
 
 
-def open_platform_specific(file_or_url: str):
+def show_file_platform_specific(file_or_url: str):
     if is_url(file_or_url) or file_or_url.endswith(".html"):
         if not is_url(file_or_url):
             file_or_url = f"file://{os.path.abspath(file_or_url)}"
@@ -74,6 +78,13 @@ def open_platform_specific(file_or_url: str):
         _native_open(file_or_url)
     else:
         raise FileNotFoundError(f"File does not exist: {file_or_url}")
+
+
+def inline_show_image_platform_specific(file: str | Path) -> bool:
+    if _in_kitty_terminal():
+        kitty_display_image(file)
+        return True
+    return False
 
 
 def view_file(filename: str, use_less: bool = True):

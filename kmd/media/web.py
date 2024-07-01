@@ -1,14 +1,17 @@
 import enum
+from pathlib import Path
 import re
 from typing import Optional
 from cachetools import TTLCache, cached
 from strif import abbreviate_str
 import requests
 import justext
+from kmd.config.settings import web_cache_dir
 from kmd.media.video import canonicalize_video_url
 from kmd.model.errors_model import CrawlError
 from kmd.util.url import Url
 from kmd.config.logger import get_logger
+from kmd.util.web_cache import WebCache
 
 log = get_logger(__name__)
 
@@ -83,6 +86,18 @@ def fetch(url: Url) -> requests.Response:
     if response.status_code != 200:
         raise CrawlError(f"HTTP error {response.status_code} fetching {url}")
     return response
+
+
+# Simple global cache for misc use. No expiration.
+_web_cache = WebCache(web_cache_dir())
+
+
+def fetch_and_cache(url: Url) -> Path:
+    """
+    Fetch the given URL and return a local cached copy.
+    """
+    path, _was_cached = _web_cache.fetch(url)
+    return path
 
 
 @cached(cache=TTLCache(maxsize=100, ttl=600))

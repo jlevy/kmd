@@ -107,7 +107,8 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
         len(result.items),
         plural("item", len(result.items)),
     )
-    log.message("%s Action %s took %.1fs.", EMOJI_TIMING, action_name, elapsed)
+    if elapsed > 1.0:
+        log.message("%s Action %s took %.1fs.", EMOJI_TIMING, action_name, elapsed)
 
     # Save the result items. This is done here so the action need not worry about saving.
     for item in result.items:
