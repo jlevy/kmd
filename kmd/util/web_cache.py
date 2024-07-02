@@ -94,7 +94,7 @@ def read_mtime(path):
     """
     try:
         mtime = os.path.getmtime(path)
-    except:
+    except OSError:
         mtime = 0
     return mtime
 

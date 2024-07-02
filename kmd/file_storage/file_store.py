@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 import time
 from typing import Dict, Generator, List, Optional, Tuple
@@ -61,13 +62,18 @@ def _format_from_ext(file_ext: FileExt) -> Optional[Format]:
     return file_ext_to_format[file_ext]
 
 
+_partial_file_pattern = re.compile(r'.*\.partial\.[a-z0-9]+$')
+
 def skippable_file(filename: str) -> bool:
     """
     Check if a file should be skipped when processing a directory.
-    This skips .archive, .settings, __pycache__ etc.
+    This skips .., .archive, .settings, __pycache__, .partial.xxx, etc.
     """
-    # TODO: Why is this not working with extensions/ dir?
-    return len(filename) > 1 and (filename.startswith(".") or filename.startswith("__"))
+    
+    return (
+        len(filename) > 1 and 
+        (filename.startswith(".") or filename.startswith("__") or bool(_partial_file_pattern.match(filename)))
+    )
 
 def write_item(item: Item, full_path: Path):
     if item.is_binary:

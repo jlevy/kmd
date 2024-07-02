@@ -27,7 +27,7 @@ from kmd.text_ui.text_styles import (
     EMOJI_WARN,
 )
 from kmd.file_storage.file_store import skippable_file
-from kmd.file_storage.workspaces import canon_workspace_name, current_workspace, show_workspace_info
+from kmd.file_storage.workspaces import canon_workspace_name, current_workspace
 from kmd.model.actions_model import ACTION_PARAMS
 from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath

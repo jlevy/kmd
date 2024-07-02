@@ -7,6 +7,7 @@ import dataclasses
 from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional
+from kmd.util.time_util import iso_format_z
 from kmd.file_storage.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
@@ -229,7 +230,7 @@ class Item:
     def update_modified_at(self):
         self.modified_at = datetime.now()
 
-    def metadata(self) -> dict:
+    def metadata(self, enums_as_str: bool = True, datetime_as_str: bool = True) -> dict[str, Any]:
         """
         Metadata is all relevant non-None fields in easy-to-serialize form.
         Optional fields are omitted unless they are set.
@@ -248,10 +249,16 @@ class Item:
             if f in item_dict and f is None:
                 del item_dict[f]
 
-        # Keep enum values as strings for simplicity with serialization to YAML.
-        for f in ["type", "format"]:
-            if item_dict.get(f):
-                item_dict[f] = str(item_dict[f])
+        # It can be simpler to keep enum and datetime values as strings for simplicity with
+        # serialization to YAML and JSON.
+        if enums_as_str:
+            for f in ["type", "format"]:
+                if item_dict.get(f):
+                    item_dict[f] = str(item_dict[f])
+        if datetime_as_str:
+            for f, v in item_dict.items():
+                if isinstance(v, datetime):
+                    item_dict[f] = iso_format_z(v)
 
         return item_dict
 
