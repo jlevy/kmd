@@ -26,7 +26,10 @@ class FetchPage(EachItemAction):
 
         page_data = web.fetch_extract(item.url)
         fetched_item = item.new_copy_with(
-            title=page_data.title, description=page_data.description, body=page_data.content
+            title=page_data.title,
+            description=page_data.description,
+            body=page_data.content,
+            thumbnail_url=page_data.thumbnail_url,
         )
 
         return fetched_item

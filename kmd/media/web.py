@@ -2,13 +2,15 @@ import enum
 from pathlib import Path
 import re
 from typing import Optional
+from dataclasses import dataclass
 from cachetools import TTLCache, cached
-from strif import abbreviate_str
 import requests
 import justext
 from kmd.config.settings import web_cache_dir
 from kmd.media.video import canonicalize_video_url
+from kmd.model.canon_url import thumbnail_url
 from kmd.model.errors_model import CrawlError
+from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
 from kmd.config.logger import get_logger
 from kmd.util.web_cache import WebCache
@@ -34,27 +36,21 @@ class PageType(enum.Enum):
         return cls.html
 
 
+@dataclass
 class PageData:
     """
     Data about a page, including URL, title and optionally description and extracted content.
     """
 
-    def __init__(
-        self,
-        url: Url,
-        type: PageType = PageType.html,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        content: Optional[str] = None,
-    ) -> None:
-        self.url = url
-        self.type = type
-        self.title = title
-        self.description = description
-        self.content = content
+    url: Url
+    type: PageType = PageType.html
+    title: Optional[str] = None
+    description: Optional[str] = None
+    content: Optional[str] = None
+    thumbnail_url: Optional[Url] = None
 
-    def __repr__(self) -> str:
-        return f"PageData(url={self.url!r}, type={self.type!r} title={self.title!r}, description={abbreviate_str(self.description)!r}, content={abbreviate_str(self.content)!r})"
+    def __str__(self):
+        return abbreviate_obj(self)
 
 
 class ContentType(enum.Enum):
@@ -101,16 +97,27 @@ def fetch_and_cache(url: Url) -> Path:
 
 
 @cached(cache=TTLCache(maxsize=100, ttl=600))
-def fetch_extract(url: Url) -> PageData:
+def fetch_extract(url: Url, cache=True) -> PageData:
     """
     Fetches a URL and extracts the title, description, and content.
     """
 
     # TODO: Consider a JS-enabled headless browser so it works on more sites.
     # Example: https://www.inc.com/atish-davda/5-questions-you-should-ask-before-taking-a-start-up-job-offer.html
-    # TODO: Use the DirCache to save raw HTML content in disk cache.
-    response = fetch(url)
-    return _extract_page_data_from_html(url, response.content)
+
+    if cache:
+        path = fetch_and_cache(url)
+        with open(path, "rb") as file:
+            content = file.read()
+        page_data = _extract_page_data_from_html(url, content)
+    else:
+        response = fetch(url)
+        page_data = _extract_page_data_from_html(url, response.content)
+
+    # Add a thumbnail, if available.
+    page_data.thumbnail_url = thumbnail_url(url)
+
+    return page_data
 
 
 def _extract_page_data_from_html(url: Url, raw_html: bytes) -> PageData:
@@ -129,7 +136,9 @@ def _extract_page_data_from_html(url: Url, raw_html: bytes) -> PageData:
 
     # Content without boilerplate.
     content = "\n\n".join([para.text for para in paragraphs if not para.is_boilerplate])
-    return PageData(url, PageType.from_url(url), title, description, content)
+    return PageData(
+        url, PageType.from_url(url), title=title, description=description, content=content
+    )
 
 
 from justext.core import (

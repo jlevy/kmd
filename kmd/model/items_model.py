@@ -172,6 +172,9 @@ class Item:
     # Optionally, relations to other items, including any time this item is derived from.
     relations: ItemRelations = field(default_factory=ItemRelations)
 
+    # Optionally, a URL to a thumbnail image for this item.
+    thumbnail_url: Optional[Url] = None
+
     # Optional additional metadata.
     extra: Optional[dict] = None
 

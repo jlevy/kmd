@@ -137,6 +137,17 @@ def canonicalize_video_url(url: Url) -> Optional[Url]:
     return None
 
 
+def thumbnail_video_url(url: Url) -> Optional[Url]:
+    """
+    Return a URL that links to the thumbnail of the video.
+    """
+    for service in video_services:
+        canonical_url = service.canonicalize(url)
+        if canonical_url:
+            return service.thumbnail_url(url)
+    return None
+
+
 def timestamp_video_url(url: Url, timestamp: float) -> Url:
     """
     Return a URL that links to the video at the given timestamp.

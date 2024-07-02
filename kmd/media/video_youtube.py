@@ -81,11 +81,18 @@ class YouTube(VideoService):
             if video_id:
                 return Url(f"https://www.youtube.com/watch?v={video_id}")
 
-    def timestamp_url(self, url: Url, timestamp: float) -> str:
+    def thumbnail_url(self, url: Url) -> Optional[Url]:
+        id = self.get_id(url)
+        return Url(f"https://img.youtube.com/vi/{id}/sddefault.jpg") if id else None
+        # Others:
+        # https://img.youtube.com/vi/{id}/hqdefault.jpg
+        # https://img.youtube.com/vi/{id}/maxresdefault.jpg
+
+    def timestamp_url(self, url: Url, timestamp: float) -> Url:
         canon_url = self.canonicalize(url)
         if not canon_url:
             raise InvalidInput(f"Unrecognized YouTube URL: {url}")
-        return canon_url + f"&t={timestamp}s"
+        return Url(canon_url + f"&t={timestamp}s")
 
     def download_audio(self, url: Url, target_dir: Optional[str] = None) -> str:
         """Download and convert to mp3 using yt_dlp, which seems like the best library for this."""

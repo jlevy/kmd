@@ -26,7 +26,10 @@ class Vimeo(VideoService):
             return f"https://vimeo.com/{video_id}"
         return None
 
-    def timestamp_url(self, url: Url, timestamp: float) -> str:
+    def thumbnail_url(self, url: Url) -> Optional[Url]:
+        raise NotImplementedError()
+
+    def timestamp_url(self, url: Url, timestamp: float) -> Url:
         raise NotImplementedError()  # TODO
 
     def download_audio(self, url: Url) -> str:

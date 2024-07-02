@@ -16,6 +16,11 @@ class VideoService(ABC):
         pass
 
     @abstractmethod
+    def thumbnail_url(self, url: Url) -> Optional[Url]:
+        """Return a URL that links to the thumbnail of the video."""
+        pass
+
+    @abstractmethod
     def timestamp_url(self, url: Url, timestamp: float) -> Url:
         """Return a URL that links to the video at the given timestamp."""
         pass
