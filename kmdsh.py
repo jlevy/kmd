@@ -102,21 +102,23 @@ class CustomShell(PromptToolkitShell):
 
 @events.on_command_not_found
 def not_found(cmd: List[str]):
-    output(f"{EMOJI_ASSISTANT} Command not found. Getting assistance…")
-    output_assistance(
-        assistance(
-            f"""
-            The user just typed the following command, but it was not found:
+    # Don't call assistant on one-word typos. It's annoying.
+    if len(cmd) >= 2:
+        output(f"{EMOJI_ASSISTANT} Command not found. Getting assistance…")
+        output_assistance(
+            assistance(
+                f"""
+                The user just typed the following command, but it was not found:
 
-            {" ".join(cmd)}
+                {" ".join(cmd)}
 
-            Please give them a brief suggestion of possible correct commands
-            and how they can get more help with `kmd_help` or any question
-            ending with ? in the terminal.
-            """,
-            fast=True,
+                Please give them a brief suggestion of possible correct commands
+                and how they can get more help with `kmd_help` or any question
+                ending with ? in the terminal.
+                """,
+                fast=True,
+            )
         )
-    )
 
 
 def start_custom_xonsh(argv=None):

@@ -39,6 +39,8 @@ def _dump_stack_traces_handler(signum, frame):
 
 @cached(cache={})
 def add_stacktrace_handler(sig=signal.SIGUSR1):
-    """To use: `pkill -USR1 -f 'module_name'"""
+    """
+    To use: `pkill -USR1 -f 'module_name'`
+    """
 
     signal.signal(sig, _dump_stack_traces_handler)

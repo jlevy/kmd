@@ -11,7 +11,9 @@ from kmd.util.thread_utils import synchronized
 
 @cached(cache={})
 def setup():
-    """One-time setup of essential keys, directories, and configs. Idempotent."""
+    """
+    One-time setup of essential keys, directories, and configs. Idempotent.
+    """
 
     logging_setup()
 
