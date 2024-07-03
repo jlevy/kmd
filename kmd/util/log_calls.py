@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import functools
 import time
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 import regex
 from strif import abbreviate_str
 from kmd.config.logger import get_logger
@@ -21,11 +21,12 @@ DEFAULT_TRUNCATE = 36
 
 
 def abbreviate_arg(
-    value: Any, repr_func: Callable = repr, truncate_length: int = DEFAULT_TRUNCATE
+    value: Any, repr_func: Callable = repr, truncate_length: Optional[int] = DEFAULT_TRUNCATE
 ) -> str:
     """
     Abbreviate an argument value for logging.
     """
+    truncate_length = truncate_length or 0
     if isinstance(value, str) and truncate_length:
         result = repr_func(abbreviate_str(single_line(value), truncate_length, indicator="…"))
         if len(result) >= truncate_length:
@@ -58,7 +59,7 @@ def log_calls(
     show_args=True,
     show_return=False,
     if_slower_than: float = 0.0,
-    truncate_length: int = DEFAULT_TRUNCATE,
+    truncate_length: Optional[int] = DEFAULT_TRUNCATE,
     repr_func: Callable = repr,
 ):
     """

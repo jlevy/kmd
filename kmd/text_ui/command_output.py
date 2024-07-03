@@ -20,6 +20,7 @@ from kmd.text_ui.text_styles import (
     COLOR_KEY,
     COLOR_OUTPUT,
     COLOR_PLAIN,
+    COLOR_RESPONSE,
     CONSOLE_WRAP_WIDTH,
 )
 
@@ -151,6 +152,10 @@ def output_status(message: str, *args, text_wrap: Wrap = Wrap.NONE):
 
 def output_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE):
     _output_message(message, *args, text_wrap=text_wrap, color=COLOR_ASSISTANCE)
+
+
+def output_response(message: str, *args, text_wrap: Wrap = Wrap.NONE):
+    _output_message(message, *args, text_wrap=text_wrap, color=COLOR_RESPONSE)
 
 
 def output_heading(message: str, *args, text_wrap: Wrap = Wrap.NONE):

@@ -24,6 +24,8 @@ COLOR_OUTPUT = "yellow"
 
 COLOR_ASSISTANCE = "italic bright_blue"
 
+COLOR_RESPONSE = "bright_blue"
+
 COLOR_LITERAL = "bright_blue"
 
 COLOR_KEY = "bright_blue"
