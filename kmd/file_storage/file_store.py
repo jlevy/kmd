@@ -7,6 +7,7 @@ from os.path import join, relpath, commonpath
 from os import path
 from slugify import slugify
 from strif import copyfile_atomic
+from kmd.query.vector_index import WsVectorIndex
 from kmd.text_ui.text_styles import EMOJI_SUCCESS, EMOJI_WARN
 from kmd.file_storage.filenames import parse_filename
 from kmd.file_storage.persisted_yaml import PersistedYaml
@@ -107,6 +108,7 @@ def read_item(full_path: Path, base_dir: Optional[Path]):
 
 ARCHIVE_DIR = ".archive"
 SETTINGS_DIR = ".settings"
+INDEX_DIR = ".index"
 
 FILENAME_SLUG_MAX_LEN = 64
 
@@ -123,14 +125,20 @@ class FileStore:
     def __init__(self, base_dir: Path):
         self.start_time = time.time()
         self.base_dir = base_dir
+
+        # TODO: Move this to its own IdentifierIndex class, and make it exactly mirror disk state.
         self.uniquifier = Uniquifier()
         self.id_map: dict[ItemId, StorePath] = {}
-        self._initialize_index()
+
+        self._id_index_init()
 
         self.archive_dir = self.base_dir / ARCHIVE_DIR
         os.makedirs(self.archive_dir, exist_ok=True)
         self.settings_dir = self.base_dir / SETTINGS_DIR
         os.makedirs(self.settings_dir, exist_ok=True)
+
+        self.index_dir = self.base_dir / INDEX_DIR
+        self.vector_index = WsVectorIndex(self.index_dir)
 
         # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
         self.selection = PersistedYaml(self.settings_dir / "selection.yaml", init_value=[])
@@ -140,21 +148,21 @@ class FileStore:
         self.end_time = time.time()
         self.log_store_info()
 
-    def _initialize_index(self):
+    def _id_index_init(self):
         num_dups = 0
         for root, dirnames, filenames in os.walk(self.base_dir):
             dirnames[:] = [d for d in dirnames if not skippable_file(d)]
             for filename in filenames:
                 if not skippable_file(filename):
                     store_path = StorePath(path.relpath(join(root, filename), self.base_dir))
-                    dup_path = self._index_item(store_path)
+                    dup_path = self._id_index_item(store_path)
                     if dup_path:
                         num_dups += 1
 
         if num_dups > 0:
             log.warning("%s Found %s duplicate items in store. See kmd.log for details.", EMOJI_WARN, num_dups)
 
-    def _index_item(self, store_path: StorePath) -> Optional[StorePath]:
+    def _id_index_item(self, store_path: StorePath) -> Optional[StorePath]:
         """
         Update metadata index with a new item.
         """
@@ -177,7 +185,7 @@ class FileStore:
 
         return dup_path
 
-    def _unindex_item(self, store_path: StorePath):
+    def _id_unindex_item(self, store_path: StorePath):
         """
         Remove an item from the metadata index.
         """
@@ -303,7 +311,7 @@ class FileStore:
                     store_path = old_store_path
 
         item.store_path = store_path
-        self._index_item(store_path)
+        self._id_index_item(store_path)
 
         log.message("%s Saved item: %s", EMOJI_SUCCESS, store_path)
         return store_path
@@ -368,14 +376,14 @@ class FileStore:
     def _remove_references(self, store_paths: List[StorePath]):
         self.selection.remove_values(store_paths)
         for store_path in store_paths:
-            self._unindex_item(store_path)
+            self._id_unindex_item(store_path)
         # TODO: Update metadata of all relations that point to this path too.
 
     def _rename_items(self, replacements: List[Tuple[StorePath, StorePath]]):
         self.selection.replace_values(replacements)
         for store_path, new_store_path in replacements:
-            self._unindex_item(store_path)
-            self._index_item(new_store_path)
+            self._id_unindex_item(store_path)
+            self._id_index_item(new_store_path)
         # TODO: Update metadata of all relations that point to this path too.
 
     def archive(self, store_path: StorePath) -> StorePath:

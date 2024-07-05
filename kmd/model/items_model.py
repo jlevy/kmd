@@ -179,8 +179,9 @@ class Item:
     # Optional additional metadata.
     extra: Optional[dict] = None
 
+    # These fields we don't want in YAML frontmatter.
+    # We don't include store_path as it's redundant with the filename.
     NON_METADATA_FIELDS = ["file_ext", "body", "external_path", "is_binary", "store_path"]
-    OPTIONAL_FIELDS = ["extra"]
 
     def __post_init__(self):
         assert type(self.type) == ItemType
@@ -227,10 +228,18 @@ class Item:
             store_path=store_path,
         )
 
+    def doc_id(self) -> str:
+        """
+        Semi-permanent id for the document. Currently just the store path.
+        """
+        if not self.store_path:
+            raise ValueError("Cannot get doc id for an item that has not been saved")
+        return str(self.store_path)
+
     def update_modified_at(self):
         self.modified_at = datetime.now()
 
-    def metadata(self, enums_as_str: bool = True, datetime_as_str: bool = True) -> dict[str, Any]:
+    def metadata(self, datetime_as_str: bool = True) -> dict[str, Any]:
         """
         Metadata is all relevant non-None fields in easy-to-serialize form.
         Optional fields are omitted unless they are set.
@@ -240,21 +249,15 @@ class Item:
         def serialize(v):
             return v.value if isinstance(v, Enum) else v
 
+        # It's simpler to keep enum values as strings for simplicity with
+        # serialization to YAML and JSON.
         item_dict = {
             k: serialize(v)  # Convert enums to strings for serialization.
             for k, v in item_dict.items()
             if v is not None and k not in self.NON_METADATA_FIELDS
         }
-        for f in self.OPTIONAL_FIELDS:
-            if f in item_dict and f is None:
-                del item_dict[f]
 
-        # It can be simpler to keep enum and datetime values as strings for simplicity with
-        # serialization to YAML and JSON.
-        if enums_as_str:
-            for f in ["type", "format"]:
-                if item_dict.get(f):
-                    item_dict[f] = str(item_dict[f])
+        # Sometimes it's also better to serialize datetimes as strings.
         if datetime_as_str:
             for f, v in item_dict.items():
                 if isinstance(v, datetime):

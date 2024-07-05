@@ -8,7 +8,7 @@ import sys
 from contextlib import contextmanager
 from enum import Enum
 import textwrap
-from textwrap import dedent
+from textwrap import dedent, indent
 from typing import Any, Callable
 from rich import print as rprint
 from rich.text import Text
@@ -29,14 +29,17 @@ class Wrap(Enum):
     NONE = "none"
     WRAP = "wrap"  # Basic wrapping but preserves whitespace.
     WRAP_FULL = "wrap_full"  # Also replaces whitespace.
-    INDENTED = "indented"  # Wrap and indent.
-    HANGING_INDENT = "hanging_indent"
+    WRAP_INDENT = "wrap_indent"  # Wrap and indent.
+    INDENT_ONLY = "indent_only"  # Just indent.
+    HANGING_INDENT = "hanging_indent"  # Wrap with hanging indent.
 
 
 def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
     if text_wrap == Wrap.NONE:
         return text
-    elif text_wrap in [Wrap.WRAP, Wrap.WRAP_FULL, Wrap.INDENTED, Wrap.HANGING_INDENT]:
+    elif text_wrap == Wrap.INDENT_ONLY:
+        return indent(text, prefix="    ")
+    elif text_wrap in [Wrap.WRAP, Wrap.WRAP_FULL, Wrap.WRAP_INDENT, Wrap.HANGING_INDENT]:
         paragraphs = text.split("\n\n")
         wrapped_paragraphs = []
 
@@ -47,6 +50,8 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH,
                         replace_whitespace=False,
+                        break_long_words=False,
+                        break_on_hyphens=False,
                     )
                 )
             elif text_wrap == Wrap.WRAP_FULL:
@@ -55,9 +60,11 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH,
                         replace_whitespace=True,
+                        break_long_words=False,
+                        break_on_hyphens=False,
                     )
                 )
-            elif text_wrap == Wrap.INDENTED:
+            elif text_wrap == Wrap.WRAP_INDENT:
                 wrapped_paragraphs.append(
                     textwrap.fill(
                         paragraph,
@@ -65,6 +72,8 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                         initial_indent="    ",
                         subsequent_indent="    ",
                         replace_whitespace=True,
+                        break_long_words=False,
+                        break_on_hyphens=False,
                     )
                 )
             elif text_wrap == Wrap.HANGING_INDENT:
@@ -75,6 +84,8 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                         initial_indent="",
                         subsequent_indent="    ",
                         replace_whitespace=True,
+                        break_long_words=False,
+                        break_on_hyphens=False,
                     )
                 )
 
@@ -89,7 +100,7 @@ def fill_markdown(doc_str: str):
 
 def format_action_description(name: str, doc: str) -> Text:
     doc = textwrap.dedent(doc).strip()
-    wrapped = fill_text(doc, text_wrap=Wrap.INDENTED)
+    wrapped = fill_text(doc, text_wrap=Wrap.WRAP_INDENT)
     return Text.assemble((name, COLOR_KEY), (": ", COLOR_HINT), "\n", (wrapped, COLOR_PLAIN))
 
 
@@ -141,8 +152,9 @@ def _output_message(
     message: str, *args, text_wrap: Wrap, color: str, transform: Callable[[str], str] = lambda x: x
 ):
     out = _current_output()
+    text = message % args if args else message
     rprint(file=out)
-    rprint(Text(transform(fill_text(message % args, text_wrap)), color), file=out)
+    rprint(Text(transform(fill_text(text, text_wrap)), color), file=out)
     rprint(file=out)
 
 
@@ -154,7 +166,7 @@ def output_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE):
     _output_message(message, *args, text_wrap=text_wrap, color=COLOR_ASSISTANCE)
 
 
-def output_response(message: str, *args, text_wrap: Wrap = Wrap.NONE):
+def output_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE):
     _output_message(message, *args, text_wrap=text_wrap, color=COLOR_RESPONSE)
 
 

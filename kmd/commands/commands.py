@@ -1,12 +1,14 @@
 import os
 from os.path import getmtime, basename, getsize, join
+from pprint import pformat
 import re
 import subprocess
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
 from kmd.assistant.assistant import assistance
+from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.media.web import fetch_and_cache
 from kmd.model.item_thumbnails import item_thumbnail_image
 from kmd.text_ui.command_output import (
@@ -16,6 +18,7 @@ from kmd.text_ui.command_output import (
     output_assistance,
     output_heading,
     output_markdown,
+    output_response,
     output_status,
 )
 from kmd.commands.local_file_tools import (
@@ -132,13 +135,13 @@ def select(*paths: str) -> None:
     """
     Get or show the current selection.
     """
-    workspace = current_workspace()
+    ws = current_workspace()
     if paths:
         store_paths = [StorePath(path) for path in paths]
-        workspace.set_selection(store_paths)
+        ws.set_selection(store_paths)
         selection = store_paths
     else:
-        selection = workspace.get_selection()
+        selection = ws.get_selection()
     if not selection:
         output_status("No selection.")
     else:
@@ -156,14 +159,13 @@ def unselect(*paths: str) -> None:
     Remove items from the current selection. Handy if you've selected some items and
     wish to unselect a few of them.
     """
-    workspace = current_workspace()
+    ws = current_workspace()
     if not paths:
-        workspace.set_selection([])
-
+        ws.set_selection([])
         output_status("Cleared selection.")
     else:
-        previous_selection = workspace.get_selection()
-        new_selection = workspace.unselect([StorePath(path) for path in paths])
+        previous_selection = ws.get_selection()
+        new_selection = ws.unselect([StorePath(path) for path in paths])
 
         output_status(
             "Unselected %s %s, %s now selected:\n%s",
@@ -174,28 +176,37 @@ def unselect(*paths: str) -> None:
         )
 
 
+def _assemble_store_paths(*paths: Optional[str]) -> List[StorePath]:
+    """
+    Assemble store paths from the given paths, or the current selection if
+    no paths are given.
+    """
+    ws = current_workspace()
+    store_paths = [StorePath(path) for path in paths if path is not None]
+    if not store_paths:
+        store_paths = ws.get_selection()
+        if not store_paths:
+            raise InvalidInput("No selection")
+    return store_paths
+
+
 @kmd_command
 def show(path: Optional[str] = None) -> None:
     """
     Show the contents of a file if one is given, or the first file if multiple files are selected.
     """
-    workspace = current_workspace()
-    if path:
-        store_path = StorePath(path)
-    else:
-        selection = workspace.get_selection()
-        if not selection:
-            raise InvalidInput("No selection")
-        store_path = selection[0]
+    store_paths = _assemble_store_paths(path)
+    store_path = store_paths[0]
 
-    show_file_platform_specific(store_path)
-
-    # Optionally, if we can inline the image (like in kitty) above the text representation, do that.
-    item = workspace.load(store_path)
+    # Optionally, if we can inline display the image (like in kitty) above the text representation, do that.
+    ws = current_workspace()
+    item = ws.load(store_path)
     thumbnail_url = item_thumbnail_image(item)
     if thumbnail_url:
         local_path = fetch_and_cache(thumbnail_url)
         inline_show_image_platform_specific(local_path)
+
+    show_file_platform_specific(store_path)
 
 
 @kmd_command
@@ -204,12 +215,12 @@ def edit(path: Optional[str] = None) -> None:
     Edit the contents of a file using the user's default editor (or defaulting to nano).
     If multiple files are selected, edit the first one.
     """
-    workspace = current_workspace()
+    ws = current_workspace()
     editor = os.getenv("EDITOR", "nano")
     if path:
         subprocess.run([editor, path])
     else:
-        selection = workspace.get_selection()
+        selection = ws.get_selection()
         if not selection:
             raise InvalidInput("No selection")
         subprocess.run([editor, selection[0]])
@@ -220,7 +231,7 @@ def param(*args: str) -> None:
     """
     Show or set currently set parameters for actions.
     """
-    workspace = current_workspace()
+    ws = current_workspace()
     if args:
         new_key_vals = dict([parse_key_value(arg) for arg in args])
 
@@ -233,12 +244,12 @@ def param(*args: str) -> None:
             if value and action_param.valid_values and value not in action_param.valid_values:
                 raise InvalidInput(f"Unrecognized value for action parameter {key}: {value}")
 
-        current_params = workspace.get_action_params()
+        current_params = ws.get_action_params()
         new_params = {**current_params, **new_key_vals}
 
         deletes = [key for key, value in new_params.items() if value is None]
         new_params = remove_values(new_params, deletes)
-        workspace.set_action_params(new_params)
+        ws.set_action_params(new_params)
 
     output_heading("Available action parameters")
 
@@ -246,7 +257,7 @@ def param(*args: str) -> None:
         output(format_action_description(ap.name, ap.full_description()))
         output()
 
-    params = workspace.get_action_params()
+    params = ws.get_action_params()
     if not params:
         output_status("No action parameters are set.")
     else:
@@ -260,11 +271,11 @@ def add_resource(*files_or_urls: str) -> None:
     """
     Add a file or URL resource to the workspace.
     """
-    workspace = current_workspace()
     if not files_or_urls:
         raise InvalidInput("No files or URLs provided to import")
 
-    store_paths = [workspace.add_resource(r) for r in files_or_urls]
+    ws = current_workspace()
+    store_paths = [ws.add_resource(r) for r in files_or_urls]
     output_status(
         "Imported %s %s:\n%s",
         len(store_paths),
@@ -279,16 +290,10 @@ def archive(*paths: str) -> None:
     """
     Archive the items at the given path, or the current selection.
     """
-    workspace = current_workspace()
-    if paths:
-        store_paths = [StorePath(path) for path in paths]
-    else:
-        store_paths = workspace.get_selection()
-        if not store_paths:
-            raise InvalidInput("No selection")
-
+    store_paths = _assemble_store_paths(*paths)
+    ws = current_workspace()
     for store_path in store_paths:
-        workspace.archive(store_path)
+        ws.archive(store_path)
 
     output_status(f"Archived:\n{format_lines(store_paths)}")
 
@@ -300,17 +305,95 @@ def unarchive(*paths: str) -> None:
     """
     Unarchive the items at the given paths.
     """
-    workspace = current_workspace()
+    ws = current_workspace()
+    for path in paths:
+        store_path = ws.unarchive(StorePath(path))
+        output_status(f"Unarchived: {store_path}")
+
+
+@kmd_command
+def index(*paths: str) -> None:
+    """
+    Index the items at the given path, or the current selection.
+    """
+    store_paths = _assemble_store_paths(*paths)
+    ws = current_workspace()
+
+    ws.vector_index.index_items([ws.load(store_path) for store_path in store_paths])
+
+    output_status(f"Indexed:\n{format_lines(store_paths)}")
+
+
+@kmd_command
+def unindex(*paths: str) -> None:
+    """
+    Unarchive the items at the given paths.
+    """
+    ws = current_workspace()
     if paths:
         store_paths = [StorePath(path) for path in paths]
     else:
-        store_paths = workspace.get_selection()
+        store_paths = ws.get_selection()
         if not store_paths:
             raise InvalidInput("No selection")
 
-    for path in paths:
-        store_path = workspace.unarchive(StorePath(path))
-        output_status(f"Unarchived: {store_path}")
+    ws.vector_index.unindex_items([ws.load(store_path) for store_path in store_paths])
+
+    output_status(f"Unindexed:\n{format_lines(store_paths)}")
+
+
+def _output_scored_node(scored_node, show_metadata: bool = True):
+    from llama_index.core.schema import TextNode
+
+    node = cast(TextNode, scored_node.node)
+    output()
+    output(
+        f"Score {scored_node.score}\n    {node.ref_doc_id}\n    node {node.node_id}",
+        text_wrap=Wrap.NONE,
+    )
+    output_response("%s", node.text, text_wrap=Wrap.WRAP_INDENT)
+
+    if show_metadata and node.metadata:
+        output("%s", to_yaml_string(node.metadata), text_wrap=Wrap.INDENT_ONLY)
+
+
+@kmd_command
+def retrieve(query_str: str) -> None:
+    """
+    Retrieve matches from the index for the given string or query.
+    """
+
+    ws = current_workspace()
+    results = ws.vector_index.retrieve(query_str)
+
+    output()
+    output(f"Matches from {ws.vector_index}:")
+    for scored_node in results:
+        _output_scored_node(scored_node)
+
+
+@kmd_command
+def query(query_str: str) -> None:
+    """
+    Query the index for an answer to the given question.
+    """
+    from llama_index.core.base.response.schema import Response
+
+    ws = current_workspace()
+    results = cast(Response, ws.vector_index.query(query_str))
+
+    output()
+    output(f"Response from {ws.vector_index}:", text_wrap=Wrap.NONE)
+    output_response("%s", results.response, text_wrap=Wrap.WRAP_FULL)
+
+    if results.source_nodes:
+        output("Sources:")
+        for scored_node in results.source_nodes:
+            _output_scored_node(scored_node)
+
+    # if results.metadata:
+    #     output("Metadata:")
+    #     output("%s", to_yaml_string(results.metadata), text_wrap=Wrap.INDENT_ONLY)
 
 
 @kmd_command
@@ -318,9 +401,9 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
     """
     List files or folders in a workspace. Shows the full current workspace if no path is provided.
     """
-    workspace = current_workspace()
+    ws = current_workspace()
     if len(paths) == 0:
-        paths = (str(workspace.base_dir),)
+        paths = (str(ws.base_dir),)
 
     total_folders, total_files = 0, 0
 
@@ -328,14 +411,14 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
         # If we're explicitly looking in a hidden directory, show hidden files.
         show_hidden = skippable_file(path)
 
-        for store_dirname, filenames in workspace.walk_by_folder(StorePath(path), show_hidden):
+        for store_dirname, filenames in ws.walk_by_folder(StorePath(path), show_hidden):
             # Show tally for this directory.
             nfiles = len(filenames)
             if nfiles > 0:
                 output(f"\n{store_dirname} - {nfiles} files", color=COLOR_EMPH)
 
             for filename in filenames:
-                full_path = join(workspace.base_dir, store_dirname, filename)
+                full_path = join(ws.base_dir, store_dirname, filename)
 
                 # Now show all the files in that directory.
                 if full:
@@ -372,20 +455,20 @@ def canonicalize(*paths: str) -> None:
     Canonicalize the given items, reformatting files' YAML and text or Markdown according
     to our conventions.
     """
-    workspace = current_workspace()
+    ws = current_workspace()
     if paths:
         store_paths = [StorePath(path) for path in paths]
     else:
-        store_paths = workspace.get_selection()
+        store_paths = ws.get_selection()
         if not store_paths:
             raise InvalidInput("No selection")
 
     canon_paths = []
     for store_path in store_paths:
         log.message("Canonicalizing: %s", store_path)
-        for item_store_path in workspace.walk_items(store_path):
+        for item_store_path in ws.walk_items(store_path):
             try:
-                workspace.canonicalize(item_store_path)
+                ws.canonicalize(item_store_path)
             except InvalidInput as e:
                 log.warning("%s Could not canonicalize %s: %s", EMOJI_WARN, item_store_path, e)
             canon_paths.append(item_store_path)
