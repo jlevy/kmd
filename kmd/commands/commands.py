@@ -1,6 +1,5 @@
 import os
 from os.path import getmtime, basename, getsize, join
-from pprint import pformat
 import re
 import subprocess
 from typing import Callable, List, Optional, cast

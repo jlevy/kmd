@@ -36,7 +36,7 @@ def _fill_in_ids(tabs: List[TabInfo]):
             tab.id = f"tab_{i}"
 
 
-def configure_webpage(items: List[Item]) -> Item:
+def webpage_config(items: List[Item]) -> Item:
     """
     Get an item with the config for a tabbed web page.
     """
@@ -71,7 +71,7 @@ def _load_tab_content(config: TabbedWebpage):
         tab.content_html = html
 
 
-def generate_webpage(config_item: Item) -> str:
+def webpage_generate(config_item: Item) -> str:
     """
     Generate a web page using the supplied config.
     """

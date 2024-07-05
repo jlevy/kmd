@@ -28,7 +28,7 @@ class VideoGallery:
     videos: List[VideoInfo]
 
 
-def configure_video_gallery(items: List[Item]) -> Item:
+def video_gallery_config(items: List[Item]) -> Item:
     """
     Get an item with the config for a video gallery.
     """
@@ -63,7 +63,7 @@ def configure_video_gallery(items: List[Item]) -> Item:
     return config_item
 
 
-def generate_video_gallery(config_item: Item) -> str:
+def video_gallery_generate(config_item: Item) -> str:
     """
     Generate a video gallery web page using the supplied config.
     """
