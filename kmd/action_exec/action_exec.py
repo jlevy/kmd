@@ -2,7 +2,7 @@ import time
 from typing import List, cast
 from strif import abbreviate_str
 from kmd.action_defs import look_up_action
-from kmd.action_exec.system_actions import fetch_action, FETCH_ACTION_NAME
+from kmd.action_exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_metadata
 from kmd.text_ui.command_output import output
 from kmd.text_ui.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
@@ -39,9 +39,13 @@ def fetch_url_items(item: Item) -> Item:
     if not item.store_path:
         raise InvalidInput("URL item should already be stored: %s", item)
 
+    if item.title and item.description:
+        # Already have metadata.
+        return item
+
     item.url = canonicalize_url(item.url)
-    log.message("Fetching URL for metadata: %s", item.url)
-    enriched_item = run_action(fetch_action, item.store_path, internal_call=True)
+    log.message("No metadata for URL, will fetch: %s", item.url)
+    enriched_item = run_action(fetch_page_metadata, item.store_path, internal_call=True)
     return enriched_item.items[0]
 
 
@@ -90,8 +94,8 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
     input_items = [ensure_saved(arg) for arg in args]
 
     # URLs should have metadata like a title and be valid, so we fetch them.
-    # Note we call ourselves to do the fetch.
-    if action.name != FETCH_ACTION_NAME:
+    # We make an action call to do the fetch so need to avoid recursing.
+    if action.name != FETCH_PAGE_METADATA_NAME:
         input_items = [fetch_url_items(item) for item in input_items]
 
     # Run the action.
@@ -99,7 +103,7 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
 
     elapsed = time.time() - start_time
 
-    log.info("Run action: Result: %s", result)
+    log.info("Action %s result: %s", action_name, result)
     log.message(
         "%s Action done: %s completed with %s %s",
         EMOJI_CALL_END,

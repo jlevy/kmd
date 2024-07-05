@@ -9,7 +9,7 @@ import justext
 from kmd.config.settings import web_cache_dir
 from kmd.media.video import canonicalize_video_url
 from kmd.model.canon_url import thumbnail_url
-from kmd.model.errors_model import CrawlError
+from kmd.model.errors_model import WebFetchError
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
 from kmd.config.logger import get_logger
@@ -80,7 +80,7 @@ def fetch(url: Url) -> requests.Response:
     response = requests.get(url, headers={"User-Agent": USER_AGENT})
     log.info("Fetched: %s (%s bytes): %s", response.status_code, len(response.content), url)
     if response.status_code != 200:
-        raise CrawlError(f"HTTP error {response.status_code} fetching {url}")
+        raise WebFetchError(f"HTTP error {response.status_code} fetching {url}")
     return response
 
 

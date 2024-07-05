@@ -16,7 +16,7 @@ class ApiResultError(KmdRuntimeError):
     pass
 
 
-class CrawlError(KmdRuntimeError):
+class WebFetchError(KmdRuntimeError):
     """For web fetching or crawling errors."""
 
     pass

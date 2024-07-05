@@ -17,7 +17,7 @@ from rich import get_console
 from xonsh.tools import XonshError
 import litellm
 from kmd.config.setup import setup
-from kmd.config.settings import media_cache_dir
+from kmd.config.settings import cache_dir
 from kmd.config.logger import get_logger
 from kmd.text_ui.text_styles import EMOJI_WARN, COLOR_ERROR, COLOR_HEADING, COLOR_LOGO, LOGO
 from kmd.text_ui.command_output import Wrap, output
@@ -173,10 +173,7 @@ def initialize():
     load_thread = threading.Thread(target=load)
     load_thread.start()
 
-    log.message(
-        "\nUsing media cache directory: %s\n",
-        media_cache_dir(),
-    )
+    log.message("\nUsing cache directory: %s\n", cache_dir())
 
 
 initialize()

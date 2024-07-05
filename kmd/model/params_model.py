@@ -49,3 +49,4 @@ ACTION_PARAMS = {
 # - source extractor
 # - citation formatter
 # - chunk size (e.g. citations per sentence or per pagagraph)
+# - web cache
