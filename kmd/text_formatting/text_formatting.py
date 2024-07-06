@@ -87,37 +87,42 @@ def abbreviate_phrase_in_middle(
     the phrase whenever possible. The ellipsis is inserted in the middle of the phrase.
     """
     if not max_trailing_len:
-        max_trailing_len = min(int(max_len / 2), max(8, int(max_len / 4)))
+        max_trailing_len = min(int(max_len / 2), max(16, int(max_len / 4)))
 
     phrase = " ".join(phrase.split())
 
     if len(phrase) <= max_len:
         return phrase
 
+    if max_len <= len(ellipsis):
+        return ellipsis
+
     words = phrase.split()
-    total_len = len(phrase)
     prefix_tally = 0
     prefix_end_index = 0
 
     # Walk through the split words, and tally total number of chars as we go.
     for i in range(len(words)):
         words[i] = abbreviate_str(words[i], max_len, ellipsis)
-        if prefix_tally >= max_len - max_trailing_len - len(ellipsis) - 1:
+        if prefix_tally + len(words[i]) + len(ellipsis) + max_trailing_len >= max_len and i > 0:
             prefix_end_index = i
             break
         prefix_tally += len(words[i]) + 1
 
-    # Begin replacing words with "".
-    chars_removed = 0
-    for i in range(prefix_end_index, len(words)):
-        chars_removed += len(words[i]) + 1
-        words[i] = ""
-        if total_len - chars_removed - prefix_tally <= max_trailing_len - len(ellipsis) - 1:
+    prefix_end_index = max(1, prefix_end_index)
+
+    # Calculate the start index for the trailing part.
+    suffix_start_index = len(words) - 1
+    suffix_tally = 0
+    for i in range(len(words) - 1, prefix_end_index - 1, -1):
+        if suffix_tally + len(words[i]) + len(ellipsis) + prefix_tally > max_len:
+            suffix_start_index = i + 1
             break
+        suffix_tally += len(words[i]) + 1
 
-    words.insert(prefix_end_index, ellipsis)
+    # Replace the middle part with ellipsis.
+    words = words[:prefix_end_index] + [ellipsis] + words[suffix_start_index:]
 
-    # Join the words
     result = " ".join(word for word in words if word)
 
     return result
@@ -171,13 +176,14 @@ def test_abbreviate_on_words():
 
 
 def test_abbreviate_phrase_in_middle():
-    assert abbreviate_phrase_in_middle("Hello, World! This is a test.", 16) == "Hello, … test."
+    assert abbreviate_phrase_in_middle("Hello, World! This is a test.", 16) == "Hello, … a test."
     assert (
-        abbreviate_phrase_in_middle("Hello, World! This is a test.", 23) == "Hello, World! … test."
+        abbreviate_phrase_in_middle("Hello, World! This is a test.", 23)
+        == "Hello, … This is a test."
     )
     assert (
         abbreviate_phrase_in_middle("Hello, World! This is a test.", 27)
-        == "Hello, World! This … test."
+        == "Hello, … This is a test."
     )
     assert (
         abbreviate_phrase_in_middle("Hello, World! This is a test.", 40)
@@ -187,4 +193,12 @@ def test_abbreviate_phrase_in_middle():
     assert (
         abbreviate_phrase_in_middle("Supercalifragilisticexpialidocious is a long word", 24)
         == "Supercalifragilisticexp… …"
+    )
+
+    assert (
+        abbreviate_phrase_in_middle(
+            "Your Mindset Matters (transcription) (clean text) (in paragraphs) (with timestamps) (add_description)",
+            64,
+        )
+        == "Your Mindset Matters (transcription) (clean … (add_description)"
     )
