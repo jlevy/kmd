@@ -17,7 +17,7 @@ def single_line(text: str) -> str:
     return regex.sub(r"\s+", " ", text).strip()
 
 
-DEFAULT_TRUNCATE = 36
+DEFAULT_TRUNCATE = 100
 
 
 def abbreviate_arg(

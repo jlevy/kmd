@@ -7,6 +7,7 @@ import dataclasses
 from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional
+from kmd.config.logger import get_logger
 from kmd.util.time_util import iso_format_z
 from kmd.file_storage.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
@@ -23,6 +24,9 @@ from kmd.text_formatting.text_formatting import (
 )
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
+
+
+log = get_logger(__name__)  # type: ignore
 
 
 class ItemType(Enum):
@@ -239,7 +243,7 @@ class Item:
     def update_modified_at(self):
         self.modified_at = datetime.now()
 
-    def metadata(self, datetime_as_str: bool = True) -> dict[str, Any]:
+    def metadata(self, datetime_as_str: bool = False) -> dict[str, Any]:
         """
         Metadata is all relevant non-None fields in easy-to-serialize form.
         Optional fields are omitted unless they are set.
