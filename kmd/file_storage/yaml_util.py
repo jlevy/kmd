@@ -11,17 +11,41 @@ from strif import atomic_output_file
 KeySort = Callable[[str], tuple]
 
 
-def _new_yaml(key_sort: Optional[KeySort] = None) -> YAML:
+def none_or_empty_dict(val: Any) -> bool:
+    return val is None or val == {}
+
+
+def new_yaml(
+    key_sort: Optional[KeySort] = None,
+    suppress_vals: Optional[Callable[[Any], bool]] = none_or_empty_dict,
+    stringify_unknown: bool = False,
+) -> YAML:
+    """
+    Configure a new YAML instance with custom settings.
+
+    If just using this for pretty-printing values, can set `stringify_unknown` to avoid
+    RepresenterError for unexpected types.
+    """
     yaml = YAML(typ="safe")
     yaml.default_flow_style = False  # Block style dictionaries.
+
+    suppr = suppress_vals or (lambda v: False)
 
     # Ignore None values in output. Sort keys if key_sort is provided.
     def represent_dict(dumper, data):
         if key_sort:
             data = {k: data[k] for k in sorted(data.keys(), key=key_sort)}
-        return dumper.represent_dict({k: v for k, v in data.items() if v is not None})
+        return dumper.represent_dict({k: v for k, v in data.items() if not suppr(v)})
 
     yaml.representer.add_representer(dict, represent_dict)
+
+    if stringify_unknown:
+
+        def represent_unknown(dumper, data):
+            return dumper.represent_str(str(data))
+
+        yaml.representer.add_representer(None, represent_unknown)
+
     if key_sort:
         yaml.representer.sort_base_mapping_type_on_output = False
 
@@ -48,7 +72,7 @@ def from_yaml_string(yaml_string: str) -> Any:
     """
     Read a YAML string into a Python object.
     """
-    return _new_yaml().load(yaml_string)
+    return new_yaml().load(yaml_string)
 
 
 def read_yaml_file(filename: str) -> Any:
@@ -56,7 +80,7 @@ def read_yaml_file(filename: str) -> Any:
     Read YAML file into a Python object.
     """
     with open(filename, "r") as f:
-        return _new_yaml().load(f)
+        return new_yaml().load(f)
 
 
 def to_yaml_string(value: Any, key_sort: Optional[KeySort] = None) -> str:
@@ -64,7 +88,7 @@ def to_yaml_string(value: Any, key_sort: Optional[KeySort] = None) -> str:
     Convert a Python object to a YAML string.
     """
     stream = StringIO()
-    _new_yaml(key_sort).dump(value, stream)
+    new_yaml(key_sort).dump(value, stream)
     return stream.getvalue()
 
 
@@ -72,7 +96,7 @@ def write_yaml(value: Any, stream: TextIO, key_sort: Optional[KeySort] = None):
     """
     Write a Python object to a YAML stream.
     """
-    _new_yaml(key_sort).dump(value, stream)
+    new_yaml(key_sort).dump(value, stream)
 
 
 def write_yaml_file(value: Any, filename: str, key_sort: Optional[KeySort] = None):
@@ -104,3 +128,29 @@ def test_write_yaml_file_with_custom_key_sort():
     assert list(read_data.keys()) == priority_keys + [
         k for k in data.keys() if k not in priority_keys
     ]
+
+
+def test_write_yaml_file_with_suppress_vals():
+    os.makedirs("tmp", exist_ok=True)
+
+    file_path = "tmp/test_write_yaml_file_suppress_vals.yaml"
+    data = {
+        "title": "Test Title",
+        "author": "Test Author",
+        "date": "2022-01-01",
+        "empty_dict": {},
+        "none_value": None,
+        "content": "Some content",
+    }
+
+    write_yaml_file(data, file_path)
+
+    read_data = read_yaml_file(file_path)
+
+    assert "empty_dict" not in read_data
+    assert "none_value" not in read_data
+
+    assert read_data["title"] == "Test Title"
+    assert read_data["author"] == "Test Author"
+    assert read_data["date"] == "2022-01-01"
+    assert read_data["content"] == "Some content"
