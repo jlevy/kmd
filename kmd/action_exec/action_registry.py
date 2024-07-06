@@ -1,6 +1,7 @@
 from typing import List, Type, Tuple, Callable
 from kmd.model.actions_model import ANY_ARGS, ONE_ARG, Action, EachItemAction
 from kmd.config.logger import get_logger
+from kmd.model.errors_model import ContentError
 from kmd.model.items_model import Item
 
 log = get_logger(__name__)
@@ -21,6 +22,9 @@ def each_item_wrapper(action: Action) -> Action:
 
     class EachItemWrapper(EachItemAction):
         def run_item(self, item: Item) -> Item:
+            result_items = action.run([item]).items
+            if len(result_items) < 1:
+                raise ContentError(f"Action {action.name} returned no items")
             return action.run([item]).items[0]
 
     if action.expected_args != ONE_ARG:

@@ -120,7 +120,7 @@ class EachItemAction(Action):
             try:
                 result_item = self.run_item(item)
                 result_items.append(result_item)
-            except ContentError as e:
+            except (ContentError, InvalidInput) as e:
                 errors.append(e)
                 log.error(
                     "%s Error processing item (will continue with others): %s: %s",

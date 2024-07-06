@@ -5,7 +5,7 @@ from kmd.model.actions_model import (
     ChunkSize,
     EachItemAction,
 )
-from kmd.model.errors_model import InvalidInput, UnexpectedError
+from kmd.model.errors_model import ContentError, InvalidInput, UnexpectedError
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.preconditions.common_preconditions import is_timestamped_text
@@ -117,9 +117,8 @@ class BackfillSourceTimestamps(EachItemAction):
                     source_wordtoks[source_wordtok_offset],
                 )
 
-                timestamp = extractor.extract(source_wordtok_offset)
-
-                if timestamp:
+                try:
+                    timestamp = extractor.extract(source_wordtok_offset)
                     timestamps_found.append(timestamp)
                     item_doc.update_sent(
                         sent_index,
@@ -127,8 +126,8 @@ class BackfillSourceTimestamps(EachItemAction):
                             old_sent, format_timestamp_citation(source_url, timestamp)
                         ),
                     )
-
-                else:
+                except ContentError:
+                    # Missing timestamps aren't fatal since it might be meta text like "Speaker 1:".
                     log.warning(
                         "Failed to extract timestamp at doc token offset %s: %s: %s",
                         wordtok_offset,
