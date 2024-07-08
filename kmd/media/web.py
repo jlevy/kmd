@@ -3,7 +3,6 @@ from pathlib import Path
 import re
 from typing import Optional
 from dataclasses import dataclass
-from cachetools import TTLCache, cached
 import requests
 import justext
 from kmd.config.settings import web_cache_dir
@@ -14,14 +13,15 @@ from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
 from kmd.config.logger import get_logger
 from kmd.util.web_cache import WebCache
+from kmd.util.log_calls import log_calls
 
 log = get_logger(__name__)
 
 
 class PageType(enum.Enum):
-    html = 1
-    pdf = 2
-    video = 3
+    html = "html"
+    pdf = "pdf"
+    video = "video"
 
     def as_str(self) -> str:
         return self.name
@@ -96,7 +96,7 @@ def fetch_and_cache(url: Url) -> Path:
     return path
 
 
-@cached(cache=TTLCache(maxsize=100, ttl=600))
+@log_calls(level="message")
 def fetch_extract(url: Url, cache=True) -> PageData:
     """
     Fetches a URL and extracts the title, description, and content.
@@ -128,6 +128,8 @@ def _extract_page_data_from_html(url: Url, raw_html: bytes) -> PageData:
     try:
         title = str(dom.cssselect("title")[0].text_content())
     except IndexError:
+        log.warning("Page missing title: %s", url)
+        log.save_object("Page missing title", "web", raw_html)
         pass
     try:
         description = str(dom.cssselect('meta[name="description"]')[0].get("content"))

@@ -94,8 +94,12 @@ class CustomLogger:
         filename = f"{prefix}{slugify(description, separator="_")}.{new_timestamped_uid()}.txt"
         path = LOG_OBJECTS / filename
         with atomic_output_file(path) as tmp_filename:
-            with open(tmp_filename, "w") as f:
-                f.write(str(obj))
+            if isinstance(obj, bytes):
+                with open(tmp_filename, "wb") as f:
+                    f.write(obj)
+            else:
+                with open(tmp_filename, "w") as f:
+                    f.write(str(obj))
 
         self.message("%s %s saved: %s", EMOJI_SAVED, description, path)
 

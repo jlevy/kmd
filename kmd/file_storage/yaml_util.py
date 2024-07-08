@@ -83,29 +83,35 @@ def read_yaml_file(filename: str) -> Any:
         return new_yaml().load(f)
 
 
-def to_yaml_string(value: Any, key_sort: Optional[KeySort] = None) -> str:
+def to_yaml_string(
+    value: Any, key_sort: Optional[KeySort] = None, stringify_unknown: bool = False
+) -> str:
     """
     Convert a Python object to a YAML string.
     """
     stream = StringIO()
-    new_yaml(key_sort).dump(value, stream)
+    new_yaml(key_sort, stringify_unknown=stringify_unknown).dump(value, stream)
     return stream.getvalue()
 
 
-def write_yaml(value: Any, stream: TextIO, key_sort: Optional[KeySort] = None):
+def write_yaml(
+    value: Any, stream: TextIO, key_sort: Optional[KeySort] = None, stringify_unknown: bool = False
+):
     """
     Write a Python object to a YAML stream.
     """
-    new_yaml(key_sort).dump(value, stream)
+    new_yaml(key_sort, stringify_unknown=stringify_unknown).dump(value, stream)
 
 
-def write_yaml_file(value: Any, filename: str, key_sort: Optional[KeySort] = None):
+def write_yaml_file(
+    value: Any, filename: str, key_sort: Optional[KeySort] = None, stringify_unknown: bool = False
+):
     """
     Atomic write of the given value to the YAML file.
     """
     with atomic_output_file(filename) as f:
         with open(f, "w") as f:
-            write_yaml(value, f, key_sort)
+            write_yaml(value, f, key_sort, stringify_unknown=stringify_unknown)
 
 
 ## Tests
