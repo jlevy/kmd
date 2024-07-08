@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, Optional
 from strif import atomic_output_file
 from kmd.config.settings import media_cache_dir
-from kmd.media.media_services import VideoService
+from kmd.model.media_model import MediaService
 from kmd.model.errors_model import InvalidInput, UnexpectedError
 from kmd.util.url import Url
 from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
@@ -123,7 +123,7 @@ def video_download_audio(url: Url, no_cache=False) -> Path:
 # List of available video services.
 youtube = YouTube()
 vimeo = Vimeo()
-video_services: List[VideoService] = [youtube, vimeo]
+video_services: List[MediaService] = [youtube, vimeo]
 
 
 def canonicalize_video_url(url: Url) -> Optional[Url]:

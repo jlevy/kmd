@@ -5,18 +5,27 @@ from typing import Optional, List, Dict, Any
 from urllib.parse import urlparse, parse_qs
 from dataclasses import dataclass, fields
 from pprint import pprint
+from datetime import date
 import yt_dlp
 from kmd.text_ui.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ApiResultError, InvalidInput
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
-from .media_services import VideoService
+from kmd.model.media_model import HeatmapValue, MediaMetadata, MediaService
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 
 
 VIDEO_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{11}$")
+
+
+def parse_date(upload_date):
+    if isinstance(upload_date, str):
+        return date.fromisoformat(upload_date)
+    elif isinstance(upload_date, date):
+        return upload_date
+    raise ValueError(f"Invalid date: {upload_date}")
 
 
 @dataclass
@@ -39,7 +48,7 @@ class YoutubeVideoMeta:
             raise ApiResultError(f"Invalid data for YoutubeVideoMeta: {data}")
 
 
-class YouTube(VideoService):
+class YouTube(MediaService):
     def get_id(self, url: Url) -> Optional[str]:
         parsed_url = urlparse(url)
         if parsed_url.hostname == "youtu.be":
@@ -120,11 +129,7 @@ class YouTube(VideoService):
         mp3_path = os.path.splitext(audio_file_path)[0] + ".mp3"
         return mp3_path
 
-    def list_channel_videos(self, url: Url) -> List[YoutubeVideoMeta]:
-        """
-        Get all video URLs and metadata from a YouTube channel or playlist.
-        """
-
+    def _extract_info(self, url: Url) -> Dict[str, Any]:
         ydl_opts = {
             "extract_flat": "in_playlist",  # Extract metadata only, without downloading.
             "quiet": True,
@@ -135,10 +140,42 @@ class YouTube(VideoService):
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             result = ydl.extract_info(str(url), download=False)
+
             log.save_object("yt_dlp result", None, result)
 
-        if not isinstance(result, dict):
-            raise ApiResultError(f"Unexpected result from yt_dlp: {result}")
+            if not isinstance(result, dict):
+                raise ApiResultError(f"Unexpected result from yt_dlp: {result}")
+
+            return result
+
+    def metadata(self, url: Url) -> MediaMetadata:
+        """
+        Get metadata for a YouTube video.
+        """
+        url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
+        yt_result: Dict[str, Any] = self._extract_info(url)
+
+        result = MediaMetadata(
+            url=url,
+            thumbnail_url=self.thumbnail_url(url),
+            id=yt_result["id"],
+            title=yt_result["title"],
+            description=yt_result["description"],
+            upload_date=parse_date(yt_result.get("upload_date")),
+            channel_url=Url(yt_result["channel_url"]),
+            view_count=yt_result.get("view_count"),
+            duration=yt_result.get("duration"),
+            heatmap=[HeatmapValue(**h) for h in yt_result.get("heatmap", [])] or None,
+        )
+        return result
+
+    def list_channel_videos(self, url: Url) -> List[YoutubeVideoMeta]:
+        """
+        Get all video URLs and metadata from a YouTube channel or playlist.
+        """
+
+        result = self._extract_info(url)
+
         if "entries" in result:
             entries = result["entries"]
         else:

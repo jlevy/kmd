@@ -4,14 +4,14 @@ from typing import Optional
 from urllib.parse import urlparse
 from pydub import AudioSegment
 from vimeo_downloader import Vimeo as VimeoDownloader
-from kmd.media.media_services import VideoService
+from kmd.model.media_model import MediaMetadata, MediaService
 from kmd.util.url import Url
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 
 
-class Vimeo(VideoService):
+class Vimeo(MediaService):
     def get_id(self, url: Url) -> Optional[str]:
         parsed_url = urlparse(url)
         if parsed_url.hostname == "vimeo.com":
@@ -19,6 +19,9 @@ class Vimeo(VideoService):
             if video_id:
                 return video_id
         return None
+
+    def metadata(self, url: Url) -> MediaMetadata:
+        raise NotImplementedError()
 
     def canonicalize(self, url: Url) -> Optional[str]:
         video_id = self.get_id(url)
