@@ -26,10 +26,11 @@ class MediaMetadata:
     title: str
     description: Optional[str] = None
     url: Optional[Url] = None
-    upload_date: Optional[date] = None
-    id: Optional[str] = None
-    channel_url: Optional[Url] = None
     thumbnail_url: Optional[Url] = None
+
+    id: Optional[str] = None
+    upload_date: Optional[date] = None
+    channel_url: Optional[Url] = None
     view_count: Optional[int] = None
     duration: Optional[int] = None
     heatmap: Optional[List[HeatmapValue]] = None

@@ -1,5 +1,6 @@
 from kmd.action_exec.action_registry import kmd_action
 from kmd.media import web
+from kmd.media.video import get_video_metadata
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     EachItemAction,
@@ -24,13 +25,19 @@ class FetchPageMetadata(EachItemAction):
         if not item.url:
             raise InvalidInput(f"Item must have a URL: {item}")
 
-        page_data = web.fetch_extract(item.url)
-
-        fetched_item = item.new_copy_with(
-            title=page_data.title or item.title,
-            description=page_data.description or item.description,
-            thumbnail_url=page_data.thumbnail_url or item.thumbnail_url,
-        )
+        # Prefer fetching metadata from the video if possible.
+        # Data is cleaner and YouTube for example often blocks regular scraping.
+        media_metadata = get_video_metadata(item.url)
+        if media_metadata:
+            fetched_item = Item.from_media_metadata(media_metadata)
+            fetched_item = item.merged_copy(fetched_item)
+        else:
+            page_data = web.fetch_extract(item.url)
+            fetched_item = item.new_copy_with(
+                title=page_data.title or item.title,
+                description=page_data.description or item.description,
+                thumbnail_url=page_data.thumbnail_url or item.thumbnail_url,
+            )
 
         if not fetched_item.title:
             raise WebFetchError(f"Failed to fetch page data: title is missing: {item.url}")

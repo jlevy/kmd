@@ -148,12 +148,17 @@ class YouTube(MediaService):
 
             return result
 
-    def metadata(self, url: Url) -> MediaMetadata:
+    def metadata(self, url: Url, full: bool = False) -> MediaMetadata:
         """
         Get metadata for a YouTube video.
         """
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
         yt_result: Dict[str, Any] = self._extract_info(url)
+
+        # Heatmap is interesting but verbose so skipping by default.
+        heatmap = None
+        if full:
+            heatmap = [HeatmapValue(**h) for h in yt_result.get("heatmap", [])] or None
 
         result = MediaMetadata(
             url=url,
@@ -165,7 +170,7 @@ class YouTube(MediaService):
             channel_url=Url(yt_result["channel_url"]),
             view_count=yt_result.get("view_count"),
             duration=yt_result.get("duration"),
-            heatmap=[HeatmapValue(**h) for h in yt_result.get("heatmap", [])] or None,
+            heatmap=heatmap,
         )
         return result
 

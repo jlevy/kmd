@@ -8,6 +8,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional
 from kmd.config.logger import get_logger
+from kmd.model.media_model import MediaMetadata
 from kmd.util.time_util import iso_format_z
 from kmd.file_storage.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
@@ -232,6 +233,34 @@ class Item:
             store_path=store_path,
         )
 
+    @classmethod
+    def from_media_metadata(cls, media_metadata: MediaMetadata) -> "Item":
+        """
+        Create an Item instance from MediaMetadata.
+        """
+        created_at = (
+            datetime.combine(media_metadata.upload_date, datetime.min.time())
+            if media_metadata.upload_date
+            else datetime.now()
+        )
+        return cls(
+            type=ItemType.resource,
+            format=Format.url,
+            title=media_metadata.title,
+            url=media_metadata.url,
+            description=media_metadata.description,
+            thumbnail_url=media_metadata.thumbnail_url,
+            created_at=created_at,
+            extra={
+                "upload_date": media_metadata.upload_date,
+                "id": media_metadata.id,
+                "channel_url": media_metadata.channel_url,
+                "view_count": media_metadata.view_count,
+                "duration": media_metadata.duration,
+                "heatmap": media_metadata.heatmap,
+            },
+        )
+
     def doc_id(self) -> str:
         """
         Semi-permanent id for the document. Currently just the store path.
@@ -343,14 +372,34 @@ class Item:
     def is_url_resource(self) -> bool:
         return self.type == ItemType.resource and self.format == Format.url and self.url is not None
 
+    def _merge_fields(self, other: Optional["Item"] = None, **kwargs) -> dict:
+        defaults = {"store_path": None, "created_at": datetime.now(), "modified_at": datetime.now()}
+        base_fields = asdict(self)
+
+        if other:
+            base_fields.update(asdict(other))
+            base_fields["extra"] = {**(self.extra or {}), **(other.extra or {})}
+
+        base_fields.update(defaults)
+        base_fields.update(kwargs)
+
+        return base_fields
+
     def new_copy_with(self, **kwargs) -> "Item":
         """
-        Copy item with the given field updates. Resets store_path and updates timestamps.
+        Copy item with the given field updates. Resets store_path and updates timestamps
+        if they are not set.
         """
-        defaults = {"store_path": None, "created_at": datetime.now(), "modified_at": datetime.now()}
-        new_item = replace(self, **defaults)
-        new_item = replace(new_item, **kwargs)
-        return new_item
+        new_fields = self._merge_fields(**kwargs)
+        return Item(**new_fields)
+
+    def merged_copy(self, other: "Item") -> "Item":
+        """
+        Copy item, merging in fields from another, with the other item's fields
+        taking precedence. Resets store_path and updates timestamps if they are not set.
+        """
+        merged_fields = self._merge_fields(other)
+        return Item(**merged_fields)
 
     def derived_copy(self, **kwargs) -> "Item":
         """

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, Optional
 from strif import atomic_output_file
 from kmd.config.settings import media_cache_dir
-from kmd.model.media_model import MediaService
+from kmd.model.media_model import MediaMetadata, MediaService
 from kmd.model.errors_model import InvalidInput, UnexpectedError
 from kmd.util.url import Url
 from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
@@ -169,4 +169,15 @@ def get_video_id(url: Url | None) -> Optional[str]:
         video_id = service.get_id(url)
         if video_id:
             return video_id
+    return None
+
+
+def get_video_metadata(url: Url) -> Optional[MediaMetadata]:
+    """
+    Return metadata for the video at the given URL.
+    """
+    for service in video_services:
+        canonical_url = service.canonicalize(url)
+        if canonical_url:
+            return service.metadata(url)
     return None
