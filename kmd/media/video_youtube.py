@@ -29,45 +29,6 @@ def parse_date(upload_date: str | date) -> date:
     raise ValueError(f"Invalid date: {upload_date}")
 
 
-def parse_metadata(yt_result: Dict[str, Any], full: bool = False) -> MediaMetadata:
-    try:
-        # Heatmap is interesting but verbose so skipping by default.
-        heatmap = None
-        if full:
-            heatmap = [HeatmapValue(**h) for h in yt_result.get("heatmap", [])] or None
-
-        # Apparently upload_date is in full video metadata but not channel metadata.
-        upload_date_str = yt_result.get("upload_date")
-        upload_date = parse_date(upload_date_str) if upload_date_str else None
-
-        thumbnail_url = best_thumbnail(yt_result)
-
-        url = yt_result.get("webpage_url") or yt_result.get("url")
-        if not url:
-            raise KeyError("No URL found")
-
-        result = MediaMetadata(
-            media_id=yt_result["id"],  # Renamed for clarity.
-            media_service=SERVICE_YOUTUBE,
-            url=url,
-            thumbnail_url=thumbnail_url,
-            title=yt_result["title"],
-            description=yt_result["description"],
-            upload_date=upload_date,
-            channel_url=Url(yt_result["channel_url"]),
-            view_count=yt_result.get("view_count"),
-            duration=yt_result.get("duration"),
-            heatmap=heatmap,
-        )
-        log.message("Parsed YouTube metadata: %s", result)
-    except KeyError as e:
-        log.error("Missing key in YouTube metadata (see saved object): %s", e)
-        log.save_object("yt_dlp result", None, to_yaml_string(yt_result, stringify_unknown=True))
-        raise ApiResultError("Did not find key in YouTube metadata: %s" % e)
-
-    return result
-
-
 class YouTube(MediaService):
     def get_id(self, url: Url) -> Optional[str]:
         parsed_url = urlparse(url)
@@ -175,7 +136,7 @@ class YouTube(MediaService):
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
         yt_result: Dict[str, Any] = self._extract_info(url)
 
-        return parse_metadata(yt_result, full=full)
+        return self._parse_metadata(yt_result, full=full)
 
     def list_channel_videos(self, url: Url) -> List[MediaMetadata]:
         """
@@ -196,14 +157,62 @@ class YouTube(MediaService):
         for value in entries:
             if "entries" in value:
                 # For channels there is a list of values each with their own videos.
-                video_meta_list.extend(parse_metadata(e) for e in value["entries"])
+                video_meta_list.extend(self._parse_metadata(e) for e in value["entries"])
             else:
                 # For playlists, entries holds the videos.
-                video_meta_list.append(parse_metadata(value))
+                video_meta_list.append(self._parse_metadata(value))
 
         log.message("Found %d videos in channel %s", len(video_meta_list), url)
 
         return video_meta_list
+
+    def _parse_metadata(
+        self, yt_result: Dict[str, Any], full: bool = False, **overrides: Dict[str, Any]
+    ) -> MediaMetadata:
+        try:
+            media_id = yt_result["id"]  # Renamed for clarity.
+            if not media_id:
+                raise KeyError("No ID found")
+
+            url = yt_result.get("webpage_url") or yt_result.get("url")
+            if not url:
+                raise KeyError("No URL found")
+
+            thumbnail_url = self.thumbnail_url(Url(url))
+            # thumbnail_url = best_thumbnail(yt_result)  # Alternate approach, but messier.
+
+            # Apparently upload_date is in full video metadata but not channel metadata.
+            upload_date_str = yt_result.get("upload_date")
+            upload_date = parse_date(upload_date_str) if upload_date_str else None
+
+            # Heatmap is interesting but verbose so skipping by default.
+            heatmap = None
+            if full:
+                heatmap = [HeatmapValue(**h) for h in yt_result.get("heatmap", [])] or None
+
+            result = MediaMetadata(
+                media_id=media_id,
+                media_service=SERVICE_YOUTUBE,
+                url=url,
+                thumbnail_url=thumbnail_url,
+                title=yt_result["title"],
+                description=yt_result["description"],
+                upload_date=upload_date,
+                channel_url=Url(yt_result["channel_url"]),
+                view_count=yt_result.get("view_count"),
+                duration=yt_result.get("duration"),
+                heatmap=heatmap,
+                **overrides,
+            )
+            log.message("Parsed YouTube metadata: %s", result)
+        except KeyError as e:
+            log.error("Missing key in YouTube metadata (see saved object): %s", e)
+            log.save_object(
+                "yt_dlp result", None, to_yaml_string(yt_result, stringify_unknown=True)
+            )
+            raise ApiResultError("Did not find key in YouTube metadata: %s" % e)
+
+        return result
 
 
 def best_thumbnail(data: Dict[str, Any]) -> Optional[Url]:
