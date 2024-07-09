@@ -3,6 +3,7 @@ from kmd.model.actions_model import ANY_ARGS, ONE_ARG, Action, EachItemAction
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError
 from kmd.model.items_model import Item
+from kmd.text_ui.text_styles import EMOJI_WARN
 
 log = get_logger(__name__)
 
@@ -69,6 +70,10 @@ def instantiate_actions() -> dict[str, Action]:
     actions_map = {}
     for cls, wrapper in _actions:
         action: Action = wrapper(cls())  # type: ignore
+        if action.name in actions_map:
+            log.error(
+                "%s Duplicate action name (defined twice by accident?): %s", EMOJI_WARN, action.name
+            )
         actions_map[action.name] = action
 
     return dict(sorted(actions_map.items()))
