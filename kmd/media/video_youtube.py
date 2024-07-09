@@ -3,15 +3,15 @@ import tempfile
 import os
 from typing import Optional, List, Dict, Any
 from urllib.parse import urlparse, parse_qs
-from dataclasses import dataclass, fields
-from pprint import pprint
 from datetime import date
 import yt_dlp
+from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.text_ui.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ApiResultError, InvalidInput
+from kmd.util.log_calls import log_calls
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
-from kmd.model.media_model import HeatmapValue, MediaMetadata, MediaService
+from kmd.model.media_model import SERVICE_YOUTUBE, HeatmapValue, MediaMetadata, MediaService
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
@@ -20,7 +20,8 @@ log = get_logger(__name__)
 VIDEO_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{11}$")
 
 
-def parse_date(upload_date):
+@log_calls(level="message", show_return=True)
+def parse_date(upload_date: str | date) -> date:
     if isinstance(upload_date, str):
         return date.fromisoformat(upload_date)
     elif isinstance(upload_date, date):
@@ -28,24 +29,43 @@ def parse_date(upload_date):
     raise ValueError(f"Invalid date: {upload_date}")
 
 
-@dataclass
-class YoutubeVideoMeta:
-    id: str
-    url: str
-    title: str
-    description: str
-    thumbnails: List[Dict]
-    view_count: int
+def parse_metadata(yt_result: Dict[str, Any], full: bool = False) -> MediaMetadata:
+    try:
+        # Heatmap is interesting but verbose so skipping by default.
+        heatmap = None
+        if full:
+            heatmap = [HeatmapValue(**h) for h in yt_result.get("heatmap", [])] or None
 
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "YoutubeVideoMeta":
-        try:
-            field_names = {f.name for f in fields(cls)}
-            filtered_data = {k: v for k, v in data.items() if k in field_names}
-            return cls(**filtered_data)
-        except TypeError:
-            print(pprint(data))
-            raise ApiResultError(f"Invalid data for YoutubeVideoMeta: {data}")
+        # Apparently upload_date is in full video metadata but not channel metadata.
+        upload_date_str = yt_result.get("upload_date")
+        upload_date = parse_date(upload_date_str) if upload_date_str else None
+
+        thumbnail_url = best_thumbnail(yt_result)
+
+        url = yt_result.get("webpage_url") or yt_result.get("url")
+        if not url:
+            raise KeyError("No URL found")
+
+        result = MediaMetadata(
+            media_id=yt_result["id"],  # Renamed for clarity.
+            media_service=SERVICE_YOUTUBE,
+            url=url,
+            thumbnail_url=thumbnail_url,
+            title=yt_result["title"],
+            description=yt_result["description"],
+            upload_date=upload_date,
+            channel_url=Url(yt_result["channel_url"]),
+            view_count=yt_result.get("view_count"),
+            duration=yt_result.get("duration"),
+            heatmap=heatmap,
+        )
+        log.message("Parsed YouTube metadata: %s", result)
+    except KeyError as e:
+        log.error("Missing key in YouTube metadata (see saved object): %s", e)
+        log.save_object("yt_dlp result", None, to_yaml_string(yt_result, stringify_unknown=True))
+        raise ApiResultError("Did not find key in YouTube metadata: %s" % e)
+
+    return result
 
 
 class YouTube(MediaService):
@@ -141,7 +161,7 @@ class YouTube(MediaService):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             result = ydl.extract_info(str(url), download=False)
 
-            log.save_object("yt_dlp result", None, result)
+            log.save_object("yt_dlp result", None, to_yaml_string(result, stringify_unknown=True))
 
             if not isinstance(result, dict):
                 raise ApiResultError(f"Unexpected result from yt_dlp: {result}")
@@ -155,26 +175,9 @@ class YouTube(MediaService):
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
         yt_result: Dict[str, Any] = self._extract_info(url)
 
-        # Heatmap is interesting but verbose so skipping by default.
-        heatmap = None
-        if full:
-            heatmap = [HeatmapValue(**h) for h in yt_result.get("heatmap", [])] or None
+        return parse_metadata(yt_result, full=full)
 
-        result = MediaMetadata(
-            url=url,
-            thumbnail_url=self.thumbnail_url(url),
-            id=yt_result["id"],
-            title=yt_result["title"],
-            description=yt_result["description"],
-            upload_date=parse_date(yt_result.get("upload_date")),
-            channel_url=Url(yt_result["channel_url"]),
-            view_count=yt_result.get("view_count"),
-            duration=yt_result.get("duration"),
-            heatmap=heatmap,
-        )
-        return result
-
-    def list_channel_videos(self, url: Url) -> List[YoutubeVideoMeta]:
+    def list_channel_videos(self, url: Url) -> List[MediaMetadata]:
         """
         Get all video URLs and metadata from a YouTube channel or playlist.
         """
@@ -187,16 +190,16 @@ class YouTube(MediaService):
             log.warning("%s No videos found in the channel.", EMOJI_WARN)
             entries = []
 
-        video_meta_list = []
+        video_meta_list: List[MediaMetadata] = []
 
         # TODO: Inspect and collect rest of the metadata here, like upload date etc.
         for value in entries:
             if "entries" in value:
                 # For channels there is a list of values each with their own videos.
-                video_meta_list.extend(YoutubeVideoMeta.from_dict(e) for e in value["entries"])
+                video_meta_list.extend(parse_metadata(e) for e in value["entries"])
             else:
                 # For playlists, entries holds the videos.
-                video_meta_list.append(YoutubeVideoMeta.from_dict(value))
+                video_meta_list.append(parse_metadata(value))
 
         log.message("Found %d videos in channel %s", len(video_meta_list), url)
 
@@ -215,15 +218,20 @@ def best_thumbnail(data: Dict[str, Any]) -> Optional[Url]:
         ],
     }
     """
+    thumbnail_url = None
     try:
         thumbnails = data["thumbnails"]
         if not isinstance(thumbnails, list):
             return None
         largest_thumbnail = max(thumbnails, key=lambda x: x.get("width", 0))
-        url_str = largest_thumbnail.get("url", None)
-        return Url(url_str) if url_str else None
+        thumbnail_url = largest_thumbnail.get("url", None)
     except (KeyError, TypeError):
-        return None
+        pass
+
+    if not thumbnail_url:
+        thumbnail_url = data.get("thumbnail")
+
+    return Url(thumbnail_url) if thumbnail_url else None
 
 
 ## Tests

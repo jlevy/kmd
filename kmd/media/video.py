@@ -5,6 +5,7 @@ from strif import atomic_output_file
 from kmd.config.settings import media_cache_dir
 from kmd.model.media_model import MediaMetadata, MediaService
 from kmd.model.errors_model import InvalidInput, UnexpectedError
+from kmd.util.log_calls import log_calls
 from kmd.util.url import Url
 from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
 from kmd.media.video_youtube import YouTube
@@ -172,12 +173,13 @@ def get_video_id(url: Url | None) -> Optional[str]:
     return None
 
 
+@log_calls(level="info", show_return=True)
 def get_video_metadata(url: Url) -> Optional[MediaMetadata]:
     """
     Return metadata for the video at the given URL.
     """
     for service in video_services:
-        canonical_url = service.canonicalize(url)
-        if canonical_url:
+        video_id = service.get_id(url)
+        if video_id:  # This is an actual video, not a channel etc.
             return service.metadata(url)
     return None

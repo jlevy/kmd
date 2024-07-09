@@ -102,7 +102,9 @@ def log_calls(
             elapsed = end_time - start_time
 
             if show_call:
-                call_msg = f"{EMOJI_CALL_END} Call done: {func_name} in {format_duration(elapsed)}"
+                call_msg = (
+                    f"{EMOJI_CALL_END} Call done: {func_name}() in {format_duration(elapsed)}"
+                )
                 if show_return:
                     log_func("%s: %s", call_msg, to_str(result))
                 else:

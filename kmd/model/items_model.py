@@ -193,6 +193,9 @@ class Item:
         assert self.format is None or type(self.format) == Format
         assert self.file_ext is None or type(self.file_ext) == FileExt
 
+        if not isinstance(self.relations, ItemRelations):
+            self.relations = ItemRelations(**self.relations)
+
     @classmethod
     def from_dict(cls, item_dict: dict[str, Any], **kwargs) -> "Item":
         """
@@ -252,8 +255,9 @@ class Item:
             thumbnail_url=media_metadata.thumbnail_url,
             created_at=created_at,
             extra={
+                "media_id": media_metadata.media_id,
+                "media_service": media_metadata.media_service,
                 "upload_date": media_metadata.upload_date,
-                "id": media_metadata.id,
                 "channel_url": media_metadata.channel_url,
                 "view_count": media_metadata.view_count,
                 "duration": media_metadata.duration,

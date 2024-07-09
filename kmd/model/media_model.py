@@ -23,17 +23,26 @@ class MediaMetadata:
     Metadata for an audio or video file from a service like YouTube, Vimeo, etc.
     """
 
+    # Fields that match Item fields.
     title: str
+    url: Url
     description: Optional[str] = None
-    url: Optional[Url] = None
     thumbnail_url: Optional[Url] = None
 
-    id: Optional[str] = None
+    # The combination of media_id and media_service should be unique.
+    media_id: Optional[str] = None
+    media_service: Optional[str] = None
+
+    # Extra media fields.
     upload_date: Optional[date] = None
     channel_url: Optional[Url] = None
     view_count: Optional[int] = None
     duration: Optional[int] = None
     heatmap: Optional[List[HeatmapValue]] = None
+
+
+SERVICE_YOUTUBE = "youtube"
+SERVICE_VIMEO = "vimeo"
 
 
 class MediaService(ABC):

@@ -9,7 +9,6 @@ from rich import get_console
 from kmd.assistant.assistant import assistance
 from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.media.web import fetch_and_cache
-from kmd.model.item_thumbnails import item_thumbnail_image
 from kmd.text_ui.command_output import (
     Wrap,
     format_action_description,
@@ -200,9 +199,8 @@ def show(path: Optional[str] = None) -> None:
     # Optionally, if we can inline display the image (like in kitty) above the text representation, do that.
     ws = current_workspace()
     item = ws.load(store_path)
-    thumbnail_url = item_thumbnail_image(item)
-    if thumbnail_url:
-        local_path = fetch_and_cache(thumbnail_url)
+    if item.thumbnail_url:
+        local_path = fetch_and_cache(item.thumbnail_url)
         inline_show_image_platform_specific(local_path)
 
     show_file_platform_specific(store_path)
