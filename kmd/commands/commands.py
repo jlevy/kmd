@@ -21,7 +21,7 @@ from kmd.text_ui.command_output import (
 )
 from kmd.commands.native_tools import (
     show_file_platform_specific,
-    inline_show_image_platform_specific,
+    terminal_show_image_graceful,
 )
 from kmd.text_ui.text_styles import (
     COLOR_EMPH,
@@ -201,7 +201,7 @@ def show(path: Optional[str] = None) -> None:
     item = ws.load(store_path)
     if item.thumbnail_url:
         local_path = fetch_and_cache(item.thumbnail_url)
-        inline_show_image_platform_specific(local_path)
+        terminal_show_image_graceful(local_path)
 
     show_file_platform_specific(store_path)
 

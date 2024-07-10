@@ -43,9 +43,11 @@ def _ensure_surrounding_breaks(
 
 
 # XXX Turn off Marko's parsing of block HTML.
-# Marko currently seems to parse comments and block elements incorrectly:
+# Block parsing with comments or block elements has some counterintuitive issues:
 # https://github.com/frostming/marko/issues/202
-# Copied from marko.block.HTMLBlock disabling most block types for the now.
+# Another solution might be to always put a newline after a closing block tag during
+# normalization, to avoid this confusion?
+# For now, just ignoring block tags.
 class CustomHTMLBlock(HTMLBlock):
     @classmethod
     def match(cls, source: Source) -> int | bool:

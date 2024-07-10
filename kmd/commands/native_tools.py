@@ -90,9 +90,8 @@ def _terminal_show_image_sixel(image_path: str | Path, width: int = 800, height:
         raise EnvironmentError("Terminal does not support Sixel graphics ({os.environ.get('TERM'})")
 
     try:
-        subprocess.run(
-            ["magick", image_path, "-geometry", f"{width}x{height}", "sixel:-"], check=True
-        )
+        cmd = ["magick", str(image_path), "-geometry", f"{width}x{height}", "sixel:-"]
+        subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError as e:
         raise EnvironmentError(f"Failed to display image: {e}")
 
@@ -109,15 +108,19 @@ def terminal_show_image(filename: str | Path):
     """
     Try to display an image in the terminal, using kitty or sixel.
     """
+    if _terminal_is_kitty():
+        _terminal_show_image_kitty(filename)
+    elif _terminal_supports_sixel():
+        _terminal_show_image_sixel(filename)
+    else:
+        raise EnvironmentError("Image display in terminal not supported")
+
+
+def terminal_show_image_graceful(filename: str | Path):
     try:
-        if _terminal_is_kitty():
-            _terminal_show_image_kitty(filename)
-        elif _terminal_supports_sixel():
-            _terminal_show_image_sixel(filename)
-        else:
-            raise EnvironmentError("Image display not supported")
+        terminal_show_image(filename)
     except EnvironmentError:
-        output(f"[Image: {filename}]", color=COLOR_HINT)
+        output("[Image: {filename}]", color=COLOR_HINT)
 
 
 def terminal_link(url: str, text: str, id: str = "") -> str:
@@ -149,20 +152,16 @@ def show_file_platform_specific(file_or_url: str):
         if ext_is_text(ext) or mime_type and mime_type.startswith("text"):
             view_file(file, use_less=num_lines > 40 or file_size > 20 * 1024)
         elif mime_type and mime_type.startswith("image"):
-            terminal_show_image(file)
+            try:
+                terminal_show_image(file)
+            except EnvironmentError:
+                native_open(file)
         else:
             native_open(file)
     elif os.path.isdir(file_or_url):
         native_open(file_or_url)
     else:
         raise FileNotFoundError(f"File does not exist: {file_or_url}")
-
-
-def inline_show_image_platform_specific(file: str | Path) -> bool:
-    if _terminal_is_kitty():
-        _terminal_show_image_kitty(file)
-        return True
-    return False
 
 
 def view_file(filename: str, use_less: bool = True):
