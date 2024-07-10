@@ -19,7 +19,7 @@ from kmd.text_ui.command_output import (
     output_response,
     output_status,
 )
-from kmd.commands.local_file_tools import (
+from kmd.commands.native_tools import (
     show_file_platform_specific,
     inline_show_image_platform_specific,
 )

@@ -41,13 +41,20 @@ class InvalidStoreState(SelfExplanatoryError):
     pass
 
 
-class SkipperError(SelfExplanatoryError):
+class EnvironmentError(SelfExplanatoryError):
+    """Raised when a package is not installed or something in the environment
+    isn't set up right."""
+
+    pass
+
+
+class SkippableError(SelfExplanatoryError):
     """Errors that are skippable but shouldn't abort the entire operation."""
 
     pass
 
 
-class ContentError(SkipperError):
+class ContentError(SkippableError):
     """Raised when content is not appropriate for an operation."""
 
     pass
