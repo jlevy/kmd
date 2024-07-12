@@ -47,22 +47,19 @@ def logging_setup():
     console_handler = RichHandler(level=WARNING, show_time=False, show_path=False, show_level=False, highlighter=KmdHighlighter(), markup=True)
     console_handler.setFormatter(Formatter("%(message)s"))
 
-    root_logger = logging.getLogger()
-    root_logger.setLevel(INFO)
-    root_logger.addHandler(file_handler)
-    root_logger.addHandler(console_handler)
-
-    # Customize the logger for LiteLLM.
-    litellm_logger = logging.getLogger("LiteLLM")
-    if litellm_logger.handlers:
-        litellm_logger.setLevel(logging.INFO)
-        # Remove any existing handlers.
-        for handler in litellm_logger.handlers[:]:
-            litellm_logger.removeHandler(handler)
-        litellm_logger.addHandler(console_handler)
-        litellm_logger.addHandler(file_handler)
-
     # TODO: Improve ytdl logging setup.
+
+    from litellm import _logging  # noqa: F401
+    for logger_name in [None, "LiteLLM", "LiteLLM Router", "LiteLLM Proxy"]:
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(INFO)
+        logger.propagate = True
+        # Remove any existing handlers.
+        for handler in logger.handlers[:]:
+            logger.removeHandler(handler)
+        logger.addHandler(console_handler)
+        logger.addHandler(file_handler)
+
 
 
 def prefix_with_warn_emoji(line: str, emoji: str = EMOJI_WARN):
