@@ -47,8 +47,6 @@ def logging_setup():
     console_handler = RichHandler(level=WARNING, show_time=False, show_path=False, show_level=False, highlighter=KmdHighlighter(), markup=True)
     console_handler.setFormatter(Formatter("%(message)s"))
 
-    # TODO: Improve ytdl logging setup.
-
     from litellm import _logging  # noqa: F401
     for logger_name in [None, "LiteLLM", "LiteLLM Router", "LiteLLM Proxy"]:
         logger = logging.getLogger(logger_name)

@@ -98,6 +98,7 @@ class YouTube(MediaService):
                     "preferredquality": "192",
                 }
             ],
+            "logger": log,
         }
 
         log.info("Extracting audio from YouTube video %s at %s", url, temp_dir)
@@ -115,6 +116,7 @@ class YouTube(MediaService):
             "extract_flat": "in_playlist",  # Extract metadata only, without downloading.
             "quiet": True,
             "dump_single_json": True,
+            "logger": log,
         }
 
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
