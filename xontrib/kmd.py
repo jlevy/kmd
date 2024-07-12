@@ -147,45 +147,62 @@ def load_xonsh_actions():
     aliases.update(kmd_actions)  # type: ignore  # noqa: F821
 
 
+_is_interactive = __xonsh__.env["XONSH_INTERACTIVE"]  # type: ignore  # noqa: F821
+
+
+def welcome():
+    if _is_interactive:
+        output()
+        output(LOGO, color=COLOR_LOGO)
+        output()
+        output("Welcome to kmd.\n", color=COLOR_HEADING)
+        output()
+        # output(f"\n{len(kmd_commands)} commands and {len(kmd_actions)} actions are available.")
+        output(
+            dedent(
+                """
+                Use `kmd_help` for help. Or simply ask a question about kmd or what you want to do.
+                Any question (ending in ?) on the command line invokes the kmd assistant.
+                """
+            ).strip(),
+            text_wrap=Wrap.WRAP_FULL,
+        )
+
+
 def initialize():
+    if _is_interactive:
+        # Try to seem a little faster starting up.
+        def load():
+            load_xonsh_commands()
+            load_xonsh_actions()
 
-    output()
-    output(LOGO, color=COLOR_LOGO)
-    output()
-    output("Welcome to kmd.\n", color=COLOR_HEADING)
-    output()
-    # output(f"\n{len(kmd_commands)} commands and {len(kmd_actions)} actions are available.")
-    output(
-        dedent(
-            """
-            Use `kmd_help` for help. Or simply ask a question about kmd or what you want to do.
-            Any question (ending in ?) on the command line invokes the kmd assistant.
-            """
-        ).strip(),
-        text_wrap=Wrap.WRAP_FULL,
-    )
+        load_thread = threading.Thread(target=load)
+        load_thread.start()
 
-    # Try to be a little faster starting up.
-    def load():
+        log.message("\nUsing cache directory: %s\n", cache_dir())
+    else:
         load_xonsh_commands()
         load_xonsh_actions()
 
-    load_thread = threading.Thread(target=load)
-    load_thread.start()
 
-    log.message("\nUsing cache directory: %s\n", cache_dir())
+def post_initialize():
+    if _is_interactive:
+        try:
+            current_workspace()  # Validates and logs workspace info for user.
+        except InvalidStoreState:
+            output(
+                f"{EMOJI_WARN} The current directory is not a workspace. "
+                "Create or switch to a workspace with the `workspace` command."
+            )
+        output()
 
+
+welcome()
 
 initialize()
 
-try:
-    current_workspace()  # Validates and logs workspace info for user.
-except InvalidStoreState:
-    output(
-        f"{EMOJI_WARN} The current directory is not a workspace. "
-        "Create or switch to a workspace with the `workspace` command."
-    )
-output()
+post_initialize()
+
 
 # TODO: Completion for action and command args, e.g. known URLs, resource titles, concepts, parameters and values, etc.
 # def _action_completer(cls, prefix, line, begidx, endidx, ctx):
