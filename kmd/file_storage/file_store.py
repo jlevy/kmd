@@ -153,7 +153,6 @@ class FileStore:
         self.action_params = PersistedYaml(self.settings_dir / "action_params.yaml", init_value={})
 
         self.end_time = time.time()
-        self.log_store_info()
 
     def _id_index_init(self):
         num_dups = 0

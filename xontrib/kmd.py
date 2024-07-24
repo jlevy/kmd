@@ -188,7 +188,7 @@ def initialize():
 def post_initialize():
     if _is_interactive:
         try:
-            current_workspace()  # Validates and logs workspace info for user.
+            current_workspace().log_store_info()  # Validates and logs info for user.
         except InvalidStoreState:
             output(
                 f"{EMOJI_WARN} The current directory is not a workspace. "

@@ -119,7 +119,8 @@ def workspace(workspace_name: Optional[str] = None) -> None:
         os.makedirs(ws_dir, exist_ok=True)
         os.chdir(ws_dir)
         output_status(f"Changed to workspace: {ws_name}")
-        current_workspace()  # Load the workspace and show status.
+
+    current_workspace().log_store_info()
 
 
 @kmd_command
