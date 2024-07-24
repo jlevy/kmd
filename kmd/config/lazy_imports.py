@@ -9,11 +9,10 @@
 
 from lazyasd import load_module_in_background
 
+# Non-essential but big packages.
 load_module_in_background("wikipedia")
 load_module_in_background("tenacity")
-load_module_in_background("litellm")
 load_module_in_background("deepgram")
-load_module_in_background("openai")
 load_module_in_background("numpy")
 load_module_in_background("pandas")
 load_module_in_background("weasyprint")

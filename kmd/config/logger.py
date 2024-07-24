@@ -19,15 +19,15 @@ LOG_FILE_NAME = "kmd.log"
 LOG_OBJECTS_NAME = "objects"
 
 
-def log_dir():
+def log_dir() -> Path:
     return LOG_ROOT / LOG_DIR_NAME
 
 
-def log_file():
+def log_file() -> Path:
     return log_dir() / LOG_FILE_NAME
 
 
-def log_objects_dir():
+def log_objects_dir() -> Path:
     return log_dir() / LOG_OBJECTS_NAME
 
 
@@ -134,7 +134,7 @@ def reset_log_root(log_root: Path):
     global LOG_ROOT
     if log_root != LOG_ROOT:
         log = get_logger(__name__)
-        log.message("Logging to: %s", log_file())
+        log.message("Logging to: %s", log_file().absolute())
 
         LOG_ROOT = log_root
         logging_setup()
