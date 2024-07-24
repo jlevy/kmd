@@ -26,6 +26,7 @@ from kmd.commands.native_tools import (
 from kmd.text_ui.text_styles import (
     COLOR_EMPH,
     EMOJI_WARN,
+    SPINNER,
 )
 from kmd.file_storage.file_store import skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace
@@ -99,7 +100,7 @@ def assist(input: str) -> None:
     Invoke the kmd assistant. You don't normally need this command as it is the same as just
     asking a question (a question ending with ?) on the kmd console.
     """
-    with get_console().status("Thinking…", spinner="dots"):
+    with get_console().status("Thinking…", spinner=SPINNER):
         output_assistance(assistance(input))
 
 

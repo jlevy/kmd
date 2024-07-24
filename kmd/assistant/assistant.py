@@ -6,7 +6,6 @@ from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
 from kmd.docs import api_docs, assistant_instructions
 from kmd.model.language_models import LLM
-from kmd.text_ui.text_styles import EMOJI_ASSISTANT
 
 
 @cached({})
@@ -31,7 +30,7 @@ def assistance(input: str, fast: bool = False) -> str:
 
     model = LLM.groq_llama3_70b_8192 if fast else LLM.gpt_4o
 
-    output(f"{EMOJI_ASSISTANT} Getting assistance (with model {model.value})…")
+    output(f"Getting assistance (model {model.value})…")
 
     system_message = dedent(
         f"""

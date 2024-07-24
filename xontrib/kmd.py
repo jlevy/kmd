@@ -19,7 +19,7 @@ import litellm
 from kmd.config.setup import setup
 from kmd.config.settings import cache_dir
 from kmd.config.logger import get_logger
-from kmd.text_ui.text_styles import EMOJI_WARN, COLOR_ERROR, COLOR_HEADING, COLOR_LOGO, LOGO
+from kmd.text_ui.text_styles import EMOJI_WARN, COLOR_ERROR, COLOR_HEADING, COLOR_LOGO, LOGO, SPINNER
 from kmd.text_ui.command_output import Wrap, output
 from kmd.file_storage.workspaces import current_workspace
 from kmd.action_defs import reload_all_actions
@@ -76,7 +76,7 @@ class CallableAction:
     def __call__(self, args):
         try:
             if not self.action.interactive_input:
-                with get_console().status(f"Running action {self.action.name}…", spinner="dots"):
+                with get_console().status(f"Running action {self.action.name}…", spinner=SPINNER):
                     run_action(self.action, *args)
             else:
                 run_action(self.action, *args)

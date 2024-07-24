@@ -7,6 +7,8 @@ Settings that define the visual appearance of text outputs.
 CONSOLE_WRAP_WIDTH = 80
 """Wrap width for console output."""
 
+SPINNER = "squareCorners"
+
 ## Text styles
 
 LOGO = "⎪K⎪M⎪D⎪"

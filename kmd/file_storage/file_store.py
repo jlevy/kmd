@@ -365,7 +365,7 @@ class FileStore:
                 file_ext = FileExt(ext_str)
             except ValueError:
                 raise InvalidFilename(
-                    f"Unknown extension for file: {file_path} (known types are {", ".join(FileExt.__members__.keys())})"
+                    f"Unknown extension for file: {file_path} (known types are {', '.join(FileExt.__members__.keys())})"
                 )
             format = Format.guess_by_file_ext(file_ext)
             if not format:

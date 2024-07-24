@@ -63,12 +63,7 @@ def current_workspace() -> FileStore:
     """
     workspace_dir = current_workspace_dir()
     reset_log_root(workspace_dir)
-    return _new_file_store(current_workspace_dir())
-
-
-def show_workspace_info() -> None:
-    workspace = current_workspace()
-    workspace.log_store_info()
+    return _new_file_store(workspace_dir)
 
 
 def ensure_saved(locator: Locator) -> Item:

@@ -2,6 +2,7 @@
 Launch xonsh with kmd extensions and customizations.
 """
 
+from rich import get_console
 import kmd.config.lazy_imports  # noqa: F401
 import re
 import shlex
@@ -18,7 +19,7 @@ from kmd.config.logger import get_logger
 from kmd.config.setup import setup
 from kmd.text_ui.command_output import output, output_assistance
 from kmd.assistant.assistant import assistance
-from kmd.text_ui.text_styles import EMOJI_ASSISTANT
+from kmd.text_ui.text_styles import SPINNER
 
 
 # Ensure logging is set up before anything else.
@@ -66,10 +67,10 @@ def install_to_xonshrc():
         pass
 
 
-def assistant_command(line: str) -> Optional[str]:
+def check_for_assistance_command(line: str) -> Optional[str]:
     """
     Is this a query to the assistant?
-    Checks for word
+    Checks for phrases ending in a ? or a period, or starting with a ?.
     """
     line = line.strip()
     if re.search(r"\b\w+\.$", line) or re.search(r"\b\w+\?$", line) or line.startswith("?"):
@@ -86,11 +87,11 @@ class CustomShell(PromptToolkitShell):
     """
 
     def default(self, line, raw_line=None):
-
-        assist_query = assistant_command(line)
+        assist_query = check_for_assistance_command(line)
         if assist_query:
             try:
-                output_assistance(assistance(line))
+                with get_console().status("Thinking…", spinner=SPINNER):
+                    output_assistance(assistance(line))
             except Exception as e:
                 log.error(f"Sorry, could not get assistance: {e}")
                 log.info(e, exc_info=True)
@@ -103,21 +104,22 @@ class CustomShell(PromptToolkitShell):
 def not_found(cmd: List[str]):
     # Don't call assistant on one-word typos. It's annoying.
     if len(cmd) >= 2:
-        output(f"{EMOJI_ASSISTANT} Command not found. Getting assistance…")
-        output_assistance(
-            assistance(
-                f"""
-                The user just typed the following command, but it was not found:
+        output(f"Command not found. Getting assistance…")
+        with get_console().status("", spinner=SPINNER):
+            output_assistance(
+                assistance(
+                    f"""
+                    The user just typed the following command, but it was not found:
 
-                {" ".join(cmd)}
+                    {" ".join(cmd)}
 
-                Please give them a brief suggestion of possible correct commands
-                and how they can get more help with `kmd_help` or any question
-                ending with ? in the terminal.
-                """,
-                fast=True,
+                    Please give them a brief suggestion of possible correct commands
+                    and how they can get more help with `kmd_help` or any question
+                    ending with ? in the terminal.
+                    """,
+                    fast=True,
+                )
             )
-        )
 
 
 def start_custom_xonsh(single_command: Optional[str] = None):

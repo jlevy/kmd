@@ -22,6 +22,7 @@ from kmd.text_ui.text_styles import (
     COLOR_PLAIN,
     COLOR_RESPONSE,
     CONSOLE_WRAP_WIDTH,
+    EMOJI_ASSISTANT,
 )
 
 
@@ -101,7 +102,7 @@ def fill_markdown(doc_str: str):
 def format_action_description(name: str, doc: str) -> Text:
     doc = textwrap.dedent(doc).strip()
     wrapped = fill_text(doc, text_wrap=Wrap.WRAP_INDENT)
-    return Text.assemble((name, COLOR_KEY), (": ", COLOR_HINT), "\n", (wrapped, COLOR_PLAIN))
+    return Text.assemble(("`", COLOR_HINT), (name, COLOR_KEY), ("`: ", COLOR_HINT), "\n", (wrapped, COLOR_PLAIN))
 
 
 # Allow output stream to be customized if desired.
@@ -163,7 +164,7 @@ def output_status(message: str, *args, text_wrap: Wrap = Wrap.NONE):
 
 
 def output_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE):
-    _output_message(message, *args, text_wrap=text_wrap, color=COLOR_ASSISTANCE)
+    _output_message(f"\n{EMOJI_ASSISTANT} " + message, *args, text_wrap=text_wrap, color=COLOR_ASSISTANCE)
 
 
 def output_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE):
