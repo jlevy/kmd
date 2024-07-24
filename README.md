@@ -12,7 +12,7 @@ brew update
 brew install pyenv
 brew install pipx
 
-# Install ffmpeg if needed:
+# Install ffmpeg:
 brew install ffmpeg
 
 # Ensure you are in the source directory (where .python-version is)
@@ -21,19 +21,21 @@ pyenv install
 
 # Install recent Poetry if needed:
 pipx install poetry
+poetry self update
 # Plugin to help with upgrades:
 poetry self add poetry-plugin-up
 ```
 
 ## Before Running
 
-The `secrets.toml` file in your current directory (or a parent directory) must hold
-needed API keys for OpenAI, Deepgram, and any other needed services:
+The `.env` file in your current directory must hold needed API keys for all
+needed services. Configuring at least OpenAI, Deepgram, Anthropic, and Groq
+(for Llama 3) is recommended.
 
 ```
 # Set up API secrets:
-cp secrets.template.toml secrets/secrets.toml  
-vi secrets.toml  # Enter API keys
+cp .env.template .env 
+vi .env # Edit the file to add all desired API keys
 ```
 
 Install package dependencies:
@@ -50,13 +52,11 @@ a full environment with all actions, completions, and other commands:
 
 ```
 # Run kmd within the xonsh shell:
-poetry run kmdsh
+poetry run kmd
 
 # Set up a workspace to test things out:
 workspace fitness
 
-# Now invoke actions directly!
-fetch_page 'https://thisappwillgiveyouabs.com/'
 # A short transcription:
 transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
 
