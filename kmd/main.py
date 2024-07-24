@@ -2,12 +2,14 @@
 Launch xonsh with kmd extensions and customizations.
 """
 
-from rich import get_console
 import kmd.config.lazy_imports  # noqa: F401
+from kmd.config.lazy_imports import import_start_time
 import re
+import time
 import shlex
 from os.path import expanduser
 from typing import List, Optional
+from rich import get_console
 import xonsh.main
 from xonsh.main import events
 from xonsh.shell import Shell
@@ -145,6 +147,10 @@ def start_custom_xonsh(single_command: Optional[str] = None):
 
     # Load kmd xontrib for rest of kmd functionality.
     xontribs_load(["kmd"])
+
+    # Imports are so slow we will need to imporove this. Let's time it.
+    startup_time = time.time() - import_start_time
+    log.info(f"kmd startup took {startup_time:.2f}s.")
 
     # Main loop.
     try:
