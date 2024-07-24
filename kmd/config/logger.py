@@ -12,20 +12,30 @@ from rich.theme import Theme
 from rich.console import Console
 from kmd.text_ui.text_styles import EMOJI_SAVED, EMOJI_WARN, HRULE, RICH_STYLES, KmdHighlighter
 
-LOG_ROOT = Path("./.kmd_logs")
+LOG_ROOT = Path(".")
 
-LOG_FILE = "kmd.log"
-
-LOG_PATH = LOG_ROOT / LOG_FILE
-
-LOG_OBJECTS = LOG_ROOT / "objects"
+LOG_DIR_NAME = ".kmd_logs"
+LOG_FILE_NAME = "kmd.log"
+LOG_OBJECTS_NAME = "objects"
 
 
+def log_dir():
+    return LOG_ROOT / LOG_DIR_NAME
+
+
+def log_file():
+    return log_dir() / LOG_FILE_NAME
+
+
+def log_objects_dir():
+    return log_dir() / LOG_OBJECTS_NAME
+
+
+# Rich console theme setup.
 _custom_theme = Theme(RICH_STYLES)
-
 console = Console(theme=_custom_theme)
-
 reconfigure(theme=_custom_theme)
+
 
 # TODO: Need this to enforce flushing of stream?
 # class FlushingStreamHandler(logging.StreamHandler):
@@ -33,21 +43,35 @@ reconfigure(theme=_custom_theme)
 #         super().emit(record)
 #         self.flush()
 
+
 def logging_setup():
+    """
+    Set up or reset logging setup. Call at initial run and again if log directory changes.
+    Replaces all previous loggers and handlers.
+    """
+
     kmd.config.suppress_warnings.filter_warnings()
 
-    os.makedirs(LOG_ROOT, exist_ok=True)
-    os.makedirs(LOG_OBJECTS, exist_ok=True)
+    os.makedirs(log_dir(), exist_ok=True)
+    os.makedirs(log_objects_dir(), exist_ok=True)
 
     # Verbose logging to file, important logging to console.
-    file_handler = logging.FileHandler(LOG_PATH)
+    file_handler = logging.FileHandler(log_file())
     file_handler.setLevel(INFO)
     file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
 
-    console_handler = RichHandler(level=WARNING, show_time=False, show_path=False, show_level=False, highlighter=KmdHighlighter(), markup=True)
+    console_handler = RichHandler(
+        level=WARNING,
+        show_time=False,
+        show_path=False,
+        show_level=False,
+        highlighter=KmdHighlighter(),
+        markup=True,
+    )
     console_handler.setFormatter(Formatter("%(message)s"))
 
     from litellm import _logging  # noqa: F401
+
     for logger_name in [None, "LiteLLM", "LiteLLM Router", "LiteLLM Proxy"]:
         logger = logging.getLogger(logger_name)
         logger.setLevel(INFO)
@@ -59,11 +83,11 @@ def logging_setup():
         logger.addHandler(file_handler)
 
 
-
 def prefix_with_warn_emoji(line: str, emoji: str = EMOJI_WARN):
     if emoji not in line:
         return f"{emoji} {line}"
     return line
+
 
 class CustomLogger:
     """
@@ -86,8 +110,8 @@ class CustomLogger:
 
     def save_object(self, description: str, prefix_slug: Optional[str], obj: Any):
         prefix = prefix_slug + "." if prefix_slug else ""
-        filename = f"{prefix}{slugify(description, separator="_")}.{new_timestamped_uid()}.txt"
-        path = LOG_OBJECTS / filename
+        filename = f"{prefix}{slugify(description, separator='_')}.{new_timestamped_uid()}.txt"
+        path = log_objects_dir() / filename
         with atomic_output_file(path) as tmp_filename:
             if isinstance(obj, bytes):
                 with open(tmp_filename, "wb") as f:
@@ -104,3 +128,13 @@ class CustomLogger:
 
 def get_logger(name: str):
     return CustomLogger(name)
+
+
+def reset_log_root(log_root: Path):
+    global LOG_ROOT
+    if log_root != LOG_ROOT:
+        log = get_logger(__name__)
+        log.warning("Now logging to: %s", log_file())
+
+        LOG_ROOT = log_root
+        logging_setup()

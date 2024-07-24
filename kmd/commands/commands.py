@@ -34,7 +34,7 @@ from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.lang_tools.inflection import plural
-from kmd.config.logger import LOG_PATH, get_logger
+from kmd.config.logger import get_logger, log_file
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
 from kmd.docs import about_kmd, workspace_and_file_formats
@@ -118,6 +118,7 @@ def workspace(workspace_name: Optional[str] = None) -> None:
         os.makedirs(ws_dir, exist_ok=True)
         os.chdir(ws_dir)
         output_status(f"Changed to workspace: {ws_name}")
+        current_workspace()  # Load the workspace and show status.
 
 
 @kmd_command
@@ -125,7 +126,7 @@ def logs() -> None:
     """
     Page through the logs for the current workspace.
     """
-    subprocess.run(["less", "+G", LOG_PATH])
+    subprocess.run(["less", "+G", log_file()])
 
 
 @kmd_command

@@ -7,7 +7,7 @@ from kmd.model.items_model import Format, Item, ItemType
 from kmd.file_storage.file_store import FileStore
 from kmd.model.locators import Locator, StorePath
 from kmd.util.url import Url, is_url
-from kmd.config.logger import get_logger
+from kmd.config.logger import get_logger, reset_log_root
 
 log = get_logger(__name__)
 
@@ -53,15 +53,17 @@ def current_workspace_name() -> Optional[str]:
 
 # Cache the file store per directory, since it takes a little while to load.
 @cached({})
-def _new_workspace_dir(base_dir: Path) -> FileStore:
+def _new_file_store(base_dir: Path) -> FileStore:
     return FileStore(base_dir)
 
 
 def current_workspace() -> FileStore:
     """
-    Get the current workspace.
+    Get the current workspace. Also updates logging to be within that workspace, if it has changed.
     """
-    return _new_workspace_dir(current_workspace_dir())
+    workspace_dir = current_workspace_dir()
+    reset_log_root(workspace_dir)
+    return _new_file_store(current_workspace_dir())
 
 
 def show_workspace_info() -> None:

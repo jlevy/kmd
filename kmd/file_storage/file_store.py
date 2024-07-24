@@ -63,18 +63,21 @@ def _format_from_ext(file_ext: FileExt) -> Optional[Format]:
     return file_ext_to_format[file_ext]
 
 
-_partial_file_pattern = re.compile(r'.*\.partial\.[a-z0-9]+$')
+_partial_file_pattern = re.compile(r".*\.partial\.[a-z0-9]+$")
+
 
 def skippable_file(filename: str) -> bool:
     """
     Check if a file should be skipped when processing a directory.
     This skips .., .archive, .settings, __pycache__, .partial.xxx, etc.
     """
-    
-    return (
-        len(filename) > 1 and 
-        (filename.startswith(".") or filename.startswith("__") or bool(_partial_file_pattern.match(filename)))
+
+    return len(filename) > 1 and (
+        filename.startswith(".")
+        or filename.startswith("__")
+        or bool(_partial_file_pattern.match(filename))
     )
+
 
 def write_item(item: Item, full_path: Path):
     if item.is_binary:
@@ -97,14 +100,18 @@ def write_item(item: Item, full_path: Path):
         key_sort=ITEM_FIELD_SORT,
     )
 
+
 def read_item(full_path: Path, base_dir: Optional[Path]):
     # This is a known text format or a YAML file, so we can read the whole thing.
     store_path = str(full_path.relative_to(base_dir)) if base_dir else None
     body, metadata = fmf_read(full_path)
     if not metadata:
-        raise FileFormatError(f"No metadata found in file: {store_path if store_path else full_path}")
+        raise FileFormatError(
+            f"No metadata found in file: {store_path if store_path else full_path}"
+        )
 
     return Item.from_dict(metadata, body=body, store_path=store_path)
+
 
 ARCHIVE_DIR = ".archive"
 SETTINGS_DIR = ".settings"
@@ -121,7 +128,7 @@ class FileStore:
     """
 
     # TODO: Consider using a pluggable filesystem (fsspec AbstractFileSystem).
-    
+
     def __init__(self, base_dir: Path):
         self.start_time = time.time()
         self.base_dir = base_dir
@@ -160,7 +167,11 @@ class FileStore:
                         num_dups += 1
 
         if num_dups > 0:
-            log.warning("%s Found %s duplicate items in store. See kmd.log for details.", EMOJI_WARN, num_dups)
+            log.warning(
+                "%s Found %s duplicate items in store. See kmd.log for details.",
+                EMOJI_WARN,
+                num_dups,
+            )
 
     def _id_index_item(self, store_path: StorePath) -> Optional[StorePath]:
         """
