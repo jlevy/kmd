@@ -3,7 +3,7 @@ from typing import List
 from kmd.config.logger import get_logger
 from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.lang_tools.clean_headings import clean_heading, summary_heading
-from kmd.media.video import get_video_id
+from kmd.media.media_services import get_media_id
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.preconditions.common_preconditions import is_youtube_video
@@ -36,7 +36,7 @@ def video_gallery_config(items: List[Item]) -> Item:
     for item in items:
         source_item = find_upstream_item(item, is_youtube_video)
 
-        youtube_id = get_video_id(source_item.url)
+        youtube_id = get_media_id(source_item.url)
         log.message(
             "Pulling video from source item: %s: %s", source_item.store_path, source_item.url
         )

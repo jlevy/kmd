@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import requests
 import justext
 from kmd.config.settings import web_cache_dir
-from kmd.media.video import canonicalize_video_url
+from kmd.media.media_services import canonicalize_media_url
 from kmd.model.canon_url import thumbnail_url
 from kmd.model.errors_model import WebFetchError
 from kmd.util.obj_utils import abbreviate_obj
@@ -29,7 +29,7 @@ class PageType(enum.Enum):
     # TODO: Use mimetime as well.
     @classmethod
     def from_url(cls, url: Url) -> "PageType":
-        if canonicalize_video_url(url):
+        if canonicalize_media_url(url):
             return cls.video
         if url.endswith(".pdf"):
             return cls.pdf

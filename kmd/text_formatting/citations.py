@@ -1,5 +1,5 @@
 from kmd.text_ui.text_styles import NBSP
-from kmd.media.video import timestamp_video_url
+from kmd.media.media_services import timestamp_media_url
 from kmd.util.url import Url
 from kmd.text_formatting.html_in_md import CITATION, html_span, html_a
 
@@ -31,7 +31,7 @@ def format_citation(citation: str, safe: bool = False) -> str:
 
 
 def format_timestamp_citation(base_url: Url, timestamp: float) -> str:
-    timestamp_url = timestamp_video_url(base_url, timestamp)
+    timestamp_url = timestamp_media_url(base_url, timestamp)
     formatted_timestamp = format_timestamp(timestamp)
     link = html_a(formatted_timestamp, timestamp_url)
     citation = format_citation(link, safe=True)

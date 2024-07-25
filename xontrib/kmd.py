@@ -19,7 +19,14 @@ import litellm
 from kmd.config.setup import setup
 from kmd.config.settings import cache_dir
 from kmd.config.logger import get_logger
-from kmd.text_ui.text_styles import EMOJI_WARN, COLOR_ERROR, COLOR_HEADING, COLOR_LOGO, LOGO, SPINNER
+from kmd.text_ui.text_styles import (
+    EMOJI_WARN,
+    COLOR_ERROR,
+    COLOR_HEADING,
+    COLOR_LOGO,
+    LOGO,
+    SPINNER,
+)
 from kmd.text_ui.command_output import Wrap, output
 from kmd.file_storage.workspaces import current_workspace
 from kmd.action_defs import reload_all_actions
@@ -86,6 +93,7 @@ class CallableAction:
             log.info("Action error details: %s", e, exc_info=True)
         finally:
             log_tallies(if_slower_than=10.0)
+            output()
             output()
 
     def __repr__(self):
@@ -179,7 +187,7 @@ def initialize():
         load_thread = threading.Thread(target=load)
         load_thread.start()
 
-        log.message("\nUsing cache directory: %s\n", cache_dir())
+        log.message("\nUsing cache directory: %s", cache_dir())
     else:
         load_xonsh_commands()
         load_xonsh_actions()

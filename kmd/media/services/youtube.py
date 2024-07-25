@@ -1,17 +1,19 @@
 import re
-import tempfile
-import os
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from urllib.parse import urlparse, parse_qs
-from datetime import date
-import yt_dlp
 from kmd.file_storage.yaml_util import to_yaml_string
+from kmd.media.yt_dlp_utils import parse_date, ydl_download_audio, ydl_extract_info
 from kmd.text_ui.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ApiResultError, InvalidInput
-from kmd.util.log_calls import log_calls
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
-from kmd.model.media_model import SERVICE_YOUTUBE, HeatmapValue, MediaMetadata, MediaService
+from kmd.model.media_model import (
+    SERVICE_YOUTUBE,
+    HeatmapValue,
+    MediaMetadata,
+    MediaService,
+    MediaUrlType,
+)
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
@@ -20,17 +22,8 @@ log = get_logger(__name__)
 VIDEO_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{11}$")
 
 
-@log_calls(level="message", show_return=True)
-def parse_date(upload_date: str | date) -> date:
-    if isinstance(upload_date, str):
-        return date.fromisoformat(upload_date)
-    elif isinstance(upload_date, date):
-        return upload_date
-    raise ValueError(f"Invalid date: {upload_date}")
-
-
 class YouTube(MediaService):
-    def get_id(self, url: Url) -> Optional[str]:
+    def get_media_id(self, url: Url) -> Optional[str]:
         parsed_url = urlparse(url)
         if parsed_url.hostname == "youtu.be":
             video_id = parsed_url.path[1:]
@@ -43,12 +36,12 @@ class YouTube(MediaService):
                 return video_id
         return None
 
-    def canonicalize(self, url: Url) -> Optional[Url]:
+    def canonicalize_and_type(self, url: Url) -> Tuple[Optional[Url], Optional[MediaUrlType]]:
         parsed_url = urlparse(url)
         if parsed_url.hostname == "youtu.be":
-            video_id = self.get_id(url)
+            video_id = self.get_media_id(url)
             if video_id:
-                return Url(f"https://www.youtube.com/watch?v={video_id}")
+                return Url(f"https://www.youtube.com/watch?v={video_id}"), MediaUrlType.video
         elif parsed_url.hostname in ("www.youtube.com", "youtube.com", "m.youtube.com"):
             # Check for channel URLs:
             if (
@@ -57,22 +50,28 @@ class YouTube(MediaService):
                 or "/user/" in parsed_url.path
                 or parsed_url.path.startswith("/@")
             ):
-                return url  # It's already a canonical channel URL.
+                # It's already a canonical channel URL.
+                return url, MediaUrlType.channel
 
             query = parse_qs(parsed_url.query)
 
             # Check for playlist URLs:
             if "/playlist" in parsed_url.path:
                 list_id = query.get("list", [""])[0]
-                return Url(f"https://www.youtube.com/playlist?list={list_id}")
+                return (
+                    Url(f"https://www.youtube.com/playlist?list={list_id}"),
+                    MediaUrlType.playlist,
+                )
 
             # Check for video URLs:
-            video_id = self.get_id(url)
+            video_id = self.get_media_id(url)
             if video_id:
-                return Url(f"https://www.youtube.com/watch?v={video_id}")
+                return Url(f"https://www.youtube.com/watch?v={video_id}"), MediaUrlType.video
+
+        return None, None
 
     def thumbnail_url(self, url: Url) -> Optional[Url]:
-        id = self.get_id(url)
+        id = self.get_media_id(url)
         return Url(f"https://img.youtube.com/vi/{id}/sddefault.jpg") if id else None
         # Others:
         # https://img.youtube.com/vi/{id}/hqdefault.jpg
@@ -85,62 +84,20 @@ class YouTube(MediaService):
         return Url(canon_url + f"&t={timestamp}s")
 
     def download_audio(self, url: Url, target_dir: Optional[str] = None) -> str:
-        """Download and convert to mp3 using yt_dlp, which seems like the best library for this."""
-
-        temp_dir = target_dir or tempfile.mkdtemp()
-        ydl_opts = {
-            "format": "bestaudio/best",
-            "outtmpl": os.path.join(temp_dir, "audio.%(id)s.%(ext)s"),
-            "postprocessors": [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": "192",
-                }
-            ],
-            "logger": log,
-        }
-
-        log.info("Extracting audio from YouTube video %s at %s", url, temp_dir)
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(url, download=True)
-            audio_file_path = ydl.prepare_filename(info_dict)
-
-        # yt_dlp returns the .webm file, so this is the converted .mp3.
-        mp3_path = os.path.splitext(audio_file_path)[0] + ".mp3"
-        return mp3_path
+        url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
+        return ydl_download_audio(url, target_dir)
 
     def _extract_info(self, url: Url) -> Dict[str, Any]:
-        ydl_opts = {
-            "extract_flat": "in_playlist",  # Extract metadata only, without downloading.
-            "quiet": True,
-            "dump_single_json": True,
-            "logger": log,
-        }
-
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            result = ydl.extract_info(str(url), download=False)
-
-            log.save_object("yt_dlp result", None, to_yaml_string(result, stringify_unknown=True))
-
-            if not isinstance(result, dict):
-                raise ApiResultError(f"Unexpected result from yt_dlp: {result}")
-
-            return result
+        return ydl_extract_info(url)
 
     def metadata(self, url: Url, full: bool = False) -> MediaMetadata:
-        """
-        Get metadata for a YouTube video.
-        """
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
         yt_result: Dict[str, Any] = self._extract_info(url)
 
         return self._parse_metadata(yt_result, full=full)
 
-    def list_channel_videos(self, url: Url) -> List[MediaMetadata]:
+    def list_channel_items(self, url: Url) -> List[MediaMetadata]:
         """
         Get all video URLs and metadata from a YouTube channel or playlist.
         """

@@ -58,10 +58,10 @@ poetry run kmd
 workspace fitness
 
 # A short transcription:
-transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
+transcribe_media 'https://www.youtube.com/watch?v=XRQnWomofIY'
 
 # A transcription with multiple speakers:
-transcribe_video 'https://www.youtube.com/watch?v=uUd7LleJuqM'
+transcribe_media 'https://www.youtube.com/watch?v=uUd7LleJuqM'
 # Now manipulate that transcription (note we are using the outputs of each previous command,
 # which are auto-selected as input to each next command):
 break_into_paragraphs
@@ -69,11 +69,11 @@ summarize_as_bullets
 create_pdf
 
 # Get all videos on a channel and then download and transcribe them:
-list_channel_videos 'https://www.youtube.com/@Kboges'
-transcribe_video
+list_channel_items 'https://www.youtube.com/@Kboges'
+transcribe_media
 
 # Processing a really long document with sliding windows:
-transcribe_video 'https://www.youtube.com/watch?v=juD99_sPWGU'
+transcribe_media 'https://www.youtube.com/watch?v=juD99_sPWGU'
 strip_html
 break_into_paragraphs
 summarize_as_bullets
@@ -93,7 +93,7 @@ poetry shell
 # Transcribe a video and summarize it:
 mkdir myworkspace.kb
 cd myworkspace.kb
-kmd transcribe_video 'https://www.youtube.com/watch?v=XRQnWomofIY'
+kmd transcribe_media 'https://www.youtube.com/watch?v=XRQnWomofIY'
 ```
 
 To install globally in current user's Python environment (so you can use `kmd` anywhere):

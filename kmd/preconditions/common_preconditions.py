@@ -1,6 +1,6 @@
 from kmd.preconditions.precondition import precondition
 from kmd.provenance.extractors import TimestampExtractor
-from kmd.media.video import get_video_id, youtube
+from kmd.media.media_services import get_media_id, youtube
 from kmd.model.errors_model import PreconditionFailure
 from kmd.model.items_model import Item, ItemType
 
@@ -22,7 +22,7 @@ def is_url(item: Item) -> bool:
 
 @precondition
 def has_video_id(item: Item) -> bool:
-    return bool(item.url and get_video_id(item.url))
+    return bool(item.url and get_media_id(item.url))
 
 
 @precondition

@@ -1011,6 +1011,34 @@ doc = ["sphinx", "sphinx_rtd_theme"]
 test = ["flake8", "isort", "pytest"]
 
 [[package]]
+name = "curl-cffi"
+version = "0.7.1"
+description = "libcurl ffi bindings for Python, with impersonation support."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "curl_cffi-0.7.1-cp38-abi3-macosx_10_9_x86_64.whl", hash = "sha256:54edae42b25f30048fd6c2de06ed9df37bbe6ffdce14cc8a27c79f8c7d47977a"},
+    {file = "curl_cffi-0.7.1-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:5c347e221ddbbde2275aa7cde00933402638c2062a3984104f66b1bb20528545"},
+    {file = "curl_cffi-0.7.1-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:99a5cc1d9ca59692cc5c175da0b397104283a0fea7515045fd22a7296296d82b"},
+    {file = "curl_cffi-0.7.1-cp38-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:0719fec4b5e1c300bf58411b1cea26cb91c44492fcf5a14ef684fe085f4d8b6e"},
+    {file = "curl_cffi-0.7.1-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1e53ab76259b575017d3260854456ba6a3fbe31cee9b44edd275d4ea9f0f20e1"},
+    {file = "curl_cffi-0.7.1-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:39d04ee1fc5f668ce53234051153031b3a3714300b772379e276565ad7cd244c"},
+    {file = "curl_cffi-0.7.1-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:e60f0dca3a55298898c62c21f0d8461e61aab96d033a7e9cead6160462728f7f"},
+    {file = "curl_cffi-0.7.1-cp38-abi3-win32.whl", hash = "sha256:318a9a21f69e720ca904a0edc80bcbb7bbb75a4bab7b31341a202f07d5378c8e"},
+    {file = "curl_cffi-0.7.1-cp38-abi3-win_amd64.whl", hash = "sha256:0eb5b08f562749639529e6990ff1b10a40e53ed45115e15f00b239230eabb927"},
+    {file = "curl_cffi-0.7.1.tar.gz", hash = "sha256:8a64b12432146a3f178c4792c91188c18f50cc4b76e908ffc3206442c4610894"},
+]
+
+[package.dependencies]
+certifi = ">=2024.2.2"
+cffi = ">=1.12.0"
+
+[package.extras]
+build = ["cibuildwheel", "wheel"]
+dev = ["charset-normalizer (>=3.3.2,<4.0)", "coverage (>=6.4.1,<7.0)", "cryptography (>=42.0.5,<43.0)", "httpx (==0.23.1)", "mypy (>=1.9.0,<2.0)", "pytest (>=8.1.1,<9.0)", "pytest-asyncio (>=0.23.6,<1.0)", "pytest-trio (>=0.8.0,<1.0)", "ruff (>=0.3.5,<1.0)", "trio (>=0.25.0,<1.0)", "trustme (>=1.1.0,<2.0)", "uvicorn (>=0.29.0,<1.0)", "websockets (>=12.0,<13.0)"]
+test = ["charset-normalizer (>=3.3.2,<4.0)", "cryptography (>=42.0.5,<43.0)", "fastapi (==0.110.0)", "httpx (==0.23.1)", "proxy.py (>=2.4.3,<3.0)", "pytest (>=8.1.1,<9.0)", "pytest-asyncio (>=0.23.6,<1.0)", "pytest-trio (>=0.8.0,<1.0)", "python-multipart (>=0.0.9,<1.0)", "trio (>=0.25.0,<1.0)", "trustme (>=1.1.0,<2.0)", "uvicorn (>=0.29.0,<1.0)", "websockets (>=12.0,<13.0)"]
+
+[[package]]
 name = "cymem"
 version = "2.0.8"
 description = "Manage calls to calloc/free through Cython"
@@ -5950,22 +5978,6 @@ docs = ["Sphinx (>=4.1.2,<4.2.0)", "sphinx-rtd-theme (>=0.5.2,<0.6.0)", "sphinxc
 test = ["Cython (>=0.29.36,<0.30.0)", "aiohttp (==3.9.0b0)", "aiohttp (>=3.8.1)", "flake8 (>=5.0,<6.0)", "mypy (>=0.800)", "psutil", "pyOpenSSL (>=23.0.0,<23.1.0)", "pycodestyle (>=2.9.0,<2.10.0)"]
 
 [[package]]
-name = "vimeo-downloader"
-version = "0.4.1"
-description = "Download videos and retrieve metadata from Vimeo."
-optional = false
-python-versions = ">=3.6.2,<4"
-files = [
-    {file = "vimeo_downloader-0.4.1-py3-none-any.whl", hash = "sha256:4196f0a160c31298c4e5401294f4b7657f69eb51cbcd81dbb74eca730ee5ad14"},
-    {file = "vimeo_downloader-0.4.1.tar.gz", hash = "sha256:00b4c2163b374215b9d19fa05ff493a2569af8c989a890455cc85503305220ed"},
-]
-
-[package.dependencies]
-requests = ">=2.26.0,<3.0.0"
-tqdm = ">=4.62.3,<5.0.0"
-urllib3 = {version = ">=1.26", markers = "python_version >= \"3.10\" and python_version < \"4\""}
-
-[[package]]
 name = "virtualenv"
 version = "20.26.3"
 description = "Virtual Python Environment builder"
@@ -6658,4 +6670,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "f069061f7ced41a075f200fab1424f2a205d5e9c94ea79e6092ea9850704f5bd"
+content-hash = "578a95bd43636d498e8f6aebd2afc36787e24d83d82ae84bc87b67edbeda259b"

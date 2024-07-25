@@ -1,4 +1,4 @@
-from kmd.media.video import youtube
+from kmd.media.media_services import youtube
 from kmd.action_exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     Action,
@@ -13,11 +13,11 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class ListChannelVideos(Action):
+class ListChannel(Action):
     def __init__(self):
         super().__init__(
-            name="list_channel_videos",
-            description="Get the URL of every video in the given channel. YouTube only for now.",
+            name="list_channel",
+            description="Get the URL of every audio or video item in a given media channel (YouTube, Apple Podcasts, etc.).",
         )
 
     def run(self, items: ActionInput) -> ActionResult:
@@ -27,7 +27,7 @@ class ListChannelVideos(Action):
         if not youtube.canonicalize(item.url):
             raise InvalidInput("Only YouTube download currently supported")
 
-        video_meta_list = youtube.list_channel_videos(item.url)
+        video_meta_list = youtube.list_channel_items(item.url)
 
         result_items = []
         for metadata in video_meta_list:

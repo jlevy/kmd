@@ -1,6 +1,6 @@
 from kmd.action_exec.action_registry import kmd_action
 from kmd.media import web
-from kmd.media.video import get_video_metadata
+from kmd.media.media_services import get_media_metadata
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     EachItemAction,
@@ -27,7 +27,7 @@ class FetchPageMetadata(EachItemAction):
 
         # Prefer fetching metadata from the video if possible.
         # Data is cleaner and YouTube for example often blocks regular scraping.
-        media_metadata = get_video_metadata(item.url)
+        media_metadata = get_media_metadata(item.url)
         if media_metadata:
             fetched_item = Item.from_media_metadata(media_metadata)
             fetched_item = item.merged_copy(fetched_item)

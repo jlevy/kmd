@@ -1,9 +1,19 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import date
+from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from kmd.util.url import Url
+
+
+class MediaUrlType(Enum):
+    episode = "episode"
+    podcast = "podcast"
+
+    video = "video"
+    channel = "channel"
+    playlist = "playlist"
 
 
 @dataclass
@@ -43,6 +53,7 @@ class MediaMetadata:
 
 SERVICE_YOUTUBE = "youtube"
 SERVICE_VIMEO = "vimeo"
+SERVICE_APPLE_PODCASTS = "apple_podcasts"
 
 
 class MediaService(ABC):
@@ -51,13 +62,17 @@ class MediaService(ABC):
     """
 
     @abstractmethod
-    def canonicalize(self, url: Url) -> Optional[Url]:
-        """Convert a URL into a canonical form for this service."""
+    def canonicalize_and_type(self, url: Url) -> Tuple[Optional[Url], Optional[MediaUrlType]]:
+        """Convert a URL into a canonical form for this service, including a unique id and URL type."""
         pass
 
+    def canonicalize(self, url: Url) -> Optional[Url]:
+        """Convert a URL into a canonical form for this service."""
+        return self.canonicalize_and_type(url)[0]
+
     @abstractmethod
-    def get_id(self, url: Url) -> str:
-        """Extract the media ID from a URL."""
+    def get_media_id(self, url: Url) -> str:
+        """Extract the media ID from a URL. Only for episodes and videos. None for channels etc."""
         pass
 
     @abstractmethod

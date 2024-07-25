@@ -1,4 +1,4 @@
-from kmd.media.video import video_download_audio
+from kmd.media.media_services import download_audio
 from kmd.action_exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
@@ -12,11 +12,11 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class DownloadVideo(EachItemAction):
+class DownloadMedia(EachItemAction):
     def __init__(self):
         super().__init__(
-            name="download_video",
-            description="Download and extract audio from a video. Only saves to media cache; does not create new items.",
+            name="download_media",
+            description="Download and save audio from a podcast or video. Only saves to media cache; does not create new items.",
             expected_args=ONE_OR_MORE_ARGS,
         )
 
@@ -24,7 +24,7 @@ class DownloadVideo(EachItemAction):
         if not item.url:
             raise InvalidInput("Item must have a URL")
 
-        video_download_audio(item.url)
+        download_audio(item.url)
 
-        # Actually return the same item since the video is actually saved to cache.
+        # Just return the same item since the video is now saved to cache.
         return item

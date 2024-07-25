@@ -8,8 +8,9 @@ from kmd.model.errors_model import InvalidInput, UnexpectedError
 from kmd.util.log_calls import log_calls
 from kmd.util.url import Url
 from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
-from kmd.media.video_youtube import YouTube
-from kmd.media.video_vimeo import Vimeo
+from kmd.media.services.youtube import YouTube
+from kmd.media.services.vimeo import Vimeo
+from kmd.media.services.apple_podcasts import ApplePodcasts
 from kmd.util.web_cache import DirStore
 from kmd.config.logger import get_logger
 
@@ -24,7 +25,7 @@ SUFFIX_MP3 = ".full.mp3"
 SUFFIX_TRANSCRIPT = ".transcript.txt"
 
 
-class VideoCache(DirStore):
+class MediaCache(DirStore):
     """
     Download and cache video, audio, and transcripts from videos.
     """
@@ -84,7 +85,7 @@ class VideoCache(DirStore):
         return full_audio_path
 
     def transcribe(self, url, no_cache=False) -> str:
-        url = canonicalize_video_url(url)
+        url = canonicalize_media_url(url)
         if not url:
             raise InvalidInput("Unrecognized video URL: %s" % url)
         if not no_cache:
@@ -98,88 +99,87 @@ class VideoCache(DirStore):
         return transcript
 
 
-_video_cache = VideoCache(media_cache_dir())
+_media_cache = MediaCache(media_cache_dir())
 
 
 def _download_audio_with_service(url: Url) -> Path:
-    for service in video_services:
+    for service in media_services:
         canonical_url = service.canonicalize(url)
         if canonical_url:
             return service.download_audio(url)
     raise ValueError(f"Unrecognized video URL: {url}")
 
 
-def video_transcription(url: Url, no_cache=False) -> str:
-    """Transcribe a video, saving in cache. If no_cache is True, force fresh download."""
+def download_and_transcribe(url: Url, no_cache=False) -> str:
+    """Download and transcribe audio or video, saving in cache. If no_cache is True, force fresh download."""
 
-    return _video_cache.transcribe(url, no_cache=no_cache)
+    return _media_cache.transcribe(url, no_cache=no_cache)
 
 
-def video_download_audio(url: Url, no_cache=False) -> Path:
+def download_audio(url: Url, no_cache=False) -> Path:
     """Download audio of a video, saving in cache. If no_cache is True, force fresh download."""
 
-    return _video_cache.download(url, no_cache=no_cache)
+    return _media_cache.download(url, no_cache=no_cache)
 
 
-# List of available video services.
+# List of available media services.
 youtube = YouTube()
 vimeo = Vimeo()
-video_services: List[MediaService] = [youtube, vimeo]
+apple_podcasts = ApplePodcasts()
+
+media_services: List[MediaService] = [youtube, vimeo, apple_podcasts]
 
 
-def canonicalize_video_url(url: Url) -> Optional[Url]:
+def canonicalize_media_url(url: Url) -> Optional[Url]:
     """
-    Return the canonical form of a video URL from a supported service (like YouTube).
+    Return the canonical form of a media URL from a supported service (like YouTube).
     """
-    for service in video_services:
+    for service in media_services:
         canonical_url = service.canonicalize(url)
         if canonical_url:
             return canonical_url
     return None
 
 
-def thumbnail_video_url(url: Url) -> Optional[Url]:
+def thumbnail_media_url(url: Url) -> Optional[Url]:
     """
     Return a URL that links to the thumbnail of the video.
     """
-    for service in video_services:
+    for service in media_services:
         canonical_url = service.canonicalize(url)
         if canonical_url:
             return service.thumbnail_url(url)
     return None
 
 
-def timestamp_video_url(url: Url, timestamp: float) -> Url:
+def timestamp_media_url(url: Url, timestamp: float) -> Url:
     """
     Return a URL that links to the video at the given timestamp.
     """
-    for service in video_services:
+    for service in media_services:
         canonical_url = service.canonicalize(url)
         if canonical_url:
             return service.timestamp_url(url, timestamp)
     raise InvalidInput(f"Unrecognized video URL: {url}")
 
 
-def get_video_id(url: Url | None) -> Optional[str]:
-    """
-    Extract the video ID from a URL.
-    """
+def get_media_id(url: Url | None) -> Optional[str]:
     if not url:
         return None
-    for service in video_services:
-        video_id = service.get_id(url)
+    for service in media_services:
+        video_id = service.get_media_id(url)
         if video_id:
             return video_id
     return None
 
 
 @log_calls(level="info", show_return=True)
-def get_video_metadata(url: Url) -> Optional[MediaMetadata]:
+def get_media_metadata(url: Url) -> Optional[MediaMetadata]:
     """
-    Return metadata for the video at the given URL.
+    Return metadata for the media at the given URL.
     """
-    for service in video_services:
-        video_id = service.get_id(url)
+    for service in media_services:
+        video_id = service.get_media_id(url)
         if video_id:  # This is an actual video, not a channel etc.
             return service.metadata(url)
     return None

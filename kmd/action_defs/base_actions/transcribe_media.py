@@ -1,5 +1,5 @@
 from kmd.action_exec.action_registry import kmd_action
-from kmd.media.video import video_transcription
+from kmd.media.media_services import download_and_transcribe
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     EachItemAction,
@@ -12,11 +12,11 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class TranscribeVideo(EachItemAction):
+class TranscribeMedia(EachItemAction):
     def __init__(self):
         super().__init__(
-            name="transcribe_video",
-            description="Download and transcribe audio from a video.",
+            name="transcribe_media",
+            description="Download and transcribe audio from a podcast or video.",
             expected_args=ONE_OR_MORE_ARGS,
         )
 
@@ -24,7 +24,7 @@ class TranscribeVideo(EachItemAction):
         if not item.url:
             raise InvalidInput("Item must have a URL")
 
-        transcription = video_transcription(item.url)
+        transcription = download_and_transcribe(item.url)
         title = item.title or UNTITLED  # This shouldn't happen normally.
         result_title = f"{title} (transcription)"
         result_item = item.derived_copy(
