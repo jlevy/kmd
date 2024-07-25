@@ -2,11 +2,12 @@ import os
 import re
 from pathlib import Path
 import time
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Generator, List, Optional, Tuple
 from os.path import join, relpath, commonpath
 from os import path
 from slugify import slugify
 from strif import copyfile_atomic
+from kmd.model.params_model import ParamSet, get_action_param
 from kmd.query.vector_index import WsVectorIndex
 from kmd.text_ui.text_styles import EMOJI_SUCCESS, EMOJI_WARN
 from kmd.file_storage.filenames import parse_filename
@@ -431,11 +432,14 @@ class FileStore:
         except OSError:
             raise InvalidStoreState("No selection saved in workspace")
 
-    def get_action_params(self) -> Dict[str, str]:
+    def get_action_params(self) -> ParamSet:
         try:
             return self.action_params.read()
         except OSError:
             return {}
+
+    def get_action_param(self, param_name: str) -> Optional[str]:
+        return get_action_param(self.get_action_params(), param_name)
 
     def set_action_params(self, action_params: dict):
         self.action_params.set(action_params)

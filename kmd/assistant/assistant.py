@@ -2,10 +2,12 @@ from textwrap import dedent
 from cachetools import cached
 from kmd.action_exec.llm_completion import llm_completion
 from kmd.config.settings import DEBUG_ASSISTANT
+from kmd.file_storage.workspaces import current_workspace
 from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
 from kmd.docs import api_docs, assistant_instructions
 from kmd.model.language_models import LLM
+from kmd.util.type_utils import not_none
 
 
 @cached({})
@@ -28,9 +30,10 @@ def assistant_preamble(skip_api: bool = False, base_only: bool = False) -> str:
 def assistance(input: str, fast: bool = False) -> str:
     from kmd.commands.commands import select  # Avoid circular imports.
 
-    model = LLM.groq_llama3_70b_8192 if fast else LLM.gpt_4o
+    assistant_model = "assistant_model_fast" if fast else "assistant_model"
+    model_str = not_none(current_workspace().get_action_param(assistant_model))
 
-    output(f"Getting assistance (model {model.value})…")
+    output(f"Getting assistance (model {model_str})…")
 
     system_message = dedent(
         f"""
@@ -58,7 +61,7 @@ def assistance(input: str, fast: bool = False) -> str:
     # TODO: Stream response.
     return wrap_markdown(
         llm_completion(
-            model.value,
+            model_str,
             system_message=system_message,
             template=template,
             input=input,
