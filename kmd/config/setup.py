@@ -1,7 +1,7 @@
 import os
 from typing import Any
 from cachetools import cached
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 from kmd.config.logger import logging_setup
 from kmd.util.stack_traces import add_stacktrace_handler
 
@@ -30,7 +30,7 @@ RECOMMENDED_APIS = ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "DEEPGRAM_API_KEY", "
 
 
 def api_setup():
-    load_dotenv()
+    load_dotenv(find_dotenv(usecwd=True))
 
     for key in RECOMMENDED_APIS:
         if key not in os.environ:
