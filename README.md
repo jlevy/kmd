@@ -99,8 +99,7 @@ kmd transcribe_media 'https://www.youtube.com/watch?v=XRQnWomofIY'
 To install globally in current user's Python environment (so you can use `kmd` anywhere):
 
 ```
-poetry build
-pip install --user dist/kmd-0.1.0-py3-none-any.whl 
+./install_local.sh
 ```
 
 ## Dev Tasks
