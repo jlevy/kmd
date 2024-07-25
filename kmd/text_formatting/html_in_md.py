@@ -46,12 +46,16 @@ def tag_with_attrs(
     return f"<{tag}{attr_str}>{br}{escape_md_html(text, safe)}{br}</{tag}>"
 
 
+# Class names:
 CITATION = "citation"
 DESCRIPTION = "description"
 SUMMARY = "summary"
 FULL_TEXT = "full-text"
+SPEAKER_LABEL = "speaker-label"
 
+# Data attributes:
 DATA_TIMESTAMP = "data-timestamp"
+DATA_SPEAKER_ID = "data-speaker-id"
 
 
 def html_span(
@@ -80,6 +84,10 @@ def html_div(
 
 def html_timestamp_span(text: str, timestamp: float, safe: bool = False) -> str:
     return html_span(text, attrs={DATA_TIMESTAMP: f"{timestamp:.2f}"}, safe=safe)
+
+
+def html_speaker_id_span(text: str, speaker_id: str, safe: bool = False) -> str:
+    return html_span(text, class_name=SPEAKER_LABEL, attrs={DATA_SPEAKER_ID: speaker_id}, safe=safe)
 
 
 def html_a(text: str, href: str, safe: bool = False) -> str:

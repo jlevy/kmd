@@ -1,6 +1,7 @@
 from os.path import getsize
 from pathlib import Path
 from typing import List, NamedTuple, Optional, Tuple
+from httpx import Timeout
 from openai import OpenAI
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource, ClientOptionsFromEnv
 from pydub import AudioSegment
@@ -8,7 +9,7 @@ from strif import atomic_output_file
 from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError
-from kmd.text_formatting.html_in_md import html_timestamp_span
+from kmd.text_formatting.html_in_md import html_speaker_id_span, html_timestamp_span
 
 log = get_logger(__name__)
 
@@ -84,7 +85,7 @@ def deepgram_transcribe_audio(audio_file_path: Path) -> str:
     }
 
     options = PrerecordedOptions(model="nova-2", smart_format=True, diarize=True)
-    response = deepgram.listen.prerecorded.v("1").transcribe_file(payload, options, timeout=600)
+    response = deepgram.listen.rest.v("1").transcribe_file(payload, options, timeout=Timeout(500))  # type: ignore
 
     diarized_segments = _deepgram_diarized_segments(response)
     log.debug("Diarized response: %s", diarized_segments)
@@ -217,7 +218,9 @@ def format_speaker_segments(speaker_segments: List[SpeakerSegment]) -> str:
     if len(speakers) > 1:
         lines = []
         for segment in speaker_segments:
-            lines.append(f"**SPEAKER {segment.speaker}:**\n{_format_words(segment.words)}")
+            lines.append(
+                f"{html_speaker_id_span(f'SPEAKER {segment.speaker}:', str(segment.speaker))}\n{_format_words(segment.words)}"
+            )
         return "\n\n".join(lines)
     else:
         return "\n\n".join(_format_words(segment.words) for segment in speaker_segments)
