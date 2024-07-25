@@ -8,7 +8,7 @@ import justext
 from kmd.config.settings import web_cache_dir
 from kmd.media.media_services import canonicalize_media_url
 from kmd.model.canon_url import thumbnail_url
-from kmd.model.errors_model import WebFetchError
+from kmd.model.errors_model import InvalidInput, WebFetchError
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
 from kmd.config.logger import get_logger
@@ -90,7 +90,8 @@ _web_cache = WebCache(web_cache_dir())
 
 def fetch_and_cache(url: Url) -> Path:
     """
-    Fetch the given URL and return a local cached copy.
+    Fetch the given URL and return a local cached copy. Raises requests.HTTPError
+    if the URL is not reachable.
     """
     path, _was_cached = _web_cache.fetch(url)
     return path

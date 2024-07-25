@@ -203,9 +203,11 @@ def show(path: Optional[str] = None) -> None:
     ws = current_workspace()
     item = ws.load(store_path)
     if item.thumbnail_url:
-        local_path = fetch_and_cache(item.thumbnail_url)
-        terminal_show_image_graceful(local_path)
-
+        try:
+            local_path = fetch_and_cache(item.thumbnail_url)
+            terminal_show_image_graceful(local_path)
+        except Exception as e:
+            log.error("Error fetching thumbnail image: %s", e)
     show_file_platform_specific(store_path)
 
 

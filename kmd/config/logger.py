@@ -105,6 +105,11 @@ class CustomLogger:
             args = (prefix_with_warn_emoji(args[0]),) + args[1:]
         self.logger.warning(*args, **kwargs)
 
+    def error(self, *args, **kwargs):
+        if len(args) > 0:
+            args = (prefix_with_warn_emoji(args[0]),) + args[1:]
+        self.logger.error(*args, **kwargs)
+
     def separator(self):
         self.message(HRULE)
 
