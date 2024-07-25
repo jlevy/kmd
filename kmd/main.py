@@ -141,6 +141,10 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     XSH.env["XONSH_INTERACTIVE"] = False if single_command else True  # type: ignore
     XSH.env["XONSH_SHOW_TRACEBACK"] = XONSH_SHOW_TRACEBACK  # type: ignore
 
+    # Having this true makes processes hard to interrupt.
+    # See https://xon.sh/envvars.html#thread-subprocs
+    XSH.env["THREAD_SUBPROCS"] = False  # type: ignore
+
     ctx["__name__"] = "__main__"
     events.on_post_init.fire()
     events.on_pre_cmdloop.fire()
