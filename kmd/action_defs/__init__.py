@@ -1,6 +1,7 @@
 from typing import Dict
 from cachetools import Cache, cached
 from kmd.action_defs.compound_actions import import_compound_actions
+from kmd.action_defs.experimental_actions import import_experimental_actions
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import Action
 from kmd.action_exec.action_registry import instantiate_actions
@@ -18,6 +19,7 @@ def load_all_actions(base_only: bool = False) -> Dict[str, Action]:
     import_base_actions()
     # Allow bootstrapping base actions before compound actions.
     if not base_only:
+        import_experimental_actions()
         import_compound_actions()
 
     actions_map = instantiate_actions()

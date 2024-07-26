@@ -122,6 +122,17 @@ cd myworkspace.kb
 kmd transcribe_media 'https://www.youtube.com/watch?v=XRQnWomofIY'
 ```
 
+## Using with Obsidian
+
+Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
+[Obsidian](https://obsidian.md/). Some notes:
+
+- In Obsidian's preferences, under Editor, turn on "Strict line breaks". This makes
+  the line breaks in kmd's normalized Mardown output work well in Obsidian.
+
+- Some kmd files also contain HTML in Markdown. This works fine, but note that only
+  the current line's HTML is shown in Obsidian.
+
 ## Development Tasks
 
 ```
