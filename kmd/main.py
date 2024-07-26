@@ -24,6 +24,7 @@ from kmd.config.setup import setup
 from kmd.text_ui.command_output import output, output_assistance
 from kmd.assistant.assistant import assistance
 from kmd.text_ui.text_styles import INPUT_COLOR, SPINNER
+from kmd.version import get_version
 
 
 # Ensure logging is set up before anything else.
@@ -31,14 +32,23 @@ setup()
 
 log = get_logger(__name__)
 
+__version__ = get_version()
+
+# If true use the kmd-customized xonsh shell. This is now the recommended way to run kmd since
+# it then supports custom parsing of shell input to include LLM-based assistance, etc.
+# Alternatively, we can run a regular xonsh shell and have it load kmd commands via the
+# xontrib only (in ~/.xonshrc) but this is not preferred.
 USE_CUSTOM_SHELL = True
 
 XONSH_SHOW_TRACEBACK = True
 
+
+## Non-customized xonsh shell setup
+
 xonshrc_init_script = """
 # Auto-load of kmd:
-# This only activates if xonsh is invoked as kmdsh.
-xontrib load kmd
+# This only activates if xonsh is invoked as kmd.
+xontrib load -f kmd.xontrib.kmd
 """
 
 xontrib_command = xonshrc_init_script.splitlines()[1].strip()
@@ -80,6 +90,8 @@ def check_for_assistance_command(line: str) -> Optional[str]:
     if re.search(r"\b\w+\.$", line) or re.search(r"\b\w+\?$", line) or line.startswith("?"):
         return line.lstrip("?").strip()
 
+
+## Custom xonsh shell setup
 
 # Base shell can be ReadlineShell or PromptToolkitShell.
 from xonsh.ptk_shell.shell import PromptToolkitShell
@@ -127,8 +139,10 @@ def not_found(cmd: List[str]):
 
 
 def customize_xonsh_settings(is_interactive: bool):
+    """
+    Xonsh settings to customize xonsh better kmd usage.
+    """
 
-    # Reasonable settings to customize xonsh for kmd usage.
     default_settings = {
         # Having this true makes processes hard to interrupt with Ctrl-C.
         # https://xon.sh/envvars.html#thread-subprocs
@@ -187,7 +201,11 @@ def customize_xonsh_settings(is_interactive: bool):
 
 
 def start_custom_xonsh(single_command: Optional[str] = None):
-    # Setup for a xonsh shell, customizing just the shell itself.
+    """
+    Customize xonsh shell, with custom shell settings and input loop hooks as well
+    as the kmd xontrib that loads kmd commands.
+    """
+
     args = premain(None)  # No xonsh args.
     ctx = {}
     execer = Execer(
@@ -209,7 +227,7 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     events.on_pre_cmdloop.fire()
 
     # Load kmd xontrib for rest of kmd functionality.
-    xontribs_load(["kmd"])
+    xontribs_load(["kmd.xontrib.kmd"], full_module=True)
 
     # Imports are so slow we will need to imporove this. Let's time it.
     startup_time = time.time() - import_start_time
@@ -243,6 +261,7 @@ def parse_args():
         description="Launch the kmd shell. If a single command is provided, it will run and exit."
     )
     parser.add_argument("command", nargs="*", help="Command to run in the shell.")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return parser.parse_args()
 
 

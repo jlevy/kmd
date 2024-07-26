@@ -31,19 +31,13 @@ poetry build
 
 set +x
 
-# Find the built wheel file
-WHEEL_FILE=$(find dist -name "*.whl" | head -n 1)
+# Find the latest built wheel file.
+WHEEL_FILE=$(find dist -name "*.whl" -print0 | xargs -0 ls -t | head -n 1)
 if [ -z "$WHEEL_FILE" ]; then
   echo "Wheel file not found. Make sure the build was successful."
   exit 1
 fi
 
-# Check if it's already installed.
-if python -m pip show $APP_NAME > /dev/null 2>&1; then
-  echo "$APP_NAME is already installed. Using --force-reinstall --no-deps to ensure it is reinstalled."
-  set -x
-  pip install --user --force-reinstall --no-deps "$WHEEL_FILE"
-else
-  set -x
-  pip install --user "$WHEEL_FILE"
-fi
+# We install for the user.
+set -x
+pip install --user "$WHEEL_FILE" $*

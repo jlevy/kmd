@@ -4,7 +4,7 @@ Xonsh extension for kmd.
 Sets up all commands and actions for use in xonsh. This makes using kmd far easier
 for interactive use than from a regular shell command line.
 
-Can run from kmdsh or from a regular xonsh shell.
+Can run from the custom kmd shell (main.py) or from a regular xonsh shell.
 """
 
 import importlib

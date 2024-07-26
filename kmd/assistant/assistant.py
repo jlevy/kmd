@@ -6,7 +6,6 @@ from kmd.file_storage.workspaces import current_workspace
 from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
 from kmd.docs import api_docs, assistant_instructions
-from kmd.model.language_models import LLM
 from kmd.util.type_utils import not_none
 
 
