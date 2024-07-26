@@ -7,12 +7,24 @@ Settings that define the visual appearance of text outputs.
 CONSOLE_WRAP_WIDTH = 80
 """Wrap width for console output."""
 
-SPINNER = "point"
+SPINNER = "line"  # for a list: python -m rich.spinner
+
 
 ## Text styles
 
 LOGO = "⎪K⎪M⎪D⎪"
 
+
+## Prompt coplors
+
+PROMPT_COLOR_NORMAL = "BOLD_GREEN"
+
+PROMPT_COLOR_WARN = "INTENSE_YELLOW"
+
+INPUT_COLOR = "#fdf"
+
+
+## Colors
 
 COLOR_LOGO = "bold magenta"
 

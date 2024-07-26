@@ -5,6 +5,7 @@ Launch xonsh with kmd extensions and customizations.
 import kmd.config.lazy_imports  # noqa: F401
 from kmd.config.lazy_imports import import_start_time
 import re
+import os
 import time
 import shlex
 from os.path import expanduser
@@ -17,11 +18,12 @@ from xonsh.main import premain, postmain
 from xonsh.built_ins import XSH
 from xonsh.execer import Execer
 from xonsh.xontribs import xontribs_load
+from pygments.token import Token
 from kmd.config.logger import get_logger
 from kmd.config.setup import setup
 from kmd.text_ui.command_output import output, output_assistance
 from kmd.assistant.assistant import assistance
-from kmd.text_ui.text_styles import SPINNER
+from kmd.text_ui.text_styles import INPUT_COLOR, SPINNER
 
 
 # Ensure logging is set up before anything else.
@@ -80,10 +82,10 @@ def check_for_assistance_command(line: str) -> Optional[str]:
 
 
 # Base shell can be ReadlineShell or PromptToolkitShell.
-from xonsh.ptk_shell.shell import PromptToolkitShell  # or ReadlineShell
+from xonsh.ptk_shell.shell import PromptToolkitShell
 
 
-class CustomShell(PromptToolkitShell):
+class CustomShell(PromptToolkitShell):  # PromptToolkitShell or ReadlineShell
     """
     Note event hooks in xonsh don't let you disable xonsh's processing, so we use a custom shell.
     """
@@ -106,7 +108,7 @@ class CustomShell(PromptToolkitShell):
 def not_found(cmd: List[str]):
     # Don't call assistant on one-word typos. It's annoying.
     if len(cmd) >= 2:
-        output(f"Command not found. Getting assistance…")
+        output("Command not found. Getting assistance…")
         with get_console().status("", spinner=SPINNER):
             output_assistance(
                 assistance(
@@ -124,6 +126,66 @@ def not_found(cmd: List[str]):
             )
 
 
+def customize_xonsh_settings(is_interactive: bool):
+
+    # Reasonable settings to customize xonsh for kmd usage.
+    default_settings = {
+        # Having this true makes processes hard to interrupt with Ctrl-C.
+        # https://xon.sh/envvars.html#thread-subprocs
+        "THREAD_SUBPROCS": False,
+        "XONSH_INTERACTIVE": is_interactive,
+        "XONSH_SHOW_TRACEBACK": XONSH_SHOW_TRACEBACK,
+        "AUTO_SUGGEST": False,
+        # Completions can be "none", "single", "multi", or "readline"
+        # https://xon.sh/envvars.html#completions-display
+        "COMPLETIONS_DISPLAY": "single",
+        # Mouse support for completions should be off since it interferes with other mouse scrolling.
+        "MOUSE_SUPPORT": False,
+        # Start with default colors then override prompt toolkit colors
+        # being the same input color.
+        "XONSH_COLOR_STYLE": "default",
+        "XONSH_STYLE_OVERRIDES": {
+            Token.Text: INPUT_COLOR,
+            Token.Keyword: INPUT_COLOR,
+            Token.Name: INPUT_COLOR,
+            Token.Name.Builtin: INPUT_COLOR,
+            Token.Name.Variable: INPUT_COLOR,
+            Token.Name.Variable.Magic: INPUT_COLOR,
+            Token.Name.Variable.Instance: INPUT_COLOR,
+            Token.Name.Variable.Class: INPUT_COLOR,
+            Token.Name.Variable.Global: INPUT_COLOR,
+            Token.Name.Function: INPUT_COLOR,
+            Token.Name.Constant: INPUT_COLOR,
+            Token.Name.Namespace: INPUT_COLOR,
+            Token.Name.Class: INPUT_COLOR,
+            Token.Name.Decorator: INPUT_COLOR,
+            Token.Name.Exception: INPUT_COLOR,
+            Token.Name.Tag: INPUT_COLOR,
+            Token.Keyword.Constant: INPUT_COLOR,
+            Token.Keyword.Namespace: INPUT_COLOR,
+            Token.Keyword.Type: INPUT_COLOR,
+            Token.Keyword.Declaration: INPUT_COLOR,
+            Token.Keyword.Reserved: INPUT_COLOR,
+            Token.Punctuation: INPUT_COLOR,
+            Token.String: INPUT_COLOR,
+            Token.Number: INPUT_COLOR,
+            Token.Generic: INPUT_COLOR,
+            Token.Operator: INPUT_COLOR,
+            Token.Operator.Word: INPUT_COLOR,
+            Token.Other: INPUT_COLOR,
+            Token.Literal: INPUT_COLOR,
+            Token.Comment: INPUT_COLOR,
+            Token.Comment.Single: INPUT_COLOR,
+            Token.Comment.Multiline: INPUT_COLOR,
+            Token.Comment.Special: INPUT_COLOR,
+        },
+    }
+
+    # Apply settings, unless environment variables are already set otherwise.
+    for key, default_value in default_settings.items():
+        XSH.env[key] = os.environ.get(key, default_value)  # type: ignore
+
+
 def start_custom_xonsh(single_command: Optional[str] = None):
     # Setup for a xonsh shell, customizing just the shell itself.
     args = premain(None)  # No xonsh args.
@@ -138,12 +200,9 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     XSH.shell = Shell(execer=execer)  # type: ignore
     XSH.shell.shell = CustomShell(execer=execer, ctx=ctx)
 
-    XSH.env["XONSH_INTERACTIVE"] = False if single_command else True  # type: ignore
-    XSH.env["XONSH_SHOW_TRACEBACK"] = XONSH_SHOW_TRACEBACK  # type: ignore
+    is_interactive = False if single_command else True
 
-    # Having this true makes processes hard to interrupt.
-    # See https://xon.sh/envvars.html#thread-subprocs
-    XSH.env["THREAD_SUBPROCS"] = False  # type: ignore
+    customize_xonsh_settings(is_interactive)
 
     ctx["__name__"] = "__main__"
     events.on_post_init.fire()

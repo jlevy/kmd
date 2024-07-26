@@ -25,6 +25,8 @@ from kmd.text_ui.text_styles import (
     COLOR_HEADING,
     COLOR_LOGO,
     LOGO,
+    PROMPT_COLOR_NORMAL,
+    PROMPT_COLOR_WARN,
     SPINNER,
 )
 from kmd.text_ui.command_output import Wrap, output
@@ -222,8 +224,10 @@ def _kmd_xonsh_prompt():
     from kmd.file_storage.workspaces import current_workspace_name
 
     name = current_workspace_name()
-    workspace_str = "{BOLD_GREEN}" + name if name else "{INTENSE_YELLOW}(no workspace)"
-    return "%s {BOLD_GREEN}❯{RESET} " % workspace_str
+    workspace_str = (
+        f"{{{PROMPT_COLOR_NORMAL}}}" + name if name else f"{{{PROMPT_COLOR_WARN}}}(no workspace)"
+    )
+    return f"{workspace_str} {{{PROMPT_COLOR_NORMAL}}}❯{{RESET}} "
 
 
 __xonsh__.env["PROMPT"] = _kmd_xonsh_prompt  # type: ignore  # noqa: F821
