@@ -114,7 +114,9 @@ def run_llm_transform_action(action: LLMAction, item: Item) -> Item:
     )
 
     if action.title_template:
-        result_item.title = action.title_template.format(title=item.abbrev_title())
+        result_item.title = action.title_template.format(
+            title=item.abbrev_title(), action_name=action.name
+        )
     result_item.format = Format.markdown
 
     return result_item

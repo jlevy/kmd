@@ -15,7 +15,7 @@ log = get_logger(__name__)
 class TranscribeMedia(EachItemAction):
     def __init__(self):
         super().__init__(
-            name="transcribe_media",
+            name="transcribe",
             description="Download and transcribe audio from a podcast or video.",
             expected_args=ONE_OR_MORE_ARGS,
         )
@@ -26,7 +26,7 @@ class TranscribeMedia(EachItemAction):
 
         transcription = download_and_transcribe(item.url)
         title = item.title or UNTITLED  # This shouldn't happen normally.
-        result_title = f"{title} (transcription)"
+        result_title = f"{title} ({self.name})"
         result_item = item.derived_copy(
             type=ItemType.note,
             title=result_title,

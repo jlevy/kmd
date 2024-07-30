@@ -25,7 +25,7 @@ class StripHtml(EachItemAction):
             raise InvalidInput(f"Item must have a body: {item}")
 
         clean_body = html_to_plaintext(item.body)
-        new_title = f"{item.title} (clean text)"
+        new_title = f"{item.title} ({self.name})"
         output_item = item.derived_copy(
             type=ItemType.note, title=new_title, body=clean_body, format=Format.markdown
         )

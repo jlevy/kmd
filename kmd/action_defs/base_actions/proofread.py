@@ -9,7 +9,7 @@ log = get_logger(__name__)
 
 
 define_llm_action(
-    name="proofread_and_correct",
+    name="proofread",
     description="Proofread text, only fixing spelling, punctuation, and grammar.",
     model=LLM.gpt_3_5_turbo.value,
     system_message=dedent(
@@ -18,7 +18,7 @@ define_llm_action(
         You give exactly the results requested without additional commentary.
         """
     ),
-    title_template="{title} (proofread)",
+    title_template="{title} ({action_name})",
     template=dedent(
         """
         Proofread the following text according to these rules:

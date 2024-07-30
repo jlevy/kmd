@@ -133,8 +133,7 @@ class EachItemAction(Action):
             except (ContentError, InvalidInput) as e:
                 errors.append(e)
                 log.error(
-                    "%s Error processing item (will continue with others): %s: %s",
-                    EMOJI_WARN,
+                    "Error processing item (will continue with others): %s: %s",
                     e,
                     item,
                 )

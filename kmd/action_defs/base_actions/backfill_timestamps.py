@@ -23,7 +23,7 @@ log = get_logger(__name__)
 class BackfillSourceTimestamps(EachItemAction):
     def __init__(self):
         super().__init__(
-            name="backfill_source_timestamps",
+            name="backfill_timestamps",
             description="""
               Backfill timestamps from a source document.
               Seeks through the document this doc is derived from for timestamps and inserts them
@@ -78,7 +78,7 @@ class BackfillSourceTimestamps(EachItemAction):
 
         log.info("Token mapping:\n%s", indent(token_mapping.full_mapping_str(), prefix="    "))
 
-        new_title = f"{item.title} (with timestamps)"
+        new_title = f"{item.title} ({self.name})"
         output_item = item.derived_copy(type=ItemType.note, title=new_title, format=Format.markdown)
 
         timestamps_found = []

@@ -4,7 +4,7 @@ from kmd.action_exec.llm_completion import llm_completion
 from kmd.model.language_models import LLM
 from kmd.text_formatting.markdown_util import as_bullet_points
 
-# FIXME: Enforce that the edits below doesn't contain anything extraneous.
+# TODO: Enforce that the edits below doesn't contain anything extraneous.
 
 
 def clean_heading(heading: str) -> str:
@@ -51,7 +51,7 @@ def summary_heading(values: List[str]) -> str:
             Summarize the following list of headings into a single heading that captures the essence of the list.
             Follow Chicago Manual of Style capitalization rules. Remove any ellipses, bracketed words or
             parentheticals, word fragments, extraneous words or punctuation at the end such as
-            "…" or "..." or "(edited)" or "(full text) (transcription)".
+            "…" or "..." or "(edited)" or "(transcribe)" or "(full text) (transcription)".
 
             Output ONLY the edited heading, with no other text.
 

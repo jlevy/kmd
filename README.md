@@ -83,10 +83,10 @@ Use `kmd_help` within the shell for full documentation. Some brief examples:
 workspace fitness
 
 # A short transcription:
-transcribe_media 'https://www.youtube.com/watch?v=XRQnWomofIY'
+transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
 
 # A transcription with multiple speakers:
-transcribe_media 'https://www.youtube.com/watch?v=uUd7LleJuqM'
+transcribe 'https://www.youtube.com/watch?v=uUd7LleJuqM'
 # Now manipulate that transcription (note we are using the outputs of each previous command,
 # which are auto-selected as input to each next command):
 break_into_paragraphs
@@ -95,10 +95,10 @@ create_pdf
 
 # Get all videos on a channel and then download and transcribe them:
 list_channel_items 'https://www.youtube.com/@Kboges'
-transcribe_media
+transcribe
 
 # Processing a really long document with sliding windows:
-transcribe_media 'https://www.youtube.com/watch?v=juD99_sPWGU'
+transcribe 'https://www.youtube.com/watch?v=juD99_sPWGU'
 strip_html
 break_into_paragraphs
 summarize_as_bullets
@@ -116,7 +116,7 @@ command.
 # Transcribe a video and summarize it:
 mkdir myworkspace.kb
 cd myworkspace.kb
-kmd transcribe_media 'https://www.youtube.com/watch?v=XRQnWomofIY'
+kmd transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
 ```
 
 ## Tips for Use with Other Tools
