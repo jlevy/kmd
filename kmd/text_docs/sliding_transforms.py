@@ -9,7 +9,7 @@ from textwrap import dedent
 from typing import Callable, List, Optional
 from kmd.config.logger import get_logger
 from kmd.text_ui.text_styles import EMOJI_WARN
-from kmd.model.errors_model import UnexpectedError
+from kmd.model.errors_model import ContentError, UnexpectedError
 from kmd.model.items_model import Format
 from kmd.text_formatting.markdown_normalization import normalize_markdown
 from kmd.text_docs.sliding_windows import sliding_para_window, sliding_word_window
@@ -196,6 +196,20 @@ def sliding_wordtok_window_transform(
         if not output_wordtoks:
             output_wordtoks = new_wordtoks
         else:
+            if len(output_wordtoks) < settings.min_overlap:
+                raise ContentError(
+                    "Output wordtoks too short to align with min_overlap %s: %s",
+                    settings.min_overlap,
+                    output_wordtoks,
+                )
+            if len(new_wordtoks) < settings.min_overlap:
+                log.error(
+                    "New wordtoks too short to align with min_overlap %s, skipping: %s",
+                    settings.min_overlap,
+                    new_wordtoks,
+                )
+                continue
+
             offset, (score, diff) = find_best_alignment(
                 output_wordtoks, new_wordtoks, settings.min_overlap
             )
