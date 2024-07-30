@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 from kmd.config.logger import get_logger
 from kmd.lang_tools.capitalization import capitalize_cms
-from kmd.text_ui.text_styles import EMOJI_WARN
+from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ContentError, InvalidInput
 from kmd.model.items_model import Item
 from kmd.lang_tools.inflection import plural
@@ -17,7 +17,7 @@ from kmd.util.parse_utils import format_key_value
 log = get_logger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ExpectedArgs:
     min_args: Optional[int]
     max_args: Optional[int]
@@ -124,6 +124,8 @@ class EachItemAction(Action):
     def run(self, items: ActionInput) -> ActionResult:
         result_items = []
         errors = []
+        log.message("Running EachItemAction %s on each of %s items", self.name, len(items))
+
         for item in items:
             try:
                 result_item = self.run_item(item)

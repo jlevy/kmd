@@ -1,6 +1,6 @@
 from textwrap import dedent
 from typing import Dict, List, Optional
-from kmd.text_ui.text_styles import SYMBOL_SEP
+from kmd.config.text_styles import SYMBOL_SEP
 from kmd.text_docs.text_diffs import DiffTag, TextDiff, diff_wordtoks
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.wordtoks import raw_text_to_wordtoks

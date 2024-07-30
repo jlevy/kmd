@@ -1,4 +1,4 @@
-from kmd.text_ui.text_styles import NBSP
+from kmd.config.text_styles import NBSP
 from kmd.media.media_services import timestamp_media_url
 from kmd.util.url import Url
 from kmd.text_formatting.html_in_md import CITATION, html_span, html_a

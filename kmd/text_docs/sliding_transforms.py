@@ -8,7 +8,7 @@ from math import ceil
 from textwrap import dedent
 from typing import Callable, List, Optional
 from kmd.config.logger import get_logger
-from kmd.text_ui.text_styles import EMOJI_WARN
+from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ContentError, UnexpectedError
 from kmd.model.items_model import Format
 from kmd.text_formatting.markdown_normalization import normalize_markdown

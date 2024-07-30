@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, Optional
 import regex
 from strif import abbreviate_str
 from kmd.config.logger import get_logger
-from kmd.text_ui.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
+from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 
 log = get_logger(__name__)
 

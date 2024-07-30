@@ -12,7 +12,7 @@ from typing import Callable, Dict, Generator, Iterable, List, Optional, Tuple
 import regex
 from kmd.config.logger import get_logger
 from kmd.text_formatting.text_formatting import html_to_plaintext
-from kmd.text_ui.text_styles import SYMBOL_PARA, SYMBOL_SENT
+from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
 from kmd.model.errors_model import UnexpectedError
 from kmd.lang_tools.sentence_split_spacy import split_sentences
 from kmd.text_docs.wordtoks import (

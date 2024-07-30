@@ -9,7 +9,7 @@ from slugify import slugify
 from strif import copyfile_atomic
 from kmd.model.params_model import ParamSet, get_action_param
 from kmd.query.vector_index import WsVectorIndex
-from kmd.text_ui.text_styles import EMOJI_SUCCESS, EMOJI_WARN
+from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
 from kmd.file_storage.filenames import parse_filename
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.yaml_util import custom_key_sort

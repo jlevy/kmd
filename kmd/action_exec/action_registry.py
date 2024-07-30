@@ -3,7 +3,7 @@ from kmd.model.actions_model import ANY_ARGS, ONE_ARG, Action, EachItemAction
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError
 from kmd.model.items_model import Item
-from kmd.text_ui.text_styles import EMOJI_WARN
+from kmd.config.text_styles import EMOJI_WARN
 
 log = get_logger(__name__)
 

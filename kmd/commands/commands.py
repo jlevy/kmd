@@ -23,7 +23,7 @@ from kmd.commands.native_tools import (
     show_file_platform_specific,
     terminal_show_image_graceful,
 )
-from kmd.text_ui.text_styles import (
+from kmd.config.text_styles import (
     COLOR_EMPH,
     EMOJI_WARN,
     SPINNER,

@@ -4,7 +4,7 @@ from strif import abbreviate_str
 from kmd.action_defs import look_up_action
 from kmd.action_exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_metadata
 from kmd.text_ui.command_output import output
-from kmd.text_ui.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
+from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
 from kmd.model.actions_model import Action, ActionResult
@@ -13,7 +13,6 @@ from kmd.model.errors_model import InvalidInput, InvalidStoreState
 from kmd.model.items_model import Item
 from kmd.model.locators import StorePath
 from kmd.text_formatting.text_formatting import format_lines
-from kmd.util.parse_utils import format_key_value
 from kmd.util.type_utils import not_none
 from kmd.commands import commands
 from kmd.config.logger import get_logger

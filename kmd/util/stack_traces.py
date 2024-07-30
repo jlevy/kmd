@@ -28,12 +28,19 @@ def current_stack_traces(all_threads: bool = True) -> str:
     return "".join(stack_traces)
 
 
-def dump_stack_traces(all_threads: bool = True):
-    print(current_stack_traces(all_threads), file=sys.stderr)
+def dump_stack_traces(all_threads: bool = True, file=sys.stderr):
+    print(current_stack_traces(all_threads), file=file)
 
 
-def _dump_stack_traces_handler(signum, frame):
-    print(f"\n\nReceived signal {signum}, will dump stack traces:", file=sys.stderr)
+def log_stack_traces(all_threads: bool = True):
+    from kmd.config.logger import get_logger
+
+    log = get_logger(__name__)
+    log.info(current_stack_traces(all_threads))
+
+
+def _dump_stack_traces_handler(signum, frame, file=sys.stderr):
+    print(f"\n\nReceived signal {signum}, will dump stack traces:", file=file)
     dump_stack_traces()
 
 

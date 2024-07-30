@@ -23,7 +23,7 @@ from kmd.config.logger import get_logger
 from kmd.config.setup import setup
 from kmd.text_ui.command_output import output, output_assistance
 from kmd.assistant.assistant import assistance
-from kmd.text_ui.text_styles import INPUT_COLOR, SPINNER
+from kmd.config.text_styles import INPUT_COLOR, SPINNER
 from kmd.version import get_version
 
 

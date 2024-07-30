@@ -6,7 +6,7 @@ from kmd.action_exec.action_registry import (
     no_wrapper,
     each_item_wrapper,
 )
-from kmd.text_ui.text_styles import EMOJI_PROCESS
+from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import InvalidInput
@@ -17,6 +17,7 @@ from kmd.text_formatting.html_in_md import (
     div_wrapper,
     identity_wrapper,
 )
+from kmd.util.stack_traces import dump_stack_traces
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
@@ -54,6 +55,8 @@ def define_action_sequence(
             self.action_sequence = action_names
 
         def run(self, items: ActionInput) -> ActionResult:
+            log.message("%s Begin action sequence %s", EMOJI_PROCESS, self.name)
+
             validate_action_names(action_names)
 
             for i, action_name in enumerate(self.action_sequence):

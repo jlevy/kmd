@@ -14,7 +14,7 @@ from xonsh.platform import ON_WINDOWS, ON_DARWIN, ON_LINUX
 from kmd.config.logger import get_logger
 from kmd.file_storage.filenames import ext_is_text, parse_filename
 from kmd.text_ui.command_output import output
-from kmd.text_ui.text_styles import COLOR_ERROR, COLOR_HINT
+from kmd.config.text_styles import COLOR_ERROR, COLOR_HINT
 from kmd.util.url import is_url
 
 log = get_logger(__name__)

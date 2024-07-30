@@ -13,7 +13,7 @@ from typing import Any, Callable
 from rich import print as rprint
 from rich.text import Text
 from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_lines_to_width
-from kmd.text_ui.text_styles import (
+from kmd.config.text_styles import (
     COLOR_ASSISTANCE,
     COLOR_HEADING,
     COLOR_HINT,

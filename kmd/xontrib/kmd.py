@@ -19,7 +19,7 @@ import litellm
 from kmd.config.setup import setup
 from kmd.config.settings import cache_dir
 from kmd.config.logger import get_logger
-from kmd.text_ui.text_styles import (
+from kmd.config.text_styles import (
     EMOJI_WARN,
     COLOR_ERROR,
     COLOR_HEADING,

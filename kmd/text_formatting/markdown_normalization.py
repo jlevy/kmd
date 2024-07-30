@@ -9,7 +9,7 @@ from marko import block, inline
 from marko.parser import Parser
 from marko.source import Source
 from marko.block import HTMLBlock
-from kmd.text_ui.text_styles import CONSOLE_WRAP_WIDTH
+from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
 from kmd.lang_tools.sentence_split_regex import split_sentences_fast
 
 
