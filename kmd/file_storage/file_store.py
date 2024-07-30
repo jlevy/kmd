@@ -26,7 +26,7 @@ from kmd.util.log_calls import format_duration
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import Url, is_url
-from kmd.config.logger import get_logger
+from kmd.config.logger import get_logger, log_file
 
 log = get_logger(__name__)
 
@@ -456,6 +456,8 @@ class FileStore:
             path.abspath(self.base_dir),
             len(self.uniquifier),
         )
+        log.message("Logging to: %s", log_file().absolute())
+
         log.info("File store startup took %s.", format_duration(self.end_time - self.start_time))
         # TODO: Log more info like number of items by type.
 

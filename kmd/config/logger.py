@@ -139,7 +139,7 @@ def reset_log_root(log_root: Path):
     global LOG_ROOT
     if log_root != LOG_ROOT:
         log = get_logger(__name__)
-        log.message("Logging to: %s", log_file().absolute())
+        log.info("Resetting log root: %s", log_file().absolute())
 
         LOG_ROOT = log_root
         logging_setup()
