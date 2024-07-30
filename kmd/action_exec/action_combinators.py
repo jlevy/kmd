@@ -150,9 +150,8 @@ def combine_with_divs(*class_names: str) -> Combiner:
     """
 
     def combiner(action: Action, inputs: List[Item], results: List[ActionResult]) -> Item:
-        return combine_with_wrappers(
-            action, inputs, results, [div_wrapper(class_name) for class_name in class_names]
-        )
+        wrappers = [div_wrapper(class_name, padding="\n\n") for class_name in class_names]
+        return combine_with_wrappers(action, inputs, results, wrappers)
 
     return combiner
 

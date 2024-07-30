@@ -90,6 +90,7 @@ testpaths = [
     "kmd",
     "tests",
 ]
+norecursedirs = ["kmd/xontrib"]
 filterwarnings = [
     "ignore::DeprecationWarning"
 ]
