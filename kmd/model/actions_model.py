@@ -11,6 +11,7 @@ from kmd.lang_tools.inflection import plural
 from kmd.model.params_model import ACTION_PARAMS, ChunkSize
 from kmd.text_formatting.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
+from kmd.util.parse_utils import format_key_value
 
 
 log = get_logger(__name__)
@@ -94,7 +95,14 @@ class Action(ABC):
 
         for name, value in params.items():
             if name in vars(new_instance) and name in ACTION_PARAMS:
-                setattr(new_instance, name, value)
+                current_value = getattr(new_instance, name)
+                if current_value != value:
+                    setattr(new_instance, name, value)
+                    log.message(
+                        "Overriding parameter for action %s: %s",
+                        self.name,
+                        format_key_value(name, value),
+                    )
 
         return new_instance
 
