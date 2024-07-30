@@ -35,12 +35,11 @@ poetry self add "poetry-dynamic-versioning[plugin]"
 poetry self add poetry-plugin-up
 ```
 
-## Running from Source
+## Building
 
-Check out code and install package dependencies:
+There aren't pre-built releases yet. Check out the code and install the package dependencies:
 
 ```
-# Install packages:
 poetry install
 ```
 
@@ -57,15 +56,15 @@ cp .env.template .env
 vi .env # Edit the file to add all desired API keys
 ```
 
+## Running
+
 To run:
 
 ```
 poetry run kmd
 ```
 
-## Installation
-
-To install kmd globally in current user's Python virtual environment (so you can more
+Optionally, to install kmd globally in current user's Python virtual environment (so you can more
 conveniently use `kmd` anywhere, make sure you have a usable Python 3.12+ environment
 active (such as using `pyenv`), then:
 
@@ -74,8 +73,6 @@ active (such as using `pyenv`), then:
 ```
 
 This does a pip install of the wheel so you can run it as `kmd`.
-
-There aren't official pre-built releases yet.
 
 ## Using kmd
 
@@ -122,7 +119,21 @@ cd myworkspace.kb
 kmd transcribe_media 'https://www.youtube.com/watch?v=XRQnWomofIY'
 ```
 
-## Using with Obsidian
+## Tips for Use with Other Tools
+
+### MacOS
+
+In general, it's convenient to make sure your preferred editor is set up for
+.yml and .md files.
+
+For convenience, a reminder on how to do this:
+
+  - In Finder, pick a .md or .yml file and hit Cmd-I (or right click and select Get Info).
+  - Select the editor, such as Cursor or VSCode or Obsidian, and click the "Change All…"
+    button to have it apply to all files with that extension.
+  - Repeat with each file type.
+
+### Obsidian
 
 Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
 [Obsidian](https://obsidian.md/). Some notes:
@@ -132,6 +143,17 @@ Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
 
 - Some kmd files also contain HTML in Markdown. This works fine, but note that only
   the current line's HTML is shown in Obsidian.
+
+- Install the [Front Matter Title plugin](https://github.com/snezhig/obsidian-front-matter-title):
+
+  - Go to settings, enable community plugins, search for "Front Matter Title" and install.
+  
+  - Under "Installed Plugins," adjust the settings to enable "Replace shown title in file explorer,"
+    "Replace shown title in graph," etc. You probably want to keep the "Replace titles in header
+    of leaves" off so you can still see original filenames if needed.
+
+  - Now titles are easy to read for all kmd notes.
+
 
 ## Development Tasks
 

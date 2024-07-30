@@ -166,6 +166,9 @@ class Item:
     created_at: datetime = field(default_factory=datetime.now)
     modified_at: datetime = field(default_factory=datetime.now)
 
+    # TODO: Consider adding aliases and tags. See also Obsidian frontmatter format:
+    # https://help.obsidian.md/Editing+and+formatting/Properties#Default%20properties
+
     # Content of the item.
     # Text items are in body. Large or binary items may be stored externally.
     body: Optional[str] = None
