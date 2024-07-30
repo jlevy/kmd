@@ -17,7 +17,6 @@ from kmd.text_formatting.html_in_md import (
     div_wrapper,
     identity_wrapper,
 )
-from kmd.util.stack_traces import dump_stack_traces
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)

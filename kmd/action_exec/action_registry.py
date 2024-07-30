@@ -26,7 +26,7 @@ def each_item_wrapper(action: Action) -> Action:
             result_items = action.run([item]).items
             if len(result_items) < 1:
                 raise ContentError(f"Action {action.name} returned no items")
-            return action.run([item]).items[0]
+            return result_items[0]
 
     if action.expected_args != ONE_ARG:
         raise ValueError(f"Action {action.name} must expect exactly one argument")

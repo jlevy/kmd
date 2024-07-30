@@ -12,6 +12,7 @@ import os
 import runpy
 from textwrap import dedent
 import threading
+import time
 from typing import Callable, List
 from rich import get_console
 from xonsh.tools import XonshError
@@ -183,13 +184,19 @@ def initialize():
     if _is_interactive:
         # Try to seem a little faster starting up.
         def load():
+            load_start_time = time.time()
+
             load_xonsh_commands()
             load_xonsh_actions()
+
+            load_time = time.time() - load_start_time
+            log.info(f"Action and command loading took {load_time:.2f}s.")
 
         load_thread = threading.Thread(target=load)
         load_thread.start()
 
-        log.message("\nUsing cache directory: %s", cache_dir())
+        output()
+        log.message("Using cache directory: %s", cache_dir())
     else:
         load_xonsh_commands()
         load_xonsh_actions()

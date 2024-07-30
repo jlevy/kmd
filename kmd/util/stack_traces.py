@@ -10,20 +10,23 @@ def current_stack_traces(all_threads: bool = True) -> str:
     Return current stack traces as a string.
     """
 
-    main_thread_id = threading.get_ident()
     stack_traces = []
+    main_thread_id = threading.get_ident()
 
     if all_threads:
         frames = sys._current_frames()
         main_thread_trace = frames.pop(main_thread_id, None)
+    else:
+        frames = {}
+        main_thread_trace = sys._current_frames()[main_thread_id]
 
-        if main_thread_trace:
-            stack_traces.append(f"\nThread ID: {main_thread_id} (main thread)\n")
-            stack_traces.append("".join(traceback.format_stack(main_thread_trace)))
+    if main_thread_trace:
+        stack_traces.append(f"\nThread ID: {main_thread_id} (main thread)\n")
+        stack_traces.append("".join(traceback.format_stack(main_thread_trace)))
 
-        for thread_id, stack_frame in frames.items():
-            stack_traces.append(f"\nThread ID: {thread_id}\n")
-            stack_traces.append("".join(traceback.format_stack(stack_frame)))
+    for thread_id, stack_frame in frames.items():
+        stack_traces.append(f"\nThread ID: {thread_id}\n")
+        stack_traces.append("".join(traceback.format_stack(stack_frame)))
 
     return "".join(stack_traces)
 
@@ -36,7 +39,7 @@ def log_stack_traces(all_threads: bool = True):
     from kmd.config.logger import get_logger
 
     log = get_logger(__name__)
-    log.info(current_stack_traces(all_threads))
+    log.info("Manual stack trace dump:\n%s", current_stack_traces(all_threads))
 
 
 def _dump_stack_traces_handler(signum, frame, file=sys.stderr):
