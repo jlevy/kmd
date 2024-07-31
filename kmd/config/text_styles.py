@@ -2,6 +2,8 @@
 Settings that define the visual appearance of text outputs.
 """
 
+from kmd.config import colors
+
 ## Settings
 
 CONSOLE_WRAP_WIDTH = 80
@@ -21,7 +23,7 @@ PROMPT_COLOR_NORMAL = "BOLD_GREEN"
 
 PROMPT_COLOR_WARN = "INTENSE_YELLOW"
 
-INPUT_COLOR = "#fdf"
+INPUT_COLOR = colors.input
 
 
 ## Colors

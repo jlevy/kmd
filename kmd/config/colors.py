@@ -2,45 +2,56 @@
 # https://rootloops.sh?sugar=8&colors=7&sogginess=5&flavor=2&fruit=9&milk=1
 
 # black
-black_dark = "#1a1a1a"
-black_light = "#bbbbbb"
-black_lighter = "#e6e6e6"
+black_dark = "hsl(0, 0%, 10%)"
+black_light = "hsl(0, 0%, 73%)"
+black_lighter = "hsl(0, 0%, 90%)"
 
 # red
-red_dark = "#ec9384"
-red_light = "#fac1b7"
-red_lighter = "#fbe8e5"
+red_dark = "hsl(7, 73%, 72%)"
+red_light = "hsl(7, 87%, 85%)"
+red_lighter = "hsl(7, 95%, 94%)"
 
 # green
-green_dark = "#6cc581"
-green_light = "#97dea7"
-green_lighter = "#d5f4dc"
-
+green_dark = "hsl(134, 43%, 60%)"
+green_light = "hsl(134, 53%, 73%)"
+green_lighter = "hsl(134, 70%, 90%)"
 
 # yellow
-yellow_dark = "#cbab4f"
-yellow_light = "#efd795"
-yellow_lighter = "#f4e9c9"
+yellow_dark = "hsl(44, 54%, 55%)"
+yellow_light = "hsl(44, 74%, 76%)"
+yellow_lighter = "hsl(44, 80%, 90%)"
 
 # blue
-blue_dark = "#96abed"
-blue_light = "#c1cdf0"
-blue_lighter = "#dfe4f3"
+blue_dark = "hsl(225, 71%, 76%)"
+blue_light = "hsl(225, 86%, 88%)"
+blue_lighter = "hsl(225, 90%, 94%)"
 
 # magenta
-magenta_dark = "#dd8ed6"
-magenta_light = "#e6cbe4"
-magenta_lighter = "#fbe8f9"
+magenta_dark = "hsl(305, 54%, 71%)"
+magenta_light = "hsl(305, 68%, 85%)"
+magenta_lighter = "hsl(305, 96%, 95%)"
 
 # cyan
-cyan_dark = "#54c0d1"
-cyan_light = "#a2d9e2"
-cyan_lighter = "#dff2f5"
+cyan_dark = "hsl(188, 58%, 57%)"
+cyan_light = "hsl(188, 52%, 76%)"
+cyan_lighter = "hsl(188, 52%, 92%)"
 
 # white
-white_dark = "#dddde1"
-white_light = "#eeeef0"
-white_lighter = "#ffffff"
+white_dark = "hsl(240, 6%, 87%)"
+white_light = "hsl(240, 6%, 94%)"
+white_lighter = "hsl(240, 6%, 98%)"
+
+# Additional colors. These are compatible with terminal preferences too.
+
+foreground = "#fff"
+background = "#000"
+
+border = "hsl(231, 17%, 16%)"
+
+cursor = "hsl(305, 84%, 68%)"
+selection = "hsla(305, 32%, 82%, 0.50)"
+
+input = "#fee6fc"
 
 
 # Logical colors
