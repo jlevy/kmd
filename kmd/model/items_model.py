@@ -468,9 +468,11 @@ class Item:
         node = Node(
             id=self.store_path,
             type=self.type.name,
-            title=self.title or "",
+            title=self.title or UNTITLED,
+            description=self.description,
             body=None,  # Skip for now, might add if we find it useful.
             url=str(self.url) if self.url else None,
+            thumbnail_url=self.thumbnail_url,
         )
 
         links = []

@@ -26,12 +26,15 @@
         --color-hover: #d1d5db;
         --color-hover-bg: #eff0f1;
         --color-hint: #9ca3af;
+
+        --font-sans: "Varta", sans-serif;
+        --font-serif: "PT Serif", serif;
       }
 
       {{ color_defs|safe }}
 
       body {
-        font-family: "PT Serif", serif;
+        font-family: var(--font-serif);
         color: var(--color-text);
         line-height: 1.5;
         padding: 2rem;
@@ -50,7 +53,7 @@
       }
 
       h1 {
-        font-family: "Varta", sans-serif;
+        font-family: var(--font-sans);
         font-weight: 400;
         font-size: 1.7rem;
         margin-top: 2rem;

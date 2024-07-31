@@ -11,8 +11,10 @@ class Node:
     id: str
     type: str
     title: str
+    description: Optional[str] = None
     body: Optional[str] = None
     url: Optional[str] = None
+    thumbnail_url: Optional[str] = None
 
 
 @dataclass(frozen=True)
