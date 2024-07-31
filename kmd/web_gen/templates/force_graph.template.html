@@ -40,6 +40,7 @@
 
 <script type="module">
   import SpriteText from "https://unpkg.com/three-spritetext/dist/three-spritetext.mjs";
+  import * as THREE from 'three';
 
   const data = {{ graph | tojson | safe }};
   const animation_speed = 150;
@@ -112,6 +113,22 @@
         }
         popover.innerHTML = content;
         popover.style.display = 'block';
+
+        // Calculate popover position
+        const nodePosition = new THREE.Vector3(node.x, node.y, node.z);
+        const screenPosition = nodePosition.project(Graph.camera());
+        const graphRect = Graph.renderer().domElement.getBoundingClientRect();
+        const x = (screenPosition.x + 1) * graphRect.width / 2 + graphRect.left + 20; // 20px offset to the right
+        let y = (-screenPosition.y + 1) * graphRect.height / 2 + graphRect.top;
+
+        // Ensure the popover doesn't extend below the bottom of the screen
+        const popoverHeight = popover.offsetHeight;
+        const maxY = window.innerHeight - popoverHeight - 20; // 20px margin from bottom
+        y = Math.min(y, maxY);
+
+        popover.style.left = `${x}px`;
+        popover.style.top = `${y}px`;
+
         setTimeout(() => {
           popover.style.opacity = '1';
         }, 0);
@@ -134,12 +151,7 @@
       }
     });
 
-  // Update popover position on mouse move.
-  Graph.renderer().domElement.addEventListener('mousemove', (event) => {
-    const popover = document.getElementById('node-popover');
-    popover.style.left = `${event.clientX + 5}px`;
-    popover.style.top = `${event.clientY + 5}px`;
-  });
+
 
   // Spread nodes a little wider
   // Graph.d3Force("charge").strength(-120);
