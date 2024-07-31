@@ -39,6 +39,7 @@ from kmd.config.logger import get_logger, log_file
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
 from kmd.docs import about_kmd, workspace_and_file_formats
+from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 
 log = get_logger(__name__)
 
@@ -449,6 +450,14 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
             total_files += nfiles
 
         output(f"\n{total_files} items total in {total_files} folders", color=COLOR_EMPH)
+
+
+@kmd_command
+def graph_view() -> None:
+    """
+    Open a graph view of the current workspace.
+    """
+    open_graph_view(assemble_workspace_graph())
 
 
 @kmd_command

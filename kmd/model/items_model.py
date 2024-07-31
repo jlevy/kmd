@@ -2,12 +2,13 @@
 The data model for Items and their file formats.
 """
 
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import asdict, dataclass, field, fields, replace
 import dataclasses
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 from kmd.config.logger import get_logger
+from kmd.model.graph_model import Link, Node
 from kmd.model.media_model import MediaMetadata
 from kmd.util.time_util import iso_format_z
 from kmd.file_storage.yaml_util import from_yaml_string
@@ -456,6 +457,34 @@ class Item:
             self.is_binary == other.is_binary and self.body == other.body
         ) or self.body_text().rstrip() == other.body_text().rstrip()
         return metadata_matches and body_matches
+
+    def as_node_links(self) -> Tuple[Node, List[Link]]:
+        """
+        Node and Links for this item.
+        """
+        if not self.store_path:
+            raise ValueError(f"Expected store path to convert item to node/links: {self}")
+
+        node = Node(
+            id=self.store_path,
+            type=self.type.name,
+            title=self.title or "",
+            body=None,  # Skip for now, might add if we find it useful.
+            url=str(self.url) if self.url else None,
+        )
+
+        links = []
+        for f in fields(ItemRelations):
+            relation_list = getattr(self.relations, f.name)
+            if relation_list:
+                for target in relation_list:
+                    links.append(
+                        Link(source=self.store_path, target=str(target), relationship=f.name)
+                    )
+
+        # TODO: Extract other relations here from the content.
+
+        return node, links
 
     def __str__(self):
         return abbreviate_obj(self)

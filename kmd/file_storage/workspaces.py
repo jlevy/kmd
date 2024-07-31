@@ -1,4 +1,5 @@
 from pathlib import Path
+import tempfile
 from typing import Optional, Tuple
 from cachetools import cached
 from kmd.model.canon_url import canonicalize_url
@@ -70,7 +71,7 @@ def current_workspace_tmp_dir() -> Path:
     try:
         return current_workspace().tmp_dir
     except InvalidStoreState:
-        return Path("/tmp")
+        return Path(tempfile.gettempdir())
 
 
 def ensure_saved(locator: Locator) -> Item:
