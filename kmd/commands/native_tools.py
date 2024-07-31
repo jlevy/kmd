@@ -139,7 +139,8 @@ def terminal_link(url: str, text: str, id: str = "") -> str:
         return text
 
 
-def show_file_platform_specific(file_or_url: str):
+def show_file_platform_specific(file_or_url: str | Path):
+    file_or_url = str(file_or_url)
     if is_url(file_or_url) or file_or_url.endswith(".html"):
         if not is_url(file_or_url):
             file_or_url = f"file://{os.path.abspath(file_or_url)}"

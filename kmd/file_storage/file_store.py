@@ -117,6 +117,7 @@ def read_item(full_path: Path, base_dir: Optional[Path]):
 ARCHIVE_DIR = ".archive"
 SETTINGS_DIR = ".settings"
 INDEX_DIR = ".index"
+TMP_DIR = ".tmp"
 
 FILENAME_SLUG_MAX_LEN = 64
 
@@ -144,6 +145,8 @@ class FileStore:
         os.makedirs(self.archive_dir, exist_ok=True)
         self.settings_dir = self.base_dir / SETTINGS_DIR
         os.makedirs(self.settings_dir, exist_ok=True)
+        self.tmp_dir = self.base_dir / TMP_DIR
+        os.makedirs(self.tmp_dir, exist_ok=True)
 
         self.index_dir = self.base_dir / INDEX_DIR
         self.vector_index = WsVectorIndex(self.index_dir)
@@ -432,6 +435,15 @@ class FileStore:
         except OSError:
             raise InvalidStoreState("No selection saved in workspace")
 
+    def unselect(self, unselect_paths: list[StorePath]):
+        current_selection = self.get_selection()
+        new_selection = [path for path in current_selection if path not in unselect_paths]
+        self.set_selection(new_selection)
+        return new_selection
+
+    def set_action_params(self, action_params: dict):
+        self.action_params.set(action_params)
+
     def get_action_params(self) -> ParamSet:
         try:
             return self.action_params.read()
@@ -440,15 +452,6 @@ class FileStore:
 
     def get_action_param(self, param_name: str) -> Optional[str]:
         return get_action_param(self.get_action_params(), param_name)
-
-    def set_action_params(self, action_params: dict):
-        self.action_params.set(action_params)
-
-    def unselect(self, unselect_paths: list[StorePath]):
-        current_selection = self.get_selection()
-        new_selection = [path for path in current_selection if path not in unselect_paths]
-        self.set_selection(new_selection)
-        return new_selection
 
     def log_store_info(self):
         log.message(

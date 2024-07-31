@@ -66,6 +66,13 @@ def current_workspace() -> FileStore:
     return _new_file_store(workspace_dir)
 
 
+def current_workspace_tmp_dir() -> Path:
+    try:
+        return current_workspace().tmp_dir
+    except InvalidStoreState:
+        return Path("/tmp")
+
+
 def ensure_saved(locator: Locator) -> Item:
     """
     Ensure that the URL or Item is saved to the workspace.
