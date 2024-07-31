@@ -8,7 +8,7 @@ import justext
 from kmd.config.settings import web_cache_dir
 from kmd.media.media_services import canonicalize_media_url
 from kmd.model.canon_url import thumbnail_url
-from kmd.model.errors_model import InvalidInput, WebFetchError
+from kmd.model.errors_model import WebFetchError
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
 from kmd.config.logger import get_logger
@@ -127,7 +127,7 @@ def _extract_page_data_from_html(url: Url, raw_html: bytes) -> PageData:
     title = None
     description = None
     try:
-        title = str(dom.cssselect("title")[0].text_content())
+        title = str(dom.cssselect("title")[0].text_content()).strip()
     except IndexError:
         log.warning("Page missing title: %s", url)
         log.save_object("Page missing title", "web", raw_html)

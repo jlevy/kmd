@@ -8,7 +8,6 @@ from math import ceil
 from textwrap import dedent
 from typing import Callable, List, Optional
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ContentError, UnexpectedError
 from kmd.model.items_model import Format
 from kmd.text_formatting.markdown_normalization import normalize_markdown
@@ -87,7 +86,7 @@ def filtered_transform(
             assert rejected_diff.left_size() == input_doc.size(Unit.WORDTOKS)
 
             log.info(
-                "Accepted proposed word token changes:\n%s",
+                "Accepted transform changes:\n%s",
                 format_lines(str(accepted_diff).splitlines()),
             )
 
@@ -95,8 +94,7 @@ def filtered_transform(
             rejected_changes = rejected_diff.changes()
             if rejected_changes:
                 log.message(
-                    "%s Rejecting proposed word token changes:\n%s",
-                    EMOJI_WARN,
+                    "Filtering extraneous changes:\n%s",
                     format_lines(rejected_diff.as_diff_str(False).splitlines()),
                 )
 

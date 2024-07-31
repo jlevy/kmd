@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict, Any, Tuple
 from urllib.parse import urlparse, parse_qs
 from datetime import date
+from yt_dlp.utils import DownloadError
 from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.media.yt_dlp_utils import ydl_download_audio, ydl_extract_info
 from kmd.config.text_styles import EMOJI_WARN
@@ -58,8 +59,12 @@ class ApplePodcasts(MediaService):
     def thumbnail_url(self, url: Url) -> Optional[Url]:
         # Apple Podcasts doesn't have a standardized thumbnail URL format.
         # We'll need to extract this from the metadata.
-        metadata = self.metadata(url)
-        return metadata.thumbnail_url if metadata else None
+        try:
+            metadata = self.metadata(url)
+            return metadata.thumbnail_url if metadata else None
+        except DownloadError as e:
+            log.warning("Could not get a thumbnail URL; will skip: %s", e)
+            return None
 
     def timestamp_url(self, url: Url, timestamp: float) -> Url:
         # Apple Podcasts doesn't support timestamp links. We'll return the original URL.
