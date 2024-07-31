@@ -3,9 +3,30 @@
     width: 100%;
     height: 600px;
   }
+  .node-popover {
+    position: absolute;
+    background: hsla(193, 90%, 96%, 0.9);
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 14px;
+    font-family: var(--font-sans);
+    font-style: normal;
+    pointer-events: none;
+    max-width: 300px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  .node-popover img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 5px;
+  }
 </style>
 
 <div id="3d-graph" class="force-graph"></div>
+<div id="node-popover" class="node-popover"></div>
+
 
 <script src="https://unpkg.com/3d-force-graph"></script>
 
@@ -21,6 +42,7 @@
   import SpriteText from "https://unpkg.com/three-spritetext/dist/three-spritetext.mjs";
 
   const data = {{ graph | tojson | safe }};
+  const animation_speed = 150;
 
   const colorFromType = (type) => {
     switch (type) {
@@ -54,19 +76,51 @@
   }
 
 
+  function truncate(description, maxLength = 200) {
+    if (description && description.length > maxLength) {
+      return description.slice(0, maxLength).trim() + ' …';
+    }
+    return description;
+  }
+
   const Graph = ForceGraph3D()(document.getElementById("3d-graph"))
     .graphData(data)
-    .nodeLabel("title")
+    .nodeLabel(null) // Disable default node label
     .nodeColor(node => colorFromType(node.type))
     .linkColor("{{ colors.link_light }}")
-    .linkOpacity(1.0)
+    .linkOpacity(0.7)
     .linkAutoColorBy("relationship")
     .nodeThreeObject((node) => {
       const sprite = new SpriteText(wrapText(node.title, 40));
       sprite.material.depthWrite = false; // make sprite background transparent
       sprite.color = colorFromType(node.type);
       sprite.textHeight = 8;
+      sprite.fontWeight = 'bold';
       return sprite;
+    })
+    .onNodeHover((node, prevNode) => {
+      const popover = document.getElementById('node-popover');
+      if (node) {
+        const { title, description, thumbnail_url } = node;
+        let content = "";
+        if (thumbnail_url) {
+          content += `<img src="${thumbnail_url}" alt="${title}">`;
+        }
+        content += `<h2>${title}</h2>`;
+        if (description) {
+          content += `<p>${truncate(description)}</p>`;
+        }
+        popover.innerHTML = content;
+        popover.style.display = 'block';
+        setTimeout(() => {
+          popover.style.opacity = '1';
+        }, 0);
+      } else {
+        popover.style.opacity = '0';
+        setTimeout(() => {
+          popover.style.display = 'none';
+        }, animation_speed);
+      }
     })
     .onNodeClick((node, event) => {
       if (node.url) {
@@ -79,6 +133,13 @@
         window.open(node.url, '_blank');
       }
     });
+
+  // Update popover position on mouse move.
+  Graph.renderer().domElement.addEventListener('mousemove', (event) => {
+    const popover = document.getElementById('node-popover');
+    popover.style.left = `${event.clientX + 5}px`;
+    popover.style.top = `${event.clientY + 5}px`;
+  });
 
   // Spread nodes a little wider
   // Graph.d3Force("charge").strength(-120);
