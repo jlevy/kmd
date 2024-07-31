@@ -34,7 +34,7 @@ magenta_lighter = "#fbe8f9"
 
 # cyan
 cyan_dark = "#54c0d1"
-cyan_lighter = "#a2d9e2"
+cyan_light = "#a2d9e2"
 cyan_lighter = "#dff2f5"
 
 # white
@@ -43,10 +43,29 @@ white_light = "#eeeef0"
 white_lighter = "#ffffff"
 
 
+# Logical colors
+
+concept_dark = green_dark
+concept_light = green_light
+concept_lighter = green_lighter
+
+note_dark = blue_dark
+note_light = blue_light
+note_lighter = blue_lighter
+
+resource_dark = cyan_dark
+resource_light = cyan_light
+resource_lighter = cyan_lighter
+
+link_dark = yellow_dark
+link_light = yellow_light
+link_lighter = yellow_lighter
+
+
 def generate_css_variables():
     css_variables = ":root {\n"
     for name, value in globals().items():
-        if name.endswith(("_dark", "_light", "_lighter", "_lightest")):
+        if not name.startswith("__"):
             css_var_name = name.replace("_", "-")
             css_variables += f"  --{css_var_name}: {value};\n"
     css_variables += "}"

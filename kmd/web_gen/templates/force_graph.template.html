@@ -23,18 +23,46 @@
   const data = {{ graph | tojson | safe }};
 
   const colorFromType = (type) => {
-    return type === "concept" ? "#c0c5f0" : "#c5f0c5";
+    switch (type) {
+      case "concept":
+        return "{{ colors.concept_light }}";
+      case "note":
+        return "{{ colors.note_light }}";
+      case "resource":
+        return "{{ colors.resource_light }}";
+      default:
+        return "{{ colors.white_light }}";
+    }
   };
+
+  function wrapText(text, maxLineLength) {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = '';
+
+    words.forEach(word => {
+      if ((currentLine + word).length <= maxLineLength) {
+        currentLine += (currentLine ? ' ' : '') + word;
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+    });
+    lines.push(currentLine);
+
+    return lines.join('\n');
+  }
+
 
   const Graph = ForceGraph3D()(document.getElementById("3d-graph"))
     .graphData(data)
     .nodeLabel("title")
-    .nodeAutoColorBy("type")
-    .linkColor("#00ffff")
+    .nodeColor(node => colorFromType(node.type))
+    .linkColor("{{ colors.link_light }}")
     .linkOpacity(1.0)
     .linkAutoColorBy("relationship")
     .nodeThreeObject((node) => {
-      const sprite = new SpriteText(node.title);
+      const sprite = new SpriteText(wrapText(node.title, 40));
       sprite.material.depthWrite = false; // make sprite background transparent
       sprite.color = colorFromType(node.type);
       sprite.textHeight = 8;
