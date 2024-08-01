@@ -2,10 +2,12 @@ from pathlib import Path
 import tempfile
 from typing import Optional, Tuple
 from cachetools import cached
+from kmd.media.media_download import reset_media_cache_dir
+from kmd.media.web import reset_web_cache_dir
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidStoreState
 from kmd.model.items_model import Format, Item, ItemType
-from kmd.file_storage.file_store import FileStore
+from kmd.file_storage.file_store import CACHE_DIR, FileStore
 from kmd.model.locators import Locator, StorePath
 from kmd.util.url import Url, is_url
 from kmd.config.logger import get_logger, reset_log_root
@@ -60,10 +62,13 @@ def _new_file_store(base_dir: Path) -> FileStore:
 
 def current_workspace() -> FileStore:
     """
-    Get the current workspace. Also updates logging to be within that workspace, if it has changed.
+    Get the current workspace. Also updates logging and cache directories to be
+    within that workspace, if it has changed.
     """
     workspace_dir = current_workspace_dir()
     reset_log_root(workspace_dir)
+    reset_media_cache_dir(workspace_dir / CACHE_DIR / "media")
+    reset_web_cache_dir(workspace_dir / CACHE_DIR / "web")
     return _new_file_store(workspace_dir)
 
 

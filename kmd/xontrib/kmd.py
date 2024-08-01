@@ -18,7 +18,6 @@ from rich import get_console
 from xonsh.tools import XonshError
 import litellm
 from kmd.config.setup import setup
-from kmd.config.settings import cache_dir
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import (
     EMOJI_WARN,
@@ -196,7 +195,6 @@ def initialize():
         load_thread.start()
 
         output()
-        log.message("Using cache directory: %s", cache_dir())
     else:
         load_xonsh_commands()
         load_xonsh_actions()

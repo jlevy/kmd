@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 from cachetools import cached
@@ -5,10 +6,19 @@ from cachetools import cached
 
 APP_NAME = "kmd"
 
-CACHE_NAME = "kmd_cache"
+GLOBAL_CACHE_NAME = "kmd_cache"
 
-DEBUG_ASSISTANT = False
-"""Convenience to allow debugging of full assistant prompts."""
+
+@dataclass
+class Settings:
+    media_cache_dir: Path
+    """The media cache directory."""
+
+    web_cache_dir: Path
+    """The web cache directory."""
+
+    debug_assistant: bool
+    """Convenience to allow debugging of full assistant prompts."""
 
 
 def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
@@ -27,26 +37,21 @@ def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
 
 
 @cached(cache={})
-def cache_dir(name: str = "") -> Path:
-    """
-    The media cache directory. Set at load time and used for the entire session.
-    """
-    cache_dir = find_in_cwd_or_parents(CACHE_NAME)
+def _cache_dir(name: str = "") -> Path:
+    cache_dir = find_in_cwd_or_parents(GLOBAL_CACHE_NAME)
     if not cache_dir:
-        cache_dir = Path(".").absolute() / CACHE_NAME
+        cache_dir = Path(".").absolute() / GLOBAL_CACHE_NAME
 
     return cache_dir / name
 
 
-def media_cache_dir() -> Path:
-    """
-    The media cache directory. Set at load time and used for the entire session.
-    """
-    return cache_dir("media")
+# Initial default settings.
+_settings = Settings(
+    media_cache_dir=_cache_dir("media"),
+    web_cache_dir=_cache_dir("web"),
+    debug_assistant=False,
+)
 
 
-def web_cache_dir() -> Path:
-    """
-    The web cache directory. Set at load time and used for the entire session.
-    """
-    return cache_dir("web")
+def get_settings() -> Settings:
+    return _settings

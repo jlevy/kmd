@@ -1,7 +1,7 @@
 from textwrap import dedent
 from cachetools import cached
 from kmd.llms.llm_completion import llm_completion
-from kmd.config.settings import DEBUG_ASSISTANT
+from kmd.config.settings import get_settings
 from kmd.file_storage.workspaces import current_workspace
 from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
@@ -64,6 +64,6 @@ def assistance(input: str, fast: bool = False) -> str:
             system_message=system_message,
             template=template,
             input=input,
-            save_objects=DEBUG_ASSISTANT,
+            save_objects=get_settings().debug_assistant,
         )
     )

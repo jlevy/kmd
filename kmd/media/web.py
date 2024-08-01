@@ -5,7 +5,7 @@ from typing import Optional
 from dataclasses import dataclass
 import requests
 import justext
-from kmd.config.settings import web_cache_dir
+from kmd.config.settings import get_settings
 from kmd.media.media_services import canonicalize_media_url
 from kmd.model.canon_url import thumbnail_url
 from kmd.model.errors_model import WebFetchError
@@ -85,7 +85,14 @@ def fetch(url: Url) -> requests.Response:
 
 
 # Simple global cache for misc use. No expiration.
-_web_cache = WebCache(web_cache_dir())
+_web_cache = WebCache(get_settings().web_cache_dir)
+
+
+def reset_web_cache_dir(path: Path):
+    get_settings().web_cache_dir = path
+    global _web_cache
+    _web_cache = WebCache(path)
+    log.debug("Using web cache: %s", path)
 
 
 def fetch_and_cache(url: Url) -> Path:

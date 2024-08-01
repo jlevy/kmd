@@ -7,6 +7,7 @@ from os.path import join, relpath, commonpath
 from os import path
 from slugify import slugify
 from strif import copyfile_atomic
+from kmd.config.settings import get_settings
 from kmd.model.params_model import ParamSet, get_action_param
 from kmd.query.vector_index import WsVectorIndex
 from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
@@ -115,6 +116,7 @@ def read_item(full_path: Path, base_dir: Optional[Path]):
 
 
 ARCHIVE_DIR = ".archive"
+CACHE_DIR = ".cache"
 SETTINGS_DIR = ".settings"
 INDEX_DIR = ".index"
 TMP_DIR = ".tmp"
@@ -152,9 +154,9 @@ class FileStore:
         self.vector_index = WsVectorIndex(self.index_dir)
 
         # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
-        self.selection = PersistedYaml(self.settings_dir / "selection.yaml", init_value=[])
+        self.selection = PersistedYaml(self.settings_dir / "selection.yml", init_value=[])
 
-        self.action_params = PersistedYaml(self.settings_dir / "action_params.yaml", init_value={})
+        self.action_params = PersistedYaml(self.settings_dir / "action_params.yml", init_value={})
 
         self.end_time = time.time()
 
@@ -460,6 +462,8 @@ class FileStore:
             len(self.uniquifier),
         )
         log.message("Logging to: %s", log_file().absolute())
+        log.message("Media cache: %s", get_settings().media_cache_dir)
+        log.message("Web cache: %s", get_settings().web_cache_dir)
 
         log.info("File store startup took %s.", format_duration(self.end_time - self.start_time))
         # TODO: Log more info like number of items by type.

@@ -12,15 +12,15 @@ from rich.theme import Theme
 from rich.console import Console
 from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, HRULE, RICH_STYLES, KmdHighlighter
 
-LOG_ROOT = Path(".")
-
-LOG_DIR_NAME = ".kmd_logs"
+LOG_DIR_NAME = ".logs"
 LOG_FILE_NAME = "kmd.log"
 LOG_OBJECTS_NAME = "objects"
 
+_log_root = Path(".")
+
 
 def log_dir() -> Path:
-    return LOG_ROOT / LOG_DIR_NAME
+    return _log_root / LOG_DIR_NAME
 
 
 def log_file() -> Path:
@@ -136,10 +136,10 @@ def get_logger(name: str):
 
 
 def reset_log_root(log_root: Path):
-    global LOG_ROOT
-    if log_root != LOG_ROOT:
+    global _log_root
+    if log_root != _log_root:
         log = get_logger(__name__)
         log.info("Resetting log root: %s", log_file().absolute())
 
-        LOG_ROOT = log_root
+        _log_root = log_root
         logging_setup()

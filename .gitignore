@@ -1,10 +1,15 @@
-kmd_cache/
 trash/
 stash/
 tmp/
 
-workspace/
+# kmd data directories.
 *.kb/
+kmd_cache/
+.archive/
+.cache/
+.tmp/
+.logs/
+.settings/
 
 # Dev convenience convention: Temporarily rename a file to stop tracking it.
 stash.*
