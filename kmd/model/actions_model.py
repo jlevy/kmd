@@ -37,9 +37,10 @@ ActionInput = List[Item]
 @dataclass
 class ActionResult:
     items: List[Item]
+    """Results from this action. Most often, just a single item."""
 
-    # If True, a hint to archive the input items.
     replaces_input: bool = False
+    """If True, a hint to archive the input items."""
 
     def __str__(self):
         return abbreviate_obj(self, field_max_len=80)
@@ -50,7 +51,7 @@ class ActionResult:
 class Action(ABC):
     """
     The base classes for Actions, which are arbitrary operations that can be
-    performedon Items. Instantiate this or a more specific subclass to create
+    performed on Items. Instantiate this or a more specific subclass to create
     an action.
     """
 

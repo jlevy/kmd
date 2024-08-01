@@ -1,5 +1,5 @@
 import time
-from typing import List, cast
+from typing import List, Optional, cast
 from strif import abbreviate_str
 from kmd.action_defs import look_up_action
 from kmd.action_exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_metadata
@@ -10,7 +10,7 @@ from kmd.lang_tools.inflection import plural
 from kmd.model.actions_model import Action, ActionResult
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidStoreState
-from kmd.model.items_model import Item
+from kmd.model.items_model import Item, State
 from kmd.model.locators import StorePath
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.util.type_utils import not_none
@@ -48,7 +48,12 @@ def fetch_url_items(item: Item) -> Item:
     return enriched_item.items[0]
 
 
-def run_action(action: str | Action, *provided_args: str, internal_call=False) -> ActionResult:
+def run_action(
+    action: str | Action,
+    *provided_args: str,
+    internal_call=False,
+    override_state: Optional[State] = None
+) -> ActionResult:
 
     start_time = time.time()
 
@@ -100,6 +105,8 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
     # Add to the history of each item.
     for item in result.items:
         item.add_to_history(action_name)
+        if override_state:
+            item.state = override_state
 
     # Log info.
     log.info("Action %s result: %s", action_name, result)
@@ -122,17 +129,19 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
     old_inputs = sorted(set(input_store_paths) - set(result_store_paths))
 
     # If there is a hint that the action replaces the input, archive any inputs that are not in the result.
+    ws = current_workspace()
     archived_store_paths = []
     if result.replaces_input and input_items:
         for input_store_path in old_inputs:
-            current_workspace().archive(input_store_path)
+            # Note some outputs may be missing if replace_input was used.
+            ws.archive(input_store_path, missing_ok=True)
             log.message("Archived input item: %s", input_store_path)
-        archived_store_paths = old_inputs
+        archived_store_paths.extend(old_inputs)
 
     # Select the final output (omitting any that were archived) and show the current selection.
     if not internal_call:
         remaining_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
-        current_workspace().set_selection(remaining_outputs)
+        ws.set_selection(remaining_outputs)
         output()
         commands.select()
 

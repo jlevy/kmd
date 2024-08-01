@@ -7,10 +7,11 @@ from kmd.action_exec.action_registry import (
     each_item_wrapper,
 )
 from kmd.config.text_styles import EMOJI_PROCESS
+from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import Item, ItemRelations, ItemType
+from kmd.model.items_model import Item, ItemRelations, ItemType, State
 from kmd.model.locators import StorePath
 from kmd.text_formatting.html_in_md import (
     Wrapper,
@@ -58,6 +59,8 @@ def define_action_sequence(
 
             validate_action_names(action_names)
 
+            transient_outputs: List[Item] = []
+
             for i, action_name in enumerate(self.action_sequence):
                 for item in items:
                     if not item.store_path:
@@ -74,8 +77,26 @@ def define_action_sequence(
                 )
 
                 item_paths = [not_none(item.store_path) for item in items]
-                result = run_action(action_name, *item_paths)
+
+                # Output of this action is transient if it's not the last action.
+                last_action = i == len(self.action_sequence) - 1
+                output_state = None if last_action else State.transient
+
+                result = run_action(action_name, *item_paths, override_state=output_state)
+
+                # Track transient items and archive them if all actions succeed.
+                for item in result.items:
+                    if item.state == State.transient:
+                        transient_outputs.append(item)
+
+                # Results are the input to the next action in the sequence.
                 items = result.items
+
+            log.message("Sequence complete; archiving %s transient items", len(transient_outputs))
+            ws = current_workspace()
+            for item in transient_outputs:
+                assert item.store_path
+                ws.archive(StorePath(item.store_path))
 
             log.separator()
 

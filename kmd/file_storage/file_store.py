@@ -402,13 +402,17 @@ class FileStore:
             self._id_index_item(new_store_path)
         # TODO: Update metadata of all relations that point to this path too.
 
-    def archive(self, store_path: StorePath) -> StorePath:
+    def archive(self, store_path: StorePath, missing_ok: bool = False) -> StorePath:
         """
         Archive the item by moving it into the archive directory.
         """
         log.message("Archiving item: %s -> %s", store_path, Path(ARCHIVE_DIR) / store_path)
+        orig_path = self.base_dir / store_path
         archive_path = self.archive_dir / store_path
-        move_file(self.base_dir / store_path, archive_path)
+        if missing_ok and not orig_path.exists():
+            log.message("Item to archive not found so moving on: %s", orig_path)
+            return store_path
+        move_file(orig_path, archive_path)
         self._remove_references([store_path])
         return StorePath(join(ARCHIVE_DIR, store_path))
 

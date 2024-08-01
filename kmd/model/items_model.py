@@ -35,14 +35,23 @@ class ItemType(Enum):
     """Kinds of items."""
 
     note = "note"
-    question = "question"
     concept = "concept"
-    answer = "answer"
     resource = "resource"
     config = "config"
     export = "export"
     instruction = "instruction"
     extension = "extension"
+
+
+class State(Enum):
+    """
+    Review state of an item. Draft is default. Transient is used for items that may be
+    safely auto-archived.
+    """
+
+    draft = "draft"
+    reviewed = "reviewed"
+    transient = "transient"
 
 
 class Format(Enum):
@@ -163,6 +172,7 @@ class Item:
     """
 
     type: ItemType
+    state: State = State.draft
     title: Optional[str] = None
     url: Optional[Url] = None
     description: Optional[str] = None
@@ -218,6 +228,7 @@ class Item:
         # These are the enum and dataclass fields.
         try:
             type = ItemType(item_dict["type"])
+            state = State(item_dict["state"]) if "state" in item_dict else State.draft
             format = Format(item_dict["format"]) if "format" in item_dict else None
             file_ext = FileExt(item_dict["file_ext"]) if "file_ext" in item_dict else None
             body = item_dict.get("body")
@@ -237,11 +248,21 @@ class Item:
             key: value
             for key, value in item_dict.items()
             if key
-            not in ["type", "format", "file_ext", "body", "history", "relations", "store_path"]
+            not in [
+                "type",
+                "state",
+                "format",
+                "file_ext",
+                "body",
+                "history",
+                "relations",
+                "store_path",
+            ]
         }
 
         return Item(
             type=type,
+            state=state,
             format=format,
             file_ext=file_ext,
             body=body,

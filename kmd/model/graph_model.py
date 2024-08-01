@@ -65,7 +65,7 @@ class GraphData:
             log.warning(
                 "In graph view, removed %d links to orphaned nodes: %s",
                 len(self.links) - len(valid_links),
-                abbreviate_list(missing_ids),
+                abbreviate_list(list(missing_ids)),
             )
 
         return GraphData(nodes=self.nodes.values(), links=valid_links)
