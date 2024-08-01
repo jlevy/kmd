@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any, Tuple
 from urllib.parse import urlparse
 from kmd.media.yt_dlp_utils import parse_date, ydl_download_audio, ydl_extract_info
 from kmd.model.errors_model import ApiResultError, InvalidInput
@@ -63,6 +63,9 @@ class Vimeo(MediaService):
     def download_audio(self, url: Url, target_dir: Optional[str] = None) -> str:
         url = not_none(self.canonicalize(url), "Not a recognized Vimeo URL")
         return ydl_download_audio(url, target_dir)
+
+    def list_channel_items(self, url: Url) -> List[MediaMetadata]:
+        raise NotImplementedError()
 
     def _extract_info(self, url: Url) -> Dict[str, Any]:
         url = not_none(self.canonicalize(url), "Not a recognized Vimeo URL")

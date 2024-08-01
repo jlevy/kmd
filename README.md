@@ -94,7 +94,7 @@ summarize_as_bullets
 create_pdf
 
 # Get all videos on a channel and then download and transcribe them:
-list_channel_items 'https://www.youtube.com/@Kboges'
+list_channel 'https://www.youtube.com/@Kboges'
 transcribe
 
 # Processing a really long document with sliding windows:

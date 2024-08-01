@@ -94,3 +94,8 @@ class MediaService(ABC):
     def download_audio(self, url: Url) -> Path:
         """Download media from URL and extract audio to mp3."""
         pass
+
+    @abstractmethod
+    def list_channel_items(self, url: Url) -> List[MediaMetadata]:
+        """List all items in a channel."""
+        pass

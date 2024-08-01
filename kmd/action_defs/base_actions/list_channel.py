@@ -1,4 +1,4 @@
-from kmd.media.media_services import youtube
+from kmd.media.media_services import canonicalize_media_url, list_channel_items
 from kmd.action_exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     Action,
@@ -24,14 +24,14 @@ class ListChannel(Action):
         item = items[0]
         if not item.url:
             raise InvalidInput("Item must have a URL")
-        if not youtube.canonicalize(item.url):
-            raise InvalidInput("Only YouTube download currently supported")
+        if not canonicalize_media_url(item.url):
+            raise InvalidInput("Media format not supported")
 
-        video_meta_list = youtube.list_channel_items(item.url)
+        metadata_list = list_channel_items(item.url)
 
         result_items = []
-        for metadata in video_meta_list:
-            if not youtube.canonicalize(metadata.url):
+        for metadata in metadata_list:
+            if not canonicalize_media_url(metadata.url):
                 log.warning("Skipping non-recognized video URL: %s", metadata.url)
                 continue
 
