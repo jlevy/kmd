@@ -1,10 +1,28 @@
+from typing import Dict, List
 from textwrap import indent
 from slugify import slugify
-from kmd.llms.completion import completion
+import litellm
 from kmd.config.logger import get_logger
+from kmd.model.errors_model import ApiResultError
 from kmd.util.log_calls import log_calls
 
+
 log = get_logger(__name__)
+
+
+def _litellm_completion(model: str, messages: List[Dict[str, str]]) -> str:
+    llm_output = litellm.completion(
+        model,
+        messages=messages,
+    )
+    result = llm_output.choices[0].message.content  # type: ignore
+    if not result or not isinstance(result, str):
+        raise ApiResultError(f"LLM completion failed: {model}: {llm_output}")
+    total_input_len = sum(len(m["content"]) for m in messages)
+    log.info(
+        f"Got LLM completion from {model}: input {total_input_len} chars in {len(messages)} messages, result {len(result)} chars"
+    )
+    return result
 
 
 @log_calls(level="info")
@@ -26,7 +44,7 @@ def llm_completion(
             f"""System message: {system_message}\n\nUser message: {user_message}\n""",
         )
 
-    text_output = completion(
+    text_output = _litellm_completion(
         model,
         messages=[
             {"role": "system", "content": system_message},

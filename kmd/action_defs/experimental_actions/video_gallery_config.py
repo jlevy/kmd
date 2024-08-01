@@ -10,7 +10,7 @@ log = get_logger(__name__)
 class ConfigureVideoGallery(Action):
     def __init__(self):
         super().__init__(
-            name="configure_video_gallery",
+            name="video_gallery_conifg",
             description="Set up a video gallery config with YouTube videos and their descriptions.",
             expected_args=ONE_OR_MORE_ARGS,
         )

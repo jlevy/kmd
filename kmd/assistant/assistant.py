@@ -1,6 +1,6 @@
 from textwrap import dedent
 from cachetools import cached
-from kmd.action_exec.llm_completion import llm_completion
+from kmd.llms.llm_completion import llm_completion
 from kmd.config.settings import DEBUG_ASSISTANT
 from kmd.file_storage.workspaces import current_workspace
 from kmd.text_formatting.markdown_normalization import wrap_markdown

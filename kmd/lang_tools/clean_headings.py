@@ -1,6 +1,6 @@
 from textwrap import dedent
 from typing import List
-from kmd.action_exec.llm_completion import llm_completion
+from kmd.llms.llm_completion import llm_completion
 from kmd.model.language_models import LLM
 from kmd.text_formatting.markdown_util import as_bullet_points
 
