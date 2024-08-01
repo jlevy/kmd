@@ -25,11 +25,8 @@ class TranscribeMedia(EachItemAction):
             raise InvalidInput("Item must have a URL")
 
         transcription = download_and_transcribe(item.url)
-        title = item.title or UNTITLED  # This shouldn't happen normally.
-        result_title = f"{title} ({self.name})"
         result_item = item.derived_copy(
             type=ItemType.note,
-            title=result_title,
             body=transcription,
             format=Format.md_html,  # Important to note this since we put in timestamp spans.
             file_ext=FileExt.md,

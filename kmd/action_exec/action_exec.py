@@ -97,6 +97,11 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
 
     elapsed = time.time() - start_time
 
+    # Add to the history of each item.
+    for item in result.items:
+        item.add_to_history(action_name)
+
+    # Log info.
     log.info("Action %s result: %s", action_name, result)
     log.message(
         "%s Action done: %s completed with %s %s",
@@ -108,7 +113,7 @@ def run_action(action: str | Action, *provided_args: str, internal_call=False) -
     if elapsed > 1.0:
         log.message("%s Action %s took %.1fs.", EMOJI_TIMING, action_name, elapsed)
 
-    # Save the result items. This is done here so the action need not worry about saving.
+    # Save the result items. This is done here; the action itself should not worry about saving.
     for item in result.items:
         workspace.save(item)
 

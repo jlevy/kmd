@@ -151,6 +151,11 @@ UNTITLED = "Untitled"
 
 
 @dataclass
+class Operation:
+    operation: str
+
+
+@dataclass
 class Item:
     """
     An Item is any piece of information we may wish to save or perform operations on, such as
@@ -178,6 +183,9 @@ class Item:
 
     # Path to the item in the store, if it has been saved.
     store_path: Optional[str] = None
+
+    # Optionally, a history of operations.
+    history: Optional[List[Operation]] = None
 
     # Optionally, relations to other items, including any time this item is derived from.
     relations: ItemRelations = field(default_factory=ItemRelations)
@@ -213,6 +221,7 @@ class Item:
             format = Format(item_dict["format"]) if "format" in item_dict else None
             file_ext = FileExt(item_dict["file_ext"]) if "file_ext" in item_dict else None
             body = item_dict.get("body")
+            history = [Operation(**op) for op in item_dict.get("history", [])]
             relations = (
                 ItemRelations(**item_dict["relations"])
                 if "relations" in item_dict
@@ -227,7 +236,8 @@ class Item:
         other_metadata = {
             key: value
             for key, value in item_dict.items()
-            if key not in ["type", "format", "file_ext", "body", "relations", "store_path"]
+            if key
+            not in ["type", "format", "file_ext", "body", "history", "relations", "store_path"]
         }
 
         return Item(
@@ -236,6 +246,7 @@ class Item:
             file_ext=file_ext,
             body=body,
             relations=relations,
+            history=history,
             **other_metadata,
             store_path=store_path,
         )
@@ -306,9 +317,10 @@ class Item:
 
         return item_dict
 
-    def abbrev_title(self, max_len: int = 100) -> str:
+    def abbrev_title(self, max_len: int = 100, with_last_op: bool = True) -> str:
         """
-        Get or infer title.
+        Get or infer title. By default, include the last operation as a parenthetical
+        at the end of the title.
         """
         title_raw_text = (
             self.title
@@ -318,7 +330,22 @@ class Item:
             or UNTITLED
         )
 
-        return clean_title(abbreviate_phrase_in_middle(html_to_plaintext(title_raw_text), max_len))
+        # Add a suffix indicating the last operation, if there was one.
+        suffix = ""
+        last_op = with_last_op and self.history and self.history[-1].operation
+        if last_op:
+            suffix = f" ({last_op})"
+
+        shorter_len = min(max_len, max(max_len - len(suffix), 20))
+        clean_text = clean_title(
+            abbreviate_phrase_in_middle(html_to_plaintext(title_raw_text), shorter_len)
+        )
+
+        final_text = clean_text
+        if len(suffix) + len(clean_text) <= max_len:
+            final_text += suffix
+
+        return final_text
 
     def abbrev_description(self, max_len: int = 1000) -> str:
         """
@@ -409,7 +436,7 @@ class Item:
         merged_fields = self._merge_fields(other)
         return Item(**merged_fields)
 
-    def derived_copy(self, **kwargs) -> "Item":
+    def derived_copy(self, operation: Optional[str] = None, **kwargs) -> "Item":
         """
         Same as `new_copy_with()`, but also updates `derived_from` relation.
         """
@@ -418,6 +445,10 @@ class Item:
 
         new_item = self.new_copy_with(**kwargs)
         new_item.update_relations(derived_from=[self.store_path])
+
+        if operation:
+            new_item.add_to_history(operation)
+
         return new_item
 
     def update_relations(self, **relations: List[str]) -> ItemRelations:
@@ -468,8 +499,8 @@ class Item:
         node = Node(
             id=self.store_path,
             type=self.type.name,
-            title=self.title or self.store_path,
-            description=self.description,
+            title=self.abbrev_title(),
+            description=self.abbrev_description(),
             body=None,  # Skip for now, might add if we find it useful.
             url=str(self.url) if self.url else None,
             thumbnail_url=self.thumbnail_url,
@@ -487,6 +518,11 @@ class Item:
         # TODO: Extract other relations here from the content.
 
         return node, links
+
+    def add_to_history(self, operation_name: str):
+        if not self.history:
+            self.history = []
+        self.history.append(Operation(operation_name))
 
     def __str__(self):
         return abbreviate_obj(self)

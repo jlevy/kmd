@@ -18,7 +18,6 @@ define_llm_action(
         You give exactly the results requested without additional commentary.
         """
     ),
-    title_template="{title} ({action_name})",
     template=dedent(
         """
         Proofread the following text according to these rules:

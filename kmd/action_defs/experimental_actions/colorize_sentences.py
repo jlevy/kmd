@@ -53,10 +53,8 @@ class ColorizeSentences(EachItemAction):
                     + "\n"
                 )
 
-        new_title = f"{item.abbrev_title()} (colorized sentences)"
-
         output_item = item.derived_copy(
-            type=ItemType.note, title=new_title, body=doc.reassemble(), format=Format.md_html
+            type=ItemType.note, body=doc.reassemble(), format=Format.md_html
         )
 
         return output_item

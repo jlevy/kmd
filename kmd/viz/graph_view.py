@@ -32,7 +32,7 @@ def assemble_workspace_graph() -> GraphData:
             node, links = item.as_node_links()
             graph_data.merge([node], links)
         except Exception as e:
-            log.warning("Error processing item: %s: %s", store_path, e)
+            log.warning("Error processing item: %s: %s", store_path, e, exc_info=e)
 
     return graph_data.validate()
 
