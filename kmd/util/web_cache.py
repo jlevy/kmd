@@ -10,8 +10,8 @@ import time
 from enum import Enum
 import requests
 import strif
-from kmd.util.download_url import download_url, user_agent_headers
 from strif import clean_alphanum_hash
+from kmd.util.download_url import download_url, user_agent_headers
 from kmd.util.url import Url, normalize_url
 from kmd.config.logger import get_logger
 
@@ -40,6 +40,9 @@ class DirStore:
     A simple file storage scheme: A directory of items, organized into folders, stored by readable
     but uniquely hashed keys so it's possible to inspect the directory.
     """
+
+    # TODO: Would be useful to support optional additional root directories, with write always
+    # being to the main root but cache lookups checking in sequence, allowing a hierarchy of caches.
 
     def __init__(self, root: Path, hash_func: Optional[Callable[[str], str]] = None) -> None:
         self.root: Path = root
@@ -71,9 +74,9 @@ class DirStore:
     def find_all(
         self, keys: list[str], folder: Optional[str] = None, suffix: Optional[str] = None
     ) -> dict[str, Optional[Path]]:
-        """Look up all existing cached results for the set of keys.
-
-        This should work fine but could be optimized for large batches.
+        """
+        Look up all existing cached results for the set of keys. This should work fine but could
+        be optimized for large batches.
         """
         return {key: self.find(key, folder=folder, suffix=suffix) for key in keys}
 

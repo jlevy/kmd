@@ -14,11 +14,10 @@ from textwrap import dedent
 import threading
 import time
 from typing import Callable, List
-from rich import get_console
 from xonsh.tools import XonshError
 import litellm
 from kmd.config.setup import setup
-from kmd.config.logger import get_logger
+from kmd.config.logger import get_console, get_logger
 from kmd.config.text_styles import (
     EMOJI_WARN,
     COLOR_ERROR,
@@ -71,8 +70,6 @@ def xonsh_command_for(func: Callable):
             log.error(f"[{COLOR_ERROR}]Command error:[/{COLOR_ERROR}] %s", _summarize_traceback(e))
 
             log.info("Command error details: %s", e, exc_info=True)
-        finally:
-            output()
 
     command.__doc__ = func.__doc__
     return command
@@ -95,8 +92,6 @@ class CallableAction:
             log.info("Action error details: %s", e, exc_info=True)
         finally:
             log_tallies(if_slower_than=10.0)
-            output()
-            output()
 
     def __repr__(self):
         return f"CallableAction({str(self.action)})"

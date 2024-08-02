@@ -142,7 +142,6 @@ def run_action(
     if not internal_call:
         remaining_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
         ws.set_selection(remaining_outputs)
-        output()
         commands.select()
 
     return result

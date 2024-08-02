@@ -18,6 +18,7 @@ from kmd.text_formatting.html_in_md import (
     div_wrapper,
     identity_wrapper,
 )
+from kmd.text_ui.command_output import output_separator
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
@@ -67,7 +68,7 @@ def define_action_sequence(
                     if not item.store_path:
                         raise InvalidInput("Item must have a store path: %s", item)
 
-                log.separator()
+                output_separator()
                 log.message(
                     "%s Action sequence %s part %s of %s: %s",
                     EMOJI_PROCESS,
@@ -103,7 +104,7 @@ def define_action_sequence(
                 assert item.store_path
                 ws.archive(StorePath(item.store_path))
 
-            log.separator()
+            output_separator()
 
             return ActionResult(items)
 
@@ -221,7 +222,7 @@ def define_action_combo(
             results: List[ActionResult] = []
 
             for i, action_name in enumerate(self.action_sequence):
-                log.separator()
+                output_separator()
                 log.message(
                     "%s Action combo %s part %s of %s: %s",
                     EMOJI_PROCESS,
@@ -237,7 +238,7 @@ def define_action_combo(
 
             combined_result = self.combiner(self, items, results)
 
-            log.separator()
+            output_separator()
 
             log.message(
                 "Combined output of %s actions on %s inputs: %s",

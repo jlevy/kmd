@@ -10,7 +10,6 @@ import time
 import shlex
 from os.path import expanduser
 from typing import List, Optional
-from rich import get_console
 import xonsh.main
 from xonsh.main import events
 from xonsh.shell import Shell
@@ -19,7 +18,7 @@ from xonsh.built_ins import XSH
 from xonsh.execer import Execer
 from xonsh.xontribs import xontribs_load
 from pygments.token import Token
-from kmd.config.logger import get_logger
+from kmd.config.logger import get_console, get_logger
 from kmd.config.setup import setup
 from kmd.text_ui.command_output import output, output_assistance
 from kmd.assistant.assistant import assistance

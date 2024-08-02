@@ -10,8 +10,9 @@ from enum import Enum
 import textwrap
 from textwrap import dedent, indent
 from typing import Any, Callable
-from rich import print as rprint
+import rich
 from rich.text import Text
+from kmd.config.logger import get_console
 from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_lines_to_width
 from kmd.config.text_styles import (
     COLOR_ASSISTANCE,
@@ -23,7 +24,10 @@ from kmd.config.text_styles import (
     COLOR_RESPONSE,
     CONSOLE_WRAP_WIDTH,
     EMOJI_ASSISTANT,
+    HRULE,
 )
+
+console = get_console()
 
 
 class Wrap(Enum):
@@ -107,19 +111,19 @@ def format_action_description(name: str, doc: str) -> Text:
     )
 
 
-# Allow output stream to be customized if desired.
-_output_stream = threading.local()
-_output_stream.current = sys.stdout
+# Allow output stream to be redirected if desired.
+_output_context = threading.local()
+_output_context.stream = None
 
 
 @contextmanager
 def redirect_output(new_output):
-    old_output = getattr(_output_stream, "current", sys.stdout)
-    _output_stream.current = new_output
+    old_output = getattr(_output_context, "stream", sys.stdout)
+    _output_context.stream = new_output
     try:
         yield
     finally:
-        _output_stream.current = old_output
+        _output_context.stream = old_output
 
 
 def output_as_string(func: Callable, *args: Any, **kwargs: Any) -> str:
@@ -132,19 +136,24 @@ def output_as_string(func: Callable, *args: Any, **kwargs: Any) -> str:
     return buffer.getvalue()
 
 
-def _current_output():
-    return getattr(_output_stream, "current", sys.stdout)
+def rprint(*args, **kwargs):
+    """Print to global console, unless output stream is redirected."""
+
+    stream = getattr(_output_context, "stream")
+    if stream:
+        rich.print(*args, **kwargs, file=stream)
+    else:
+        console.print(*args, **kwargs)
 
 
 def output(message: str | Text = "", *args, text_wrap: Wrap = Wrap.WRAP, color=None):
-    out = _current_output()
     if isinstance(message, str):
         if color:
-            rprint(Text(fill_text(message % args, text_wrap), color), file=out)
+            rprint(Text(fill_text(message % args, text_wrap), color))
         else:
-            rprint(fill_text(message % args, text_wrap), file=out)
+            rprint(fill_text(message % args, text_wrap))
     else:
-        rprint(message, file=out)
+        rprint(message)
 
 
 def output_markdown(doc_str: str):
@@ -154,11 +163,14 @@ def output_markdown(doc_str: str):
 def _output_message(
     message: str, *args, text_wrap: Wrap, color: str, transform: Callable[[str], str] = lambda x: x
 ):
-    out = _current_output()
     text = message % args if args else message
-    rprint(file=out)
-    rprint(Text(transform(fill_text(text, text_wrap)), color), file=out)
-    rprint(file=out)
+    rprint()
+    rprint(Text(transform(fill_text(text, text_wrap)), color))
+    rprint()
+
+
+def output_separator():
+    rprint(HRULE)
 
 
 def output_status(message: str, *args, text_wrap: Wrap = Wrap.NONE):

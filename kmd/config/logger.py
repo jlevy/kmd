@@ -33,8 +33,14 @@ def log_objects_dir() -> Path:
 
 # Rich console theme setup.
 _custom_theme = Theme(RICH_STYLES)
-console = Console(theme=_custom_theme)
+_console = Console(theme=_custom_theme)
 reconfigure(theme=_custom_theme)
+
+
+def get_console():
+    """A globally shared custom console for logging and output for interactive use."""
+
+    return _console
 
 
 # TODO: Need this to enforce flushing of stream?
@@ -61,6 +67,7 @@ def logging_setup():
     file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
 
     console_handler = RichHandler(
+        console=_console,
         level=WARNING,
         show_time=False,
         show_path=False,
@@ -109,9 +116,6 @@ class CustomLogger:
         if len(args) > 0:
             args = (prefix_with_warn_emoji(args[0]),) + args[1:]
         self.logger.error(*args, **kwargs)
-
-    def separator(self):
-        self.message(HRULE)
 
     def save_object(self, description: str, prefix_slug: Optional[str], obj: Any):
         prefix = prefix_slug + "." if prefix_slug else ""
