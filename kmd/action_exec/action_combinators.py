@@ -59,6 +59,7 @@ def define_action_sequence(
 
             validate_action_names(action_names)
 
+            original_input_paths = [not_none(item.store_path) for item in items]
             transient_outputs: List[Item] = []
 
             for i, action_name in enumerate(self.action_sequence):
@@ -92,6 +93,10 @@ def define_action_sequence(
                 # Results are the input to the next action in the sequence.
                 items = result.items
 
+            # The final items should be derived from the original inputs.
+            for item in items:
+                item.update_relations(derived_from=original_input_paths)
+
             log.message("Sequence complete; archiving %s transient items", len(transient_outputs))
             ws = current_workspace()
             for item in transient_outputs:
@@ -104,9 +109,7 @@ def define_action_sequence(
 
 
 Combiner = Callable[[Action, List[Item], List[ActionResult]], Item]
-"""
-A function that combines the outputs of multiple actions into a single Item.
-"""
+"""A function that combines the outputs of multiple actions into a single Item."""
 
 
 def combine_with_wrappers(
@@ -142,7 +145,6 @@ def combine_with_wrappers(
     combo_title = f"{inputs[0].title}"
     if len(inputs) > 1:
         combo_title += f" and {len(inputs) - 1} others"
-    combo_title += f" ({action.friendly_name})"
 
     relations = ItemRelations(derived_from=[StorePath(part.store_path) for part, _wrapper in parts])
     combo_result = Item(

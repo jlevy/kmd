@@ -6,6 +6,7 @@ from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     Action,
     EachItemAction,
+    LLMTemplate,
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item
@@ -25,7 +26,7 @@ log = get_logger(__name__)
 def _sliding_llm_transform(
     model: str,
     system_message: str,
-    template: str,
+    template: LLMTemplate,
     input: str,
     windowing: Optional[WindowSettings],
     diff_filter: DiffOpFilter,

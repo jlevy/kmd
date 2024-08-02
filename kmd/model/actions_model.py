@@ -12,6 +12,7 @@ from kmd.model.params_model import ACTION_PARAMS, ChunkSize
 from kmd.text_formatting.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_utils import format_key_value
+from kmd.util.string_template import StringTemplate
 
 
 log = get_logger(__name__)
@@ -29,6 +30,21 @@ ONE_OR_NO_ARGS = ExpectedArgs(0, 1)
 TWO_ARGS = ExpectedArgs(2, 2)
 ANY_ARGS = ExpectedArgs(0, None)
 ONE_OR_MORE_ARGS = ExpectedArgs(1, None)
+
+
+class TitleTemplate(StringTemplate):
+    """A template for a title."""
+
+    def __init__(self, template: str):
+        super().__init__(template, allowed_fields=["title", "action_name"])
+
+
+class LLMTemplate(StringTemplate):
+    """A template for an LLM request."""
+
+    def __init__(self, template: str):
+        super().__init__(template, allowed_fields=["body"])
+
 
 # For now these are simple but we will want to support other hints or output data in the future.
 ActionInput = List[Item]
@@ -61,8 +77,8 @@ class Action(ABC):
     friendly_name: Optional[str] = None
     model: Optional[str] = None
     chunk_size: Optional[ChunkSize] = None
-    title_template: Optional[str] = None
-    template: Optional[str] = None
+    title_template: Optional[TitleTemplate] = None
+    template: Optional[LLMTemplate] = None
     system_message: Optional[str] = None
     expected_args: ExpectedArgs = field(default_factory=lambda: ONE_ARG)
     interactive_input: bool = False

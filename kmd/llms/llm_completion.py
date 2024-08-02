@@ -3,6 +3,7 @@ from textwrap import indent
 from slugify import slugify
 import litellm
 from kmd.config.logger import get_logger
+from kmd.model.actions_model import LLMTemplate
 from kmd.model.errors_model import ApiResultError
 from kmd.util.log_calls import log_calls
 
@@ -27,7 +28,7 @@ def _litellm_completion(model: str, messages: List[Dict[str, str]]) -> str:
 
 @log_calls(level="info")
 def llm_completion(
-    model: str, system_message: str, template: str, input: str, save_objects: bool = True
+    model: str, system_message: str, template: LLMTemplate, input: str, save_objects: bool = True
 ) -> str:
     """
     Perform an LLM completion. Input is inserted into the template with a `body` parameter.
