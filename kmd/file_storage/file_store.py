@@ -243,23 +243,24 @@ class FileStore:
 
     def find_path_for(self, item: Item) -> Tuple[StorePath, Optional[StorePath]]:
         """
-        Return the store path for an item. Store path may or may not already exist, depending on whether
-        store_path is already set on the item or the an item with the same identity has been saved before.
-        Returns `store_path, old_store_path` where `old_store_path` is the previous similarly named item
-        (or None there is none).
+        Return the store path for an item. If the item already has a `store_path`, we use that.
+        Otherwise we need to find the store path or generate a new one.
+
+        Returns `store_path, old_store_path` where `old_store_path` is the previous similarly
+        named item (or None there is none). Store path may or may not already exist, depending
+        on whether an item with the same identity has been saved before.
         """
         item_id = item.item_id()
         old_filename = None
         if item.store_path:
-            store_path = item.store_path
-            return StorePath(str(store_path)), None
+            return StorePath(item.store_path), None
         elif item_id in self.id_map:
             # If this item has an identity and we've saved under that id before, use the same store path.
             store_path = self.id_map[item_id]
             log.message("Item with id %s already saved: %s", item_id, store_path)
-            return StorePath(str(store_path)), None
+            return store_path, None
         else:
-            # We need to generate a new name.
+            # We need to generate a new filename.
             folder_path = Path(item_type_to_folder(item.type))
             filename, old_filename = self._new_filename_for(item)
             store_path = folder_path / filename

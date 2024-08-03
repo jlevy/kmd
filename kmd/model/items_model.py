@@ -127,6 +127,17 @@ class FileExt(Enum):
         return self.name
 
 
+class IdType(Enum):
+    """
+    Type of the id.
+    """
+
+    url = "url"
+    concept = "concept"
+
+    # TODO: Handle hash identity.
+
+
 @dataclass(frozen=True)
 class ItemId:
     """
@@ -135,11 +146,21 @@ class ItemId:
     """
 
     type: ItemType
-    format: Format
+    id_type: IdType
     value: str
 
     def __str__(self):
-        return f"id:{self.type.value}:{self.format.value}:{self.value}"
+        return f"id:{self.type.value}:{self.id_type.value}:{self.value}"
+
+    @classmethod
+    def for_item(cls, item: "Item") -> Optional["ItemId"]:
+        item_id = None
+        if item.type == ItemType.resource and item.format == Format.url and item.url:
+            item_id = ItemId(item.type, IdType.url, canonicalize_url(item.url))
+        elif item.type == ItemType.concept and item.title:
+            item_id = ItemId(item.type, IdType.concept, canonicalize_concept(item.title))
+
+        return item_id
 
 
 @dataclass
@@ -484,14 +505,7 @@ class Item:
         """
         Return identity of the item, or None if it should be treated as unique.
         """
-        item_id = None
-
-        if self.type == ItemType.resource and self.format == Format.url and self.url:
-            item_id = ItemId(self.type, self.format, canonicalize_url(self.url))
-        elif self.type == ItemType.concept and self.title:
-            item_id = ItemId(self.type, Format.plaintext, canonicalize_concept(self.title))
-
-        return item_id
+        return ItemId.for_item(self)
 
     def content_equals(self, other: "Item") -> bool:
         """
