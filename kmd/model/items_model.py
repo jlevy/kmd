@@ -10,6 +10,7 @@ from typing import Any, List, Optional, Tuple
 from kmd.config.logger import get_logger
 from kmd.model.graph_model import Link, Node
 from kmd.model.media_model import MediaMetadata
+from kmd.model.operations_model import Operation, OperationSummary
 from kmd.util.time_util import iso_format_z
 from kmd.file_storage.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
@@ -181,11 +182,6 @@ UNTITLED = "Untitled"
 
 
 @dataclass
-class Operation:
-    operation: str
-
-
-@dataclass
 class Item:
     """
     An Item is any piece of information we may wish to save or perform operations on, such as
@@ -215,11 +211,14 @@ class Item:
     # Path to the item in the store, if it has been saved.
     store_path: Optional[str] = None
 
-    # Optionally, a history of operations.
-    history: Optional[List[Operation]] = None
-
     # Optionally, relations to other items, including any time this item is derived from.
     relations: ItemRelations = field(default_factory=ItemRelations)
+
+    # The operation that created this item.
+    last_operation: Optional[Operation] = None
+
+    # Optionally, a history of operations.
+    history: Optional[List[OperationSummary]] = None
 
     # Optionally, a URL to a thumbnail image for this item.
     thumbnail_url: Optional[Url] = None
@@ -253,7 +252,12 @@ class Item:
             format = Format(item_dict["format"]) if "format" in item_dict else None
             file_ext = FileExt(item_dict["file_ext"]) if "file_ext" in item_dict else None
             body = item_dict.get("body")
-            history = [Operation(**op) for op in item_dict.get("history", [])]
+            last_operation = (
+                Operation(**item_dict.get("last_operation", {}))
+                if "last_operation" in item_dict
+                else None
+            )
+            history = [OperationSummary(**op) for op in item_dict.get("history", [])]
             relations = (
                 ItemRelations(**item_dict["relations"])
                 if "relations" in item_dict
@@ -275,6 +279,7 @@ class Item:
                 "format",
                 "file_ext",
                 "body",
+                "last_operation",
                 "history",
                 "relations",
                 "store_path",
@@ -288,6 +293,7 @@ class Item:
             file_ext=file_ext,
             body=body,
             relations=relations,
+            last_operation=last_operation,
             history=history,
             **other_metadata,
             store_path=store_path,
@@ -478,7 +484,7 @@ class Item:
         merged_fields = self._merge_fields(other)
         return Item(**merged_fields)
 
-    def derived_copy(self, operation: Optional[str] = None, **kwargs) -> "Item":
+    def derived_copy(self, **kwargs) -> "Item":
         """
         Same as `new_copy_with()`, but also updates `derived_from` relation.
         """
@@ -487,9 +493,6 @@ class Item:
 
         new_item = self.new_copy_with(**kwargs)
         new_item.update_relations(derived_from=[self.store_path])
-
-        if operation:
-            new_item.add_to_history(operation)
 
         return new_item
 
@@ -554,10 +557,10 @@ class Item:
 
         return node, links
 
-    def add_to_history(self, operation_name: str):
+    def add_to_history(self, operation_summary: OperationSummary):
         if not self.history:
             self.history = []
-        self.history.append(Operation(operation_name))
+        self.history.append(operation_summary)
 
     def __str__(self):
         return abbreviate_obj(self)

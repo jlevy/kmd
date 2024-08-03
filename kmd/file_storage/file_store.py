@@ -8,6 +8,7 @@ from os import path
 from slugify import slugify
 from strif import copyfile_atomic
 from kmd.config.settings import get_settings
+from kmd.model.operations_model import OPERATION_FIELDS
 from kmd.model.params_model import ParamSet, get_action_param
 from kmd.query.vector_index import WsVectorIndex
 from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
@@ -123,7 +124,7 @@ TMP_DIR = ".tmp"
 
 FILENAME_SLUG_MAX_LEN = 64
 
-ITEM_FIELD_SORT = custom_key_sort(ITEM_FIELDS)
+ITEM_FIELD_SORT = custom_key_sort(OPERATION_FIELDS + ITEM_FIELDS)
 
 
 class FileStore:

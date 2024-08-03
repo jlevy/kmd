@@ -1,9 +1,7 @@
 import time
 from typing import List, Optional, cast
-from strif import abbreviate_str
 from kmd.action_defs import look_up_action
 from kmd.action_exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_metadata
-from kmd.text_ui.command_output import output
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
@@ -11,6 +9,7 @@ from kmd.model.actions_model import Action, ActionResult
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidStoreState
 from kmd.model.items_model import Item, State
+from kmd.model.operations_model import Operation
 from kmd.model.locators import StorePath
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.util.type_utils import not_none
@@ -81,12 +80,10 @@ def run_action(
     # Ensure we have the right number of args.
     action.validate_args(args)
 
-    log.message(
-        "%s Action: %s %s",
-        EMOJI_CALL_BEGIN,
-        action_name,
-        abbreviate_str(" ".join(repr(arg) for arg in args), max_len=200),
-    )
+    # Now we have the operation we will perform.
+    # TODO: Also save the parameters/options that were used.
+    operation = Operation(action_name, args)
+    log.message("%s Action: %s", EMOJI_CALL_BEGIN, operation.command_line())
 
     # Ensure any items that are not saved are already in the workspace and get the corresponding items.
     # This looks up any URLs.
@@ -102,9 +99,12 @@ def run_action(
 
     elapsed = time.time() - start_time
 
-    # Add to the history of each item.
+    # Record the operation and add to the history of each item.
     for item in result.items:
-        item.add_to_history(action_name)
+        item.last_operation = operation
+        item.add_to_history(operation.summary())
+
+        # Override the state if requested (this handles marking items as transient).
         if override_state:
             item.state = override_state
 
