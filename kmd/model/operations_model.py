@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List
+from kmd.util.log_calls import quote_if_needed
 
 
 @dataclass(frozen=True)
@@ -11,15 +12,6 @@ class OperationSummary:
     """
 
     operation: str
-
-
-def quote_if_needed(arg: str) -> str:
-    """
-    Quoting compatible with most shells and xonsh.
-    """
-    if " " in arg or "'" in arg or '"' in arg:
-        return repr(arg)
-    return arg
 
 
 @dataclass(frozen=True)

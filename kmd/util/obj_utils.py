@@ -1,8 +1,9 @@
 from dataclasses import asdict, is_dataclass
 from enum import Enum
 import operator
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Iterable, List, Optional, Set, Tuple
 from strif import abbreviate_str
+from kmd.util.log_calls import quote_if_needed
 
 
 class DeleteSentinel:
@@ -58,36 +59,60 @@ def remove_values(
     return replace_values(data, [(target, DELETE_VALUE) for target in targets], eq)
 
 
-def abbreviate_value(value: Any, field_max_len: int) -> Dict[str, str]:
-    if is_dataclass(value):
-        value = asdict(value)
-    if not isinstance(value, dict):
-        raise ValueError(f"Value is not a dataclass instance or a dictionary: {type(value)}")
+def is_not_none(value: Any) -> bool:
+    return value is not None
 
-    return {
-        k: repr(
-            abbreviate_str(
-                str(v.value) if isinstance(v, Enum) else str(v),
-                max_len=field_max_len,
-                indicator="[…]",
+
+def _format_kvs(
+    items: Iterable[Tuple[Any, Any]],
+    field_max_len: int,
+    value_filter: Callable[[Any], bool] = is_not_none,
+) -> str:
+    abbreviated_items = {k: abbreviate_obj(v, field_max_len) for k, v in items if value_filter(v)}
+    return ", ".join(f"{k}={v}" for k, v in abbreviated_items.items())
+
+
+def abbreviate_obj(
+    value: Any,
+    field_max_len: int = 64,
+    list_max_len: int = 32,
+    value_filter: Callable[[Any], bool] = is_not_none,
+    visited: Optional[Set[Any]] = None,
+) -> str:
+    """
+    Helper to print an abbreviated string version of an object. Not a parsable format.
+    Useful for abbreviating dicts or for __str__() on dataclasses. Abbreviate long
+    fields for readability, omit None values, and omit quotes when possible.
+    """
+    if visited is None:
+        visited = set()
+    if id(value) in visited:
+        return "<circular reference>"
+    visited.add(id(value))
+
+    if isinstance(value, list):
+        truncated_list = value[:list_max_len] + (["..."] if len(value) > list_max_len else [])
+        return (
+            "["
+            + ", ".join(
+                abbreviate_obj(item, field_max_len, list_max_len, value_filter, visited)
+                for item in truncated_list
             )
+            + "]"
         )
-        for k, v in sorted(value.items())
-        if v is not None
-    }
 
+    if is_dataclass(value):
+        name = value.__class__.__name__
+        value_dict = asdict(value)
+        return f"{name}(" + _format_kvs(value_dict.items(), field_max_len, value_filter) + ")"
 
-def abbreviate_obj(value: Any, field_max_len: int = 64) -> str:
-    """
-    Helper for __str__() on dataclass values or other dictionaries.
-    Abbreviate long fields for readability.
-    """
-    if not is_dataclass(value):
-        raise ValueError("The provided value is not a dataclass instance.")
+    if isinstance(value, dict):
+        return "{" + _format_kvs(value.items(), field_max_len, value_filter) + "}"
 
-    name = value.__class__.__name__
-    summary = ", ".join([f"{k}={v}" for k, v in abbreviate_value(value, field_max_len).items()])
-    return f"{name}({summary})"
+    if isinstance(value, Enum):
+        return value.name
+
+    return quote_if_needed(abbreviate_str(str(value), field_max_len))
 
 
 ## Tests

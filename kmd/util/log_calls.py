@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import functools
 import time
+import re
 from typing import Any, Callable, Dict, Optional
 import regex
 from strif import abbreviate_str
@@ -17,11 +18,32 @@ def single_line(text: str) -> str:
     return regex.sub(r"\s+", " ", text).strip()
 
 
+_QUOTABLE = re.compile(r"['\" \n\t\r]")
+
+
+def quote_if_needed(arg: str) -> str:
+    """
+    Only quote if necessary for readability. Quoting compatible with most shells and xonsh.
+    """
+    if _QUOTABLE.search(arg):
+        return repr(arg)
+    return arg
+
+
+def friendly_str(arg: Any) -> str:
+    """
+    Same as `str()` but quotes strings if helpful for readability.
+    """
+    return quote_if_needed(arg) if isinstance(arg, str) else str(arg)
+
+
 DEFAULT_TRUNCATE = 100
 
 
 def abbreviate_arg(
-    value: Any, repr_func: Callable = repr, truncate_length: Optional[int] = DEFAULT_TRUNCATE
+    value: Any,
+    repr_func: Callable = friendly_str,
+    truncate_length: Optional[int] = DEFAULT_TRUNCATE,
 ) -> str:
     """
     Abbreviate an argument value for logging.
@@ -60,7 +82,7 @@ def log_calls(
     show_return=False,
     if_slower_than: float = 0.0,
     truncate_length: Optional[int] = DEFAULT_TRUNCATE,
-    repr_func: Callable = repr,
+    repr_func: Callable = friendly_str,
 ):
     """
     Decorator to log function calls and returns and time taken, with optional display of
