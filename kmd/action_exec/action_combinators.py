@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Set, Tuple
 from kmd.action_defs import look_up_action
 from kmd.action_exec.action_exec import run_action
 from kmd.action_exec.action_registry import (
@@ -130,7 +130,8 @@ def combine_with_wrappers(
     if wrappers and len(wrappers) != len(results):
         raise InvalidInput("Expected as many wrappers as results: %s", wrappers)
 
-    parts = []
+    # Assemble the parts and wrappers.
+    parts: List[Tuple[Item, Wrapper]] = []
     for i, result in enumerate(results):
         wrapper = wrappers[i] if wrappers else identity_wrapper
         for part in result.items:
@@ -141,13 +142,16 @@ def combine_with_wrappers(
 
             parts.append((part, wrapper))
 
-    combo_body = separator.join(wrapper(part.body) for part, wrapper in parts)
+    # Assemble the body from the parts, wrapping each one.
+    combo_body = separator.join(wrapper(not_none(part.body)) for part, wrapper in parts)
 
     combo_title = f"{inputs[0].title}"
     if len(inputs) > 1:
         combo_title += f" and {len(inputs) - 1} others"
 
-    relations = ItemRelations(derived_from=[StorePath(part.store_path) for part, _wrapper in parts])
+    relations = ItemRelations(
+        derived_from=[StorePath(not_none(part.store_path)) for part, _wrapper in parts]
+    )
     combo_result = Item(
         title=combo_title,
         body=combo_body,
@@ -155,6 +159,18 @@ def combine_with_wrappers(
         format=results[0].items[0].format,
         relations=relations,
     )
+
+    # History when combining results is a litle complicated, so let's just concatenate
+    # all the history lists but avoid duplicates.
+    result_items = [item for result in results for item in result.items]
+    unique_ops: Set[str] = set()
+    combo_result.history = []
+
+    for item in result_items:
+        for entry in item.history or []:
+            if entry.operation not in unique_ops:
+                unique_ops.add(entry.operation)
+                combo_result.history.append(entry)
 
     return combo_result
 

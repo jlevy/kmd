@@ -457,10 +457,12 @@ class Item:
 
     def _merge_fields(self, other: Optional["Item"] = None, **kwargs) -> dict:
         defaults = {"store_path": None, "created_at": datetime.now(), "modified_at": datetime.now()}
-        base_fields = asdict(self)
+        # asdict() creates dicts recursively so using __annotations__ to do a shallow copy.
+        base_fields = {field: getattr(self, field) for field in self.__annotations__}
 
         if other:
-            base_fields.update(asdict(other))
+            for field in other.__annotations__:
+                base_fields[field] = getattr(other, field)
             base_fields["extra"] = {**(self.extra or {}), **(other.extra or {})}
 
         base_fields.update(defaults)

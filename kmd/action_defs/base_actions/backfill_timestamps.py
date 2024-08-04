@@ -76,7 +76,7 @@ class BackfillSourceTimestamps(EachItemAction):
             indent(token_mapping.diff.as_diff_str(include_equal=False), prefix="    "),
         )
 
-        log.info("Token mapping:\n%s", indent(token_mapping.full_mapping_str(), prefix="    "))
+        log.save_object("Token mapping", None, token_mapping.full_mapping_str())
 
         new_title = f"{item.title} ({self.name})"
         output_item = item.derived_copy(type=ItemType.note, title=new_title, format=Format.markdown)
