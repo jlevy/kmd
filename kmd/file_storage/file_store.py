@@ -24,6 +24,7 @@ from kmd.text_formatting.text_formatting import format_lines
 from kmd.text_formatting.doc_formatting import normalize_formatting
 from kmd.lang_tools.inflection import plural
 from kmd.util.file_utils import move_file
+from kmd.util.hash_utils import hash_file
 from kmd.util.log_calls import format_duration
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
@@ -352,6 +353,12 @@ class FileStore:
                 file_ext=file_ext,
                 store_path=store_path,
             )
+
+    def hash(self, store_path: StorePath) -> str:
+        """
+        Get a hash of the item at the given path.
+        """
+        return hash_file(self.base_dir / store_path, algorithm="sha1")
 
     def add_resource(self, file_path_or_url: str) -> StorePath:
         """

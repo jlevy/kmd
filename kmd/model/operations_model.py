@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import List
+from typing import Any, Dict, List, Optional
+from kmd.model.locators import StorePath
 from kmd.util.log_calls import quote_if_needed
 
 
@@ -15,6 +16,39 @@ class OperationSummary:
 
 
 @dataclass(frozen=True)
+class Input:
+    """
+    An input to an operation, which may include a hash fingerprint.
+    """
+
+    # TODO: May want to support Locators or other inputs besides StorePaths.
+    path: StorePath
+    hash: Optional[str] = None
+
+    def path_and_hash(self):
+        return f"{self.path}@{self.hash}"
+
+    def __str__(self):
+        return self.path_and_hash()
+
+    @classmethod
+    def parse(cls, input_str: str) -> "Input":
+        """
+        Parse an Input string in the format `path@hash`.
+        """
+        parts = input_str.split("@")
+        if len(parts) > 2:
+            raise ValueError(
+                f"Invalid input string format. Expected 'path@hash' or 'path': {input_str}"
+            )
+        elif len(parts) == 2:
+            path, hash = parts
+            return cls(path=StorePath(path), hash=hash)
+        else:
+            return cls(path=StorePath(input_str), hash=None)
+
+
+@dataclass(frozen=True)
 class Operation:
     """
     A single operation that was performed. An operation is an action together with all the
@@ -22,14 +56,26 @@ class Operation:
     """
 
     operation: str
-    arguments: List[str]
+    arguments: List[Input]
 
     def summary(self) -> OperationSummary:
         return OperationSummary(self.operation)
 
     def command_line(self):
-        quoted_args = [quote_if_needed(arg) for arg in self.arguments]
+        quoted_args = [quote_if_needed(str(arg.path)) for arg in self.arguments]
         return f"{self.operation} {' '.join(quoted_args)}"
+
+    def as_dict(self):
+        return {
+            "operation": self.operation,
+            "arguments": [arg.path_and_hash() for arg in self.arguments],
+        }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "Operation":
+        operation = d["operation"]
+        arguments = [Input.parse(input_str) for input_str in d.get("arguments", [])]
+        return cls(operation=operation, arguments=arguments)
 
     def __str__(self):
         return self.command_line()

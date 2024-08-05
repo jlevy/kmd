@@ -253,7 +253,7 @@ class Item:
             file_ext = FileExt(item_dict["file_ext"]) if "file_ext" in item_dict else None
             body = item_dict.get("body")
             last_operation = (
-                Operation(**item_dict.get("last_operation", {}))
+                Operation.from_dict(item_dict.get("last_operation", {}))
                 if "last_operation" in item_dict
                 else None
             )
@@ -344,10 +344,21 @@ class Item:
         Metadata is all relevant non-None fields in easy-to-serialize form.
         Optional fields are omitted unless they are set.
         """
+
         item_dict = asdict(self)
 
+        # Special case for prettier serialization of input path/hash.
+        if self.last_operation:
+            item_dict["last_operation"] = self.last_operation.as_dict()
+
         def serialize(v):
-            return v.value if isinstance(v, Enum) else v
+            if isinstance(v, Enum):
+                return v.value
+            elif isinstance(v, Operation):
+                # Special case for prettier display of inputs.
+                return v.as_dict()
+            else:
+                return v
 
         # It's simpler to keep enum values as strings for simplicity with
         # serialization to YAML and JSON.

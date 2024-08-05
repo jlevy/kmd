@@ -9,8 +9,8 @@ from kmd.model.actions_model import Action, ActionResult
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidStoreState
 from kmd.model.items_model import Item, State
-from kmd.model.operations_model import Operation
-from kmd.model.locators import StorePath
+from kmd.model.operations_model import Input, Operation
+from kmd.model.locators import Locator, StorePath, is_store_path
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.util.type_utils import not_none
 from kmd.commands import commands
@@ -19,15 +19,15 @@ from kmd.config.logger import get_logger
 log = get_logger(__name__)
 
 
-def collect_args(*args: str) -> List[str]:
+def collect_args(*args: str) -> List[Locator]:
     if not args:
         try:
             selection_args = current_workspace().get_selection()
-            return cast(List[str], selection_args)
+            return cast(List[Locator], selection_args)
         except InvalidStoreState:
             return []
     else:
-        return list(args)
+        return cast(List[Locator], list(args))
 
 
 def fetch_url_items(item: Item) -> Item:
@@ -62,8 +62,8 @@ def run_action(
     action_name = action.name
 
     # Get the current action params.
-    workspace = current_workspace()
-    action_params = workspace.get_action_params()
+    ws = current_workspace()
+    action_params = ws.get_action_params()
 
     # Update the action with any overridden params.
     if action_params:
@@ -81,8 +81,10 @@ def run_action(
     action.validate_args(args)
 
     # Now we have the operation we will perform.
+    # If the inputs are paths, record the input paths with hashes.
     # TODO: Also save the parameters/options that were used.
-    operation = Operation(action_name, args)
+    inputs = [Input(StorePath(arg), ws.hash(StorePath(arg))) for arg in args if is_store_path(arg)]
+    operation = Operation(action_name, inputs)
     log.message("%s Action: %s", EMOJI_CALL_BEGIN, operation.command_line())
 
     # Ensure any items that are not saved are already in the workspace and get the corresponding items.
@@ -122,7 +124,7 @@ def run_action(
 
     # Save the result items. This is done here; the action itself should not worry about saving.
     for item in result.items:
-        workspace.save(item)
+        ws.save(item)
 
     input_store_paths = [StorePath(not_none(item.store_path)) for item in input_items]
     result_store_paths = [StorePath(not_none(item.store_path)) for item in result.items]

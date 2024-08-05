@@ -19,7 +19,9 @@ define_llm_action(
         """
         Summarize the following text as a list of concise bullet points:
 
-        - Each point should be one to three sentences long. Include all key numbers or facts, without omitting any key details.
+        - Each point should be one sentence long.
+        
+        - Include all key numbers or facts, without omitting any claims or important details.
         
         - Use simple and precise language.
 
