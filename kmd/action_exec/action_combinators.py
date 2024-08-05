@@ -248,7 +248,7 @@ def define_action_combo(
                     action_name,
                 )
 
-                result = run_action(action_name, *item_paths)
+                result = run_action(action_name, *item_paths, override_state=State.transient)
 
                 results.append(result)
 

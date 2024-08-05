@@ -9,7 +9,8 @@ from kmd.config import colors
 CONSOLE_WRAP_WIDTH = 80
 """Wrap width for console output."""
 
-SPINNER = "line"  # for a list: python -m rich.spinner
+SPINNER = "dots12"
+"""Progress spinner. For a list, use `python -m rich.spinner`."""
 
 
 ## Text styles
