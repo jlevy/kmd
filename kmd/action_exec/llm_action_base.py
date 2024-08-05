@@ -77,11 +77,11 @@ class LLMAction(EachItemAction):
         self.diff_filter = diff_filter
 
     def run_item(self, item: Item) -> Item:
-        return run_llm_transform_action(self, item)
+        return run_llm_transform(self, item)
 
 
 @log_calls(level="message")
-def run_llm_transform_action(action: LLMAction, item: Item) -> Item:
+def run_llm_transform(action: LLMAction, item: Item) -> Item:
     """
     Run an LLM transform action as a sliding window on the input.
     """
@@ -124,9 +124,9 @@ def run_llm_transform_action(action: LLMAction, item: Item) -> Item:
 
 
 @log_calls(level="message")
-def run_llm_action(action: Action, item: Item) -> Item:
+def run_llm_completion(action: Action, item: Item) -> Item:
     """
-    Run a simple LLM completion on the input.
+    Run a simple LLM completion on the item.
     """
     if not item.body:
         raise InvalidInput(f"LLM actions expect a body: {action.name} on {item}")

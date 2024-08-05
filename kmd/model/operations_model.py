@@ -71,6 +71,23 @@ class Operation:
             "arguments": [arg.path_and_hash() for arg in self.arguments],
         }
 
+    def paths_eq(self, other: "Operation") -> bool:
+        return (
+            self.operation == other.operation
+            and len(self.arguments) == len(other.arguments)
+            and all(a.path == b.path for a, b in zip(self.arguments, other.arguments))
+        )
+
+    def exact_eq(self, other: "Operation") -> bool:
+        return self.paths_eq(other) and all(
+            a.hash == b.hash for a, b in zip(self.arguments, other.arguments)
+        )
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Operation):
+            return NotImplemented
+        return self.exact_eq(other)
+
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "Operation":
         operation = d["operation"]

@@ -517,6 +517,13 @@ class Item:
         self.relations = replace(self.relations, **relations)
         return self.relations
 
+    def update_history(self, operation: Operation) -> None:
+        """
+        Update the history of the item with the given operation.
+        """
+        self.last_operation = operation
+        self.add_to_history(operation.summary())
+
     def item_id(self) -> Optional[ItemId]:
         """
         Return identity of the item, or None if it should be treated as unique.

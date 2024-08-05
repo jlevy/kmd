@@ -5,10 +5,10 @@ from kmd.action_exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
-from kmd.model.actions_model import Action, ActionResult
+from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidStoreState
-from kmd.model.items_model import Item, State
+from kmd.model.items_model import UNTITLED, Item, State
 from kmd.model.operations_model import Input, Operation
 from kmd.model.locators import Locator, StorePath, is_store_path
 from kmd.text_formatting.text_formatting import format_lines
@@ -47,12 +47,29 @@ def fetch_url_items(item: Item) -> Item:
     return enriched_item.items[0]
 
 
+def assemble_single_output(action: Action, items: ActionInput) -> Item:
+    """
+    Assemble a single output item from the given input items, using the first
+    input item as a template.
+    """
+    primary_input = items[0]
+    output_item = primary_input.derived_copy(body=None)
+
+    if action.title_template:
+        output_item.title = action.title_template.format(title=primary_input.title or UNTITLED)
+
+    return output_item
+
+
 def run_action(
     action: str | Action,
     *provided_args: str,
     internal_call=False,
     override_state: Optional[State] = None
 ) -> ActionResult:
+    """
+    Main function to run an action.
+    """
 
     start_time = time.time()
 
@@ -103,11 +120,11 @@ def run_action(
 
     # Record the operation and add to the history of each item.
     for item in result.items:
-        item.last_operation = operation
-        item.add_to_history(operation.summary())
+        item.update_history(operation)
 
-        # Override the state if requested (this handles marking items as transient).
-        if override_state:
+    # Override the state if requested (this handles marking items as transient).
+    if override_state:
+        for item in result.items:
             item.state = override_state
 
     # Log info.
@@ -119,6 +136,7 @@ def run_action(
         len(result.items),
         plural("item", len(result.items)),
     )
+    elapsed = time.time() - start_time
     if elapsed > 1.0:
         log.message("%s Action %s took %.1fs.", EMOJI_TIMING, action_name, elapsed)
 
