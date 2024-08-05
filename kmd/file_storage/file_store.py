@@ -8,20 +8,17 @@ from os import path
 from slugify import slugify
 from strif import copyfile_atomic
 from kmd.config.settings import get_settings
-from kmd.model.operations_model import OPERATION_FIELDS
+from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.model.params_model import ParamSet, get_action_param
 from kmd.query.vector_index import WsVectorIndex
 from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
 from kmd.file_storage.filenames import parse_filename
 from kmd.file_storage.persisted_yaml import PersistedYaml
-from kmd.file_storage.yaml_util import custom_key_sort
-from kmd.model.errors_model import FileFormatError, InvalidFilename, InvalidStoreState
+from kmd.model.errors_model import InvalidFilename, InvalidStoreState
 from kmd.model.locators import StorePath
-from kmd.model.items_model import ITEM_FIELDS, FileExt, Format, Item, ItemId, ItemType
-from kmd.file_storage.frontmatter_format import FmFormat, fmf_read, fmf_write
+from kmd.model.items_model import FileExt, Format, Item, ItemId, ItemType
 from kmd.model.canon_url import canonicalize_url
 from kmd.text_formatting.text_formatting import format_lines
-from kmd.text_formatting.doc_formatting import normalize_formatting
 from kmd.lang_tools.inflection import plural
 from kmd.util.file_utils import move_file
 from kmd.util.hash_utils import hash_file
@@ -33,12 +30,41 @@ from kmd.config.logger import get_logger, log_file
 
 log = get_logger(__name__)
 
+
+## File Naming Conventions
+
+
+FILENAME_SLUG_MAX_LEN = 64
+
 # For folder names, note -> notes, question -> questions, etc.
 _type_to_folder = {name: plural(name) for name, _value in ItemType.__members__.items()}
 
 
 def item_type_to_folder(item_type: ItemType) -> str:
     return _type_to_folder[item_type.name]
+
+
+def _folder_for(item: Item) -> Path:
+    """
+    Relative Path for the folder containing this item type.
+    """
+    return Path(item_type_to_folder(item.type))
+
+
+def _slug_for(item: Item) -> str:
+    """
+    Get a readable slugified version of the title for this item (may not be unique).
+    """
+    title = item.abbrev_title(max_len=FILENAME_SLUG_MAX_LEN)
+    slug = slugify(title, max_length=FILENAME_SLUG_MAX_LEN, separator="_")
+    return slug
+
+
+def _join_filename(base_slug: str, full_suffix: str) -> str:
+    return f"{base_slug}.{full_suffix}"
+
+
+## File Utilities
 
 
 def _parse_check_filename(filename: str) -> Tuple[str, ItemType, FileExt]:
@@ -83,49 +109,13 @@ def skippable_file(filename: str) -> bool:
     )
 
 
-def write_item(item: Item, full_path: Path):
-    if item.is_binary:
-        raise ValueError(f"Binary Items should be external files: {item}")
-
-    formatted_body = normalize_formatting(item.body_text(), item.format)
-
-    if str(item.format) == str(Format.html):
-        fmformat = FmFormat.html
-    elif str(item.format) == str(Format.python):
-        fmformat = FmFormat.code
-    else:
-        fmformat = FmFormat.yaml
-
-    fmf_write(
-        full_path,
-        formatted_body,
-        item.metadata(),
-        format=fmformat,
-        key_sort=ITEM_FIELD_SORT,
-    )
-
-
-def read_item(full_path: Path, base_dir: Optional[Path]):
-    # This is a known text format or a YAML file, so we can read the whole thing.
-    store_path = str(full_path.relative_to(base_dir)) if base_dir else None
-    body, metadata = fmf_read(full_path)
-    if not metadata:
-        raise FileFormatError(
-            f"No metadata found in file: {store_path if store_path else full_path}"
-        )
-
-    return Item.from_dict(metadata, body=body, store_path=store_path)
-
+## Store Implementation
 
 ARCHIVE_DIR = ".archive"
 CACHE_DIR = ".cache"
 SETTINGS_DIR = ".settings"
 INDEX_DIR = ".index"
 TMP_DIR = ".tmp"
-
-FILENAME_SLUG_MAX_LEN = 64
-
-ITEM_FIELD_SORT = custom_key_sort(OPERATION_FIELDS + ITEM_FIELDS)
 
 
 class FileStore:
@@ -189,7 +179,7 @@ class FileStore:
         except InvalidFilename:
             log.debug("Skipping file with invalid name: %s", store_path)
             return
-        self.uniquifier.add(name, f"{item_type.name}.{file_ext.name}")
+        self.uniquifier.add(name, _join_filename(item_type.name, file_ext.name))
 
         item = self.load(store_path)
         item_id = item.item_id()
@@ -218,28 +208,20 @@ class FileStore:
         except FileNotFoundError:
             pass
 
-    def _base_slug_for(self, item: Item) -> str:
-        """
-        Get a readable slugified version of the title for this item (may not be unique).
-        """
-        title = item.abbrev_title(max_len=FILENAME_SLUG_MAX_LEN)
-        slug = slugify(title, max_length=FILENAME_SLUG_MAX_LEN, separator="_")
-        return slug
-
     def _new_filename_for(self, item: Item) -> Tuple[str, Optional[str]]:
         """
         Get a suitable filename for this item that is close to the slugified title yet also unique.
         Also return the old filename if it's different.
         """
-        slug = self._base_slug_for(item)
+        slug = _slug_for(item)
         full_suffix = item.get_full_suffix()
         # Get a unique name per item type.
         unique_slug, old_slugs = self.uniquifier.uniquify_historic(slug, full_suffix)
 
         # Suffix files with both item type and a suitable file extension.
-        new_unique_filename = f"{unique_slug}.{full_suffix}"
+        new_unique_filename = _join_filename(unique_slug, full_suffix)
 
-        old_filename = f"{old_slugs[0]}.{full_suffix}" if old_slugs else None
+        old_filename = _join_filename(old_slugs[0], full_suffix) if old_slugs else None
 
         return new_unique_filename, old_filename
 
@@ -263,7 +245,7 @@ class FileStore:
             return store_path, None
         else:
             # We need to generate a new filename.
-            folder_path = Path(item_type_to_folder(item.type))
+            folder_path = _folder_for(item)
             filename, old_filename = self._new_filename_for(item)
             store_path = folder_path / filename
 
