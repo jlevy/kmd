@@ -9,7 +9,7 @@ from kmd.model.actions_model import (
     LLMTemplate,
 )
 from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import Format, Item
+from kmd.model.items_model import UNTITLED, Format, Item
 from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.text_docs.text_diffs import ALL_CHANGES, DiffOpFilter
@@ -116,7 +116,7 @@ def run_llm_transform_action(action: LLMAction, item: Item) -> Item:
 
     if action.title_template:
         result_item.title = action.title_template.format(
-            title=item.abbrev_title(), action_name=action.name
+            title=(item.title or UNTITLED), action_name=action.name
         )
     result_item.format = Format.markdown
 
