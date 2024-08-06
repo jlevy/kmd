@@ -3,13 +3,13 @@ Transform text using sliding windows over a document, then reassembling the
 transformed text.
 """
 
-from dataclasses import dataclass
 from math import ceil
 from textwrap import dedent
 from typing import Callable, List, Optional
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError, UnexpectedError
 from kmd.model.items_model import Format
+from kmd.text_docs.window_settings import WINDOW_BR, WINDOW_BR_SEP, WindowSettings
 from kmd.text_formatting.markdown_normalization import normalize_markdown
 from kmd.text_docs.sliding_windows import sliding_para_window, sliding_word_window
 from kmd.text_docs.text_diffs import ALL_CHANGES, DiffOpFilter, diff_docs, find_best_alignment
@@ -27,34 +27,12 @@ log = get_logger(__name__)
 
 TextDocTransform = Callable[[TextDoc], TextDoc]
 
-WINDOW_BR = "<!--window-br-->"
-"""Marker inserted into result documents to show where window breaks have occurred."""
-
-WINDOW_BR_SEP = f"\n{WINDOW_BR}\n"
-
 
 def remove_window_br(doc: TextDoc):
     """
     Remove `<!--window-br-->` markers in a document.
     """
     doc.replace_str(WINDOW_BR, "")
-
-
-@dataclass
-class WindowSettings:
-    """
-    Size of the sliding window, the shift, and the min overlap required when stitching windows
-    together. All sizes in wordtoks.
-    """
-
-    unit: Unit
-    size: int
-    shift: int
-    min_overlap: int = 0
-    separator: str = ""
-
-    def __str__(self):
-        return f"windowing size={self.size}, shift={self.shift}, min_overlap={self.min_overlap} {self.unit.value}"
 
 
 def filtered_transform(

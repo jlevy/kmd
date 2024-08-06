@@ -1,4 +1,4 @@
-from kmd.action_exec.action_combinators import define_action_sequence
+from kmd.exec.action_combinators import define_action_sequence
 
 
 define_action_sequence(

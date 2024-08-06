@@ -1,4 +1,4 @@
-from kmd.action_exec.action_registry import kmd_action
+from kmd.exec.action_registry import kmd_action
 from kmd.media import web
 from kmd.media.media_services import get_media_metadata
 from kmd.model.actions_model import (

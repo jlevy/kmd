@@ -1,4 +1,4 @@
-from kmd.preconditions.precondition import precondition
+from kmd.model.preconditions_model import precondition
 from kmd.provenance.extractors import TimestampExtractor
 from kmd.media.media_services import get_media_id, youtube
 from kmd.model.errors_model import PreconditionFailure

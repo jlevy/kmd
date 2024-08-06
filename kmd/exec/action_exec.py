@@ -1,7 +1,7 @@
 import time
 from typing import List, Optional, cast
 from kmd.action_defs import look_up_action
-from kmd.action_exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_metadata
+from kmd.exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_metadata
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
@@ -93,6 +93,9 @@ def run_action(
     # Ensure input items are already saved in the workspace and load the corresponding items.
     # This also imports any URLs.
     input_items = [ensure_saved(arg) for arg in args]
+
+    # Validate the precondition.
+    action.validate_precondition(input_items)
 
     # URLs should have metadata like a title and be valid, so we fetch them.
     # We make an action call to do the fetch so need to avoid recursing.

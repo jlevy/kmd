@@ -31,7 +31,7 @@ from kmd.config.text_styles import (
 from kmd.text_ui.command_output import Wrap, output
 from kmd.file_storage.workspaces import current_workspace
 from kmd.action_defs import reload_all_actions
-from kmd.action_exec.action_exec import run_action
+from kmd.exec.action_exec import run_action
 from kmd.commands import commands
 from kmd.commands.commands import kmd_command
 from kmd.model.actions_model import Action

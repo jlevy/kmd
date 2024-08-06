@@ -1,5 +1,5 @@
 from kmd.media.media_download import download_audio
-from kmd.action_exec.action_registry import kmd_action
+from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     EachItemAction,

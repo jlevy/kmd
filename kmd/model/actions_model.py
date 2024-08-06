@@ -10,6 +10,7 @@ from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.lang_tools.inflection import plural
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ACTION_PARAMS, ChunkSize
+from kmd.model.preconditions_model import Precondition
 from kmd.text_formatting.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_utils import format_key_value
@@ -80,7 +81,7 @@ class Action(ABC):
 
     name: str
     description: str
-    implementation: str = "builtin"
+    precondition: Optional[Precondition] = None
     model: Optional[str] = None
     chunk_size: Optional[ChunkSize] = None
     title_template: Optional[TitleTemplate] = None
@@ -106,6 +107,11 @@ class Action(ABC):
             raise InvalidInput(
                 f"Action {self.name} expects at least {self.expected_args.min_args} arguments"
             )
+
+    def validate_precondition(self, items: ActionInput) -> None:
+        if self.precondition:
+            for item in items:
+                self.precondition.check(item)
 
     def update_with_params(self, params: Dict[str, str]) -> "Action":
         """

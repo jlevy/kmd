@@ -1,5 +1,5 @@
 from textwrap import indent
-from kmd.action_exec.action_registry import kmd_action
+from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     ChunkSize,
@@ -8,7 +8,7 @@ from kmd.model.actions_model import (
 from kmd.model.errors_model import ContentError, InvalidInput, UnexpectedError
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
-from kmd.preconditions.common_preconditions import is_timestamped_text
+from kmd.precondition_defs.common_preconditions import is_timestamped_text
 from kmd.provenance.source_items import find_upstream_item
 from kmd.text_formatting.citations import add_citation_to_text, format_timestamp_citation
 from kmd.provenance.extractors import TimestampExtractor

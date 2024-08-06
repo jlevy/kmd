@@ -1,7 +1,7 @@
 from typing import Callable, List, Optional, Set, Tuple
 from kmd.action_defs import look_up_action
-from kmd.action_exec.action_exec import run_action
-from kmd.action_exec.action_registry import (
+from kmd.exec.action_exec import run_action
+from kmd.exec.action_registry import (
     kmd_action_wrapped,
     no_wrapper,
     each_item_wrapper,

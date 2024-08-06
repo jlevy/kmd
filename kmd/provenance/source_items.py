@@ -3,7 +3,7 @@ from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item
 from kmd.config.logger import get_logger
 from kmd.model.locators import StorePath
-from kmd.preconditions.precondition import Precondition
+from kmd.model.preconditions_model import Precondition
 
 log = get_logger(__name__)
 

@@ -1,6 +1,6 @@
 from os.path import join
 from kmd.file_storage.workspaces import current_workspace
-from kmd.action_exec.action_registry import kmd_action
+from kmd.exec.action_registry import kmd_action
 from kmd.lang_tools.clean_headings import clean_heading
 from kmd.model.actions_model import ONE_ARG, Action, ActionInput, ActionResult
 from kmd.model.errors_model import InvalidInput

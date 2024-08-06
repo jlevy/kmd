@@ -1,4 +1,4 @@
-from kmd.action_exec.action_registry import kmd_action
+from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
 from kmd.model.errors_model import InvalidInput
 from kmd.config.logger import get_logger

@@ -1,4 +1,4 @@
-from kmd.action_exec.action_registry import kmd_action
+from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import ONE_ARG, Action, ActionInput, ActionResult
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.config.logger import get_logger

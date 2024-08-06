@@ -1,4 +1,4 @@
-from kmd.action_exec.action_registry import kmd_action
+from kmd.exec.action_registry import kmd_action
 from kmd.media.media_download import download_and_transcribe
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,

@@ -1,5 +1,5 @@
 from kmd.media.media_services import canonicalize_media_url, list_channel_items
-from kmd.action_exec.action_registry import kmd_action
+from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     Action,
     ActionInput,

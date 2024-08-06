@@ -1,4 +1,4 @@
-from kmd.action_exec.action_combinators import combine_with_divs, define_action_combo
+from kmd.exec.action_combinators import combine_with_divs, define_action_combo
 from kmd.text_formatting.html_in_md import DESCRIPTION, FULL_TEXT
 
 

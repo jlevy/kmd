@@ -1,4 +1,4 @@
-from kmd.action_exec.action_builders import define_llm_action
+from kmd.exec.action_builders import define_llm_action
 from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
 from kmd.model.language_models import LLM
 from kmd.text_docs.window_settings import WINDOW_16_PARA

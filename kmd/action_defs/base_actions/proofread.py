@@ -1,4 +1,4 @@
-from kmd.action_exec.action_builders import define_llm_action
+from kmd.exec.action_builders import define_llm_action
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.language_models import LLM

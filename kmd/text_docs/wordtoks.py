@@ -57,9 +57,9 @@ def wordtok_len(wordtok: str) -> int:
 
 def raw_text_to_wordtoks(text: str, parse_para_br=False, bof_eof=False) -> List[str]:
     """
-    Fast breaking of text into word tokens, including words, whitespace, and punctuation.
-    Does not look for paragraph breaks unless `parse_para_br` is True. Does not parse
-    sentence breaks. Normalizes all other whitespace to a single space character.
+    Fast breaking of text into word tokens, including words, whitespace, punctuation, and
+    HTML tags. Does not look for paragraph breaks unless `parse_para_br` is True. Does not
+    parse sentence breaks. Normalizes all other whitespace to a single space character.
     """
     if parse_para_br:
         text = _para_br_pattern.sub(PARA_BR_TOK, text)
