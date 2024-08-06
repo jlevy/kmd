@@ -5,6 +5,7 @@ confusions of using full HTML escaping (like unnecessary &quot;s etc.)
 """
 
 from typing import Callable, Optional, Dict
+from kmd.model.html_conventions import DATA_SPEAKER_ID, DATA_TIMESTAMP, SPEAKER_LABEL
 
 
 def escape_md_html(s: str, safe: bool = False) -> str:
@@ -43,18 +44,6 @@ def tag_with_attrs(
     if not padding and tag in ["div", "p"]:
         padding = "\n"
     return f"<{tag}{attr_str}>{padding}{escape_md_html(text, safe)}{padding}</{tag}>"
-
-
-# Class names:
-CITATION = "citation"
-DESCRIPTION = "description"
-SUMMARY = "summary"
-FULL_TEXT = "full-text"
-SPEAKER_LABEL = "speaker-label"
-
-# Data attributes:
-DATA_TIMESTAMP = "data-timestamp"
-DATA_SPEAKER_ID = "data-speaker-id"
 
 
 def html_span(

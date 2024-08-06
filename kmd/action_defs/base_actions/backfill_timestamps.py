@@ -2,7 +2,6 @@ from textwrap import indent
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
-    ChunkSize,
     CachedTextAction,
 )
 from kmd.model.errors_model import ContentError, InvalidInput, UnexpectedError
@@ -10,6 +9,7 @@ from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.precondition_defs.common_preconditions import is_timestamped_text
 from kmd.provenance.source_items import find_upstream_item
+from kmd.text_docs.sizes import TextUnit
 from kmd.text_formatting.citations import add_citation_to_text, format_timestamp_citation
 from kmd.provenance.extractors import TimestampExtractor
 from kmd.text_docs.text_doc import TextDoc
@@ -30,15 +30,20 @@ class BackfillSourceTimestamps(CachedTextAction):
               into the text of the current doc. Source must have similar tokens.
             """,
             expected_args=ONE_OR_MORE_ARGS,
-            chunk_size=ChunkSize.PARAGRAPH,
+            chunk_unit=TextUnit.PARAGRAPHS,
         )
 
-        if self.chunk_size == ChunkSize.SENTENCE:
+        if self.chunk_unit not in (TextUnit.SENTENCES, TextUnit.PARAGRAPHS):
+            raise InvalidInput(
+                f"Only support sentences and paragraphs for chunk unit: {self.chunk_unit}"
+            )
+
+        if self.chunk_unit == TextUnit.SENTENCES:
             self.citation_tokens = [SENT_BR_TOK, PARA_BR_TOK, EOF_TOK]
-        elif self.chunk_size == ChunkSize.PARAGRAPH:
+        elif self.chunk_unit == TextUnit.PARAGRAPHS:
             self.citation_tokens = [PARA_BR_TOK, EOF_TOK]
         else:
-            raise UnexpectedError(f"Invalid text unit: {self.chunk_size}")
+            raise UnexpectedError(f"Invalid text unit: {self.chunk_unit}")
 
     def run_item(self, item: Item) -> Item:
 
@@ -88,7 +93,7 @@ class BackfillSourceTimestamps(CachedTextAction):
             if wordtok in self.citation_tokens:
                 # If we're inserting citations at paragraph breaks, we need to back up to the beginning of the paragraph.
                 # If we're inserting citations at sentence breaks, we can just use the per-sentence timestamps.
-                if self.chunk_size == ChunkSize.PARAGRAPH:
+                if self.chunk_unit == TextUnit.PARAGRAPHS:
                     start_para_index, start_para_wordtok = (
                         search_tokens(item_wordtoks)
                         .at(wordtok_offset)

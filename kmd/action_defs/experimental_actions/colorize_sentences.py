@@ -5,7 +5,7 @@ from kmd.model.actions_model import (
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
-from kmd.text_docs.text_doc import TextDoc, Unit
+from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_formatting.html_in_md import html_span
 from kmd.text_formatting.text_formatting import single_line
 
@@ -41,7 +41,7 @@ class ColorizeSentences(EachItemAction):
 
         for para in doc.paragraphs:
             for sent in para.sentences:
-                word_count = sent.size(Unit.WORDS)
+                word_count = sent.size(TextUnit.WORDS)
                 color = color_by_length(word_count)
                 sent.text = (
                     html_span(

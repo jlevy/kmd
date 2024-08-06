@@ -12,7 +12,7 @@ from kmd.text_formatting.doc_formatting import normalize_formatting
 from kmd.text_docs.text_doc import (
     SentIndex,
     TextDoc,
-    Unit,
+    TextUnit,
     size,
 )
 
@@ -21,7 +21,7 @@ log = get_logger(__name__)
 
 
 def sliding_word_window(
-    doc: TextDoc, window_size: int, window_shift: int, unit: Unit
+    doc: TextDoc, window_size: int, window_shift: int, unit: TextUnit
 ) -> Generator[TextDoc, None, None]:
     """
     Generate TextDoc sub-documents in a sliding window over the given document.
@@ -86,7 +86,7 @@ def test_sliding_window():
     window_size = 80
     window_shift = 60
 
-    windows = list(sliding_word_window(doc, window_size, window_shift, Unit.BYTES))
+    windows = list(sliding_word_window(doc, window_size, window_shift, TextUnit.BYTES))
     pprint(windows)
 
     sentence_windows = [
@@ -103,9 +103,9 @@ def test_sliding_window():
     for sub_doc in windows:
         sub_text = sub_doc.reassemble()
 
-        print(f"\n\n---Sub-document length {size(sub_text, Unit.BYTES)}")
+        print(f"\n\n---Sub-document length {size(sub_text, TextUnit.BYTES)}")
         pprint(sub_text)
 
-        assert size(sub_text, Unit.BYTES) <= window_size
+        assert size(sub_text, TextUnit.BYTES) <= window_size
 
         assert sub_text in doc.reassemble()

@@ -9,7 +9,7 @@ from kmd.model.errors_model import ContentError, InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.lang_tools.inflection import plural
 from kmd.model.operations_model import Operation, Source
-from kmd.model.params_model import ACTION_PARAMS, ChunkSize
+from kmd.model.params_model import ACTION_PARAMS, TextUnit
 from kmd.model.preconditions_model import Precondition
 from kmd.text_formatting.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
@@ -80,15 +80,27 @@ class Action(ABC):
     """
 
     name: str
+    """The name of the action. Should be in lower_snake_case."""
+
     description: str
+    """A description of the action, in a few sentences."""
+
     precondition: Optional[Precondition] = None
+    """Mainly a sanity check. For simplicity we apply one precondition on all args."""
+
+    expected_args: ExpectedArgs = field(default_factory=lambda: ONE_ARG)
+    """The required number of arguments."""
+
+    interactive_input: bool = False
+    """Does this action ask for input interactively?"""
+
+    # These are set if they make sense, i.e. it's an LLM action.
     model: Optional[str] = None
-    chunk_size: Optional[ChunkSize] = None
+    chunk_size: Optional[int] = None
+    chunk_unit: Optional[TextUnit] = None
     title_template: Optional[TitleTemplate] = None
     template: Optional[LLMTemplate] = None
     system_message: Optional[LLMMessage] = None
-    expected_args: ExpectedArgs = field(default_factory=lambda: ONE_ARG)
-    interactive_input: bool = False
 
     def __post_init__(self):
         # Class is frozen but we do want to update the description.

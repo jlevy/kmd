@@ -1,5 +1,5 @@
 from kmd.exec.action_combinators import combine_with_divs, define_action_combo
-from kmd.text_formatting.html_in_md import DESCRIPTION, FULL_TEXT
+from kmd.model.html_conventions import DESCRIPTION, FULL_TEXT
 
 
 define_action_combo(

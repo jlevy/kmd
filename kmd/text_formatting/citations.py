@@ -1,7 +1,8 @@
 from kmd.config.text_styles import NBSP
 from kmd.media.media_services import timestamp_media_url
+from kmd.model.html_conventions import CITATION
 from kmd.util.url import Url
-from kmd.text_formatting.html_in_md import CITATION, html_span, html_a
+from kmd.text_formatting.html_in_md import html_span, html_a
 
 
 def add_citation_to_text(text: str, citation: str) -> str:

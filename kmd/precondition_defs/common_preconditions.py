@@ -2,12 +2,7 @@ from kmd.model.preconditions_model import precondition
 from kmd.provenance.extractors import TimestampExtractor
 from kmd.media.media_services import get_media_id, youtube
 from kmd.model.errors_model import PreconditionFailure
-from kmd.model.items_model import Item, ItemType
-
-
-@precondition
-def has_body(item: Item) -> bool:
-    return item.body is not None
+from kmd.model.items_model import Format, Item, ItemType
 
 
 @precondition
@@ -18,6 +13,21 @@ def is_resource(item: Item) -> bool:
 @precondition
 def is_url(item: Item) -> bool:
     return item.url is not None
+
+
+@precondition
+def has_body(item: Item) -> bool:
+    return bool(item.body)
+
+
+@precondition
+def is_markdown(item: Item) -> bool:
+    return has_body(item) and item.format in (Format.markdown, Format.md_html)
+
+
+@precondition
+def is_div_chunks(item: Item) -> bool:
+    return bool(item.body and item.body.find('<div class="chunk">') != -1)
 
 
 @precondition

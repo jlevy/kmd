@@ -1,21 +1,11 @@
 from dataclasses import dataclass
-from enum import Enum
 from typing import Dict, Optional
 from kmd.config.logger import get_logger
 from kmd.model.language_models import LLM, MODEL_LIST
+from kmd.text_docs.sizes import TextUnit
 
 
 log = get_logger(__name__)
-
-
-class ChunkSize(Enum):
-    """
-    The size of a chunk used by different actions.
-    TODO: Could add a quantity to offer more flexibility.
-    """
-
-    PARAGRAPH = "paragraph"
-    SENTENCE = "sentence"
 
 
 @dataclass(frozen=True)
@@ -56,8 +46,14 @@ ACTION_PARAMS = {
     ),
     "chunk_size": ActionParam(
         "chunk_size",
-        "For actions that support more than one kind of chunk, process what size of chunk?",
-        [chunk_size.value for chunk_size in ChunkSize],
+        "For actions that support it, process chunks of what size?",
+        valid_values=None,
+        default_value=None,
+    ),
+    "chunk_unit": ActionParam(
+        "chunk_unit",
+        "For actions that support it, the unit for measuring chunk size.",
+        [chunk_unit.value for chunk_unit in TextUnit],
         default_value=None,
     ),
 }
