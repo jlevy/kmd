@@ -1,12 +1,11 @@
 from textwrap import dedent
 from kmd.exec.action_registry import kmd_action
-from kmd.exec.llm_action_base import run_llm_completion
+from kmd.exec.llm_action_base import LLMAction, run_llm_transform
 from kmd.assistant.assistant import assistant_preamble
 from kmd.file_storage.workspaces import current_workspace
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.model.actions_model import (
     ONE_OR_NO_ARGS,
-    Action,
     ActionInput,
     ActionResult,
     LLMMessage,
@@ -24,7 +23,7 @@ def assistant_coding_preamble() -> LLMMessage:
 
 
 @kmd_action
-class WriteNewAction(Action):
+class WriteNewAction(LLMAction):
     def __init__(self):
         super().__init__(
             name="write_new_action",
@@ -115,7 +114,7 @@ class WriteNewAction(Action):
         workspace = current_workspace()
         workspace.save(description_item)
 
-        result_item = run_llm_completion(self, description_item)
+        result_item = run_llm_transform(self, description_item)
         result_item.type = ItemType.extension
         result_item.format = Format.python
 

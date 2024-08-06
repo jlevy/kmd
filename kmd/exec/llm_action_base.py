@@ -4,22 +4,25 @@ from kmd.llms.llm_completion import llm_completion
 from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
-    Action,
     ExpectedArgs,
     LLMMessage,
     LLMTemplate,
     CachedTextAction,
 )
-from kmd.model.errors_model import InvalidInput
+from kmd.model.errors_model import InvalidInput, UnexpectedError
 from kmd.model.items_model import UNTITLED, Format, Item
 from kmd.config import setup
 from kmd.config.logger import get_logger
+from kmd.model.preconditions_model import Precondition
+from kmd.precondition_defs.common_preconditions import has_div_chunks
+from kmd.text_docs.div_chunks import parse_chunk_divs, chunk_wrapper
 from kmd.text_docs.text_diffs import ALL_CHANGES, DiffOpFilter
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.sliding_transforms import (
     WindowSettings,
     filtered_transform,
 )
+from kmd.text_formatting.html_in_md import html_div, join_blocks
 from kmd.util.log_calls import log_calls
 
 log = get_logger(__name__)
@@ -64,7 +67,7 @@ class LLMAction(CachedTextAction):
 @log_calls(level="message")
 def run_llm_transform(action: LLMAction, item: Item) -> Item:
     """
-    Run an LLM transform action as a sliding window on the input.
+    Run an LLM transform action on the input, optionally using a sliding window.
     """
 
     if not item.body:
@@ -85,56 +88,75 @@ def run_llm_transform(action: LLMAction, item: Item) -> Item:
     )
     log.info("Input item: %s", item)
 
-    result_item = item.derived_copy(body=None)
-    result_item.body = _sliding_llm_transform(
-        action.model,
-        action.system_message,
-        action.template,
-        item.body,
-        action.windowing,
-        action.diff_filter or ALL_CHANGES,
-    )
+    result_item = item.derived_copy(body=None, format=Format.markdown)
+
+    if action.windowing:
+        result_item.body = _sliding_llm_transform(
+            action.model,
+            action.system_message,
+            action.template,
+            item.body,
+            action.windowing,
+            action.diff_filter or ALL_CHANGES,
+        )
+    else:
+        result_item.body = llm_completion(
+            action.model,
+            system_message=action.system_message,
+            template=action.template,
+            input=item.body,
+        )
 
     if action.title_template:
         result_item.title = action.title_template.format(
             title=(item.title or UNTITLED), action_name=action.name
         )
-    result_item.format = Format.markdown
 
     return result_item
 
 
-@log_calls(level="message")
-def run_llm_completion(action: Action, item: Item) -> Item:
+@dataclass(frozen=True)
+class ChunkedLLMAction(LLMAction):
     """
-    Run a simple LLM completion on the item.
+    LLM action that operates on chunks that are already marked with divs.
     """
-    if not item.body:
-        raise InvalidInput(f"LLM actions expect a body: {action.name} on {item}")
-    if not action.model or not action.system_message or not action.template:
-        raise InvalidInput(
-            f"LLM actions expect a model, system_message, and template: {action.name}"
-        )
 
-    setup.api_setup()
-    log.message(
-        "%s Running LLM completion action %s with model %s",
-        EMOJI_PROCESS,
-        action.name,
-        action.model,
-    )
-    log.info("Input item: %s", item)
+    precondition: Precondition = has_div_chunks
 
-    result_item = item.derived_copy(body=None)
-    result_item.body = llm_completion(
-        action.model,
-        system_message=action.system_message,
-        template=action.template,
-        input=item.body,
-    )
+    result_class_name: str = "result"
+    original_class_name: str = "original"
 
-    if action.title_template:
-        result_item.title = action.title_template.format(title=item.abbrev_title())
-    result_item.format = Format.markdown
+    def run_item(self, item: Item) -> Item:
+        if not item.body:
+            raise InvalidInput(f"LLM actions expect a body: {self.name} on {item}")
+        if not self.model or not self.system_message or not self.template:
+            raise UnexpectedError("LLM action missing parameters")
 
-    return result_item
+        output = []
+        for chunk in parse_chunk_divs(item.body):
+            llm_response = llm_completion(
+                self.model,
+                system_message=self.system_message,
+                template=self.template,
+                input=chunk.content,
+            )
+
+            output.append(
+                chunk_wrapper(
+                    join_blocks(
+                        html_div(llm_response, self.result_class_name, padding="\n\n"),
+                        html_div(
+                            chunk.content, self.original_class_name, safe=True, padding="\n\n"
+                        ),
+                    )
+                )
+            )
+
+        result_item = item.derived_copy(body="\n\n".join(output), format=Format.md_html)
+
+        if self.title_template:
+            result_item.title = self.title_template.format(
+                title=(item.title or UNTITLED), action_name=self.name
+            )
+
+        return result_item

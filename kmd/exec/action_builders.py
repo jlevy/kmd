@@ -18,6 +18,7 @@ def define_llm_action(
     title_template: TitleTemplate = TitleTemplate("{title}"),
     windowing: Optional[WindowSettings] = None,
     diff_filter: Optional[DiffOpFilter] = None,
+    **kwargs,
 ):
     """
     Convenience method to register an LLM action.
@@ -35,4 +36,5 @@ def define_llm_action(
                 template=template,
                 windowing=windowing,
                 diff_filter=diff_filter,
+                **kwargs,
             )

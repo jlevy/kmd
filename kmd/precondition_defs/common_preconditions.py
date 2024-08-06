@@ -1,3 +1,4 @@
+from kmd.model.html_conventions import CHUNK_DIV_BEGIN
 from kmd.model.preconditions_model import precondition
 from kmd.provenance.extractors import TimestampExtractor
 from kmd.media.media_services import get_media_id, youtube
@@ -26,8 +27,8 @@ def is_markdown(item: Item) -> bool:
 
 
 @precondition
-def is_div_chunks(item: Item) -> bool:
-    return bool(item.body and item.body.find('<div class="chunk">') != -1)
+def has_div_chunks(item: Item) -> bool:
+    return bool(item.body and item.body.find(CHUNK_DIV_BEGIN) != -1)
 
 
 @precondition

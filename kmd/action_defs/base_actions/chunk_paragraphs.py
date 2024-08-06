@@ -7,7 +7,7 @@ from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.precondition_defs.common_preconditions import is_markdown
-from kmd.text_docs.para_groups import chunk_paras_into_divs
+from kmd.text_docs.div_chunks import chunk_paras_into_divs
 from kmd.text_docs.sizes import TextUnit
 
 log = get_logger(__name__)

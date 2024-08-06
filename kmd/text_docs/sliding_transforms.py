@@ -42,8 +42,10 @@ def filtered_transform(
     diff_filter: DiffOpFilter = ALL_CHANGES,
 ) -> TextDoc:
     """
-    Apply a transform with sliding window across the input doc, enforcing
-    the changes it's allowed to make with `diff_filter`.
+    Apply a transform with sliding window across the input doc, enforcing the changes it's
+    allowed to make with `diff_filter`.
+
+    If windowing is None, apply the transform to the entire document at once.
     """
     if not windowing:
         transformed_doc = transform_func(doc)

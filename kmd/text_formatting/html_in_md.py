@@ -84,6 +84,10 @@ def html_a(text: str, href: str, safe: bool = False) -> str:
     return f'<a href="{href}">{text}</a>'
 
 
+def join_blocks(*blocks: str) -> str:
+    return "\n\n".join(blocks)
+
+
 Wrapper = Callable[[str], str]
 """Wraps a string to identify it in some way."""
 
