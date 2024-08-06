@@ -1,7 +1,7 @@
 from kmd.action_exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
-    EachItemAction,
+    CachedTextAction,
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
@@ -12,7 +12,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class StripHtml(EachItemAction):
+class StripHtml(CachedTextAction):
     def __init__(self):
         super().__init__(
             name="strip_html",
@@ -27,8 +27,8 @@ class StripHtml(EachItemAction):
         clean_body = html_to_plaintext(item.body)
         output_item = item.derived_copy(
             type=ItemType.note,
-            body=clean_body,
             format=Format.markdown,
+            body=clean_body,
         )
 
         return output_item

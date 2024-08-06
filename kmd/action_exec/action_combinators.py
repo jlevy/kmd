@@ -57,7 +57,7 @@ def define_action_sequence(
             self.action_sequence = action_names
 
         def run(self, items: ActionInput) -> ActionResult:
-            log.message("%s Begin action sequence %s", EMOJI_PROCESS, self.name)
+            log.message("%s Begin action sequence `%s`", EMOJI_PROCESS, self.name)
 
             validate_action_names(action_names)
 

@@ -44,6 +44,20 @@ class Input:
     def path_and_hash(self):
         return f"{self.path}@{self.hash}"
 
+    # Inputs are equal if the hashes match (even if the paths have changed).
+
+    def __hash__(self):
+        return hash(self.hash) if self.hash else object.__hash__(self)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Input):
+            return NotImplemented
+        if self.hash and other.hash:
+            return self.hash == other.hash
+        if not self.hash and not other.hash:
+            return self.path == other.path
+        return False
+
     def __str__(self):
         return self.path_and_hash()
 
@@ -76,23 +90,6 @@ class Operation:
     def command_line(self):
         quoted_args = [quote_if_needed(str(arg.path)) for arg in self.arguments]
         return f"{self.action_name} {' '.join(quoted_args)}"
-
-    def paths_eq(self, other: "Operation") -> bool:
-        return (
-            self.action_name == other.action_name
-            and len(self.arguments) == len(other.arguments)
-            and all(a.path == b.path for a, b in zip(self.arguments, other.arguments))
-        )
-
-    def exact_eq(self, other: "Operation") -> bool:
-        return self.paths_eq(other) and all(
-            a.hash == b.hash for a, b in zip(self.arguments, other.arguments)
-        )
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, Operation):
-            return NotImplemented
-        return self.exact_eq(other)
 
     def as_str(self):
         return (

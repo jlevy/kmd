@@ -5,8 +5,8 @@ from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     Action,
-    EachItemAction,
     LLMTemplate,
+    CachedTextAction,
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, Format, Item
@@ -49,7 +49,7 @@ def _sliding_llm_transform(
 
 
 @dataclass
-class LLMAction(EachItemAction):
+class LLMAction(CachedTextAction):
     def __init__(
         self,
         name,

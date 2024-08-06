@@ -3,7 +3,7 @@ from kmd.action_exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     ChunkSize,
-    EachItemAction,
+    CachedTextAction,
 )
 from kmd.model.errors_model import ContentError, InvalidInput, UnexpectedError
 from kmd.model.items_model import Format, Item, ItemType
@@ -20,7 +20,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class BackfillSourceTimestamps(EachItemAction):
+class BackfillSourceTimestamps(CachedTextAction):
     def __init__(self):
         super().__init__(
             name="backfill_timestamps",

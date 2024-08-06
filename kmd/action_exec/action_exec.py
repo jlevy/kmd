@@ -5,10 +5,10 @@ from kmd.action_exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
-from kmd.model.actions_model import Action, ActionInput, ActionResult
+from kmd.model.actions_model import Action, ActionResult
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidStoreState
-from kmd.model.items_model import UNTITLED, Item, State
+from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
 from kmd.model.locators import Locator, StorePath, is_store_path
 from kmd.text_formatting.text_formatting import format_lines
@@ -46,25 +46,12 @@ def fetch_url_items(item: Item) -> Item:
     return enriched_item.items[0]
 
 
-def assemble_single_output(action: Action, items: ActionInput) -> Item:
-    """
-    Assemble a single output item from the given input items, using the first
-    input item as a template.
-    """
-    primary_input = items[0]
-    output_item = primary_input.derived_copy(body=None)
-
-    if action.title_template:
-        output_item.title = action.title_template.format(title=primary_input.title or UNTITLED)
-
-    return output_item
-
-
 def run_action(
     action: str | Action,
     *provided_args: str,
     internal_call=False,
-    override_state: Optional[State] = None
+    override_state: Optional[State] = None,
+    force=False,
 ) -> ActionResult:
     """
     Main function to run an action.
@@ -112,59 +99,83 @@ def run_action(
     if action.name != FETCH_PAGE_METADATA_NAME:
         input_items = [fetch_url_items(item) for item in input_items]
 
-    # Preassemble outputs, so we can check if they already exist.
-    # TODO: Finish!
-    # preassembled_result = action.preassemble(operation, input_items)
-    # if preassembled_result:
-    #     # Check if these items already exist, with last_operation matching action and input fingerprints.
-    #     pass
+    cached_result = None
+    if not force:
+        # Preassemble outputs, so we can check if they already exist.
+        preassembled_result = action.preassemble(operation, input_items)
+        if preassembled_result:
+            # Check if these items already exist, with last_operation matching action and input fingerprints.
+            already_present = [ws.find_by_id(item) for item in preassembled_result.items]
+            if all(already_present):
+                log.message(
+                    "All outputs already saved so skipping action `%s`:\n%s",
+                    action_name,
+                    format_lines(already_present),
+                )
+                cached_items = [ws.load(not_none(store_path)) for store_path in already_present]
+                cached_result = ActionResult(cached_items)
 
-    # Run the action.
-    result = action.run(input_items)
+    if cached_result:
+        # Use the cached result.
+        result = cached_result
 
-    # Record the operation and add to the history of each item.
-    for i, item in enumerate(result.items):
-        item.update_history(Source(operation=operation, output_num=i))
+        result_store_paths = [StorePath(not_none(item.store_path)) for item in result.items]
+        archived_store_paths = []
 
-    # Override the state if requested (this handles marking items as transient).
-    if override_state:
+        log.message(
+            "%s Action skipped: %s completed with %s %s",
+            EMOJI_CALL_END,
+            action_name,
+            len(result.items),
+            plural("item", len(result.items)),
+        )
+    else:
+        # Run the action.
+        result = action.run(input_items)
+
+        # Record the operation and add to the history of each item.
+        for i, item in enumerate(result.items):
+            item.update_history(Source(operation=operation, output_num=i))
+
+        # Override the state if requested (this handles marking items as transient).
+        if override_state:
+            for item in result.items:
+                item.state = override_state
+
+        # Save the result items. This is done here; the action itself should not worry about saving.
         for item in result.items:
-            item.state = override_state
+            ws.save(item)
 
-    # Log info.
-    log.info("Action %s result: %s", action_name, result)
-    log.message(
-        "%s Action done: %s completed with %s %s",
-        EMOJI_CALL_END,
-        action_name,
-        len(result.items),
-        plural("item", len(result.items)),
-    )
-    elapsed = time.time() - start_time
-    if elapsed > 1.0:
-        log.message("%s Action %s took %.1fs.", EMOJI_TIMING, action_name, elapsed)
+        input_store_paths = [StorePath(not_none(item.store_path)) for item in input_items]
+        result_store_paths = [StorePath(not_none(item.store_path)) for item in result.items]
+        old_inputs = sorted(set(input_store_paths) - set(result_store_paths))
 
-    # Save the result items. This is done here; the action itself should not worry about saving.
-    for item in result.items:
-        ws.save(item)
+        # If there is a hint that the action replaces the input, archive any inputs that are not in the result.
+        ws = current_workspace()
+        archived_store_paths = []
+        if result.replaces_input and input_items:
+            for input_store_path in old_inputs:
+                # Note some outputs may be missing if replace_input was used.
+                ws.archive(input_store_path, missing_ok=True)
+                log.message("Archived input item: %s", input_store_path)
+            archived_store_paths.extend(old_inputs)
 
-    input_store_paths = [StorePath(not_none(item.store_path)) for item in input_items]
-    result_store_paths = [StorePath(not_none(item.store_path)) for item in result.items]
-    old_inputs = sorted(set(input_store_paths) - set(result_store_paths))
-
-    # If there is a hint that the action replaces the input, archive any inputs that are not in the result.
-    ws = current_workspace()
-    archived_store_paths = []
-    if result.replaces_input and input_items:
-        for input_store_path in old_inputs:
-            # Note some outputs may be missing if replace_input was used.
-            ws.archive(input_store_path, missing_ok=True)
-            log.message("Archived input item: %s", input_store_path)
-        archived_store_paths.extend(old_inputs)
+        # Log info.
+        log.info("Action `%s` result: %s", action_name, result)
+        log.message(
+            "%s Action done: %s completed with %s %s",
+            EMOJI_CALL_END,
+            action_name,
+            len(result.items),
+            plural("item", len(result.items)),
+        )
+        elapsed = time.time() - start_time
+        if elapsed > 1.0:
+            log.message("%s Action `%s` took %.1fs.", EMOJI_TIMING, action_name, elapsed)
 
     # Select the final output (omitting any that were archived).
     if not internal_call:
-        remaining_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
-        ws.set_selection(remaining_outputs)
+        final_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
+        ws.set_selection(final_outputs)
 
     return result

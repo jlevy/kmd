@@ -6,8 +6,9 @@ from kmd.config.logger import get_logger
 from kmd.lang_tools.capitalization import capitalize_cms
 from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ContentError, InvalidInput
-from kmd.model.items_model import Item
+from kmd.model.items_model import UNTITLED, Format, Item, ItemType
 from kmd.lang_tools.inflection import plural
+from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ACTION_PARAMS, ChunkSize
 from kmd.text_formatting.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
@@ -116,12 +117,22 @@ class Action(ABC):
                 if current_value != value:
                     setattr(new_instance, name, value)
                     log.message(
-                        "Overriding parameter for action %s: %s",
+                        "Overriding parameter for action `%s`: %s",
                         self.name,
                         format_key_value(name, value),
                     )
 
         return new_instance
+
+    def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
+        """
+        Actions can have a separate preliminary step to pre-assemble outputs. This allows us to
+        determine the title and types for the output items and check if they were already
+        generated before running slow or expensive actions.
+
+        Default behavior is to return None, which means this is disabled.
+        """
+        return None
 
     @abstractmethod
     def run(self, items: ActionInput) -> ActionResult:
@@ -167,3 +178,34 @@ class EachItemAction(Action):
     @abstractmethod
     def run_item(self, item: Item) -> Item:
         pass
+
+
+def preassemble_single_output(
+    operation: Operation, action: Action, items: ActionInput, **kwargs
+) -> Item:
+    """
+    Assemble a single output item from the given input items, copying the first
+    input item as a template and empty body.
+    """
+    primary_input = items[0]
+    item = primary_input.derived_copy(body=None, **kwargs)
+
+    if action.title_template:
+        item.title = action.title_template.format(title=primary_input.title or UNTITLED)
+
+    item.update_history(Source(operation=operation, output_num=0))
+
+    return item
+
+
+@dataclass
+class CachedTextAction(EachItemAction):
+    """
+    A simple action that processes each input returns a single text output for each,
+    with the output title etc. derived from the first input item. Caches and skips
+    items that have already been processed.
+    """
+
+    # Implementing this makes caching work.
+    def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
+        return ActionResult([preassemble_single_output(operation, self, items, type=ItemType.note)])

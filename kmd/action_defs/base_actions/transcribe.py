@@ -2,17 +2,17 @@ from kmd.action_exec.action_registry import kmd_action
 from kmd.media.media_download import download_and_transcribe
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
-    EachItemAction,
+    CachedTextAction,
 )
 from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import UNTITLED, FileExt, Format, Item, ItemType
+from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 
 
 @kmd_action
-class TranscribeMedia(EachItemAction):
+class TranscribeMedia(CachedTextAction):
     def __init__(self):
         super().__init__(
             name="transcribe",

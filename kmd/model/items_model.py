@@ -153,8 +153,11 @@ class ItemId:
     id_type: IdType
     value: str
 
+    def id_str(self):
+        return f"id:{self.id_type.value}:{self.value.replace(' ', '_')}"
+
     def __str__(self):
-        return f"id:{self.type.value}:{self.id_type.value}:{self.value}"
+        return self.id_str()
 
     @classmethod
     def for_item(cls, item: "Item") -> Optional["ItemId"]:

@@ -225,11 +225,46 @@ class FileStore:
 
         return new_unique_filename, old_filename
 
-    def default_path_for(self, item: Item) -> StorePath:
+    def _default_path_for(self, item: Item) -> StorePath:
         folder_path = _folder_for(item)
         slug = _slug_for(item)
         suffix = item.get_full_suffix()
         return StorePath(folder_path / _join_filename(slug, suffix))
+
+    def exists(self, store_path: StorePath) -> bool:
+        return (self.base_dir / store_path).exists()
+
+    def find_by_id(self, item: Item) -> Optional[StorePath]:
+        """
+        Best effort to see if an item with the same identity is already in the store.
+        """
+        item_id = item.item_id()
+        if not item_id:
+            return None
+        else:
+            store_path = self.id_map.get(item_id)
+            if not store_path:
+                # Just in case the id_map is not complete, check the default path too.
+                default_path = self._default_path_for(item)
+                if self.exists(default_path):
+                    old_item = self.load(default_path)
+                    if old_item.item_id() == item_id:
+                        log.message(
+                            "Cache check: Item id %s already saved (default name):\n%s",
+                            item_id,
+                            format_lines([default_path]),
+                        )
+                        store_path = default_path
+                        self.id_map[item_id] = default_path
+                        return default_path
+            if store_path and self.exists(store_path):
+                log.message(
+                    "Cache check: Item with id %s already saved:\n%s",
+                    item_id,
+                    format_lines([store_path]),
+                )
+                return store_path
+        return None
 
     def find_path_for(self, item: Item) -> Tuple[StorePath, Optional[StorePath]]:
         """
@@ -247,7 +282,11 @@ class FileStore:
         elif item_id in self.id_map:
             # If this item has an identity and we've saved under that id before, use the same store path.
             store_path = self.id_map[item_id]
-            log.message("Item with id %s already saved: %s", item_id, store_path)
+            log.message(
+                "Post-save check: Item with id %s already saved:\n%s",
+                item_id,
+                format_lines([store_path]),
+            )
             return store_path, None
         else:
             # We need to generate a new filename.
