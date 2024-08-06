@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
-from copy import deepcopy
-from dataclasses import dataclass, field
+from copy import copy
+from dataclasses import dataclass, field, fields
 from typing import Dict, List, Optional
 from kmd.config.logger import get_logger
-from kmd.lang_tools.capitalization import capitalize_cms
 from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ContentError, InvalidInput
-from kmd.model.items_model import UNTITLED, Format, Item, ItemType
+from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.lang_tools.inflection import plural
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ACTION_PARAMS, ChunkSize
@@ -63,8 +62,7 @@ class ActionResult:
         return abbreviate_obj(self, field_max_len=80)
 
 
-# TODO: frozen=True
-@dataclass
+@dataclass(frozen=True)
 class Action(ABC):
     """
     The base classes for Actions, which are arbitrary operations that can be
@@ -75,7 +73,6 @@ class Action(ABC):
     name: str
     description: str
     implementation: str = "builtin"
-    friendly_name: Optional[str] = None
     model: Optional[str] = None
     chunk_size: Optional[ChunkSize] = None
     title_template: Optional[TitleTemplate] = None
@@ -85,11 +82,8 @@ class Action(ABC):
     interactive_input: bool = False
 
     def __post_init__(self):
-        self.friendly_name = self.friendly_name or capitalize_cms(
-            self.name, underscores_to_spaces=True
-        )
-        self.friendly_name = clean_description(self.friendly_name)
-        self.description = clean_description(self.description)
+        # Class is frozen but we do want to update the description.
+        object.__setattr__(self, "description", clean_description(self.description))
 
     def validate_args(self, args: List[str]) -> None:
         if len(args) != 0 and self.expected_args == NO_ARGS:
@@ -109,18 +103,20 @@ class Action(ABC):
         """
         Update the action with the given parameters and return a new Action.
         """
-        new_instance = deepcopy(self)
+        new_instance = copy(self)  # Shallow copy.
+        action_fields = fields(self)
 
         for name, value in params.items():
-            if name in vars(new_instance) and name in ACTION_PARAMS:
-                current_value = getattr(new_instance, name)
-                if current_value != value:
-                    setattr(new_instance, name, value)
-                    log.message(
-                        "Overriding parameter for action `%s`: %s",
-                        self.name,
-                        format_key_value(name, value),
-                    )
+            if name in ACTION_PARAMS and name in action_fields:
+                # Use object.__setattr__ to update the frozen instance.
+                object.__setattr__(new_instance, name, value)
+                log.message(
+                    "Overriding parameter for action `%s`: %s",
+                    self.name,
+                    format_key_value(name, value),
+                )
+            else:
+                log.warning("Ignoring unknown override param for action `%s`: %s", self.name, name)
 
         return new_instance
 
@@ -142,7 +138,7 @@ class Action(ABC):
         return abbreviate_obj(self)
 
 
-@dataclass
+@dataclass(frozen=True)
 class EachItemAction(Action):
     """
     An action that simply processes each arg one after the other. It does not abort for
@@ -198,7 +194,7 @@ def preassemble_single_output(
     return item
 
 
-@dataclass
+@dataclass(frozen=True)
 class CachedTextAction(EachItemAction):
     """
     A simple action that processes each input returns a single text output for each,

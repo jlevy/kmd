@@ -12,7 +12,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class TranscribeMedia(CachedTextAction):
+class Transcribe(CachedTextAction):
     def __init__(self):
         super().__init__(
             name="transcribe",

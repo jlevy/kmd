@@ -5,6 +5,7 @@ from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     Action,
+    ExpectedArgs,
     LLMTemplate,
     CachedTextAction,
 )
@@ -48,33 +49,11 @@ def _sliding_llm_transform(
     return result_doc.reassemble()
 
 
-@dataclass
+@dataclass(frozen=True)
 class LLMAction(CachedTextAction):
-    def __init__(
-        self,
-        name,
-        description,
-        model,
-        system_message,
-        title_template,
-        template,
-        friendly_name: Optional[str] = None,
-        windowing: Optional[WindowSettings] = None,
-        diff_filter: Optional[DiffOpFilter] = None,
-    ):
-        super().__init__(
-            name,
-            description,
-            model=model,
-            friendly_name=friendly_name,
-            system_message=system_message,
-            title_template=title_template,
-            template=template,
-            expected_args=ONE_OR_MORE_ARGS,
-        )
-        self.implementation: str = "llm"
-        self.windowing = windowing
-        self.diff_filter = diff_filter
+    expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
+    windowing: Optional[WindowSettings] = None
+    diff_filter: Optional[DiffOpFilter] = None
 
     def run_item(self, item: Item) -> Item:
         return run_llm_transform(self, item)

@@ -33,7 +33,6 @@ def each_item_wrapper(action: Action) -> Action:
 
     return EachItemWrapper(
         name=action.name,
-        friendly_name=action.friendly_name,
         description=action.description,
         expected_args=ANY_ARGS,
     )

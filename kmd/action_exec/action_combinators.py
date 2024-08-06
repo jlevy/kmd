@@ -33,7 +33,6 @@ def validate_action_names(action_names: List[str]) -> None:
 def define_action_sequence(
     name: str,
     action_names: list[str],
-    friendly_name: Optional[str] = None,
     description: Optional[str] = None,
     on_each_input: bool = False,
 ) -> None:
@@ -52,7 +51,7 @@ def define_action_sequence(
     @kmd_action_wrapped(wrapper=action_wrapper)
     class SequenceAction(Action):
         def __init__(self):
-            super().__init__(name=name, friendly_name=friendly_name, description=seq_description)
+            super().__init__(name=name, description=seq_description)
 
             self.action_sequence = action_names
 
@@ -200,7 +199,6 @@ def combine_with_divs(*class_names: str) -> Combiner:
 def define_action_combo(
     name,
     action_names: List[str],
-    friendly_name: Optional[str] = None,
     description: Optional[str] = None,
     combiner: Combiner = combine_as_paragraphs,
     on_each_input: Optional[bool] = False,
@@ -212,7 +210,6 @@ def define_action_combo(
     if not action_names or len(action_names) <= 1:
         raise InvalidInput("Action must have at least two sub-actions: %s", action_names)
 
-    combo_friendly_name = friendly_name or name
     extra_desc = "This action combines outputs of these actions: " + ", ".join(action_names) + "."
     combo_description = " ".join([description, extra_desc]) if description else extra_desc
 
@@ -221,9 +218,7 @@ def define_action_combo(
     @kmd_action_wrapped(wrapper=action_wrapper)
     class ComboAction(Action):
         def __init__(self):
-            super().__init__(
-                name=name, friendly_name=combo_friendly_name, description=combo_description
-            )
+            super().__init__(name=name, description=combo_description)
             self.action_sequence = action_names
             self.combiner = combiner
 

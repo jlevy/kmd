@@ -1,6 +1,7 @@
 from kmd.action_exec.action_registry import kmd_action
 from kmd.action_exec.llm_action_base import LLMAction
 from kmd.config.logger import get_logger
+from kmd.model.actions_model import TitleTemplate
 
 log = get_logger(__name__)
 
@@ -11,8 +12,7 @@ def define_llm_action(
     model,
     system_message,
     template,
-    title_template="{title}",
-    friendly_name=None,
+    title_template=TitleTemplate("{title}"),
     windowing=None,
     diff_filter=None,
 ):
@@ -30,7 +30,6 @@ def define_llm_action(
                 system_message=system_message,
                 title_template=title_template,
                 template=template,
-                friendly_name=friendly_name,
                 windowing=windowing,
                 diff_filter=diff_filter,
             )
