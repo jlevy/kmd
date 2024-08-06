@@ -13,6 +13,7 @@ from kmd.config.logger import get_logger
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item, ItemRelations, ItemType, State
 from kmd.model.locators import StorePath
+from kmd.model.operations_model import OperationSummary
 from kmd.text_formatting.html_in_md import (
     Wrapper,
     div_wrapper,
@@ -98,7 +99,7 @@ def define_action_sequence(
             for item in items:
                 item.update_relations(derived_from=original_input_paths)
 
-            log.message("Sequence complete; archiving %s transient items", len(transient_outputs))
+            log.message("Sequence complete. Archiving transient items.")
             ws = current_workspace()
             for item in transient_outputs:
                 assert item.store_path
@@ -163,13 +164,13 @@ def combine_with_wrappers(
     # History when combining results is a litle complicated, so let's just concatenate
     # all the history lists but avoid duplicates.
     result_items = [item for result in results for item in result.items]
-    unique_ops: Set[str] = set()
+    unique_ops: Set[OperationSummary] = set()
     combo_result.history = []
 
     for item in result_items:
         for entry in item.history or []:
-            if entry.operation not in unique_ops:
-                unique_ops.add(entry.operation)
+            if entry not in unique_ops:
+                unique_ops.add(entry)
                 combo_result.history.append(entry)
 
     return combo_result

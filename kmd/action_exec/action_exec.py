@@ -9,11 +9,10 @@ from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidStoreState
 from kmd.model.items_model import UNTITLED, Item, State
-from kmd.model.operations_model import Input, Operation
+from kmd.model.operations_model import Input, Operation, Source
 from kmd.model.locators import Locator, StorePath, is_store_path
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.util.type_utils import not_none
-from kmd.commands import commands
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
@@ -104,8 +103,8 @@ def run_action(
     operation = Operation(action_name, inputs)
     log.message("%s Action: %s", EMOJI_CALL_BEGIN, operation.command_line())
 
-    # Ensure any items that are not saved are already in the workspace and get the corresponding items.
-    # This looks up any URLs.
+    # Ensure input items are already saved in the workspace and load the corresponding items.
+    # This also imports any URLs.
     input_items = [ensure_saved(arg) for arg in args]
 
     # URLs should have metadata like a title and be valid, so we fetch them.
@@ -113,14 +112,19 @@ def run_action(
     if action.name != FETCH_PAGE_METADATA_NAME:
         input_items = [fetch_url_items(item) for item in input_items]
 
+    # Preassemble outputs, so we can check if they already exist.
+    # TODO: Finish!
+    # preassembled_result = action.preassemble(operation, input_items)
+    # if preassembled_result:
+    #     # Check if these items already exist, with last_operation matching action and input fingerprints.
+    #     pass
+
     # Run the action.
     result = action.run(input_items)
 
-    elapsed = time.time() - start_time
-
     # Record the operation and add to the history of each item.
-    for item in result.items:
-        item.update_history(operation)
+    for i, item in enumerate(result.items):
+        item.update_history(Source(operation=operation, output_num=i))
 
     # Override the state if requested (this handles marking items as transient).
     if override_state:
@@ -158,10 +162,9 @@ def run_action(
             log.message("Archived input item: %s", input_store_path)
         archived_store_paths.extend(old_inputs)
 
-    # Select the final output (omitting any that were archived) and show the current selection.
+    # Select the final output (omitting any that were archived).
     if not internal_call:
         remaining_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
         ws.set_selection(remaining_outputs)
-        commands.select()
 
     return result

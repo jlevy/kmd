@@ -7,6 +7,7 @@ import os
 from typing import Any, Callable, List, Optional, TextIO
 from ruamel.yaml import YAML
 from strif import atomic_output_file
+from kmd.model.locators import StorePath
 
 KeySort = Callable[[str], tuple]
 
@@ -38,6 +39,12 @@ def new_yaml(
         return dumper.represent_dict({k: v for k, v in data.items() if not suppr(v)})
 
     yaml.representer.add_representer(dict, represent_dict)
+
+    # Our StorePath is just a str.
+    def represent_store_path(dumper, data):
+        return dumper.represent_str(str(data))
+
+    yaml.representer.add_representer(StorePath, represent_store_path)
 
     if stringify_unknown:
 

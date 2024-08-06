@@ -6,11 +6,11 @@ from dataclasses import asdict, dataclass, field, fields, replace
 import dataclasses
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Type, TypeVar
 from kmd.config.logger import get_logger
 from kmd.model.graph_model import Link, Node
 from kmd.model.media_model import MediaMetadata
-from kmd.model.operations_model import Operation, OperationSummary
+from kmd.model.operations_model import Operation, OperationSummary, Source
 from kmd.util.time_util import iso_format_z
 from kmd.file_storage.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
@@ -30,6 +30,9 @@ from kmd.util.url import Url
 
 
 log = get_logger(__name__)  # type: ignore
+
+
+T = TypeVar("T")
 
 
 class ItemType(Enum):
@@ -130,20 +133,20 @@ class FileExt(Enum):
 
 class IdType(Enum):
     """
-    Type of the id.
+    Types of identity checks.
     """
 
     url = "url"
     concept = "concept"
-
-    # TODO: Handle hash identity.
+    source = "source"
 
 
 @dataclass(frozen=True)
 class ItemId:
     """
     Represents the identity of an item. Used as a key to determine when to treat two items as
-    the same object (same URL, same concept, etc.).
+    the same object. This could be the same URL, the same concept, or the same source, by which
+    we mean the item is the output of the same action on the exact same inputs).
     """
 
     type: ItemType
@@ -160,6 +163,8 @@ class ItemId:
             item_id = ItemId(item.type, IdType.url, canonicalize_url(item.url))
         elif item.type == ItemType.concept and item.title:
             item_id = ItemId(item.type, IdType.concept, canonicalize_concept(item.title))
+        elif item.source:
+            item_id = ItemId(item.type, IdType.source, item.source.as_str())
 
         return item_id
 
@@ -215,7 +220,7 @@ class Item:
     relations: ItemRelations = field(default_factory=ItemRelations)
 
     # The operation that created this item.
-    last_operation: Optional[Operation] = None
+    source: Optional[Source] = None
 
     # Optionally, a history of operations.
     history: Optional[List[OperationSummary]] = None
@@ -245,46 +250,57 @@ class Item:
         """
         item_dict = {**item_dict, **kwargs}
 
+        # Metadata formats might change over time so it's important to gracefully handle issues.
+        def set_field(key: str, default: Any, cls: Type[T]) -> T:
+            try:
+                if key in item_dict:
+                    return cls(item_dict[key])
+                else:
+                    return default
+            except (KeyError, ValueError) as e:
+                log.warning(
+                    "Error reading field `%s` so using default `%s`: %s: %s",
+                    key,
+                    default,
+                    e,
+                    item_dict,
+                )
+                return default
+
         # These are the enum and dataclass fields.
-        try:
-            type = ItemType(item_dict["type"])
-            state = State(item_dict["state"]) if "state" in item_dict else State.draft
-            format = Format(item_dict["format"]) if "format" in item_dict else None
-            file_ext = FileExt(item_dict["file_ext"]) if "file_ext" in item_dict else None
-            body = item_dict.get("body")
-            last_operation = (
-                Operation.from_dict(item_dict.get("last_operation", {}))
-                if "last_operation" in item_dict
-                else None
-            )
-            history = [OperationSummary(**op) for op in item_dict.get("history", [])]
-            relations = (
-                ItemRelations(**item_dict["relations"])
-                if "relations" in item_dict
-                else ItemRelations()
-            )
-            store_path = item_dict.get("store_path")
-            # TODO: created_at and modified_at could be handled here too.
-        except KeyError as e:
-            raise ValueError(f"Error deserializing Item: {e}")
+        type = set_field("type", ItemType.note, ItemType)
+        state = set_field("state", State.draft, State)
+        format = set_field("format", None, Format)
+        file_ext = set_field("file_ext", None, FileExt)
+        source = set_field("source", None, Source.from_dict)  # type: ignore
+
+        body = item_dict.get("body")
+        history = [OperationSummary(**op) for op in item_dict.get("history", [])]
+        relations = (
+            ItemRelations(**item_dict["relations"]) if "relations" in item_dict else ItemRelations()
+        )
+        store_path = item_dict.get("store_path")
 
         # Other fields are basic strings or dicts.
-        other_metadata = {
-            key: value
-            for key, value in item_dict.items()
-            if key
-            not in [
-                "type",
-                "state",
-                "format",
-                "file_ext",
-                "body",
-                "last_operation",
-                "history",
-                "relations",
-                "store_path",
-            ]
+        excluded_fields = [
+            "type",
+            "state",
+            "format",
+            "file_ext",
+            "body",
+            "source",
+            "history",
+            "relations",
+            "store_path",
+        ]
+        all_fields = [f.name for f in fields(cls)]
+        allowed_fields = [f for f in all_fields if f not in excluded_fields]
+        other_metadata = {key: value for key, value in item_dict.items() if key in allowed_fields}
+        unexpected_metadata = {
+            key: value for key, value in item_dict.items() if key not in all_fields
         }
+        if unexpected_metadata:
+            log.warning("Unexpected metadata on item: %s", unexpected_metadata)
 
         return Item(
             type=type,
@@ -293,7 +309,7 @@ class Item:
             file_ext=file_ext,
             body=body,
             relations=relations,
-            last_operation=last_operation,
+            source=source,
             history=history,
             **other_metadata,
             store_path=store_path,
@@ -348,8 +364,8 @@ class Item:
         item_dict = asdict(self)
 
         # Special case for prettier serialization of input path/hash.
-        if self.last_operation:
-            item_dict["last_operation"] = self.last_operation.as_dict()
+        if self.source:
+            item_dict["source"] = self.source.as_dict()
 
         def serialize(v):
             if isinstance(v, Enum):
@@ -391,7 +407,7 @@ class Item:
 
         # Add a suffix indicating the last operation, if there was one.
         suffix = ""
-        last_op = with_last_op and self.history and self.history[-1].operation
+        last_op = with_last_op and self.history and self.history[-1].action_name
         if last_op:
             suffix = f" ({last_op})"
 
@@ -517,12 +533,12 @@ class Item:
         self.relations = replace(self.relations, **relations)
         return self.relations
 
-    def update_history(self, operation: Operation) -> None:
+    def update_history(self, source: Source) -> None:
         """
         Update the history of the item with the given operation.
         """
-        self.last_operation = operation
-        self.add_to_history(operation.summary())
+        self.source = source
+        self.add_to_history(source.operation.summary())
 
     def item_id(self) -> Optional[ItemId]:
         """

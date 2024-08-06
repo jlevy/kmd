@@ -225,6 +225,12 @@ class FileStore:
 
         return new_unique_filename, old_filename
 
+    def default_path_for(self, item: Item) -> StorePath:
+        folder_path = _folder_for(item)
+        slug = _slug_for(item)
+        suffix = item.get_full_suffix()
+        return StorePath(folder_path / _join_filename(slug, suffix))
+
     def find_path_for(self, item: Item) -> Tuple[StorePath, Optional[StorePath]]:
         """
         Return the store path for an item. If the item already has a `store_path`, we use that.
@@ -251,9 +257,9 @@ class FileStore:
 
             old_store_path = None
             if old_filename and Path(self.base_dir / folder_path / old_filename).exists():
-                old_store_path = StorePath(str(folder_path / old_filename))
+                old_store_path = StorePath(folder_path / old_filename)
 
-            return StorePath(str(store_path)), old_store_path
+            return StorePath(store_path), old_store_path
 
     def save(self, item: Item) -> StorePath:
         """
@@ -499,7 +505,7 @@ class FileStore:
                 filtered_filenames.append(filename)
 
             if len(filtered_filenames) > 0:
-                yield StorePath(str(store_dirname)), filtered_filenames
+                yield StorePath(store_dirname), filtered_filenames
 
     def walk_items(
         self, store_path: Optional[StorePath] = None, show_hidden: bool = False

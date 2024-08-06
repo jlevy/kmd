@@ -1,9 +1,21 @@
-from typing import NewType
+from pathlib import Path
+from typing import Self
 from kmd.util.url import Url, is_url
 
 
-# Mostly for readability and light type checking.
-StorePath = NewType("StorePath", str)
+class StorePath(str):
+    """
+    A relative path of an item in the file store. This can be used interchangably with
+    str but helps with readability, easy casting from Path, and light type checking.
+    """
+
+    def __new__(cls, path: str | Path) -> Self:
+        if not path or str(path).startswith("/") or Path(path).is_absolute():
+            raise ValueError(f"StorePath must be a relative path: {path}")
+
+        return super().__new__(cls, str(path))
+
+
 Locator = Url | StorePath | str
 
 

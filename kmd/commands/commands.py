@@ -406,15 +406,19 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
     """
     ws = current_workspace()
     if len(paths) == 0:
-        paths = (str(ws.base_dir),)
+        paths_to_show = (None,)
+    else:
+        paths_to_show = paths
 
     total_folders, total_files = 0, 0
 
-    for path in paths:
+    for path in paths_to_show:
         # If we're explicitly looking in a hidden directory, show hidden files.
-        show_hidden = skippable_file(path)
+        show_hidden = path is not None and skippable_file(path)
 
-        for store_dirname, filenames in ws.walk_by_folder(StorePath(path), show_hidden):
+        for store_dirname, filenames in ws.walk_by_folder(
+            StorePath(path) if path else None, show_hidden
+        ):
             # Show tally for this directory.
             nfiles = len(filenames)
             if nfiles > 0:
