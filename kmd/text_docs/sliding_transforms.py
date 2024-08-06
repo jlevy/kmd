@@ -114,6 +114,11 @@ def filtered_transform(
                 normalize_markdown(input_doc.reassemble()),
             )
             log.save_object(
+                "Transformed doc raw",
+                "transform_and_check_diff",
+                transformed_doc.reassemble(),
+            )
+            log.save_object(
                 "Transformed doc normalized",
                 "transform_and_check_diff",
                 normalize_markdown(transformed_doc.reassemble()),

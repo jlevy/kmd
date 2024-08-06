@@ -28,3 +28,8 @@ WINDOW_8_PARA = WindowSettings(
     Unit.PARAGRAPHS, size=8, shift=8, min_overlap=0, separator=WINDOW_BR_SEP
 )
 """Process 8 paragraphs at a time."""
+
+WINDOW_16_PARA = WindowSettings(
+    Unit.PARAGRAPHS, size=16, shift=16, min_overlap=0, separator=WINDOW_BR_SEP
+)
+"""Process 16 paragraphs at a time."""

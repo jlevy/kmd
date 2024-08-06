@@ -178,7 +178,7 @@ def unselect(*paths: str) -> None:
         )
 
 
-def _assemble_store_paths(*paths: Optional[str]) -> List[StorePath]:
+def _assemble_paths(*paths: Optional[str]) -> List[StorePath]:
     """
     Assemble store paths from the given paths, or the current selection if
     no paths are given.
@@ -197,7 +197,7 @@ def show(path: Optional[str] = None) -> None:
     """
     Show the contents of a file if one is given, or the first file if multiple files are selected.
     """
-    store_paths = _assemble_store_paths(path)
+    store_paths = _assemble_paths(path)
     store_path = store_paths[0]
 
     # Optionally, if we can inline display the image (like in kitty) above the text representation, do that.
@@ -267,6 +267,7 @@ def param(*args: str) -> None:
         output_heading("Current action parameters")
         for key, value in params.items():
             output(format_key_value(key, value))
+        output()
 
 
 @kmd_command
@@ -293,7 +294,7 @@ def archive(*paths: str) -> None:
     """
     Archive the items at the given path, or the current selection.
     """
-    store_paths = _assemble_store_paths(*paths)
+    store_paths = _assemble_paths(*paths)
     ws = current_workspace()
     for store_path in store_paths:
         ws.archive(store_path)
@@ -319,7 +320,7 @@ def index(*paths: str) -> None:
     """
     Index the items at the given path, or the current selection.
     """
-    store_paths = _assemble_store_paths(*paths)
+    store_paths = _assemble_paths(*paths)
     ws = current_workspace()
 
     ws.vector_index.index_items([ws.load(store_path) for store_path in store_paths])

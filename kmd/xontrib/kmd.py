@@ -43,7 +43,13 @@ setup()
 log = get_logger(__name__)
 
 # Common exceptions that don't merit a full stack trace.
-_common_exceptions = (SelfExplanatoryError, IOError, XonshError, litellm.exceptions.APIError)
+_common_exceptions = (
+    SelfExplanatoryError,
+    FileNotFoundError,
+    IOError,
+    XonshError,
+    litellm.exceptions.APIError,
+)
 
 
 def _summarize_traceback(exception: Exception) -> str:
@@ -68,6 +74,7 @@ def xonsh_command_for(func: Callable):
             func(*args)
         except _common_exceptions as e:
             log.error(f"[{COLOR_ERROR}]Command error:[/{COLOR_ERROR}] %s", _summarize_traceback(e))
+            output()
 
             log.info("Command error details: %s", e, exc_info=True)
 
