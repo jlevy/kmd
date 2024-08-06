@@ -56,7 +56,7 @@ def all_commands():
     return sorted(_commands, key=lambda cmd: cmd.__name__)
 
 
-def output_help(base_only: bool = False) -> None:
+def output_help_page(base_only: bool = False) -> None:
     from kmd.action_defs import load_all_actions
 
     output_heading("About kmd")
@@ -92,7 +92,7 @@ def kmd_help() -> None:
     """
     # TODO: Take an argument to show help for a specific command or action.
 
-    output_help()
+    output_help_page()
 
 
 @kmd_command

@@ -1,21 +1,21 @@
-from textwrap import dedent
 from kmd.action_exec.action_builders import define_llm_action
+from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
 from kmd.model.language_models import LLM
-from kmd.text_docs.window_settings import WINDOW_16_PARA, WINDOW_1_PARA
+from kmd.text_docs.window_settings import WINDOW_16_PARA
 
 
 define_llm_action(
     name="summarize_as_bullets",
     description="Summarize text as bullet points.",
     model=LLM.claude_3_5_sonnet.value,
-    system_message=dedent(
+    system_message=LLMMessage(
         """
         You are a careful and precise editor.
         You give exactly the results requested without additional commentary.
         """
     ),
-    title_template="Summary of {title}",
-    template=dedent(
+    title_template=TitleTemplate("Summary of {title}"),
+    template=LLMTemplate(
         """
         Summarize the following text as a list of concise bullet points:
 

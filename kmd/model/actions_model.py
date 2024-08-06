@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import copy
 from dataclasses import dataclass, field, fields
+from textwrap import dedent
 from typing import Dict, List, Optional
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_WARN
@@ -36,14 +37,21 @@ class TitleTemplate(StringTemplate):
     """A template for a title."""
 
     def __init__(self, template: str):
-        super().__init__(template, allowed_fields=["title", "action_name"])
+        super().__init__(template.strip(), allowed_fields=["title", "action_name"])
 
 
 class LLMTemplate(StringTemplate):
     """A template for an LLM request."""
 
     def __init__(self, template: str):
-        super().__init__(template, allowed_fields=["body"])
+        super().__init__(dedent(template), allowed_fields=["body"])
+
+
+class LLMMessage(str):
+    """A message for an LLM."""
+
+    def __new__(cls, value: str):
+        return super().__new__(cls, dedent(value))
 
 
 # For now these are simple but we will want to support other hints or output data in the future.
@@ -77,7 +85,7 @@ class Action(ABC):
     chunk_size: Optional[ChunkSize] = None
     title_template: Optional[TitleTemplate] = None
     template: Optional[LLMTemplate] = None
-    system_message: Optional[str] = None
+    system_message: Optional[LLMMessage] = None
     expected_args: ExpectedArgs = field(default_factory=lambda: ONE_ARG)
     interactive_input: bool = False
 

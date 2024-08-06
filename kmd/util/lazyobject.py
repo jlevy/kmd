@@ -129,6 +129,9 @@ class LazyObject(Generic[T]):
     def __repr__(self) -> str:
         return repr(self._lazy_obj())
 
+    def __len__(self) -> int:
+        return len(self._lazy_obj())  # type: ignore
+
 
 def lazyobject(f: Callable[[], T]) -> T:
     """

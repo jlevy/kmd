@@ -6,6 +6,7 @@ from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     Action,
     ExpectedArgs,
+    LLMMessage,
     LLMTemplate,
     CachedTextAction,
 )
@@ -26,7 +27,7 @@ log = get_logger(__name__)
 
 def _sliding_llm_transform(
     model: str,
-    system_message: str,
+    system_message: LLMMessage,
     template: LLMTemplate,
     input: str,
     windowing: Optional[WindowSettings],
@@ -52,6 +53,7 @@ def _sliding_llm_transform(
 @dataclass(frozen=True)
 class LLMAction(CachedTextAction):
     expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
+
     windowing: Optional[WindowSettings] = None
     diff_filter: Optional[DiffOpFilter] = None
 
@@ -126,7 +128,7 @@ def run_llm_completion(action: Action, item: Item) -> Item:
     result_item = item.derived_copy(body=None)
     result_item.body = llm_completion(
         action.model,
-        system_message=str(action.system_message),
+        system_message=action.system_message,
         template=action.template,
         input=item.body,
     )

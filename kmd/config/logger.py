@@ -10,7 +10,7 @@ from strif import new_timestamped_uid, atomic_output_file
 from rich.logging import RichHandler
 from rich.theme import Theme
 from rich.console import Console
-from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, HRULE, RICH_STYLES, KmdHighlighter
+from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, RICH_STYLES, KmdHighlighter
 
 LOG_DIR_NAME = ".logs"
 LOG_FILE_NAME = "kmd.log"

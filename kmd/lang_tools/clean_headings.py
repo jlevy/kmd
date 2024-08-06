@@ -1,6 +1,6 @@
-from textwrap import dedent
 from typing import List
 from kmd.llms.llm_completion import llm_completion
+from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.language_models import LLM
 from kmd.text_formatting.markdown_util import as_bullet_points
 
@@ -13,12 +13,12 @@ def clean_heading(heading: str) -> str:
     """
     return llm_completion(
         LLM.groq_llama3_70b_8192.value,
-        system_message=dedent(
+        system_message=LLMMessage(
             """
             You are a careful and precise editor. You follow directions exactly and do not embellish or offer any other commentary.
             """
         ),
-        template=dedent(
+        template=LLMTemplate(
             """
             Edit the following heading to be suitable for a title of a web page or section in a document.
             Follow Chicago Manual of Style capitalizaiton rules. Remove any ellipses, bracketed words or
@@ -41,12 +41,12 @@ def summary_heading(values: List[str]) -> str:
 
     return llm_completion(
         LLM.groq_llama3_70b_8192.value,
-        system_message=dedent(
+        system_message=LLMMessage(
             """
             You are a careful and precise editor. You follow directions exactly and do not embellish or offer any other commentary.
             """
         ),
-        template=dedent(
+        template=LLMTemplate(
             """
             Summarize the following list of headings into a single heading that captures the essence of the list.
             Follow Chicago Manual of Style capitalization rules. Remove any ellipses, bracketed words or

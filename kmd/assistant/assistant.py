@@ -3,6 +3,7 @@ from cachetools import cached
 from kmd.llms.llm_completion import llm_completion
 from kmd.config.settings import get_settings
 from kmd.file_storage.workspaces import current_workspace
+from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
 from kmd.docs import api_docs, assistant_instructions
@@ -11,14 +12,14 @@ from kmd.util.type_utils import not_none
 
 @cached({})
 def assistant_preamble(skip_api: bool = False, base_only: bool = False) -> str:
-    from kmd.commands.commands import output_help  # Avoid circular imports.
+    from kmd.commands.commands import output_help_page  # Avoid circular imports.
 
     return dedent(
         f"""
         {fill_markdown(assistant_instructions.__doc__)}
 
 
-        {output_as_string(lambda: output_help(base_only))}
+        {output_as_string(lambda: output_help_page(base_only))}
 
 
         {"" if skip_api else api_docs.__doc__} 
@@ -34,7 +35,7 @@ def assistance(input: str, fast: bool = False) -> str:
 
     output(f"Getting assistance (model {model_str})…")
 
-    system_message = dedent(
+    system_message = LLMMessage(
         f"""
         {assistant_preamble(skip_api=fast)}
 
@@ -47,7 +48,7 @@ def assistance(input: str, fast: bool = False) -> str:
         # TODO: Include selection history, command history, and other info about the workspace.
     )
 
-    template = dedent(
+    template = LLMTemplate(
         """
         Here is the user's request:
         

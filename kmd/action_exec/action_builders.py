@@ -1,20 +1,23 @@
+from typing import Optional
 from kmd.action_exec.action_registry import kmd_action
 from kmd.action_exec.llm_action_base import LLMAction
 from kmd.config.logger import get_logger
-from kmd.model.actions_model import TitleTemplate
+from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
+from kmd.text_docs.sliding_transforms import WindowSettings
+from kmd.text_docs.text_diffs import DiffOpFilter
 
 log = get_logger(__name__)
 
 
 def define_llm_action(
-    name,
-    description,
-    model,
-    system_message,
-    template,
-    title_template=TitleTemplate("{title}"),
-    windowing=None,
-    diff_filter=None,
+    name: str,
+    description: str,
+    model: str,
+    system_message: LLMMessage,
+    template: LLMTemplate,
+    title_template: TitleTemplate = TitleTemplate("{title}"),
+    windowing: Optional[WindowSettings] = None,
+    diff_filter: Optional[DiffOpFilter] = None,
 ):
     """
     Convenience method to register an LLM action.
@@ -24,8 +27,8 @@ def define_llm_action(
     class CustomLLMAction(LLMAction):
         def __init__(self):
             super().__init__(
-                name,
-                description,
+                name=name,
+                description=description,
                 model=model,
                 system_message=system_message,
                 title_template=title_template,

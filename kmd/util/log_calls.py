@@ -15,7 +15,7 @@ def single_line(text: str) -> str:
     """
     Convert newlines and other whitespace to spaces.
     """
-    return regex.sub(r"\s+", " ", text).strip()
+    return regex.sub(r"\s+", " ", str(text)).strip()
 
 
 _QUOTABLE = re.compile(r"['\" \n\t\r]")

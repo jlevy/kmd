@@ -11,7 +11,7 @@ from kmd.config.settings import get_settings
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.model.params_model import ParamSet, get_action_param
 from kmd.query.vector_index import WsVectorIndex
-from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
+from kmd.config.text_styles import EMOJI_SUCCESS
 from kmd.file_storage.filenames import parse_filename
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.model.errors_model import InvalidFilename, InvalidStoreState
@@ -165,8 +165,7 @@ class FileStore:
 
         if num_dups > 0:
             log.warning(
-                "%s Found %s duplicate items in store. See kmd.log for details.",
-                EMOJI_WARN,
+                "Found %s duplicate items in store. See kmd.log for details.",
                 num_dups,
             )
 

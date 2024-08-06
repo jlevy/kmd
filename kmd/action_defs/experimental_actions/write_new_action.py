@@ -9,6 +9,7 @@ from kmd.model.actions_model import (
     Action,
     ActionInput,
     ActionResult,
+    LLMMessage,
     LLMTemplate,
     TitleTemplate,
 )
@@ -18,8 +19,8 @@ from kmd.util.lazyobject import lazyobject
 
 
 @lazyobject
-def assistant_coding_preamble():
-    return assistant_preamble(False, False)
+def assistant_coding_preamble() -> LLMMessage:
+    return LLMMessage(assistant_preamble(False, False))
 
 
 @kmd_action

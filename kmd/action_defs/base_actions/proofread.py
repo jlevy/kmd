@@ -1,6 +1,6 @@
-from textwrap import dedent
 from kmd.action_exec.action_builders import define_llm_action
 from kmd.config.logger import get_logger
+from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.language_models import LLM
 from kmd.text_docs.window_settings import WINDOW_1_PARA
 
@@ -12,13 +12,13 @@ define_llm_action(
     name="proofread",
     description="Proofread text, only fixing spelling, punctuation, and grammar.",
     model=LLM.gpt_3_5_turbo.value,
-    system_message=dedent(
+    system_message=LLMMessage(
         """
         You are a careful and precise editor.
         You give exactly the results requested without additional commentary.
         """
     ),
-    template=dedent(
+    template=LLMTemplate(
         """
         Proofread the following text according to these rules:
 

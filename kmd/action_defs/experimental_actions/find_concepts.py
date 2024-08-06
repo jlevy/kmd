@@ -1,6 +1,6 @@
-from textwrap import dedent
 from kmd.action_exec.action_builders import define_llm_action
 from kmd.config.logger import get_logger
+from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
 from kmd.model.language_models import LLM
 from kmd.text_docs.window_settings import WINDOW_4_PARA
 
@@ -12,14 +12,14 @@ define_llm_action(
     name="find_concepts",
     description="Identify the key concepts in a text.",
     model=LLM.gpt_4o.value,
-    system_message=dedent(
+    system_message=LLMMessage(
         """
         You are a careful and precise editor.
         You give exactly the results requested without additional commentary.
         """
     ),
-    title_template="Concepts from {title}",
-    template=dedent(
+    title_template=TitleTemplate("Concepts from {title}"),
+    template=LLMTemplate(
         """
         You are collecting concepts for the glossary of a book.
         
