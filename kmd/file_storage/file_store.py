@@ -55,7 +55,7 @@ def _slug_for(item: Item) -> str:
     """
     Get a readable slugified version of the title for this item (may not be unique).
     """
-    title = item.abbrev_title(max_len=FILENAME_SLUG_MAX_LEN)
+    title = item.abbrev_title(max_len=FILENAME_SLUG_MAX_LEN, with_last_op=True)
     slug = slugify(title, max_length=FILENAME_SLUG_MAX_LEN, separator="_")
     return slug
 

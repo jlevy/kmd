@@ -401,9 +401,9 @@ class Item:
         """
         return self.store_path or self.abbrev_title()
 
-    def abbrev_title(self, max_len: int = 100, with_last_op: bool = True) -> str:
+    def abbrev_title(self, max_len: int = 100, with_last_op: bool = False) -> str:
         """
-        Get or infer title. By default, include the last operation as a parenthetical
+        Get or infer title. Optionally, include the last operation as a parenthetical
         at the end of the title.
         """
         title_raw_text = (
@@ -582,7 +582,7 @@ class Item:
         node = Node(
             id=self.store_path,
             type=self.type.name,
-            title=self.abbrev_title(),
+            title=self.abbrev_title(with_last_op=True),
             description=self.abbrev_description(),
             body=None,  # Skip for now, might add if we find it useful.
             url=str(self.url) if self.url else None,

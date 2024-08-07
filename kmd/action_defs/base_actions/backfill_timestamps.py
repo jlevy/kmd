@@ -84,8 +84,7 @@ class BackfillSourceTimestamps(CachedItemAction):
 
         log.save_object("Token mapping", None, token_mapping.full_mapping_str())
 
-        new_title = f"{item.title} ({self.name})"
-        output_item = item.derived_copy(type=ItemType.note, title=new_title, format=Format.markdown)
+        output_item = item.derived_copy(type=ItemType.note, format=Format.markdown)
 
         timestamps_found = []
         for wordtok_offset, (wordtok, sent_index) in enumerate(

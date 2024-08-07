@@ -25,6 +25,8 @@ define_llm_action(
           text is about cheese being nutritious, you can say "Cheese is nutritious." But do NOT
           say "The author says cheese is nutritious" or "According to the text, cheese is nutritious."
 
+        - If the content is missing so brief that it can't be described, simply say "(No description.)"
+        
         Original text:
 
         {body}
