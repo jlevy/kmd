@@ -1,12 +1,12 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
-    CachedTextAction,
+    CachedItemAction,
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
-from kmd.precondition_defs.common_preconditions import is_markdown
+from kmd.preconditions.precondition_defs import is_readable_text
 from kmd.text_docs.div_chunks import chunk_paras_into_divs
 from kmd.text_docs.sizes import TextUnit
 
@@ -14,13 +14,13 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class ChunkParagraphs(CachedTextAction):
+class ChunkParagraphs(CachedItemAction):
     def __init__(self):
         super().__init__(
             name="chunk_paragraphs",
             description="Group paragraphs into chunks, demarcated by div tags.",
             expected_args=ONE_OR_MORE_ARGS,
-            precondition=is_markdown,
+            precondition=is_readable_text,
             chunk_size=2000,
             chunk_unit=TextUnit.WORDS,
         )

@@ -7,7 +7,7 @@ from kmd.model.actions_model import (
     ExpectedArgs,
     LLMMessage,
     LLMTemplate,
-    CachedTextAction,
+    CachedItemAction,
 )
 from kmd.model.errors_model import InvalidInput, UnexpectedError
 from kmd.model.items_model import UNTITLED, Format, Item
@@ -15,7 +15,7 @@ from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.model.language_models import LLM
 from kmd.model.preconditions_model import Precondition
-from kmd.precondition_defs.common_preconditions import has_div_chunks
+from kmd.preconditions.precondition_defs import has_div_chunks, is_readable_text
 from kmd.text_docs.div_chunks import parse_chunk_divs, chunk_wrapper
 from kmd.text_docs.text_diffs import ALL_CHANGES, DiffOpFilter
 from kmd.text_docs.text_doc import TextDoc
@@ -55,8 +55,9 @@ def _sliding_llm_transform(
 
 
 @dataclass(frozen=True)
-class LLMAction(CachedTextAction):
+class LLMAction(CachedItemAction):
     expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
+    precondition: Precondition = is_readable_text
 
     windowing: Optional[WindowSettings] = None
     diff_filter: Optional[DiffOpFilter] = None

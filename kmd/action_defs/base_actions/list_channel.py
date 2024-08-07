@@ -8,6 +8,7 @@ from kmd.model.actions_model import (
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item
 from kmd.config.logger import get_logger
+from kmd.preconditions.precondition_defs import is_url
 
 log = get_logger(__name__)
 
@@ -18,6 +19,7 @@ class ListChannel(Action):
         super().__init__(
             name="list_channel",
             description="Get the URL of every audio or video item in a given media channel (YouTube, Apple Podcasts, etc.).",
+            precondition=is_url,
         )
 
     def run(self, items: ActionInput) -> ActionResult:

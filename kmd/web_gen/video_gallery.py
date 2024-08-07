@@ -6,7 +6,7 @@ from kmd.lang_tools.clean_headings import clean_heading, summary_heading
 from kmd.media.media_services import get_media_id
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
-from kmd.precondition_defs.common_preconditions import is_youtube_video
+from kmd.preconditions.precondition_defs import is_youtube_video
 from kmd.provenance.source_items import find_upstream_item
 from kmd.util.type_utils import as_dataclass
 from kmd.web_gen.template_render import render_web_template

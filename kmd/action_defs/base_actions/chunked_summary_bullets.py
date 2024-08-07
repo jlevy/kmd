@@ -2,7 +2,6 @@ from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 from kmd.exec.llm_action_base import ChunkedLLMAction
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.html_conventions import ORIGINAL, SUMMARY
-from kmd.model.language_models import LLM
 from kmd.exec.action_registry import kmd_action
 
 

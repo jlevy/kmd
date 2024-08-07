@@ -7,6 +7,7 @@ from kmd.model.actions_model import (
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item
 from kmd.config.logger import get_logger
+from kmd.preconditions.precondition_defs import is_url
 
 log = get_logger(__name__)
 
@@ -18,6 +19,7 @@ class DownloadMedia(EachItemAction):
             name="download_media",
             description="Download and save audio from a podcast or video. Only saves to media cache; does not create new items.",
             expected_args=ONE_OR_MORE_ARGS,
+            precondition=is_url,
         )
 
     def run_item(self, item: Item) -> Item:

@@ -12,6 +12,7 @@ from kmd.model.language_models import LLM
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ACTION_PARAMS, TextUnit
 from kmd.model.preconditions_model import Precondition
+from kmd.preconditions.precondition_defs import has_text_body
 from kmd.text_formatting.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_utils import format_key_value
@@ -178,22 +179,27 @@ class EachItemAction(Action):
         errors = []
         log.message("Running EachItemAction %s on each of %s items", self.name, len(items))
 
+        multiple_inputs = len(items) > 1
+
         for item in items:
             try:
                 result_item = self.run_item(item)
                 result_items.append(result_item)
             except (ContentError, InvalidInput) as e:
                 errors.append(e)
-                log.error(
-                    "Error processing item (will continue with others): %s: %s",
-                    e,
-                    item,
-                )
+                if multiple_inputs:
+                    log.error(
+                        "Error processing item (will continue with others): %s: %s",
+                        e,
+                        item,
+                    )
+                else:
+                    # If there's only one input, fail fast.
+                    raise e
 
         if errors:
             log.error(
-                "%s %s %s occurred while processing items. See above!",
-                EMOJI_WARN,
+                "%s %s occurred while processing items. See above!",
                 len(errors),
                 plural("error", len(errors)),
             )
@@ -223,7 +229,7 @@ def preassemble_single_output(
 
 
 @dataclass(frozen=True)
-class CachedTextAction(EachItemAction):
+class CachedItemAction(EachItemAction):
     """
     A simple action that processes each input returns a single text output for each,
     with the output title etc. derived from the first input item. Caches and skips

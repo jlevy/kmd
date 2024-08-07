@@ -2,16 +2,16 @@ from textwrap import indent
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
-    CachedTextAction,
+    CachedItemAction,
 )
 from kmd.model.errors_model import ContentError, InvalidInput, UnexpectedError
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
-from kmd.precondition_defs.common_preconditions import is_timestamped_text
+from kmd.preconditions.precondition_defs import is_timestamped_text, is_readable_text
 from kmd.provenance.source_items import find_upstream_item
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_formatting.citations import add_citation_to_text, format_timestamp_citation
-from kmd.provenance.extractors import TimestampExtractor
+from kmd.provenance.timestamps import TimestampExtractor
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.token_mapping import TokenMapping
 from kmd.text_docs.wordtoks import BOF_TOK, EOF_TOK, PARA_BR_TOK, SENT_BR_TOK, search_tokens
@@ -20,7 +20,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class BackfillSourceTimestamps(CachedTextAction):
+class BackfillSourceTimestamps(CachedItemAction):
     def __init__(self):
         super().__init__(
             name="backfill_timestamps",
@@ -30,6 +30,7 @@ class BackfillSourceTimestamps(CachedTextAction):
               into the text of the current doc. Source must have similar tokens.
             """,
             expected_args=ONE_OR_MORE_ARGS,
+            precondition=is_readable_text & ~is_timestamped_text,
             chunk_unit=TextUnit.PARAGRAPHS,
         )
 

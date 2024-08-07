@@ -8,6 +8,7 @@ from kmd.model.actions_model import (
 from kmd.model.errors_model import InvalidInput, WebFetchError
 from kmd.model.items_model import Item
 from kmd.config.logger import get_logger
+from kmd.preconditions.precondition_defs import is_url
 
 log = get_logger(__name__)
 
@@ -19,6 +20,7 @@ class FetchPageMetadata(EachItemAction):
             name="fetch_page_metadata",
             description="Fetches a web page for title, description, and thumbnail, if available.",
             expected_args=ONE_OR_MORE_ARGS,
+            precondition=is_url,
         )
 
     def run_item(self, item: Item) -> Item:

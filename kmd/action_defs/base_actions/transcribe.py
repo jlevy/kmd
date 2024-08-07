@@ -2,22 +2,24 @@ from kmd.exec.action_registry import kmd_action
 from kmd.media.media_download import download_and_transcribe
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
-    CachedTextAction,
+    CachedItemAction,
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import FileExt, Format, Item, ItemType
 from kmd.config.logger import get_logger
+from kmd.preconditions.precondition_defs import is_url
 
 log = get_logger(__name__)
 
 
 @kmd_action
-class Transcribe(CachedTextAction):
+class Transcribe(CachedItemAction):
     def __init__(self):
         super().__init__(
             name="transcribe",
             description="Download and transcribe audio from a podcast or video.",
             expected_args=ONE_OR_MORE_ARGS,
+            precondition=is_url,
         )
 
     def run_item(self, item: Item) -> Item:

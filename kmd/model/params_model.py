@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 from kmd.config.logger import get_logger
 from kmd.config.settings import DEFAULT_CAREFUL_MODEL, DEFAULT_FAST_MODEL
-from kmd.model.language_models import LLM, MODEL_LIST
+from kmd.model.language_models import MODEL_LIST
 from kmd.text_docs.sizes import TextUnit
 
 

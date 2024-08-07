@@ -395,6 +395,12 @@ class Item:
 
         return item_dict
 
+    def path_or_title(self) -> str:
+        """
+        Get the path or fall back to the title of the item.
+        """
+        return self.store_path or self.abbrev_title()
+
     def abbrev_title(self, max_len: int = 100, with_last_op: bool = True) -> str:
         """
         Get or infer title. By default, include the last operation as a parenthetical

@@ -6,6 +6,7 @@ from kmd.model.actions_model import (
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
+from kmd.preconditions.precondition_defs import has_text_body
 from kmd.text_docs.wordtoks import raw_text_to_wordtoks, visualize_wordtoks
 
 log = get_logger(__name__)
@@ -18,6 +19,7 @@ class Wordtokenize(EachItemAction):
             name="wordtokenize",
             description="For debugging: Break text into word tokens.",
             expected_args=ONE_OR_MORE_ARGS,
+            precondition=has_text_body,
         )
 
     def run_item(self, item: Item) -> Item:
