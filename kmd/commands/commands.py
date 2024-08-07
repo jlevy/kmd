@@ -6,6 +6,7 @@ from typing import Callable, List, Optional, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
+from kmd.action_defs import load_all_actions
 from kmd.assistant.assistant import assistance
 from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.media.web import fetch_and_cache
@@ -30,7 +31,7 @@ from kmd.config.text_styles import (
 )
 from kmd.file_storage.file_store import skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace
-from kmd.model.actions_model import ACTION_PARAMS
+from kmd.model.actions_model import ACTION_PARAMS, Action
 from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath
 from kmd.text_formatting.text_formatting import format_lines
@@ -313,6 +314,40 @@ def unarchive(*paths: str) -> None:
     for path in paths:
         store_path = ws.unarchive(StorePath(path))
         output_status(f"Unarchived: {store_path}")
+
+
+@kmd_command
+def applicable_actions() -> None:
+    """
+    Show the actions that are applicable to the current selection.
+    This is a great command to use at any point to see what actions are available!
+    """
+    ws = current_workspace()
+    selection = ws.get_selection()
+    if not selection:
+        raise InvalidInput("No selection")
+
+    def check_precondition(action: Action, store_path: StorePath) -> bool:
+        if action.precondition:
+            return action.precondition(ws.load(store_path))
+        return True
+
+    output_status("Applicable actions for selection:\n %s", format_lines(selection))
+
+    actions = load_all_actions(base_only=False)
+    for action in actions.values():
+        if all(check_precondition(action, store_path) for store_path in selection):
+            precondition_str = (
+                f"(matches precondition {action.precondition })"
+                if action.precondition
+                else "(no precondition)"
+            )
+            output(
+                format_action_description(
+                    action.name, action.description, parenthetical=precondition_str
+                )
+            )
+            output()
 
 
 @kmd_command

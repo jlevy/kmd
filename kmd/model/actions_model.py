@@ -4,7 +4,6 @@ from dataclasses import dataclass, field, fields
 from textwrap import dedent
 from typing import Dict, List, Optional
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ContentError, InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.lang_tools.inflection import plural
@@ -12,7 +11,6 @@ from kmd.model.language_models import LLM
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ACTION_PARAMS, TextUnit
 from kmd.model.preconditions_model import Precondition
-from kmd.preconditions.precondition_defs import has_text_body
 from kmd.text_formatting.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_utils import format_key_value
@@ -123,7 +121,6 @@ class Action(ABC):
             )
 
     def validate_precondition(self, items: ActionInput) -> None:
-        # FIXME: More helpful error with precondition name.
         if self.precondition:
             for item in items:
                 self.precondition.check(item)

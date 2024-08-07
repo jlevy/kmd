@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from enum import Enum
 import textwrap
 from textwrap import dedent, indent
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 import rich
 from rich.text import Text
 from kmd.config.logger import get_console
@@ -103,11 +103,17 @@ def fill_markdown(doc_str: str):
     return normalize_markdown(dedent(doc_str).strip(), line_wrapper=wrap_lines_to_width)
 
 
-def format_action_description(name: str, doc: str) -> Text:
+def format_action_description(name: str, doc: str, parenthetical: Optional[str] = None) -> Text:
     doc = textwrap.dedent(doc).strip()
     wrapped = fill_text(doc, text_wrap=Wrap.WRAP_INDENT)
     return Text.assemble(
-        ("`", COLOR_HINT), (name, COLOR_KEY), ("`: ", COLOR_HINT), "\n", (wrapped, COLOR_PLAIN)
+        ("`", COLOR_HINT),
+        (name, COLOR_KEY),
+        ("`", COLOR_HINT),
+        ((" " + parenthetical, COLOR_PLAIN) if parenthetical else ""),
+        (": ", COLOR_HINT),
+        "\n",
+        (wrapped, COLOR_PLAIN),
     )
 
 
