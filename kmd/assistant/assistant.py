@@ -29,7 +29,7 @@ def assistant_preamble(skip_api: bool = False, base_only: bool = False) -> str:
 
 
 def assistance(input: str, fast: bool = False) -> str:
-    from kmd.commands.commands import select  # Avoid circular imports.
+    from kmd.commands.commands import select, applicable_actions  # Avoid circular imports.
 
     assistant_model = "assistant_model_fast" if fast else "assistant_model"
     model_str = not_none(current_workspace().get_action_param(assistant_model))
@@ -41,13 +41,18 @@ def assistance(input: str, fast: bool = False) -> str:
         f"""
         {assistant_preamble(skip_api=fast)}
 
-        CURRENT USER STATE
+        CURRENT STATE
 
         The user's current selection is below:
 
         {output_as_string(select)}
+
+        The actions with preconditions that match this selection, so are available to run on the
+        current selection, are below:
+
+        {output_as_string(applicable_actions)}
         """
-        # TODO: Include selection history, command history, and other info about the workspace.
+        # TODO: Include selection history, command history, any other info about the workspace.
     )
 
     template = LLMTemplate(
