@@ -66,7 +66,9 @@ def has_many_paragraphs(item: Item) -> bool:
     return bool(item.body and item.body.count("\n\n") > 4)
 
 
-is_readable_text = is_plaintext | is_markdown
+@precondition
+def is_readable_text(item: Item) -> bool:
+    return is_plaintext(item) or is_markdown(item)
 
 
 @precondition

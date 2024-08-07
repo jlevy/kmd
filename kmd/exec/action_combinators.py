@@ -14,6 +14,7 @@ from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item, ItemRelations, ItemType, State
 from kmd.model.locators import StorePath
 from kmd.model.operations_model import OperationSummary
+from kmd.model.preconditions_model import Precondition
 from kmd.text_formatting.html_in_md import (
     Wrapper,
     div_wrapper,
@@ -25,9 +26,8 @@ from kmd.util.type_utils import not_none
 log = get_logger(__name__)
 
 
-def validate_action_names(action_names: List[str]) -> None:
-    for action_name in action_names:
-        look_up_action(action_name)
+def look_up_actions(action_names: List[str]) -> list[Action]:
+    return [look_up_action(action_name) for action_name in action_names]
 
 
 def define_action_sequence(
@@ -35,6 +35,7 @@ def define_action_sequence(
     action_names: list[str],
     description: Optional[str] = None,
     on_each_input: bool = False,
+    precondition: Optional[Precondition] = None,
 ) -> None:
     """
     Register a sequential action that chains the outputs of each action to the inputs of the next.
@@ -44,21 +45,21 @@ def define_action_sequence(
         raise InvalidInput("Action must have at least two sub-actions: %s", action_names)
 
     extra_desc = "This action is a sequence of these actions: " + ", ".join(action_names) + "."
-    seq_description = " ".join([description, extra_desc]) if description else extra_desc
+    seq_description = "\n\n".join([description, extra_desc]) if description else extra_desc
 
     action_wrapper = each_item_wrapper if on_each_input else no_wrapper
 
     @kmd_action_wrapped(wrapper=action_wrapper)
     class SequenceAction(Action):
         def __init__(self):
-            super().__init__(name=name, description=seq_description)
+            super().__init__(name=name, description=seq_description, precondition=precondition)
 
             self.action_sequence = action_names
 
         def run(self, items: ActionInput) -> ActionResult:
             log.message("%s Begin action sequence `%s`", EMOJI_PROCESS, self.name)
 
-            validate_action_names(action_names)
+            look_up_actions(action_names)  # Validate action names.
 
             original_input_paths = [not_none(item.store_path) for item in items]
             transient_outputs: List[Item] = []
@@ -202,6 +203,7 @@ def define_action_combo(
     description: Optional[str] = None,
     combiner: Combiner = combine_as_paragraphs,
     on_each_input: Optional[bool] = False,
+    precondition: Optional[Precondition] = None,
 ) -> None:
     """
     Register an action that combines the results of other actions.
@@ -211,19 +213,19 @@ def define_action_combo(
         raise InvalidInput("Action must have at least two sub-actions: %s", action_names)
 
     extra_desc = "This action combines outputs of these actions: " + ", ".join(action_names) + "."
-    combo_description = " ".join([description, extra_desc]) if description else extra_desc
+    combo_description = "\n\n".join([description, extra_desc]) if description else extra_desc
 
     action_wrapper = each_item_wrapper if on_each_input else no_wrapper
 
     @kmd_action_wrapped(wrapper=action_wrapper)
     class ComboAction(Action):
         def __init__(self):
-            super().__init__(name=name, description=combo_description)
+            super().__init__(name=name, description=combo_description, precondition=precondition)
             self.action_sequence = action_names
             self.combiner = combiner
 
         def run(self, items: ActionInput) -> ActionResult:
-            validate_action_names(action_names)
+            look_up_actions(action_names)  # Validate action names.
 
             for item in items:
                 if not item.store_path:

@@ -101,6 +101,10 @@ EMOJI_CALL_END = "≪"
 
 EMOJI_ASSISTANT = "🤖"
 
+EMOJI_TRUE = "✓"
+
+EMOJI_FALSE = "✗"
+
 ## Rich setup
 
 from rich.highlighter import RegexHighlighter, _combine_regex

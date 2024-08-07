@@ -35,6 +35,7 @@ def each_item_wrapper(action: Action) -> Action:
         name=action.name,
         description=action.description,
         expected_args=ANY_ARGS,
+        precondition=action.precondition,
     )
 
 

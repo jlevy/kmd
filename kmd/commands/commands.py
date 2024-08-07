@@ -10,6 +10,7 @@ from kmd.action_defs import load_all_actions
 from kmd.assistant.assistant import assistance
 from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.media.web import fetch_and_cache
+from kmd.preconditions import ALL_PRECONDITIONS
 from kmd.text_ui.command_output import (
     Wrap,
     format_action_description,
@@ -26,6 +27,7 @@ from kmd.commands.native_tools import (
 )
 from kmd.config.text_styles import (
     COLOR_EMPH,
+    EMOJI_TRUE,
     EMOJI_WARN,
     SPINNER,
 )
@@ -348,6 +350,30 @@ def applicable_actions() -> None:
                 )
             )
             output()
+
+
+@kmd_command
+def preconditions() -> None:
+    """
+    List all preconditions and if the current selection meets them.
+    """
+
+    ws = current_workspace()
+    selection = ws.get_selection()
+    if not selection:
+        raise InvalidInput("No selection")
+
+    items = [ws.load(item) for item in selection]
+
+    output_status("Precondition check for selection:\n %s", format_lines(selection))
+
+    for precondition in ALL_PRECONDITIONS:
+        satisfied = all(precondition(item) for item in items)
+        emoji = EMOJI_TRUE if satisfied else " "
+        satisfied_str = "satisfied" if satisfied else "not satisfied"
+        output(f"{emoji} {precondition} {satisfied_str}")
+
+    output()
 
 
 @kmd_command

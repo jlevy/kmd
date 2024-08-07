@@ -35,10 +35,28 @@ class Precondition:
         return Precondition(lambda item: self(item) or other(item), f"{self.name} | {other.name}")
 
     def __invert__(self) -> "Precondition":
-        return Precondition(lambda item: not self(item), f"not {self.name}")
+        return Precondition(lambda item: not self(item), f"~{self.name}")
 
     def __str__(self) -> str:
         return f"`{self.name}`"
+
+    @staticmethod
+    def and_all(*preconditions: "Precondition") -> "Precondition":
+        if not preconditions:
+            return Precondition(lambda item: True, "always")
+        combined = preconditions[0]
+        for precondition in preconditions[1:]:
+            combined = combined & precondition
+        return combined
+
+    @staticmethod
+    def or_all(*preconditions: "Precondition") -> "Precondition":
+        if not preconditions:
+            return Precondition(lambda item: False, "never")
+        combined = preconditions[0]
+        for precondition in preconditions[1:]:
+            combined = combined | precondition
+        return combined
 
 
 def precondition(func: Callable[[Item], bool]) -> Precondition:
