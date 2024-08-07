@@ -1,3 +1,4 @@
+from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 from kmd.exec.llm_action_base import ChunkedLLMAction
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.html_conventions import ORIGINAL, SUMMARY
@@ -11,7 +12,7 @@ class ChunkedSummaryBullets(ChunkedLLMAction):
         super().__init__(
             name="chunked_summary_bullets",
             description="Summarize text as bullet points.",
-            model=LLM.claude_3_5_sonnet.value,
+            model=DEFAULT_CAREFUL_MODEL,
             result_class_name=SUMMARY,
             original_class_name=ORIGINAL,
             system_message=LLMMessage(

@@ -5,6 +5,7 @@ import litellm
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.errors_model import ApiResultError
+from kmd.model.language_models import LLM
 from kmd.util.log_calls import log_calls
 
 
@@ -28,7 +29,7 @@ def _litellm_completion(model: str, messages: List[Dict[str, str]]) -> str:
 
 @log_calls(level="info")
 def llm_completion(
-    model: str,
+    model: LLM,
     system_message: LLMMessage,
     template: LLMTemplate,
     input: str,
@@ -39,8 +40,14 @@ def llm_completion(
     Use this function to interact with the LLMs for consistent logging.
     """
     user_message = template.format(body=input)
-    model_slug = slugify(model, separator="_")
+    model_slug = slugify(model.value, separator="_")
 
+    log.message(
+        "LLM completion from %s on %s+%s chars system+user input…",
+        model,
+        len(system_message),
+        len(user_message),
+    )
     log.info("LLM completion input to model %s:\n%s", model, indent(user_message, "    "))
     if save_objects:
         log.save_object(
@@ -50,7 +57,7 @@ def llm_completion(
         )
 
     text_output = _litellm_completion(
-        model,
+        model.value,
         messages=[
             {"role": "system", "content": str(system_message)},
             {"role": "user", "content": user_message},

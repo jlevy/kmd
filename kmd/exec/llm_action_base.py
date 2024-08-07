@@ -13,6 +13,7 @@ from kmd.model.errors_model import InvalidInput, UnexpectedError
 from kmd.model.items_model import UNTITLED, Format, Item
 from kmd.config import setup
 from kmd.config.logger import get_logger
+from kmd.model.language_models import LLM
 from kmd.model.preconditions_model import Precondition
 from kmd.precondition_defs.common_preconditions import has_div_chunks
 from kmd.text_docs.div_chunks import parse_chunk_divs, chunk_wrapper
@@ -29,7 +30,7 @@ log = get_logger(__name__)
 
 
 def _sliding_llm_transform(
-    model: str,
+    model: LLM,
     system_message: LLMMessage,
     template: LLMTemplate,
     input: str,

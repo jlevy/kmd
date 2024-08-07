@@ -1,7 +1,7 @@
 from kmd.exec.action_builders import define_llm_action
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import LLMMessage, LLMTemplate
-from kmd.model.language_models import LLM
+from kmd.config.settings import DEFAULT_FAST_MODEL
 from kmd.text_docs.text_diffs import ONLY_BREAKS_AND_SPACES
 from kmd.text_docs.window_settings import WINDOW_2K_WORDTOKS
 
@@ -12,7 +12,7 @@ log = get_logger(__name__)
 define_llm_action(
     name="break_into_paragraphs",
     description="Reformat text as paragraphs.",
-    model=LLM.groq_llama3_70b_8192.value,
+    model=DEFAULT_FAST_MODEL,
     system_message=LLMMessage(
         """
         You are a careful and precise editor.

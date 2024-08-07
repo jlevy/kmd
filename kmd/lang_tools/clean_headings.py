@@ -1,7 +1,7 @@
 from typing import List
+from kmd.config.settings import DEFAULT_FAST_MODEL
 from kmd.llms.llm_completion import llm_completion
 from kmd.model.actions_model import LLMMessage, LLMTemplate
-from kmd.model.language_models import LLM
 from kmd.text_formatting.markdown_util import as_bullet_points
 
 # TODO: Enforce that the edits below doesn't contain anything extraneous.
@@ -12,7 +12,7 @@ def clean_heading(heading: str) -> str:
     Fast LLM call to edit and clean up a heading.
     """
     return llm_completion(
-        LLM.groq_llama3_70b_8192.value,
+        DEFAULT_FAST_MODEL,
         system_message=LLMMessage(
             """
             You are a careful and precise editor. You follow directions exactly and do not embellish or offer any other commentary.
@@ -40,7 +40,7 @@ def clean_heading(heading: str) -> str:
 def summary_heading(values: List[str]) -> str:
 
     return llm_completion(
-        LLM.groq_llama3_70b_8192.value,
+        DEFAULT_FAST_MODEL,
         system_message=LLMMessage(
             """
             You are a careful and precise editor. You follow directions exactly and do not embellish or offer any other commentary.

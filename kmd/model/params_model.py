@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, Optional
 from kmd.config.logger import get_logger
+from kmd.config.settings import DEFAULT_CAREFUL_MODEL, DEFAULT_FAST_MODEL
 from kmd.model.language_models import LLM, MODEL_LIST
 from kmd.text_docs.sizes import TextUnit
 
@@ -30,19 +31,19 @@ ACTION_PARAMS = {
         "model",
         "The name of the LLM.",
         MODEL_LIST,
-        default_value=None,
+        default_value=None,  # Let actions set defaults.
     ),
     "assistant_model": ActionParam(
         "assistant_model",
         "The name of the LLM used by the kmd assistant for regular (complex) requests.",
         MODEL_LIST,
-        default_value=LLM.claude_3_5_sonnet.value,
+        default_value=DEFAULT_CAREFUL_MODEL.value,
     ),
     "assistant_model_fast": ActionParam(
         "assistant_model_fast",
         "The name of the LLM used by the kmd assistant for fast responses.",
         MODEL_LIST,
-        default_value=LLM.groq_llama_3_1_8b_instant.value,
+        default_value=DEFAULT_FAST_MODEL.value,
     ),
     "chunk_size": ActionParam(
         "chunk_size",

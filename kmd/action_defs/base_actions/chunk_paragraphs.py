@@ -21,7 +21,7 @@ class ChunkParagraphs(CachedTextAction):
             description="Group paragraphs into chunks, demarcated by div tags.",
             expected_args=ONE_OR_MORE_ARGS,
             precondition=is_markdown,
-            chunk_size=200,
+            chunk_size=2000,
             chunk_unit=TextUnit.WORDS,
         )
 

@@ -1,4 +1,5 @@
 from textwrap import dedent
+from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 from kmd.exec.action_registry import kmd_action
 from kmd.exec.llm_action_base import LLMAction, run_llm_transform
 from kmd.assistant.assistant import assistant_preamble
@@ -13,7 +14,6 @@ from kmd.model.actions_model import (
     TitleTemplate,
 )
 from kmd.model.items_model import Format, Item, ItemType
-from kmd.model.language_models import LLM
 from kmd.util.lazyobject import lazyobject
 
 
@@ -28,7 +28,7 @@ class WriteNewAction(LLMAction):
         super().__init__(
             name="write_new_action",
             description="Create a new kmd action in Python, based on a description of the features.",
-            model=LLM.gpt_4o.value,
+            model=DEFAULT_CAREFUL_MODEL,
             system_message=assistant_coding_preamble,  # Give it context on kmd APIs.
             title_template=TitleTemplate("Action: {title}"),
             template=LLMTemplate(

@@ -1,13 +1,13 @@
+from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 from kmd.exec.action_builders import define_llm_action
 from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
-from kmd.model.language_models import LLM
 from kmd.text_docs.window_settings import WINDOW_16_PARA
 
 
 define_llm_action(
     name="summarize_as_bullets",
     description="Summarize text as bullet points.",
-    model=LLM.claude_3_5_sonnet.value,
+    model=DEFAULT_CAREFUL_MODEL,
     system_message=LLMMessage(
         """
         You are a careful and precise editor.

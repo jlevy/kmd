@@ -1,7 +1,7 @@
+from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 from kmd.exec.action_builders import define_llm_action
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
-from kmd.model.language_models import LLM
 from kmd.text_docs.window_settings import WINDOW_4_PARA
 
 
@@ -11,7 +11,7 @@ log = get_logger(__name__)
 define_llm_action(
     name="find_concepts",
     description="Identify the key concepts in a text.",
-    model=LLM.gpt_4o.value,
+    model=DEFAULT_CAREFUL_MODEL,
     system_message=LLMMessage(
         """
         You are a careful and precise editor.

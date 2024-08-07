@@ -4,6 +4,7 @@ from kmd.llms.llm_completion import llm_completion
 from kmd.config.settings import get_settings
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import LLMMessage, LLMTemplate
+from kmd.model.language_models import LLM
 from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
 from kmd.docs import api_docs, assistant_instructions
@@ -33,7 +34,8 @@ def assistance(input: str, fast: bool = False) -> str:
     assistant_model = "assistant_model_fast" if fast else "assistant_model"
     model_str = not_none(current_workspace().get_action_param(assistant_model))
 
-    output(f"Getting assistance (model {model_str})…")
+    model = LLM(model_str)
+    output(f"Getting assistance (model {model})…")
 
     system_message = LLMMessage(
         f"""
@@ -61,7 +63,7 @@ def assistance(input: str, fast: bool = False) -> str:
     # TODO: Stream response.
     return wrap_markdown(
         llm_completion(
-            model_str,
+            model,
             system_message=system_message,
             template=template,
             input=input,

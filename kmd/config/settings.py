@@ -2,7 +2,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 from cachetools import cached
+from kmd.model.language_models import LLM
 
+
+# Important: These are the default models for many actions.
+# The user may override them with parameters.
+DEFAULT_CAREFUL_MODEL = LLM.claude_3_5_sonnet
+DEFAULT_FAST_MODEL = LLM.gpt_4o_mini
 
 APP_NAME = "kmd"
 
@@ -11,6 +17,7 @@ GLOBAL_CACHE_NAME = "kmd_cache"
 
 @dataclass
 class Settings:
+
     media_cache_dir: Path
     """The media cache directory."""
 

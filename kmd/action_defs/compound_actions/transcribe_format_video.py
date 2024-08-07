@@ -2,7 +2,7 @@ from kmd.exec.action_combinators import define_action_sequence
 
 
 define_action_sequence(
-    "transcribe_and_format_video",
+    "transcribe_format_video",
     [
         "transcribe",
         "strip_html",

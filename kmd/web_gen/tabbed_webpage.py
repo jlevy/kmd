@@ -45,7 +45,7 @@ def webpage_config(items: List[Item]) -> Item:
             raise ValueError(f"Item has no store_path: {item}")
 
     tabs = [
-        TabInfo(label=clean_heading(item.abbrev_title(max_len=40)), store_path=item.store_path)
+        TabInfo(label=clean_heading(item.abbrev_title()), store_path=item.store_path)
         for item in items
     ]
     _fill_in_ids(tabs)

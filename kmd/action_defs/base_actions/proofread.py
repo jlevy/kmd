@@ -1,7 +1,7 @@
+from kmd.config.settings import DEFAULT_FAST_MODEL
 from kmd.exec.action_builders import define_llm_action
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import LLMMessage, LLMTemplate
-from kmd.model.language_models import LLM
 from kmd.text_docs.window_settings import WINDOW_1_PARA
 
 
@@ -11,7 +11,7 @@ log = get_logger(__name__)
 define_llm_action(
     name="proofread",
     description="Proofread text, only fixing spelling, punctuation, and grammar.",
-    model=LLM.gpt_3_5_turbo.value,
+    model=DEFAULT_FAST_MODEL,
     system_message=LLMMessage(
         """
         You are a careful and precise editor.

@@ -8,6 +8,7 @@ from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ContentError, InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.lang_tools.inflection import plural
+from kmd.model.language_models import LLM
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ACTION_PARAMS, TextUnit
 from kmd.model.preconditions_model import Precondition
@@ -95,7 +96,7 @@ class Action(ABC):
     """Does this action ask for input interactively?"""
 
     # These are set if they make sense, i.e. it's an LLM action.
-    model: Optional[str] = None
+    model: Optional[LLM] = None
     chunk_size: Optional[int] = None
     chunk_unit: Optional[TextUnit] = None
     title_template: Optional[TitleTemplate] = None
@@ -121,6 +122,7 @@ class Action(ABC):
             )
 
     def validate_precondition(self, items: ActionInput) -> None:
+        # FIXME: More helpful error with precondition name.
         if self.precondition:
             for item in items:
                 self.precondition.check(item)
@@ -141,7 +143,7 @@ class Action(ABC):
                     self.name,
                     format_key_value(name, value),
                 )
-            else:
+            if name not in ACTION_PARAMS and name not in action_fields:
                 log.warning("Ignoring unknown override param for action `%s`: %s", self.name, name)
 
         return new_instance

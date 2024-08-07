@@ -3,7 +3,9 @@ from enum import Enum
 
 class LLM(Enum):
     """
-    We are using LiteLLM for models. For more see: https://docs.litellm.ai/docs/providers
+    We are using LiteLLM for models.
+
+    For current list of models see: https://docs.litellm.ai/docs/providers
     """
 
     gpt_4o_mini = "gpt-4o-mini"
@@ -21,6 +23,9 @@ class LLM(Enum):
     groq_llama_3_1_405b_reasoning = "groq/llama-3.1-405b-reasoning"
     groq_llama3_8b_8192 = "groq/llama3-8b-8192"
     groq_llama3_70b_8192 = "groq/llama3-70b-8192"
+
+    def __str__(self):
+        return self.value
 
 
 MODEL_LIST = [model.value for model in LLM]

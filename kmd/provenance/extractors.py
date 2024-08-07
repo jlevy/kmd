@@ -56,6 +56,7 @@ class TimestampExtractor(Extractor):
         return wordtoks
 
     def precondition_check(self) -> None:
+        # FIXME: Move to preconditions
         if not TIMESTAMP_RE.search(self.doc_str):
             raise PreconditionFailure(
                 'Document has no timestamps of the form `<span data-timestamp="123.45">`'
