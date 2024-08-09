@@ -24,4 +24,5 @@ class ConfigureWebpage(Action):
                 raise InvalidInput(f"Item must have a body: {item}")
 
         config_item = webpage_config(items)
+
         return ActionResult([config_item])

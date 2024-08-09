@@ -472,7 +472,14 @@ class FileStore:
 
     def get_selection(self) -> list[StorePath]:
         try:
-            return self.selection.read()
+            store_paths = self.selection.read()
+            filtered_store_paths = [StorePath(path) for path in store_paths if self.exists(path)]
+            if len(filtered_store_paths) != len(store_paths):
+                log.warning(
+                    "Items in selection are missing, so ignoring: %s",
+                    ", ".join(sorted(set(store_paths) - set(filtered_store_paths))),
+                )
+            return filtered_store_paths
         except OSError:
             raise InvalidStoreState("No selection saved in workspace")
 
