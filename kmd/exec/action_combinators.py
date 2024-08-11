@@ -71,8 +71,7 @@ def define_action_sequence(
 
                 output_separator()
                 log.message(
-                    "%s Action sequence %s part %s of %s: %s",
-                    EMOJI_PROCESS,
+                    "Action sequence `%s` part %s of %s: %s",
                     self.name,
                     i + 1,
                     len(self.action_sequence),
@@ -99,7 +98,7 @@ def define_action_sequence(
             for item in items:
                 item.update_relations(derived_from=original_input_paths)
 
-            log.message("Sequence complete. Archiving transient items.")
+            log.message("Action sequence `%s` complete. Archiving transient items.", self.name)
             ws = current_workspace()
             for item in transient_outputs:
                 assert item.store_path

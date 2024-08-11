@@ -3,8 +3,8 @@ from copy import copy
 from dataclasses import dataclass, field, fields
 from textwrap import dedent
 from typing import Dict, List, Optional
-from kmd.config.logger import get_logger
-from kmd.model.errors_model import ContentError, InvalidInput
+from kmd.config.logger import nonfatal_exceptions, get_logger
+from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.lang_tools.inflection import plural
 from kmd.model.language_models import LLM
@@ -165,7 +165,7 @@ class Action(ABC):
 
 
 @dataclass(frozen=True)
-class EachItemAction(Action):
+class ForEachItemAction(Action):
     """
     An action that simply processes each arg one after the other. It does not abort for
     content-related errors but will fail on other errors.
@@ -174,19 +174,24 @@ class EachItemAction(Action):
     def run(self, items: ActionInput) -> ActionResult:
         result_items = []
         errors = []
-        log.message("Running EachItemAction %s on each of %s items", self.name, len(items))
-
         multiple_inputs = len(items) > 1
 
-        for item in items:
+        for i, item in enumerate(items):
+            log.message(
+                "Action `%s` processing item %d of %d: %s",
+                self.name,
+                i + 1,
+                len(items),
+                item,
+            )
             try:
                 result_item = self.run_item(item)
                 result_items.append(result_item)
-            except (ContentError, InvalidInput) as e:
+            except nonfatal_exceptions() as e:
                 errors.append(e)
                 if multiple_inputs:
                     log.error(
-                        "Error processing item (will continue with others): %s: %s",
+                        "Error processing item; continuing with others: %s: %s",
                         e,
                         item,
                     )
@@ -226,7 +231,7 @@ def preassemble_single_output(
 
 
 @dataclass(frozen=True)
-class CachedItemAction(EachItemAction):
+class CachedItemAction(ForEachItemAction):
     """
     A simple action that processes each input returns a single text output for each,
     with the output title etc. derived from the first input item. Caches and skips

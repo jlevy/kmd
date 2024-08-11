@@ -3,7 +3,7 @@ from kmd.media import web
 from kmd.media.media_services import get_media_metadata
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
-    EachItemAction,
+    ForEachItemAction,
 )
 from kmd.model.errors_model import InvalidInput, WebFetchError
 from kmd.model.items_model import Item
@@ -14,7 +14,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class FetchPageMetadata(EachItemAction):
+class FetchPageMetadata(ForEachItemAction):
     def __init__(self):
         super().__init__(
             name="fetch_page_metadata",

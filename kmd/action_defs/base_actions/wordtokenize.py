@@ -1,7 +1,7 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
-    EachItemAction,
+    ForEachItemAction,
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
@@ -13,7 +13,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class Wordtokenize(EachItemAction):
+class Wordtokenize(ForEachItemAction):
     def __init__(self):
         super().__init__(
             name="wordtokenize",

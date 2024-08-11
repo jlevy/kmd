@@ -1,5 +1,5 @@
 from typing import List, Type, Tuple, Callable
-from kmd.model.actions_model import ANY_ARGS, ONE_ARG, Action, EachItemAction
+from kmd.model.actions_model import ANY_ARGS, ONE_ARG, Action, ForEachItemAction
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError
 from kmd.model.items_model import Item
@@ -21,7 +21,7 @@ def each_item_wrapper(action: Action) -> Action:
     Wrap an action that runs on a single item as one that that processes all input items.
     """
 
-    class EachItemWrapper(EachItemAction):
+    class EachItemWrapper(ForEachItemAction):
         def run_item(self, item: Item) -> Item:
             result_items = action.run([item]).items
             if len(result_items) < 1:

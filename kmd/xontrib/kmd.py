@@ -14,10 +14,8 @@ from textwrap import dedent
 import threading
 import time
 from typing import Callable, List
-from xonsh.tools import XonshError
-import litellm
 from kmd.config.setup import setup
-from kmd.config.logger import get_console, get_logger
+from kmd.config.logger import nonfatal_exceptions, get_console, get_logger
 from kmd.config.text_styles import (
     EMOJI_WARN,
     COLOR_ERROR,
@@ -35,21 +33,12 @@ from kmd.exec.action_exec import run_action
 from kmd.commands import commands
 from kmd.commands.commands import kmd_command
 from kmd.model.actions_model import Action
-from kmd.model.errors_model import SelfExplanatoryError, InvalidStoreState
+from kmd.model.errors_model import InvalidStoreState
 from kmd.util.log_calls import log_tallies
 
 setup()
 
 log = get_logger(__name__)
-
-# Common exceptions that don't merit a full stack trace.
-_common_exceptions = (
-    SelfExplanatoryError,
-    FileNotFoundError,
-    IOError,
-    XonshError,
-    litellm.exceptions.APIError,
-)
 
 
 def _summarize_traceback(exception: Exception) -> str:
@@ -72,7 +61,7 @@ def xonsh_command_for(func: Callable):
     def command(args: List[str]):
         try:
             func(*args)
-        except _common_exceptions as e:
+        except nonfatal_exceptions() as e:
             log.error(f"[{COLOR_ERROR}]Command error:[/{COLOR_ERROR}] %s", _summarize_traceback(e))
             output()
 
@@ -94,7 +83,7 @@ class CallableAction:
             else:
                 run_action(self.action, *args)
             # We don't return the result to keep the xonsh shell output clean.
-        except _common_exceptions as e:
+        except nonfatal_exceptions() as e:
             log.error(f"[{COLOR_ERROR}]Action error:[/{COLOR_ERROR}] %s", _summarize_traceback(e))
             log.info("Action error details: %s", e, exc_info=True)
         finally:

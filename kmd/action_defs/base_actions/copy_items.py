@@ -1,7 +1,7 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     ANY_ARGS,
-    EachItemAction,
+    ForEachItemAction,
 )
 from kmd.model.items_model import Item
 from kmd.config.logger import get_logger
@@ -10,7 +10,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class CopyAction(EachItemAction):
+class CopyAction(ForEachItemAction):
     def __init__(self):
         super().__init__(
             name="copy_items",

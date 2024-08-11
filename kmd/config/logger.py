@@ -10,7 +10,10 @@ from strif import new_timestamped_uid, atomic_output_file
 from rich.logging import RichHandler
 from rich.theme import Theme
 from rich.console import Console
+from xonsh.tools import XonshError
+from typing import Tuple, Type
 from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, RICH_STYLES, KmdHighlighter
+from kmd.model.errors_model import SelfExplanatoryError
 
 LOG_DIR_NAME = ".logs"
 LOG_FILE_NAME = "kmd.log"
@@ -29,6 +32,35 @@ def log_file() -> Path:
 
 def log_objects_dir() -> Path:
     return log_dir() / LOG_OBJECTS_NAME
+
+
+def nonfatal_exceptions() -> Tuple[Type[Exception], ...]:
+    """
+    Exceptions that are not fatal usually don't merit a full stack trace.
+    """
+
+    exceptions = [
+        SelfExplanatoryError,
+        FileNotFoundError,
+        IOError,
+        XonshError,
+    ]
+
+    try:
+        import litellm
+
+        exceptions.append(litellm.exceptions.APIError)
+    except ImportError:
+        pass
+
+    try:
+        import yt_dlp
+
+        exceptions.append(yt_dlp.utils.DownloadError)
+    except ImportError:
+        pass
+
+    return tuple(exceptions)
 
 
 # Rich console theme setup.

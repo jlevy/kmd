@@ -1,7 +1,7 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
-    EachItemAction,
+    ForEachItemAction,
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
@@ -26,7 +26,7 @@ def color_by_length(count: int) -> str:
 
 
 @kmd_action
-class ColorizeSentences(EachItemAction):
+class ColorizeSentences(ForEachItemAction):
     def __init__(self):
         super().__init__(
             name="colorize_sentences",
