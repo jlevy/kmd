@@ -69,6 +69,7 @@ def run_action(
     action_params = ws.get_action_params()
 
     # Update the action with any overridden params.
+    log.info("Action params: %s", action_params)
     if action_params:
         action = action.update_with_params(action_params)
 

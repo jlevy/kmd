@@ -96,6 +96,7 @@ class Action(ABC):
 
     # These are set if they make sense, i.e. it's an LLM action.
     model: Optional[LLM] = None
+    language: Optional[str] = None
     chunk_size: Optional[int] = None
     chunk_unit: Optional[TextUnit] = None
     title_template: Optional[TitleTemplate] = None
@@ -130,7 +131,7 @@ class Action(ABC):
         Update the action with the given parameters and return a new Action.
         """
         new_instance = copy(self)  # Shallow copy.
-        action_fields = fields(self)
+        action_fields = [f.name for f in fields(self)]
 
         for name, value in params.items():
             if name in ACTION_PARAMS and name in action_fields:
@@ -141,7 +142,7 @@ class Action(ABC):
                     self.name,
                     format_key_value(name, value),
                 )
-            if name not in ACTION_PARAMS and name not in action_fields:
+            elif name not in ACTION_PARAMS and name not in action_fields:
                 log.warning("Ignoring unknown override param for action `%s`: %s", self.name, name)
 
         return new_instance

@@ -8,6 +8,44 @@ from kmd.text_docs.sizes import TextUnit
 
 log = get_logger(__name__)
 
+# Just a common language list.
+# Currently the main languages supported by DeepGram nova-2.
+LANGUAGES = [
+    "bg",
+    "ca",
+    "zh",
+    "cs",
+    "da",
+    "nl",
+    "en",
+    "et",
+    "fi",
+    "fr",
+    "de",
+    "el",
+    "hi",
+    "hu",
+    "id",
+    "it",
+    "ja",
+    "ko",
+    "lv",
+    "lt",
+    "ms",
+    "no",
+    "pl",
+    "pt",
+    "ro",
+    "ru",
+    "sk",
+    "es",
+    "sv",
+    "th",
+    "tr",
+    "uk",
+    "vi",
+]
+
 
 @dataclass(frozen=True)
 class ActionParam:
@@ -32,6 +70,12 @@ ACTION_PARAMS = {
         "The name of the LLM.",
         MODEL_LIST,
         default_value=None,  # Let actions set defaults.
+    ),
+    "language": ActionParam(
+        "language",
+        "The language of the input audio or text.",
+        LANGUAGES,
+        default_value=None,
     ),
     "assistant_model": ActionParam(
         "assistant_model",

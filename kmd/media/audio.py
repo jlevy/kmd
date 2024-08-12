@@ -68,11 +68,13 @@ class SpeakerSegment(NamedTuple):
     average_confidence: float
 
 
-def deepgram_transcribe_audio(audio_file_path: Path) -> str:
+def deepgram_transcribe_audio(audio_file_path: Path, language: Optional[str] = None) -> str:
     """Transcribe an audio file using Deepgram."""
 
     size = getsize(audio_file_path)
-    log.info("Transcribing via Deepgram: %s (size %s)", audio_file_path, size)
+    log.info(
+        "Transcribing via Deepgram (language %r): %s (size %s)", language, audio_file_path, size
+    )
 
     setup.api_setup()
     deepgram = DeepgramClient("", ClientOptionsFromEnv())
@@ -84,8 +86,10 @@ def deepgram_transcribe_audio(audio_file_path: Path) -> str:
         "buffer": buffer_data,
     }
 
-    options = PrerecordedOptions(model="nova-2", smart_format=True, diarize=True)
-    response = deepgram.listen.rest.v("1").transcribe_file(payload, options, timeout=Timeout(500))  # type: ignore
+    options = PrerecordedOptions(model="nova-2", smart_format=True, diarize=True, language=language)
+    response = deepgram.listen.prerecorded.v("1").transcribe_file(payload, options, timeout=Timeout(500))  # type: ignore
+
+    log.save_object("Deepgram response", None, response)
 
     diarized_segments = _deepgram_diarized_segments(response)
     log.debug("Diarized response: %s", diarized_segments)

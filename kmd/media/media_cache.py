@@ -55,10 +55,10 @@ class MediaCache(DirStore):
             downsample_to_16khz(full_audio_file, downsampled_audio_file)
         return downsampled_audio_file
 
-    def _do_transcription(self, url) -> str:
+    def _do_transcription(self, url, language: Optional[str] = None) -> str:
         downsampled_audio_file = self._do_downsample(url)
         log.message("Transcribing audio: %s: %s", url, downsampled_audio_file)
-        transcript = transcribe_audio(downsampled_audio_file)
+        transcript = transcribe_audio(downsampled_audio_file, language=language)
         self._write_transcript(url, transcript)
         return transcript
 
@@ -78,7 +78,7 @@ class MediaCache(DirStore):
 
         return full_audio_path
 
-    def transcribe(self, url, no_cache=False) -> str:
+    def transcribe(self, url, no_cache=False, language: Optional[str] = None) -> str:
         url = canonicalize_media_url(url)
         if not url:
             raise InvalidInput("Unrecognized media URL: %s" % url)
@@ -87,7 +87,7 @@ class MediaCache(DirStore):
             if transcript:
                 return transcript
         self.download(url, no_cache=no_cache)
-        transcript = self._do_transcription(url)
+        transcript = self._do_transcription(url, language=language)
         if not transcript:
             raise UnexpectedError("No transcript found for: %s" % url)
         return transcript

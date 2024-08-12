@@ -26,7 +26,7 @@ class Transcribe(CachedItemAction):
         if not item.url:
             raise InvalidInput("Item must have a URL")
 
-        transcription = download_and_transcribe(item.url)
+        transcription = download_and_transcribe(item.url, language=self.language)
         result_item = item.derived_copy(
             type=ItemType.note,
             body=transcription,
