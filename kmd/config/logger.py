@@ -34,10 +34,7 @@ def log_objects_dir() -> Path:
     return log_dir() / LOG_OBJECTS_NAME
 
 
-def nonfatal_exceptions() -> Tuple[Type[Exception], ...]:
-    """
-    Exceptions that are not fatal usually don't merit a full stack trace.
-    """
+def _nonfatal_exceptions() -> Tuple[Type[Exception], ...]:
 
     exceptions = [
         SelfExplanatoryError,
@@ -61,6 +58,10 @@ def nonfatal_exceptions() -> Tuple[Type[Exception], ...]:
         pass
 
     return tuple(exceptions)
+
+
+NONFATAL_EXCEPTIONS = _nonfatal_exceptions()
+"""Exceptions that are not fatal and usually don't merit a full stack trace."""
 
 
 # Rich console theme setup.

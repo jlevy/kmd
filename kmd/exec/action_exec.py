@@ -64,9 +64,9 @@ def run_action(
         action = look_up_action(action)
     action_name = action.name
 
-    # Get the current action params.
+    # Get the current workspace params.
     ws = current_workspace()
-    action_params = ws.get_action_params()
+    action_params = ws.get_params()
 
     # Update the action with any overridden params.
     log.info("Action params: %s", action_params)

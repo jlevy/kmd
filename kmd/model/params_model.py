@@ -48,7 +48,7 @@ LANGUAGES = [
 
 
 @dataclass(frozen=True)
-class ActionParam:
+class Param:
     name: str
     description: str
     valid_values: Optional[list[str]]
@@ -64,38 +64,38 @@ class ActionParam:
         return desc
 
 
-ACTION_PARAMS = {
-    "model": ActionParam(
+PARAMS = {
+    "model": Param(
         "model",
         "The name of the LLM.",
         MODEL_LIST,
         default_value=None,  # Let actions set defaults.
     ),
-    "language": ActionParam(
+    "language": Param(
         "language",
         "The language of the input audio or text.",
         LANGUAGES,
         default_value=None,
     ),
-    "assistant_model": ActionParam(
+    "assistant_model": Param(
         "assistant_model",
         "The name of the LLM used by the kmd assistant for regular (complex) requests.",
         MODEL_LIST,
         default_value=DEFAULT_CAREFUL_MODEL.value,
     ),
-    "assistant_model_fast": ActionParam(
+    "assistant_model_fast": Param(
         "assistant_model_fast",
         "The name of the LLM used by the kmd assistant for fast responses.",
         MODEL_LIST,
         default_value=DEFAULT_FAST_MODEL.value,
     ),
-    "chunk_size": ActionParam(
+    "chunk_size": Param(
         "chunk_size",
         "For actions that support it, process chunks of what size?",
         valid_values=None,
         default_value=None,
     ),
-    "chunk_unit": ActionParam(
+    "chunk_unit": Param(
         "chunk_unit",
         "For actions that support it, the unit for measuring chunk size.",
         [chunk_unit.value for chunk_unit in TextUnit],
@@ -107,12 +107,12 @@ ACTION_PARAMS = {
 ParamSet = Dict[str, str]
 
 
-def get_action_param(params: ParamSet, param_name: str) -> Optional[str]:
+def get_param(params: ParamSet, param_name: str) -> Optional[str]:
     value = params.get(param_name)
     if value is None:
-        param = ACTION_PARAMS.get(param_name)
+        param = PARAMS.get(param_name)
         if param is None:
-            raise ValueError(f"Action parameter not found: {param_name}")
+            raise ValueError(f"Parameter not found: {param_name}")
         value = param.default_value
     return value
 

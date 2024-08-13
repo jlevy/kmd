@@ -32,7 +32,7 @@ def assistance(input: str, fast: bool = False) -> str:
     from kmd.commands.commands import select, applicable_actions  # Avoid circular imports.
 
     assistant_model = "assistant_model_fast" if fast else "assistant_model"
-    model_str = not_none(current_workspace().get_action_param(assistant_model))
+    model_str = not_none(current_workspace().get_param(assistant_model))
 
     model = LLM(model_str)
     output(f"Getting assistance (model {model})…")

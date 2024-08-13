@@ -3,13 +3,13 @@ from copy import copy
 from dataclasses import dataclass, field, fields
 from textwrap import dedent
 from typing import Dict, List, Optional
-from kmd.config.logger import nonfatal_exceptions, get_logger
+from kmd.config.logger import NONFATAL_EXCEPTIONS, get_logger
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.lang_tools.inflection import plural
 from kmd.model.language_models import LLM
 from kmd.model.operations_model import Operation, Source
-from kmd.model.params_model import ACTION_PARAMS, TextUnit
+from kmd.model.params_model import PARAMS, TextUnit
 from kmd.model.preconditions_model import Precondition
 from kmd.text_formatting.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
@@ -134,7 +134,7 @@ class Action(ABC):
         action_fields = [f.name for f in fields(self)]
 
         for name, value in params.items():
-            if name in ACTION_PARAMS and name in action_fields:
+            if name in PARAMS and name in action_fields:
                 # Use object.__setattr__ to update the frozen instance.
                 object.__setattr__(new_instance, name, value)
                 log.message(
@@ -142,7 +142,7 @@ class Action(ABC):
                     self.name,
                     format_key_value(name, value),
                 )
-            elif name not in ACTION_PARAMS and name not in action_fields:
+            elif name not in PARAMS and name not in action_fields:
                 log.warning("Ignoring unknown override param for action `%s`: %s", self.name, name)
 
         return new_instance
@@ -168,8 +168,8 @@ class Action(ABC):
 @dataclass(frozen=True)
 class ForEachItemAction(Action):
     """
-    An action that simply processes each arg one after the other. It does not abort for
-    content-related errors but will fail on other errors.
+    An action that simply processes each arg one after the other. If "non fatal" errors are
+    encountered, they are reported and processing continues with the next item.
     """
 
     def run(self, items: ActionInput) -> ActionResult:
@@ -188,7 +188,7 @@ class ForEachItemAction(Action):
             try:
                 result_item = self.run_item(item)
                 result_items.append(result_item)
-            except nonfatal_exceptions() as e:
+            except NONFATAL_EXCEPTIONS as e:
                 errors.append(e)
                 if multiple_inputs:
                     log.error(

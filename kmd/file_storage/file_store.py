@@ -9,7 +9,7 @@ from slugify import slugify
 from strif import copyfile_atomic
 from kmd.config.settings import get_settings
 from kmd.file_storage.item_file_format import read_item, write_item
-from kmd.model.params_model import ParamSet, get_action_param
+from kmd.model.params_model import ParamSet, get_param
 from kmd.query.vector_index import WsVectorIndex
 from kmd.config.text_styles import EMOJI_SUCCESS
 from kmd.file_storage.filenames import parse_filename
@@ -148,7 +148,7 @@ class FileStore:
         # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
         self.selection = PersistedYaml(self.settings_dir / "selection.yml", init_value=[])
 
-        self.action_params = PersistedYaml(self.settings_dir / "action_params.yml", init_value={})
+        self.params = PersistedYaml(self.settings_dir / "params.yml", init_value={})
 
         self.end_time = time.time()
 
@@ -489,17 +489,19 @@ class FileStore:
         self.set_selection(new_selection)
         return new_selection
 
-    def set_action_params(self, action_params: dict):
-        self.action_params.set(action_params)
+    def set_param(self, action_params: dict):
+        """Set a global parameter for this workspace."""
+        self.params.set(action_params)
 
-    def get_action_params(self) -> ParamSet:
+    def get_params(self) -> ParamSet:
+        """Get any parameters globally set for this workspace."""
         try:
-            return self.action_params.read()
+            return self.params.read()
         except OSError:
             return {}
 
-    def get_action_param(self, param_name: str) -> Optional[str]:
-        return get_action_param(self.get_action_params(), param_name)
+    def get_param(self, param_name: str) -> Optional[str]:
+        return get_param(self.get_params(), param_name)
 
     def log_store_info(self):
         log.message(

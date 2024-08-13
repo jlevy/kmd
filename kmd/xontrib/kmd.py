@@ -15,7 +15,7 @@ import threading
 import time
 from typing import Callable, List
 from kmd.config.setup import setup
-from kmd.config.logger import nonfatal_exceptions, get_console, get_logger
+from kmd.config.logger import NONFATAL_EXCEPTIONS, get_console, get_logger
 from kmd.config.text_styles import (
     EMOJI_WARN,
     COLOR_ERROR,
@@ -61,7 +61,7 @@ def xonsh_command_for(func: Callable):
     def command(args: List[str]):
         try:
             func(*args)
-        except nonfatal_exceptions() as e:
+        except NONFATAL_EXCEPTIONS as e:
             log.error(f"[{COLOR_ERROR}]Command error:[/{COLOR_ERROR}] %s", _summarize_traceback(e))
             output()
 
@@ -83,7 +83,7 @@ class CallableAction:
             else:
                 run_action(self.action, *args)
             # We don't return the result to keep the xonsh shell output clean.
-        except nonfatal_exceptions() as e:
+        except NONFATAL_EXCEPTIONS as e:
             log.error(f"[{COLOR_ERROR}]Action error:[/{COLOR_ERROR}] %s", _summarize_traceback(e))
             log.info("Action error details: %s", e, exc_info=True)
         finally:
@@ -213,6 +213,7 @@ post_initialize()
 
 
 # TODO: Completion for action and command args, e.g. known URLs, resource titles, concepts, parameters and values, etc.
+# Also use preconditions to filter out what items apply to a given action.
 # def _action_completer(cls, prefix, line, begidx, endidx, ctx):
 #     return ["https://"]
 # __xonsh__.completers["foo"] = _action_completer
