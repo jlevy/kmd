@@ -18,9 +18,9 @@ class Param:
     """
 
     name: str
-    description: Optional[str]
-    valid_values: Optional[list[str]]
-    default_value: Optional[str]
+    description: Optional[str] = None
+    valid_values: Optional[list[str]] = None
+    default_value: Optional[str] = None
     type: Type = str
 
     def full_description(self) -> str:
@@ -55,20 +55,8 @@ class Param:
             ) from e
 
 
-# Some parameters that make sense to be settable globally.
+# Parameters set globally such as in the workspace.
 GLOBAL_PARAMS = {
-    "model": Param(
-        "model",
-        "The name of the LLM.",
-        MODEL_LIST,
-        default_value=None,  # Let actions set defaults.
-    ),
-    "language": Param(
-        "language",
-        "The language of the input audio or text.",
-        LANGUAGE_LIST,
-        default_value=None,
-    ),
     "assistant_model": Param(
         "assistant_model",
         "The name of the LLM used by the kmd assistant for regular (complex) requests.",
@@ -80,6 +68,22 @@ GLOBAL_PARAMS = {
         "The name of the LLM used by the kmd assistant for fast responses.",
         MODEL_LIST,
         default_value=DEFAULT_FAST_MODEL.value,
+    ),
+}
+
+# Parameters that are common to all actions.
+COMMON_ACTION_PARAMS = {
+    "model": Param(
+        "model",
+        "The name of the LLM.",
+        MODEL_LIST,
+        default_value=None,  # Let actions set defaults.
+    ),
+    "language": Param(
+        "language",
+        "The language of the input audio or text.",
+        LANGUAGE_LIST,
+        default_value=None,
     ),
     "chunk_size": Param(
         "chunk_size",
@@ -95,15 +99,31 @@ GLOBAL_PARAMS = {
     ),
 }
 
-GLOBAL_PARAM_NAMES = set(GLOBAL_PARAMS.keys())
+# Parameters that are used when a command is invoked.
+RUNTIME_PARAMS = {
+    "rerun": Param(
+        "rerun",
+        "Rerun an action that would otherwise be skipped because the output already exists.",
+        type=bool,
+    ),
+    "refetch": Param(
+        "refetch",
+        "Do not take content from media and web page caches. Re-fetch and update cache instead.",
+        type=bool,
+    ),
+}
 
+USER_SETTABLE_PARAMS = {**GLOBAL_PARAMS, **COMMON_ACTION_PARAMS}
+
+ALL_COMMON_PARAMS = {**GLOBAL_PARAMS, **COMMON_ACTION_PARAMS, **RUNTIME_PARAMS}
 
 ParamValues = Dict[str, Any]
 
 
-def param_lookup(
-    params: ParamValues, param_name: str, defaults: Dict[str, Param] = GLOBAL_PARAMS
-) -> Optional[Any]:
+def param_lookup(params: ParamValues, param_name: str, defaults: Dict[str, Param]) -> Optional[Any]:
+    """
+    Look up a parameter value, falling back to parameter defaults.
+    """
     value = params.get(param_name)
     if value is None:
         param = defaults.get(param_name)
@@ -117,5 +137,4 @@ def param_lookup(
 # - window settings
 # - source extractor
 # - citation formatter
-# - chunk size (e.g. citations per sentence or per pagagraph)
 # - web cache

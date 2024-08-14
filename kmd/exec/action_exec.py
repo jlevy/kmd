@@ -51,7 +51,7 @@ def run_action(
     *provided_args: str,
     internal_call=False,
     override_state: Optional[State] = None,
-    force=False,
+    rerun=False,
 ) -> ActionResult:
     """
     Main function to run an action.
@@ -104,7 +104,7 @@ def run_action(
         input_items = [fetch_url_items(item) for item in input_items]
 
     cached_result = None
-    if not force:
+    if not rerun:
         # Preassemble outputs, so we can check if they already exist.
         preassembled_result = action.preassemble(operation, input_items)
         if preassembled_result:

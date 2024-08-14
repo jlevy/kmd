@@ -9,9 +9,9 @@ from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.lang_tools.inflection import plural
 from kmd.model.language_models import LLM
 from kmd.model.operations_model import Operation, Source
-from kmd.model.params_model import GLOBAL_PARAM_NAMES, ParamValues, TextUnit
+from kmd.model.params_model import ALL_COMMON_PARAMS, ParamValues, TextUnit
 from kmd.model.preconditions_model import Precondition
-from kmd.text_formatting.text_formatting import clean_description
+from kmd.text_formatting.text_formatting import clean_description, format_lines
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_utils import format_key_value
 from kmd.util.string_template import StringTemplate
@@ -149,7 +149,7 @@ class Action(ABC):
 
         for param_name, value in param_values.items():
             # Sanity checks.
-            if param_name not in GLOBAL_PARAM_NAMES and param_name not in action_param_names:
+            if param_name not in ALL_COMMON_PARAMS and param_name not in action_param_names:
                 if strict:
                     raise InvalidInput(
                         "Unknown override param for action `%s`: %s", self.name, param_name
@@ -163,13 +163,13 @@ class Action(ABC):
             # TODO: Sanity check types as well.
 
             # Update the action.
-            if param_name in GLOBAL_PARAM_NAMES and param_name in action_param_names:
+            if param_name in ALL_COMMON_PARAMS and param_name in action_param_names:
                 # Use object.__setattr__ to update the frozen instance.
                 object.__setattr__(new_instance, param_name, value)
                 log.message(
-                    "Overriding parameter for action `%s`: %s",
+                    "Overriding parameter for action `%s`:\n%s",
                     self.name,
-                    format_key_value(param_name, value),
+                    format_lines([format_key_value(param_name, value)]),
                 )
 
         return new_instance

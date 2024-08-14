@@ -40,7 +40,7 @@ from kmd.config.text_styles import (
 from kmd.file_storage.file_store import FileStore, skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace
 from kmd.model.actions_model import Action
-from kmd.model.params_model import GLOBAL_PARAMS
+from kmd.model.params_model import USER_SETTABLE_PARAMS
 from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath
 from kmd.text_formatting.text_formatting import format_lines
@@ -223,19 +223,19 @@ def edit(path: Optional[str] = None, all: bool = False) -> None:
 @kmd_command
 def param(*args: str) -> None:
     """
-    Show or set currently set of parameters, which are global settings that may be used by
-    commands and actions.
+    Show or set currently set of global parameters, which are settings that may be used by
+    commands and actions or to override default action parameters.
     """
     ws = current_workspace()
     if args:
         new_key_vals = dict([parse_key_value(arg) for arg in args])
 
         for key in new_key_vals:
-            if key not in GLOBAL_PARAMS:
+            if key not in USER_SETTABLE_PARAMS:
                 raise InvalidInput(f"Unknown action parameter: {key}")
 
         for key, value in new_key_vals.items():
-            action_param = GLOBAL_PARAMS[key]
+            action_param = USER_SETTABLE_PARAMS[key]
             if value and action_param.valid_values and value not in action_param.valid_values:
                 raise InvalidInput(f"Unrecognized value for action parameter {key}: {value}")
 
@@ -248,7 +248,7 @@ def param(*args: str) -> None:
 
     output_heading("Available action parameters")
 
-    for ap in GLOBAL_PARAMS.values():
+    for ap in USER_SETTABLE_PARAMS.values():
         output(format_name_and_description(ap.name, ap.full_description()))
         output()
 

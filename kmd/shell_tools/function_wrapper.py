@@ -8,6 +8,7 @@ from typing import (
 )
 from kmd.help.command_help import output_command_help
 from kmd.model.errors_model import InvalidCommand
+from kmd.model.params_model import ALL_COMMON_PARAMS, Param
 from kmd.shell_tools.function_inspect import FuncParam, inspect_function_params
 from kmd.shell_tools.option_parsing import parse_shell_args
 
@@ -68,6 +69,18 @@ def _map_keyword(
     return kw_values
 
 
+def _look_up_params(kw_params: Dict[str, FuncParam]) -> Dict[str, Param]:
+
+    def get_param(name: str, param: FuncParam) -> Param:
+        return ALL_COMMON_PARAMS.get(param.name) or Param(name, type=param.type)
+
+    return {
+        name: param
+        for name, param in ((name, get_param(name, param)) for name, param in kw_params.items())
+        if param is not None
+    }
+
+
 R = TypeVar("R")
 
 
@@ -83,8 +96,10 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
         pos_values = _map_positional(shell_args.pos_args, pos_params)
         kw_values = _map_keyword(shell_args.kw_args, kw_params)
 
+        param_info = _look_up_params(kw_params)
+
         if shell_args.show_help:
-            output_command_help(func.__name__, description=func.__doc__, kw_params=kw_params)
+            output_command_help(func.__name__, func.__doc__, param_info)
 
             return None
 
