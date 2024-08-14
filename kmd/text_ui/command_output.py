@@ -27,6 +27,7 @@ from kmd.config.text_styles import (
     EMOJI_ASSISTANT,
     HRULE,
 )
+from kmd.text_formatting.text_formatting import DEFAULT_INDENT
 
 console = get_console()
 
@@ -40,7 +41,7 @@ class Wrap(Enum):
     HANGING_INDENT = "hanging_indent"  # Wrap with hanging indent.
 
 
-def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
+def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
     if text_wrap == Wrap.NONE:
         return text
     elif text_wrap == Wrap.INDENT_ONLY:
@@ -55,6 +56,8 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                     textwrap.fill(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH,
+                        initial_indent=extra_indent,
+                        subsequent_indent=extra_indent,
                         replace_whitespace=False,
                         break_long_words=False,
                         break_on_hyphens=False,
@@ -65,6 +68,8 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                     textwrap.fill(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH,
+                        initial_indent=extra_indent,
+                        subsequent_indent=extra_indent,
                         replace_whitespace=True,
                         break_long_words=False,
                         break_on_hyphens=False,
@@ -75,8 +80,8 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                     textwrap.fill(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH - 4,
-                        initial_indent="    ",
-                        subsequent_indent="    ",
+                        initial_indent=extra_indent + DEFAULT_INDENT,
+                        subsequent_indent=extra_indent + DEFAULT_INDENT,
                         replace_whitespace=True,
                         break_long_words=False,
                         break_on_hyphens=False,
@@ -87,8 +92,8 @@ def fill_text(text: str, text_wrap=Wrap.WRAP) -> str:
                     textwrap.fill(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH - 8,
-                        initial_indent="",
-                        subsequent_indent="    ",
+                        initial_indent=extra_indent,
+                        subsequent_indent=extra_indent + DEFAULT_INDENT,
                         replace_whitespace=True,
                         break_long_words=False,
                         break_on_hyphens=False,
@@ -153,26 +158,33 @@ def rprint(*args, **kwargs):
         console.print(*args, **kwargs)
 
 
-def output(message: str | Text = "", *args, text_wrap: Wrap = Wrap.WRAP, color=None):
+def output(
+    message: str | Text = "", *args, text_wrap: Wrap = Wrap.WRAP, color=None, extra_indent: str = ""
+):
     if isinstance(message, str):
         if color:
-            rprint(Text(fill_text(message % args, text_wrap), color))
+            rprint(Text(fill_text(message % args, text_wrap, extra_indent), color))
         else:
-            rprint(fill_text(message % args, text_wrap))
+            rprint(fill_text(message % args, text_wrap, extra_indent))
     else:
         rprint(message)
 
 
-def output_markdown(doc_str: str):
-    output(fill_markdown(doc_str), text_wrap=Wrap.NONE)
+def output_markdown(doc_str: str, extra_indent: str = ""):
+    output(fill_markdown(doc_str), text_wrap=Wrap.NONE, extra_indent=extra_indent)
 
 
 def _output_message(
-    message: str, *args, text_wrap: Wrap, color: str, transform: Callable[[str], str] = lambda x: x
+    message: str,
+    *args,
+    text_wrap: Wrap,
+    color: str,
+    transform: Callable[[str], str] = lambda x: x,
+    extra_indent: str = "",
 ):
     text = message % args if args else message
     rprint()
-    rprint(Text(transform(fill_text(text, text_wrap)), color))
+    rprint(Text(transform(fill_text(text, text_wrap, extra_indent)), color))
     rprint()
 
 
@@ -180,23 +192,38 @@ def output_separator():
     rprint(HRULE)
 
 
-def output_status(message: str, *args, text_wrap: Wrap = Wrap.NONE):
-    _output_message(message, *args, text_wrap=text_wrap, color=COLOR_OUTPUT)
-
-
-def output_help(message: str, *args, text_wrap: Wrap = Wrap.NONE):
-    output(message, *args, text_wrap=text_wrap, color=COLOR_HELP)
-
-
-def output_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE):
+def output_status(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
     _output_message(
-        f"\n{EMOJI_ASSISTANT} " + message, *args, text_wrap=text_wrap, color=COLOR_ASSISTANCE
+        message, *args, text_wrap=text_wrap, color=COLOR_OUTPUT, extra_indent=extra_indent
     )
 
 
-def output_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE):
-    _output_message(message, *args, text_wrap=text_wrap, color=COLOR_RESPONSE)
+def output_help(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+    output(message, *args, text_wrap=text_wrap, color=COLOR_HELP, extra_indent=extra_indent)
 
 
-def output_heading(message: str, *args, text_wrap: Wrap = Wrap.NONE):
-    _output_message(message, *args, text_wrap=text_wrap, color=COLOR_HEADING, transform=str.upper)
+def output_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+    _output_message(
+        f"\n{EMOJI_ASSISTANT} " + message,
+        *args,
+        text_wrap=text_wrap,
+        color=COLOR_ASSISTANCE,
+        extra_indent=extra_indent,
+    )
+
+
+def output_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+    _output_message(
+        message, *args, text_wrap=text_wrap, color=COLOR_RESPONSE, extra_indent=extra_indent
+    )
+
+
+def output_heading(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+    _output_message(
+        message,
+        *args,
+        text_wrap=text_wrap,
+        color=COLOR_HEADING,
+        transform=str.upper,
+        extra_indent=extra_indent,
+    )
