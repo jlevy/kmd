@@ -9,7 +9,7 @@ from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.lang_tools.inflection import plural
 from kmd.model.language_models import LLM
 from kmd.model.operations_model import Operation, Source
-from kmd.model.params_model import GLOBAL_PARAMS, TextUnit
+from kmd.model.params_model import GLOBAL_PARAM_NAMES, ParamValues, TextUnit
 from kmd.model.preconditions_model import Precondition
 from kmd.text_formatting.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
@@ -94,6 +94,14 @@ class Action(ABC):
     interactive_input: bool = False
     """Does this action ask for input interactively?"""
 
+    _NON_PARAM_FIELDS = [
+        "name",
+        "description",
+        "precondition",
+        "expected_args",
+        "interactive_input",
+    ]
+
     # These are set if they make sense, i.e. it's an LLM action.
     model: Optional[LLM] = None
     language: Optional[str] = None
@@ -126,24 +134,32 @@ class Action(ABC):
             for item in items:
                 self.precondition.check(item)
 
-    def update_with_params(self, params: Dict[str, str]) -> "Action":
+    def param_names(self) -> List[str]:
+        return sorted(
+            set(f.name for f in fields(self) if not f.name.startswith("_"))
+            - set(self._NON_PARAM_FIELDS)
+        )
+
+    def update_with_params(self, param_values: ParamValues) -> "Action":
         """
         Update the action with the given parameters and return a new Action.
         """
         new_instance = copy(self)  # Shallow copy.
-        action_fields = [f.name for f in fields(self)]
+        action_param_names = self.param_names()
 
-        for name, value in params.items():
-            if name in GLOBAL_PARAMS and name in action_fields:
+        for param_name, value in param_values.items():
+            if param_name in GLOBAL_PARAM_NAMES and param_name in action_param_names:
                 # Use object.__setattr__ to update the frozen instance.
-                object.__setattr__(new_instance, name, value)
+                object.__setattr__(new_instance, param_name, value)
                 log.message(
                     "Overriding parameter for action `%s`: %s",
                     self.name,
-                    format_key_value(name, value),
+                    format_key_value(param_name, value),
                 )
-            elif name not in GLOBAL_PARAMS and name not in action_fields:
-                log.warning("Ignoring unknown override param for action `%s`: %s", self.name, name)
+            elif param_name not in GLOBAL_PARAM_NAMES and param_name not in action_param_names:
+                log.warning(
+                    "Ignoring unknown override param for action `%s`: %s", self.name, param_name
+                )
 
         return new_instance
 

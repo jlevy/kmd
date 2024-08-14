@@ -33,7 +33,8 @@ from kmd.config.text_styles import (
 )
 from kmd.file_storage.file_store import skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace
-from kmd.model.actions_model import GLOBAL_PARAMS, Action
+from kmd.model.actions_model import Action
+from kmd.model.params_model import GLOBAL_PARAMS
 from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath
 from kmd.text_formatting.text_formatting import format_lines

@@ -506,9 +506,9 @@ class FileStore:
             path.abspath(self.base_dir),
             len(self.uniquifier),
         )
-        log.message("Logging to: %s", log_file().absolute())
-        log.message("Media cache: %s", get_settings().media_cache_dir)
-        log.message("Web cache: %s", get_settings().web_cache_dir)
+        log.info("Logging to: %s", log_file().absolute())
+        log.info("Media cache: %s", get_settings().media_cache_dir)
+        log.info("Web cache: %s", get_settings().web_cache_dir)
 
         log.info("File store startup took %s.", format_duration(self.end_time - self.start_time))
         # TODO: Log more info like number of items by type.

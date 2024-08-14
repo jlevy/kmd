@@ -101,6 +101,8 @@ GLOBAL_PARAMS = {
     ),
 }
 
+GLOBAL_PARAM_NAMES = set(GLOBAL_PARAMS.keys())
+
 
 ParamValues = Dict[str, Any]
 
@@ -117,7 +119,7 @@ def param_lookup(
     return value
 
 
-# TODO: Add params for:
+# TODO: Consider adding params for:
 # - window settings
 # - source extractor
 # - citation formatter
