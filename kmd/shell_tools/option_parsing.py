@@ -1,20 +1,28 @@
+from dataclasses import dataclass
 from typing import (
     Dict,
     List,
-    Tuple,
     Optional,
 )
 from kmd.util.parse_utils import parse_key_value
 
 
-def parse_shell_args(args: List[str]) -> Tuple[List[str], Dict[str, Optional[str]]]:
-    """
-    Parse shell input arguments into positional and keyword arguments:
+@dataclass(frozen=True)
+class ShellArgs:
+    pos_args: List[str]
+    kw_args: Dict[str, Optional[str]]
+    show_help: bool = False
 
-    `["foo", "--opt1", "--opt2=bar"] -> (["foo"], {"opt1": None, "opt2": "bar"})`
+
+def parse_shell_args(args: List[str]) -> ShellArgs:
+    """
+    Parse shell input arguments into a ShellArgs object:
+
+    `["foo", "--opt1", "--opt2=bar"] -> ShellArgs(pos_args=["foo"], kw_args={"opt1": True, "opt2": "bar"}, show_help=False)`
     """
     pos_args = []
     kw_args = {}
+    show_help = False
 
     i = 0
     while i < len(args):
@@ -24,29 +32,33 @@ def parse_shell_args(args: List[str]) -> Tuple[List[str], Dict[str, Optional[str
             key_value_str = args[i][prefix_len:]
             key, value = parse_key_value(key_value_str)
             key = key.replace("-", "_")
-            kw_args[key] = value
+            if key == "help":
+                show_help = True
+            else:
+                kw_args[key] = value if value is not None else True
             i += 1
         else:
             pos_args.append(args[i])
             i += 1
 
-    return pos_args, kw_args
+    return ShellArgs(pos_args=pos_args, kw_args=kw_args, show_help=show_help)
 
 
 ## Tests
 
 
 def test_parse_shell_args():
-    args = ["pos1", "pos2", "--key1=value1", "--key2", "pos3", "-k3=value3"]
-    pos_args, kw_args = parse_shell_args(args)
+    args = ["pos1", "pos2", "--key1=value1", "--key2", "pos3", "-k3=value3", "--help"]
+    shell_args = parse_shell_args(args)
 
-    assert pos_args == [
+    assert shell_args.pos_args == [
         "pos1",
         "pos2",
         "pos3",
     ]
-    assert kw_args == {
+    assert shell_args.kw_args == {
         "key1": "value1",
-        "key2": None,
+        "key2": True,
         "k3": "value3",
     }
+    assert shell_args.show_help == True

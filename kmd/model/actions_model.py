@@ -140,7 +140,7 @@ class Action(ABC):
             - set(self._NON_PARAM_FIELDS)
         )
 
-    def update_with_params(self, param_values: ParamValues) -> "Action":
+    def update_with_params(self, param_values: ParamValues, strict: bool = False) -> "Action":
         """
         Update the action with the given parameters and return a new Action.
         """
@@ -148,6 +148,21 @@ class Action(ABC):
         action_param_names = self.param_names()
 
         for param_name, value in param_values.items():
+            # Sanity checks.
+            if param_name not in GLOBAL_PARAM_NAMES and param_name not in action_param_names:
+                if strict:
+                    raise InvalidInput(
+                        "Unknown override param for action `%s`: %s", self.name, param_name
+                    )
+                else:
+                    log.warning(
+                        "Ignoring unknown override param for action `%s`: %s", self.name, param_name
+                    )
+                    continue
+
+            # TODO: Sanity check types as well.
+
+            # Update the action.
             if param_name in GLOBAL_PARAM_NAMES and param_name in action_param_names:
                 # Use object.__setattr__ to update the frozen instance.
                 object.__setattr__(new_instance, param_name, value)
@@ -155,10 +170,6 @@ class Action(ABC):
                     "Overriding parameter for action `%s`: %s",
                     self.name,
                     format_key_value(param_name, value),
-                )
-            elif param_name not in GLOBAL_PARAM_NAMES and param_name not in action_param_names:
-                log.warning(
-                    "Ignoring unknown override param for action `%s`: %s", self.name, param_name
                 )
 
         return new_instance

@@ -1,93 +1,21 @@
-import inspect
-from inspect import Parameter
 from typing import (
     Callable,
     Any,
     Dict,
     List,
-    Tuple,
     Optional,
-    Type,
-    get_origin,
-    get_args,
-    Union,
     TypeVar,
 )
-from dataclasses import dataclass
+from kmd.help.command_help import output_command_help
 from kmd.model.errors_model import InvalidCommand
+from kmd.shell_tools.function_inspect import FuncParam, inspect_function_params
 from kmd.shell_tools.option_parsing import parse_shell_args
-
-
-@dataclass
-class FuncParam:
-    name: str
-    type: Type
-    default: Any
-    is_var: bool
-
-
-def inspect_function_params(
-    func: Callable[..., Any]
-) -> Tuple[List[FuncParam], Dict[str, FuncParam]]:
-    """
-    Extract parameters from a function's variable names and type annotations. Return the
-    positional and keyword parameters.
-    """
-    signature = inspect.signature(func)
-    pos_args: List[FuncParam] = []
-    kw_args: Dict[str, FuncParam] = {}
-
-    for param in signature.parameters.values():
-        param_name = param.name
-        param_default = param.default
-        if param.default == param.empty:
-            param_default = None
-        param_kind = param.kind
-
-        # Get type from type annotation or default value.
-        if param.annotation != param.empty:
-            param_type = param.annotation
-        elif param.default != param.empty and param.default is not None:
-            param_type = type(param.default)
-        else:
-            param_type = None
-        # Unwrap Optional type.
-        if get_origin(param_type) is Union:
-            param_type = next(
-                (arg for arg in get_args(param_type) if arg is not type(None)),
-                str,
-            )
-        if param_type is not None and not isinstance(param_type, type):
-            param_type = type(param_type)
-
-        func_param = FuncParam(
-            param_name,
-            param_type,
-            param_default,
-            param_kind in (Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD),
-        )
-
-        if param_kind in (
-            Parameter.POSITIONAL_ONLY,
-            Parameter.POSITIONAL_OR_KEYWORD,
-        ):
-            if param.default == param.empty:
-                pos_args.append(func_param)
-            else:
-                kw_args[param_name] = func_param
-        elif param_kind == Parameter.VAR_POSITIONAL:
-            pos_args.append(func_param)
-        elif param_kind == Parameter.KEYWORD_ONLY:
-            kw_args[param_name] = func_param
-        elif param_kind == Parameter.VAR_KEYWORD:
-            kw_args[param_name] = func_param
-
-    return pos_args, kw_args
 
 
 def _map_positional(pos_args: List[str], pos_params: List[FuncParam]) -> List[Any]:
     """
-    Map parsed positional arguments to function parameters, ensuring the number of arguments matches and converting types.
+    Map parsed positional arguments to function parameters, ensuring the number of
+    arguments matches and converting types.
     """
     pos_values = []
     i = 0
@@ -128,10 +56,7 @@ def _map_keyword(
 
     for key, value in kw_args.items():
         if key in kw_params:
-            if value is None and isinstance(kw_params[key].default, bool):
-                kw_values[key] = True  # Handle boolean options.
-            else:
-                kw_values[key] = kw_params[key].type(value)  # Convert value to type.
+            kw_values[key] = kw_params[key].type(value)  # Convert value to type.
         elif var_kw_param:
             var_kw_values[key] = value
         else:
@@ -146,17 +71,22 @@ def _map_keyword(
 R = TypeVar("R")
 
 
-def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], R]:
+def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optional[R]]:
     """
     Wrap a function to accept a list of string shell arguments, parse them, and call the
     original function.
     """
     pos_params, kw_params = inspect_function_params(func)
 
-    def wrapped(args: List[str]) -> R:
-        pos_args, kw_args = parse_shell_args(args)
-        pos_values = _map_positional(pos_args, pos_params)
-        kw_values = _map_keyword(kw_args, kw_params)
+    def wrapped(args: List[str]) -> Optional[R]:
+        shell_args = parse_shell_args(args)
+        pos_values = _map_positional(shell_args.pos_args, pos_params)
+        kw_values = _map_keyword(shell_args.kw_args, kw_params)
+
+        if shell_args.show_help:
+            output_command_help(func.__name__, description=func.__doc__, kw_params=kw_params)
+
+            return None
 
         return func(*pos_values, **kw_values)
 

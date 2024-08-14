@@ -17,6 +17,7 @@ from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_
 from kmd.config.text_styles import (
     COLOR_ASSISTANCE,
     COLOR_HEADING,
+    COLOR_HELP,
     COLOR_HINT,
     COLOR_KEY,
     COLOR_OUTPUT,
@@ -181,6 +182,10 @@ def output_separator():
 
 def output_status(message: str, *args, text_wrap: Wrap = Wrap.NONE):
     _output_message(message, *args, text_wrap=text_wrap, color=COLOR_OUTPUT)
+
+
+def output_help(message: str, *args, text_wrap: Wrap = Wrap.NONE):
+    output(message, *args, text_wrap=text_wrap, color=COLOR_HELP)
 
 
 def output_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE):

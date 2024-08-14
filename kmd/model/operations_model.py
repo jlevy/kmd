@@ -71,6 +71,7 @@ class Operation:
 
     action_name: str
     arguments: List[Input]
+    # FIXME: Add parameters.
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "Operation":

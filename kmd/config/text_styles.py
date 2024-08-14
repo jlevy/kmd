@@ -39,6 +39,8 @@ COLOR_EMPH = "bright_green"
 
 COLOR_OUTPUT = "yellow"
 
+COLOR_HELP = "bright_blue"
+
 COLOR_ASSISTANCE = "italic bright_blue"
 
 COLOR_RESPONSE = "bright_blue"

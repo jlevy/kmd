@@ -9,7 +9,7 @@ from humanize import naturaltime, naturalsize
 from rich import get_console
 from kmd.action_defs import load_all_actions
 from kmd.help.assistant import assistance
-from kmd.help.help import output_help_page
+from kmd.help.help_page import output_help_page
 from kmd.commands.command_registry import kmd_command
 from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.media.web import fetch_and_cache
@@ -322,6 +322,12 @@ def _action_precondition_check(
     for action in actions.values():
         if all(check_precondition(action, store_path) for store_path in paths):
             yield action
+
+
+@kmd_command
+def suggest_actions() -> None:
+    # TODO: More heuristics for suggesting actions.
+    applicable_actions(brief=True)
 
 
 @kmd_command
