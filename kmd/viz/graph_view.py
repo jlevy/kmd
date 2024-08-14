@@ -1,5 +1,5 @@
 from pathlib import Path
-from kmd.commands.native_tools import show_file_platform_specific
+from kmd.shell_tools.native_tools import show_file_platform_specific
 from kmd.config.logger import get_logger
 from kmd.model.graph_model import GraphData, Node, Link
 from kmd.web_gen.force_graph import force_graph_generate

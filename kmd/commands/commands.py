@@ -23,7 +23,7 @@ from kmd.text_ui.command_output import (
     output_response,
     output_status,
 )
-from kmd.commands.native_tools import (
+from kmd.shell_tools.native_tools import (
     edit_files,
     show_file_platform_specific,
     terminal_show_image_graceful,
