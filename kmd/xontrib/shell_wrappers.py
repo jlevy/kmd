@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable, List, Optional, TypeVar
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_console, get_logger
 from kmd.config.text_styles import (
     COLOR_ERROR,
@@ -30,16 +30,19 @@ def _summarize_traceback(exception: Exception) -> str:
     )
 
 
-def shell_command_for(func: Callable):
-    def command(args: List[str]):
+R = TypeVar("R")
+
+
+def wrap_with_exception_printing(func: Callable[..., R]) -> Callable[[List[str]], Optional[R]]:
+    def command(*args) -> Optional[R]:
         try:
-            func(*args)
+            return func(*args)
         except NONFATAL_EXCEPTIONS as e:
             log.error(f"[{COLOR_ERROR}]Command error:[/{COLOR_ERROR}] %s", _summarize_traceback(e))
             output()
-
             log.info("Command error details: %s", e, exc_info=True)
 
+    command.__name__ = func.__name__
     command.__doc__ = func.__doc__
     return command
 

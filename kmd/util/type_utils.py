@@ -13,9 +13,39 @@ def not_none(value: Optional[T], message: Optional[str] = None) -> T:
     return value
 
 
+def is_truthy(value: Any, strict: bool = True) -> bool:
+    """
+    True for all common string and non-string values for true.
+    """
+    truthy_values = {"true", "1", "yes", "on", "y"}
+    falsy_values = {"false", "0", "no", "off", "n", ""}
+
+    if value is None:
+        return False
+    elif isinstance(value, str):
+        value = value.strip().lower()
+        if value in truthy_values:
+            return True
+        elif value in falsy_values:
+            return False
+    elif isinstance(value, (int, float)):
+        return value != 0
+    elif isinstance(value, bool):
+        return value
+    elif isinstance(value, (list, tuple, set, dict)):
+        return len(value) > 0
+
+    if strict:
+        raise ValueError(f"Could not convert type {type(value)} to boolean: {repr(value)}")
+
+    return bool(value)
+
+
 def as_dataclass(dict_data: Dict[str, Any], dataclass_type: Type[T]) -> T:
     """
-    Convert a dict recursively to dataclass object, raising an error if the data does not fit the dataclass.
+    Convert a dict recursively to dataclass object, raising an error if the data does
+    not fit the dataclass. Can be used to validate a deserialized dict is compatible
+    with the dataclass's constructor.
     """
 
     field_types = {f.name: f.type for f in fields(dataclass_type)}

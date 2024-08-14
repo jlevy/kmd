@@ -13,6 +13,7 @@ import runpy
 import threading
 import time
 from kmd.commands.command_registry import all_commands, kmd_command
+from kmd.commands.option_parsing import wrap_for_shell_args
 from kmd.config.setup import setup
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import (
@@ -26,7 +27,7 @@ from kmd.action_defs import reload_all_actions
 from kmd.commands import commands
 from kmd.commands.commands import welcome
 from kmd.model.errors_model import InvalidStoreState
-from kmd.xontrib.shell_wrappers import ShellCallableAction, shell_command_for
+from kmd.xontrib.shell_wrappers import ShellCallableAction, wrap_with_exception_printing
 
 setup()
 
@@ -72,7 +73,7 @@ def load_xonsh_commands():
     # aliases["reload"] = reload  # type: ignore
 
     for func in all_commands():
-        kmd_commands[func.__name__] = shell_command_for(func)
+        kmd_commands[func.__name__] = wrap_with_exception_printing(wrap_for_shell_args(func))
 
     aliases.update(kmd_commands)  # type: ignore  # noqa: F821
 

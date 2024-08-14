@@ -5,19 +5,10 @@ from kmd.config.settings import DEFAULT_CAREFUL_MODEL, DEFAULT_FAST_MODEL
 from kmd.model.constants import LANGUAGE_LIST
 from kmd.model.language_models import MODEL_LIST
 from kmd.text_docs.sizes import TextUnit
+from kmd.util.type_utils import is_truthy
 
 
 log = get_logger(__name__)
-
-
-def is_truthy(value: Any) -> bool:
-    if value is None:
-        return False
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, str):
-        return value.lower() in ("true", "1", "yes", "on", "y")
-    return bool(value)
 
 
 @dataclass(frozen=True)
@@ -27,23 +18,26 @@ class Param:
     """
 
     name: str
-    description: str
+    description: Optional[str]
     valid_values: Optional[list[str]]
     default_value: Optional[str]
     type: Type = str
 
     def full_description(self) -> str:
-        desc = self.description
+        desc = self.description or ""
         if self.type is str:
             if self.valid_values:
                 val_list = ", ".join(f"`{v}`" for v in self.valid_values)
-                desc += "\n\n"
+                if desc:
+                    desc += "\n\n"
                 desc += f"Allowed values are: {val_list}"
             if self.default_value:
-                desc += "\n\n"
+                if desc:
+                    desc += "\n\n"
                 desc += f"Default value is: `{self.default_value}`"
         else:
-            desc += "\n\n"
+            if desc:
+                desc += "\n\n"
             desc += f"Type: `{self.type.__name__}`"
 
         return desc

@@ -90,6 +90,14 @@ def kmd_help() -> None:
 
 
 @kmd_command
+def logs() -> None:
+    """
+    Page through the logs for the current workspace.
+    """
+    subprocess.run(["less", "+G", log_file()])
+
+
+@kmd_command
 def assist(input: str) -> None:
     """
     Invoke the kmd assistant. You don't normally need this command as it is the same as just
@@ -116,14 +124,6 @@ def workspace(workspace_name: Optional[str] = None) -> None:
         output_status(f"Changed to workspace: {ws_name}")
 
     current_workspace().log_store_info()
-
-
-@kmd_command
-def logs() -> None:
-    """
-    Page through the logs for the current workspace.
-    """
-    subprocess.run(["less", "+G", log_file()])
 
 
 @kmd_command
@@ -454,7 +454,7 @@ def query(query_str: str) -> None:
 
 
 @kmd_command
-def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] = True) -> None:
+def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool] = False) -> None:
     """
     List files or folders in a workspace. Shows the full current workspace if no path is provided.
     """
@@ -482,10 +482,10 @@ def files(*paths: str, full: Optional[bool] = True, human_time: Optional[bool] =
                 full_path = join(ws.base_dir, store_dirname, filename)
 
                 # Now show all the files in that directory.
-                if full:
+                if not summary:
                     file_size = naturalsize(getsize(full_path))
 
-                    if human_time:
+                    if not iso_time:
                         file_mod_time = naturaltime(datetime.fromtimestamp(getmtime(full_path)))
                     else:
                         file_mod_time = (
