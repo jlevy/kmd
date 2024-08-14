@@ -12,6 +12,7 @@ import webbrowser
 from cachetools import cached
 from xonsh.platform import ON_WINDOWS, ON_DARWIN, ON_LINUX
 from kmd.config.logger import get_logger
+from kmd.config.settings import get_settings
 from kmd.file_storage.filenames import ext_is_text, parse_filename
 from kmd.text_ui.command_output import output
 from kmd.config.text_styles import COLOR_ERROR, COLOR_HINT
@@ -177,3 +178,11 @@ def view_file(filename: str, use_less: bool = True):
             subprocess.run(f"pygmentize -g {filename}", shell=True, check=True)
     except subprocess.CalledProcessError as e:
         output(f"Error displaying file: {e}", color=COLOR_ERROR)
+
+
+def edit_files(*filenames: str | Path):
+    """
+    Edit a file using the user's preferred editor.
+    """
+    editor = os.getenv("EDITOR", get_settings().default_editor)
+    subprocess.run([editor] + list(filenames))

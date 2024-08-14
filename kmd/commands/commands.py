@@ -24,6 +24,7 @@ from kmd.text_ui.command_output import (
     output_status,
 )
 from kmd.commands.native_tools import (
+    edit_files,
     show_file_platform_specific,
     terminal_show_image_graceful,
 )
@@ -207,20 +208,16 @@ def show(path: Optional[str] = None) -> None:
 
 
 @kmd_command
-def edit(path: Optional[str] = None) -> None:
+def edit(path: Optional[str] = None, all: bool = False) -> None:
     """
     Edit the contents of a file using the user's default editor (or defaulting to nano).
     If multiple files are selected, edit the first one.
     """
-    ws = current_workspace()
-    editor = os.getenv("EDITOR", "nano")
-    if path:
-        subprocess.run([editor, path])
-    else:
-        selection = ws.get_selection()
-        if not selection:
-            raise InvalidInput("No selection")
-        subprocess.run([editor, selection[0]])
+    store_paths = _assemble_paths(path)
+    if not all:
+        store_paths = [store_paths[0]]
+
+    edit_files(*store_paths)
 
 
 @kmd_command

@@ -27,6 +27,9 @@ class Settings:
     debug_assistant: bool
     """Convenience to allow debugging of full assistant prompts."""
 
+    default_editor: str
+    """The default editor to use for editing files."""
+
 
 def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
     """
@@ -57,6 +60,7 @@ _settings = Settings(
     media_cache_dir=_cache_dir("media"),
     web_cache_dir=_cache_dir("web"),
     debug_assistant=False,
+    default_editor="nano",
 )
 
 
