@@ -3,7 +3,7 @@ from os.path import getmtime, basename, getsize, join
 import re
 import subprocess
 from textwrap import dedent
-from typing import List, Optional, cast
+from typing import Iterable, List, Optional, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
@@ -36,7 +36,7 @@ from kmd.config.text_styles import (
     LOGO,
     SPINNER,
 )
-from kmd.file_storage.file_store import skippable_file
+from kmd.file_storage.file_store import FileStore, skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace
 from kmd.model.actions_model import Action
 from kmd.model.params_model import GLOBAL_PARAMS
@@ -310,27 +310,43 @@ def unarchive(*paths: str) -> None:
         output_status(f"Unarchived: {store_path}")
 
 
-@kmd_command
-def applicable_actions() -> None:
-    """
-    Show the actions that are applicable to the current selection.
-    This is a great command to use at any point to see what actions are available!
-    """
-    ws = current_workspace()
-    selection = ws.get_selection()
-    if not selection:
-        raise InvalidInput("No selection")
-
+def _action_precondition_check(ws: FileStore, paths: List[StorePath]) -> Iterable[Action]:
     def check_precondition(action: Action, store_path: StorePath) -> bool:
         if action.precondition:
             return action.precondition(ws.load(store_path))
         return True
 
-    output_status("Applicable actions for selection:\n %s", format_lines(selection))
-
     actions = load_all_actions(base_only=False)
+
     for action in actions.values():
-        if all(check_precondition(action, store_path) for store_path in selection):
+        if all(check_precondition(action, store_path) for store_path in paths):
+            yield action
+
+
+@kmd_command
+def applicable_actions(*paths: str, brief: bool = False) -> None:
+    """
+    Show the actions that are applicable to the current selection.
+    This is a great command to use at any point to see what actions are available!
+    """
+    store_paths = _assemble_paths(*paths)
+    ws = current_workspace()
+
+    applicable_actions = list(_action_precondition_check(ws, store_paths))
+
+    if not applicable_actions:
+        output_status("No applicable actions for selection.")
+        return
+
+    if brief:
+        action_names = [action.name for action in applicable_actions]
+        output_status("Applicable actions:")
+        output(", ".join(f"`{name}`" for name in action_names))
+        output()
+    else:
+        output_status("Applicable actions for items:\n %s", format_lines(store_paths))
+
+        for action in applicable_actions:
             precondition_str = (
                 f"(matches precondition {action.precondition })"
                 if action.precondition
@@ -386,14 +402,8 @@ def unindex(*paths: str) -> None:
     """
     Unarchive the items at the given paths.
     """
+    store_paths = _assemble_paths(*paths)
     ws = current_workspace()
-    if paths:
-        store_paths = [StorePath(path) for path in paths]
-    else:
-        store_paths = ws.get_selection()
-        if not store_paths:
-            raise InvalidInput("No selection")
-
     ws.vector_index.unindex_items([ws.load(store_path) for store_path in store_paths])
 
     output_status(f"Unindexed:\n{format_lines(store_paths)}")
@@ -525,12 +535,7 @@ def canonicalize(*paths: str) -> None:
     to our conventions.
     """
     ws = current_workspace()
-    if paths:
-        store_paths = [StorePath(path) for path in paths]
-    else:
-        store_paths = ws.get_selection()
-        if not store_paths:
-            raise InvalidInput("No selection")
+    store_paths = _assemble_paths(*paths)
 
     canon_paths = []
     for store_path in store_paths:

@@ -64,8 +64,10 @@ class ShellCallableAction:
             log.info("Action error details: %s", e, exc_info=True)
         finally:
             log_tallies(if_slower_than=10.0)
+
             # Show the current selection.
             commands.select()
+            commands.applicable_actions(brief=True)
 
     def __repr__(self):
         return f"CallableAction({str(self.action)})"

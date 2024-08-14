@@ -4,8 +4,12 @@ from typing import Any, Iterable
 import regex
 from strif import abbreviate_str
 
+DEFAULT_INDENT = "    "
 
-def format_lines(values: Iterable[Any], prefix: str = "    ", line_break: str = "\n") -> str:
+
+def format_lines(
+    values: Iterable[Any], prefix: str = DEFAULT_INDENT, line_break: str = "\n"
+) -> str:
     """
     Simple indented or prefixed formatting of values one per line.
     """

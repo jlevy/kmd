@@ -110,7 +110,7 @@ def format_name_and_description(name: str, doc: str, extra_note: Optional[str] =
         ("`", COLOR_HINT),
         (name, COLOR_KEY),
         ("`", COLOR_HINT),
-        ((" " + extra_note, COLOR_PLAIN) if extra_note else ""),
+        ((" " + extra_note, COLOR_HINT) if extra_note else ""),
         (": ", COLOR_HINT),
         "\n",
         (wrapped, COLOR_PLAIN),

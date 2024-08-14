@@ -24,6 +24,8 @@ class WsVectorIndex:
         if self._setup_done:
             return
 
+        log.message("Setting up vector index: %s", self.index_dir)
+
         import chromadb
         from chromadb.config import Settings
         from llama_index.core.node_parser import SentenceSplitter
@@ -74,10 +76,10 @@ class WsVectorIndex:
         self._setup_done = True
 
     def index_items(self, items: Iterable[Item]):
+        self._setup()
+
         from llama_index.core import Document
         from llama_index.core.ingestion import run_transformations
-
-        self._setup()
 
         documents = []
         for item in items:
