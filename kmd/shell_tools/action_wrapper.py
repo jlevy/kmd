@@ -33,21 +33,25 @@ class ShellCallableAction:
     def __call__(self, args):
         shell_args = parse_shell_args(args)
 
+        additional_options = ["rerun"]
+
         if shell_args.show_help:
-            param_info = _look_up_params(self.action.param_names())
+            param_info = _look_up_params(self.action.param_names() + additional_options)
 
             output_command_help(self.action.name, self.action.description, param_info)
 
             return
 
-        self.action.update_with_params(shell_args.kw_args, strict=True)
+        rerun = bool(shell_args.kw_args.get("rerun", False))
+
+        self.action = self.action.update_with_params(shell_args.kw_args, strict=True)
 
         try:
             if not self.action.interactive_input:
                 with get_console().status(f"Running action {self.action.name}…", spinner=SPINNER):
-                    run_action(self.action, *shell_args.pos_args)
+                    run_action(self.action, *shell_args.pos_args, rerun=rerun)
             else:
-                run_action(self.action, *args)
+                run_action(self.action, *args, rerun=rerun)
             # We don't return the result to keep the xonsh shell output clean.
         except NONFATAL_EXCEPTIONS as e:
             log.error(f"[{COLOR_ERROR}]Action error:[/{COLOR_ERROR}] %s", summarize_traceback(e))

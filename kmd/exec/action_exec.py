@@ -66,12 +66,12 @@ def run_action(
 
     # Get the current workspace params.
     ws = current_workspace()
-    action_params = ws.get_params()
+    ws_params = ws.get_params()
 
     # Update the action with any overridden params.
-    log.info("Action params: %s", action_params)
-    if action_params:
-        action = action.update_with_params(action_params)
+    log.info("Action params: %s", ws_params)
+    if ws_params:
+        action = action.update_with_params(ws_params)
 
     # Collect args from the provided args or otherwise the current selection.
     args = collect_args(*provided_args)
@@ -88,8 +88,9 @@ def run_action(
     # If the inputs are paths, record the input paths with hashes.
     # TODO: Also save the parameters/options that were used.
     inputs = [Input(StorePath(arg), ws.hash(StorePath(arg))) for arg in args if is_store_path(arg)]
-    operation = Operation(action_name, inputs)
+    operation = Operation(action_name, inputs, action.nondefault_params())
     log.message("%s Action: %s", EMOJI_CALL_BEGIN, operation.command_line())
+    log.info("Operation is: %s", operation)
 
     # Ensure input items are already saved in the workspace and load the corresponding items.
     # This also imports any URLs.
@@ -104,13 +105,16 @@ def run_action(
         input_items = [fetch_url_items(item) for item in input_items]
 
     cached_result = None
-    if not rerun:
-        # Preassemble outputs, so we can check if they already exist.
-        preassembled_result = action.preassemble(operation, input_items)
-        if preassembled_result:
-            # Check if these items already exist, with last_operation matching action and input fingerprints.
-            already_present = [ws.find_by_id(item) for item in preassembled_result.items]
-            if all(already_present):
+
+    # Preassemble outputs, so we can check if they already exist.
+    preassembled_result = action.preassemble(operation, input_items)
+    if preassembled_result:
+        # Check if these items already exist, with last_operation matching action and input fingerprints.
+        already_present = [ws.find_by_id(item) for item in preassembled_result.items]
+        if all(already_present):
+            if rerun:
+                log.message("Output already exists, but running anyway since rerun requested.")
+            else:
                 log.message(
                     "All outputs already saved so skipping action `%s`:\n%s",
                     action_name,

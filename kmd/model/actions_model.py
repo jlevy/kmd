@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from copy import copy
 from dataclasses import dataclass, field, fields
 from textwrap import dedent
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_logger
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
@@ -139,6 +139,13 @@ class Action(ABC):
             set(f.name for f in fields(self) if not f.name.startswith("_"))
             - set(self._NON_PARAM_FIELDS)
         )
+
+    def nondefault_params(self):
+        changed_params: Dict[str, Any] = {}
+        for param_name in self.param_names():
+            if getattr(self, param_name):
+                changed_params[param_name] = getattr(self, param_name)
+        return changed_params
 
     def update_with_params(self, param_values: ParamValues, strict: bool = False) -> "Action":
         """

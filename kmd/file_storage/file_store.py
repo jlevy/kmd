@@ -165,7 +165,7 @@ class FileStore:
 
         if num_dups > 0:
             log.warning(
-                "Found %s duplicate items in store. See kmd.log for details.",
+                "Found %s duplicate items in store. See `logs` for details.",
                 num_dups,
             )
 
@@ -249,7 +249,7 @@ class FileStore:
                     old_item = self.load(default_path)
                     if old_item.item_id() == item_id:
                         log.message(
-                            "Cache check: Item id %s already saved (default name):\n%s",
+                            "Output check: Item id %s already saved (default name):\n%s",
                             item_id,
                             format_lines([default_path]),
                         )
@@ -258,7 +258,7 @@ class FileStore:
                         return default_path
             if store_path and self.exists(store_path):
                 log.message(
-                    "Cache check: Item with id %s already saved:\n%s",
+                    "Output check: Item with id %s already saved:\n%s",
                     item_id,
                     format_lines([store_path]),
                 )

@@ -71,37 +71,59 @@ class Operation:
 
     action_name: str
     arguments: List[Input]
-    # FIXME: Add parameters.
+    options: Dict[str, str]
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "Operation":
         action_name = d["action_name"]
         arguments = [Input.parse(input_str) for input_str in d.get("arguments", [])]
-        return cls(action_name=action_name, arguments=arguments)
+        return cls(action_name=action_name, arguments=arguments, options=d.get("options", {}))
 
     def as_dict(self):
-        return {
+        d: Dict[str, Any] = {
             "action_name": self.action_name,
-            "arguments": [arg.path_and_hash() for arg in self.arguments],
         }
+
+        if self.arguments:
+            d["arguments"] = [arg.path_and_hash() for arg in self.arguments]
+        if self.options:
+            d["options"] = self.options
+
+        return d
 
     def summary(self) -> OperationSummary:
         return OperationSummary(self.action_name)
 
+    def quoted_args(self):
+        return [quote_if_needed(str(arg.path)) for arg in self.arguments]
+
+    def hashed_args(self):
+        return [arg.path_and_hash() for arg in self.arguments]
+
+    def quoted_options(self):
+        return [f"--{k}={quote_if_needed(str(v))}" for k, v in self.options.items()]
+
     def command_line(self):
-        quoted_args = [quote_if_needed(str(arg.path)) for arg in self.arguments]
-        return f"{self.action_name} {' '.join(quoted_args)}"
+        cmd = f"{self.action_name}"
+
+        all_args = self.quoted_options() + self.quoted_args()
+        if all_args:
+            cmd += " " + " ".join(all_args)
+
+        return cmd
 
     def as_str(self):
         return (
             self.action_name
             + "("
-            + ", ".join(input.path_and_hash() for input in self.arguments)
+            + ",".join(self.hashed_args())
+            + ";"
+            + ",".join(f"{k}={repr(v)}" for k, v in self.options.items())
             + ")"
         )
 
     def __str__(self):
-        return self.as_str()
+        return f"Operation({self.command_line()})"
 
 
 # Just a nicety to help with sorting these keys when serializing to YAML.
