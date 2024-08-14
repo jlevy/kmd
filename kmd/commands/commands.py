@@ -307,11 +307,15 @@ def unarchive(*paths: str) -> None:
         output_status(f"Unarchived: {store_path}")
 
 
-def _action_precondition_check(ws: FileStore, paths: List[StorePath]) -> Iterable[Action]:
+def _action_precondition_check(
+    ws: FileStore,
+    paths: List[StorePath],
+    include_no_precondition: bool = False,
+) -> Iterable[Action]:
     def check_precondition(action: Action, store_path: StorePath) -> bool:
         if action.precondition:
             return action.precondition(ws.load(store_path))
-        return True
+        return include_no_precondition
 
     actions = load_all_actions(base_only=False)
 
@@ -321,7 +325,7 @@ def _action_precondition_check(ws: FileStore, paths: List[StorePath]) -> Iterabl
 
 
 @kmd_command
-def applicable_actions(*paths: str, brief: bool = False) -> None:
+def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> None:
     """
     Show the actions that are applicable to the current selection.
     This is a great command to use at any point to see what actions are available!
@@ -329,7 +333,13 @@ def applicable_actions(*paths: str, brief: bool = False) -> None:
     store_paths = _assemble_paths(*paths)
     ws = current_workspace()
 
-    applicable_actions = list(_action_precondition_check(ws, store_paths))
+    applicable_actions = list(
+        _action_precondition_check(
+            ws,
+            store_paths,
+            include_no_precondition=all,
+        )
+    )
 
     if not applicable_actions:
         output_status("No applicable actions for selection.")
