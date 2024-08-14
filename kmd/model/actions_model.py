@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from copy import copy
 from dataclasses import dataclass, field, fields
 from textwrap import dedent
-from typing import Dict, List, Optional
+from typing import List, Optional
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_logger
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType

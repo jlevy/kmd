@@ -2,7 +2,7 @@ from textwrap import dedent
 from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 from kmd.exec.action_registry import kmd_action
 from kmd.exec.llm_action_base import LLMAction, run_llm_transform
-from kmd.assistant.assistant import assistant_preamble
+from kmd.help.assistant import assistant_preamble
 from kmd.file_storage.workspaces import current_workspace
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.model.actions_model import (

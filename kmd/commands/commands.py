@@ -2,12 +2,15 @@ import os
 from os.path import getmtime, basename, getsize, join
 import re
 import subprocess
-from typing import Callable, List, Optional, cast
+from textwrap import dedent
+from typing import List, Optional, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
 from kmd.action_defs import load_all_actions
-from kmd.assistant.assistant import assistance
+from kmd.help.assistant import assistance
+from kmd.help.help import output_help_page
+from kmd.commands.command_registry import kmd_command
 from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.media.web import fetch_and_cache
 from kmd.preconditions import ALL_PRECONDITIONS
@@ -17,7 +20,6 @@ from kmd.text_ui.command_output import (
     output,
     output_assistance,
     output_heading,
-    output_markdown,
     output_response,
     output_status,
 )
@@ -27,8 +29,11 @@ from kmd.commands.native_tools import (
 )
 from kmd.config.text_styles import (
     COLOR_EMPH,
+    COLOR_HEADING,
+    COLOR_LOGO,
     EMOJI_TRUE,
     EMOJI_WARN,
+    LOGO,
     SPINNER,
 )
 from kmd.file_storage.file_store import skippable_file
@@ -42,51 +47,36 @@ from kmd.lang_tools.inflection import plural
 from kmd.config.logger import get_logger, log_file
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
-from kmd.docs import about_kmd, workspace_and_file_formats
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 
 log = get_logger(__name__)
 
 
-_commands: List[Callable] = []
-
-
-def kmd_command(func):
-    _commands.append(func)
-    return func
-
-
-def all_commands():
-    return sorted(_commands, key=lambda cmd: cmd.__name__)
-
-
-def output_help_page(base_only: bool = False) -> None:
-    from kmd.action_defs import load_all_actions
-
-    output_heading("About kmd")
-    output_markdown(about_kmd.__doc__)
-
-    output_heading("Workspace and File Formats")
-    output_markdown(workspace_and_file_formats.__doc__)
-
-    output_heading("Available commands")
-    for command in all_commands():
-        doc = command.__doc__ if command.__doc__ else ""
-        output(format_name_and_description(command.__name__, doc))
-        output()
-
-    output_heading("Available actions")
-    actions = load_all_actions(base_only=base_only)
-    for action in actions.values():
-        output(format_name_and_description(action.name, action.description))
-        output()
-
-    output_heading("More help")
-    output(
-        "Use `kmd_help` for this list. Use `xonfig tutorial` for xonsh help and `help()` for Python help."
-    )
+@kmd_command
+def welcome() -> None:
+    """
+    Print a welcome message.
+    """
 
     output()
+    output(LOGO, color=COLOR_LOGO)
+    output()
+    output("Welcome to kmd.\n", color=COLOR_HEADING)
+    output()
+    # output(f"\n{len(kmd_commands)} commands and {len(kmd_actions)} actions are available.")
+    output(
+        dedent(
+            """
+            Use `kmd_help` for help and available commands. Use `logs` for detailed logs.
+
+            You may also simply ask a question about kmd or what you want to do. Type any
+            question (ending in ?) on the command line to invoke the kmd assistant.
+
+            Try: `what is kmd?` or `how can I transcribe a YouTube video?`
+            """
+        ).strip(),
+        text_wrap=Wrap.WRAP_FULL,
+    )
 
 
 @kmd_command
