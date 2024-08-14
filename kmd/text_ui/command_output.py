@@ -103,14 +103,14 @@ def fill_markdown(doc_str: str):
     return normalize_markdown(dedent(doc_str).strip(), line_wrapper=wrap_lines_to_width)
 
 
-def format_name_and_description(name: str, doc: str, parenthetical: Optional[str] = None) -> Text:
+def format_name_and_description(name: str, doc: str, extra_note: Optional[str] = None) -> Text:
     doc = textwrap.dedent(doc).strip()
     wrapped = fill_text(doc, text_wrap=Wrap.WRAP_INDENT)
     return Text.assemble(
         ("`", COLOR_HINT),
         (name, COLOR_KEY),
         ("`", COLOR_HINT),
-        ((" " + parenthetical, COLOR_PLAIN) if parenthetical else ""),
+        ((" " + extra_note, COLOR_PLAIN) if extra_note else ""),
         (": ", COLOR_HINT),
         "\n",
         (wrapped, COLOR_PLAIN),

@@ -9,7 +9,7 @@ class OperationSummary:
     """
     Brief version of an operation that was performed on an item. We could include a history
     of the full Operations but that seems like a cumbersome amount of metadata, so just
-    keeping a brief summary.
+    keeping the action name for now.
     """
 
     action_name: str
@@ -65,8 +65,8 @@ class Input:
 @dataclass(frozen=True)
 class Operation:
     """
-    A single operation that was performed. An operation is an action together with all the
-    inputs to that action.
+    A single operation that was performed, i.e. the name of an action together with all the
+    inputs supplied to that action.
     """
 
     action_name: str
@@ -109,6 +109,11 @@ OPERATION_FIELDS = ["action_name", "arguments"]
 
 @dataclass(frozen=True)
 class Source:
+    """
+    A source of an output item describes where the output came from, i.e. the action,
+    its inputs, and which output from that action that it is.
+    """
+
     operation: Operation
     output_num: int
 

@@ -9,7 +9,7 @@ from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.lang_tools.inflection import plural
 from kmd.model.language_models import LLM
 from kmd.model.operations_model import Operation, Source
-from kmd.model.params_model import PARAMS, TextUnit
+from kmd.model.params_model import GLOBAL_PARAMS, TextUnit
 from kmd.model.preconditions_model import Precondition
 from kmd.text_formatting.text_formatting import clean_description
 from kmd.util.obj_utils import abbreviate_obj
@@ -134,7 +134,7 @@ class Action(ABC):
         action_fields = [f.name for f in fields(self)]
 
         for name, value in params.items():
-            if name in PARAMS and name in action_fields:
+            if name in GLOBAL_PARAMS and name in action_fields:
                 # Use object.__setattr__ to update the frozen instance.
                 object.__setattr__(new_instance, name, value)
                 log.message(
@@ -142,7 +142,7 @@ class Action(ABC):
                     self.name,
                     format_key_value(name, value),
                 )
-            elif name not in PARAMS and name not in action_fields:
+            elif name not in GLOBAL_PARAMS and name not in action_fields:
                 log.warning("Ignoring unknown override param for action `%s`: %s", self.name, name)
 
         return new_instance

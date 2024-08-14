@@ -9,6 +9,7 @@ from kmd.model.errors_model import InvalidStoreState
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.file_storage.file_store import CACHE_DIR, FileStore
 from kmd.model.locators import Locator, StorePath
+from kmd.model.params_model import param_lookup
 from kmd.util.url import Url, is_url
 from kmd.config.logger import get_logger, reset_log_root
 
@@ -105,3 +106,15 @@ def import_url_to_workspace(url: Url) -> Item:
     workspace = current_workspace()
     workspace.save(item)
     return item
+
+
+def get_param_value(param_name: str) -> Optional[str]:
+    """
+    Get a global parameter value, checking if it is set in the current workspace first.
+    """
+    try:
+        params = current_workspace().get_params()
+    except InvalidStoreState:
+        params = {}
+
+    return param_lookup(params, param_name)

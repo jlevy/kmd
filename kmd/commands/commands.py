@@ -33,7 +33,7 @@ from kmd.config.text_styles import (
 )
 from kmd.file_storage.file_store import skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace
-from kmd.model.actions_model import PARAMS, Action
+from kmd.model.actions_model import GLOBAL_PARAMS, Action
 from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath
 from kmd.text_formatting.text_formatting import format_lines
@@ -243,11 +243,11 @@ def param(*args: str) -> None:
         new_key_vals = dict([parse_key_value(arg) for arg in args])
 
         for key in new_key_vals:
-            if key not in PARAMS:
+            if key not in GLOBAL_PARAMS:
                 raise InvalidInput(f"Unknown action parameter: {key}")
 
         for key, value in new_key_vals.items():
-            action_param = PARAMS[key]
+            action_param = GLOBAL_PARAMS[key]
             if value and action_param.valid_values and value not in action_param.valid_values:
                 raise InvalidInput(f"Unrecognized value for action parameter {key}: {value}")
 
@@ -260,7 +260,7 @@ def param(*args: str) -> None:
 
     output_heading("Available action parameters")
 
-    for ap in PARAMS.values():
+    for ap in GLOBAL_PARAMS.values():
         output(format_name_and_description(ap.name, ap.full_description()))
         output()
 
@@ -347,7 +347,7 @@ def applicable_actions() -> None:
             )
             output(
                 format_name_and_description(
-                    action.name, action.description, parenthetical=precondition_str
+                    action.name, action.description, extra_note=precondition_str
                 )
             )
             output()

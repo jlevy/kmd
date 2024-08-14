@@ -9,7 +9,7 @@ from slugify import slugify
 from strif import copyfile_atomic
 from kmd.config.settings import get_settings
 from kmd.file_storage.item_file_format import read_item, write_item
-from kmd.model.params_model import ParamSet, get_param
+from kmd.model.params_model import ParamValues
 from kmd.query.vector_index import WsVectorIndex
 from kmd.config.text_styles import EMOJI_SUCCESS
 from kmd.file_storage.filenames import parse_filename
@@ -493,15 +493,12 @@ class FileStore:
         """Set a global parameter for this workspace."""
         self.params.set(action_params)
 
-    def get_params(self) -> ParamSet:
+    def get_params(self) -> ParamValues:
         """Get any parameters globally set for this workspace."""
         try:
             return self.params.read()
         except OSError:
             return {}
-
-    def get_param(self, param_name: str) -> Optional[str]:
-        return get_param(self.get_params(), param_name)
 
     def log_store_info(self):
         log.message(

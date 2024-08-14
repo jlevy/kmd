@@ -2,7 +2,7 @@ from textwrap import dedent
 from cachetools import cached
 from kmd.llms.llm_completion import llm_completion
 from kmd.config.settings import get_settings
-from kmd.file_storage.workspaces import current_workspace
+from kmd.file_storage.workspaces import current_workspace_name, get_param_value
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.language_models import LLM
 from kmd.text_formatting.markdown_normalization import wrap_markdown
@@ -32,25 +32,47 @@ def assistance(input: str, fast: bool = False) -> str:
     from kmd.commands.commands import select, applicable_actions  # Avoid circular imports.
 
     assistant_model = "assistant_model_fast" if fast else "assistant_model"
-    model_str = not_none(current_workspace().get_param(assistant_model))
 
-    model = LLM(model_str)
+    model = LLM(not_none(get_param_value(assistant_model)))
+
     output(f"Getting assistance (model {model})…")
+
+    ws_name = current_workspace_name()
+    if ws_name:
+        current_state_message = LLMMessage(
+            f"""
+            CURRENT STATE
+
+            Current workspace is: {ws_name}
+
+            The user's current selection is below:
+
+            {output_as_string(select)}
+
+            The actions with preconditions that match this selection, so are available to run on the
+            current selection, are below:
+
+            {output_as_string(applicable_actions)}
+            """
+        )
+    else:
+        current_state_message = LLMMessage(
+            """
+            CURRENT STATE
+
+            The current directory is not a workspace. Create or switch to a workspace with the `workspace` command.
+            For example:
+
+            - `workspace my_new_workspace`.
+            """
+        )
 
     system_message = LLMMessage(
         f"""
         {assistant_preamble(skip_api=fast)}
 
-        CURRENT STATE
+        {current_state_message}
 
-        The user's current selection is below:
-
-        {output_as_string(select)}
-
-        The actions with preconditions that match this selection, so are available to run on the
-        current selection, are below:
-
-        {output_as_string(applicable_actions)}
         """
         # TODO: Include selection history, command history, any other info about the workspace.
     )

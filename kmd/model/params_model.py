@@ -1,70 +1,68 @@
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, Any, Type
 from kmd.config.logger import get_logger
 from kmd.config.settings import DEFAULT_CAREFUL_MODEL, DEFAULT_FAST_MODEL
+from kmd.model.constants import LANGUAGE_LIST
 from kmd.model.language_models import MODEL_LIST
 from kmd.text_docs.sizes import TextUnit
 
 
 log = get_logger(__name__)
 
-# Just a common language list.
-# Currently the main languages supported by DeepGram nova-2.
-LANGUAGES = [
-    "bg",
-    "ca",
-    "zh",
-    "cs",
-    "da",
-    "nl",
-    "en",
-    "et",
-    "fi",
-    "fr",
-    "de",
-    "el",
-    "hi",
-    "hu",
-    "id",
-    "it",
-    "ja",
-    "ko",
-    "lv",
-    "lt",
-    "ms",
-    "no",
-    "pl",
-    "pt",
-    "ro",
-    "ru",
-    "sk",
-    "es",
-    "sv",
-    "th",
-    "tr",
-    "uk",
-    "vi",
-]
+
+def is_truthy(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() in ("true", "1", "yes", "on", "y")
+    return bool(value)
 
 
 @dataclass(frozen=True)
 class Param:
+    """
+    A settable parameter. May be used globally or as an option on a command or action.
+    """
+
     name: str
     description: str
     valid_values: Optional[list[str]]
     default_value: Optional[str]
+    type: Type = str
 
     def full_description(self) -> str:
         desc = self.description
-        if self.valid_values:
-            val_list = ", ".join(f"`{v}`" for v in self.valid_values)
-            desc += f"\n\nAllowed values are: {val_list}"
-        if self.default_value:
-            desc += f"\n\nDefault value is: `{self.default_value}`"
+        if self.type is str:
+            if self.valid_values:
+                val_list = ", ".join(f"`{v}`" for v in self.valid_values)
+                desc += "\n\n"
+                desc += f"Allowed values are: {val_list}"
+            if self.default_value:
+                desc += "\n\n"
+                desc += f"Default value is: `{self.default_value}`"
+        else:
+            desc += "\n\n"
+            desc += f"Type: `{self.type.__name__}`"
+
         return desc
 
+    def parse(self, value: str) -> Optional[Any]:
+        if value is None:
+            return None
+        try:
+            if self.type == bool:
+                return is_truthy(value)
+            return self.type(value)
+        except ValueError as e:
+            raise ValueError(
+                f"Invalid value for {self.name} (expected type {self.type.__name__}): {value}"
+            ) from e
 
-PARAMS = {
+
+# Some parameters that make sense to be settable globally.
+GLOBAL_PARAMS = {
     "model": Param(
         "model",
         "The name of the LLM.",
@@ -74,7 +72,7 @@ PARAMS = {
     "language": Param(
         "language",
         "The language of the input audio or text.",
-        LANGUAGES,
+        LANGUAGE_LIST,
         default_value=None,
     ),
     "assistant_model": Param(
@@ -104,13 +102,15 @@ PARAMS = {
 }
 
 
-ParamSet = Dict[str, str]
+ParamValues = Dict[str, Any]
 
 
-def get_param(params: ParamSet, param_name: str) -> Optional[str]:
+def param_lookup(
+    params: ParamValues, param_name: str, defaults: Dict[str, Param] = GLOBAL_PARAMS
+) -> Optional[Any]:
     value = params.get(param_name)
     if value is None:
-        param = PARAMS.get(param_name)
+        param = defaults.get(param_name)
         if param is None:
             raise ValueError(f"Parameter not found: {param_name}")
         value = param.default_value
