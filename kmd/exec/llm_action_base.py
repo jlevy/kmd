@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
 from kmd.llms.llm_completion import llm_completion
-from kmd.config.text_styles import EMOJI_PROCESS
 from kmd.model.actions_model import (
     ONE_OR_MORE_ARGS,
     ExpectedArgs,
@@ -81,8 +80,7 @@ def run_llm_transform(action: LLMAction, item: Item) -> Item:
 
     setup.api_setup()
     log.message(
-        "%s Running LLM sliding transform action %s with model %s: %s %s",
-        EMOJI_PROCESS,
+        "Running LLM sliding transform action %s with model %s: %s %s",
         action.name,
         action.model,
         action.windowing,

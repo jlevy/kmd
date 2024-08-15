@@ -3,7 +3,7 @@ from os.path import getmtime, basename, getsize, join
 import re
 import subprocess
 from textwrap import dedent
-from typing import Iterable, List, Optional, cast
+from typing import List, Optional, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
@@ -14,6 +14,7 @@ from kmd.commands.command_registry import kmd_command
 from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.media.web import fetch_and_cache
 from kmd.preconditions import ALL_PRECONDITIONS
+from kmd.preconditions.precondition_checks import actions_matching_paths
 from kmd.text_ui.command_output import (
     Wrap,
     format_name_and_description,
@@ -37,9 +38,8 @@ from kmd.config.text_styles import (
     LOGO,
     SPINNER,
 )
-from kmd.file_storage.file_store import FileStore, skippable_file
+from kmd.file_storage.file_store import skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace
-from kmd.model.actions_model import Action
 from kmd.model.params_model import USER_SETTABLE_PARAMS
 from kmd.model.errors_model import InvalidInput
 from kmd.model.locators import StorePath
@@ -307,26 +307,11 @@ def unarchive(*paths: str) -> None:
         output_status(f"Unarchived: {store_path}")
 
 
-def _action_precondition_check(
-    ws: FileStore,
-    paths: List[StorePath],
-    include_no_precondition: bool = False,
-) -> Iterable[Action]:
-    def check_precondition(action: Action, store_path: StorePath) -> bool:
-        if action.precondition:
-            return action.precondition(ws.load(store_path))
-        return include_no_precondition
-
-    actions = load_all_actions(base_only=False)
-
-    for action in actions.values():
-        if all(check_precondition(action, store_path) for store_path in paths):
-            yield action
-
-
 @kmd_command
 def suggest_actions() -> None:
-    # TODO: More heuristics for suggesting actions.
+    """
+    Suggest actions that can be applied to the current selection.
+    """
     applicable_actions(brief=True)
 
 
@@ -339,8 +324,10 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
     store_paths = _assemble_paths(*paths)
     ws = current_workspace()
 
+    actions = load_all_actions(base_only=False).values()
     applicable_actions = list(
-        _action_precondition_check(
+        actions_matching_paths(
+            actions,
             ws,
             store_paths,
             include_no_precondition=all,

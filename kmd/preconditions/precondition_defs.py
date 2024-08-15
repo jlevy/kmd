@@ -19,7 +19,7 @@ def is_config(item: Item) -> bool:
 
 @precondition
 def is_url(item: Item) -> bool:
-    return item.url is not None
+    return item.type == ItemType.resource and item.url is not None
 
 
 @precondition

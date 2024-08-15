@@ -6,7 +6,7 @@ from kmd.exec.action_registry import (
     no_wrapper,
     each_item_wrapper,
 )
-from kmd.config.text_styles import EMOJI_PROCESS
+from kmd.config.text_styles import EMOJI_ACTION
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.config.logger import get_logger
@@ -57,7 +57,7 @@ def define_action_sequence(
             self.action_sequence = action_names
 
         def run(self, items: ActionInput) -> ActionResult:
-            log.message("%s Begin action sequence `%s`", EMOJI_PROCESS, self.name)
+            log.message("%s Begin action sequence `%s`", EMOJI_ACTION, self.name)
 
             look_up_actions(action_names)  # Validate action names.
 
@@ -238,7 +238,7 @@ def define_action_combo(
                 output_separator()
                 log.message(
                     "%s Action combo %s part %s of %s: %s",
-                    EMOJI_PROCESS,
+                    EMOJI_ACTION,
                     self.name,
                     i + 1,
                     len(self.action_sequence),

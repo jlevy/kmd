@@ -12,16 +12,27 @@ import os
 import runpy
 import threading
 import time
-from kmd.commands.command_registry import all_commands, kmd_command
+from typing import Dict
+from xonsh.completers.tools import contextual_completer, CompletionContext, CompleterResult
+from xonsh.completers.completer import add_one_completer, RichCompletion
+from kmd.commands.command_registry import CommandFunction, all_commands, kmd_command
 from kmd.config.setup import setup
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import (
+    COLOR_ACTION,
+    COLOR_COMMAND,
+    EMOJI_ACTION,
     EMOJI_WARN,
     PROMPT_COLOR_NORMAL,
     PROMPT_COLOR_WARN,
 )
+from kmd.model.actions_model import Action
+from kmd.preconditions.precondition_checks import (
+    items_matching_precondition,
+)
 from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
+from kmd.text_formatting.text_formatting import single_line
 from kmd.text_ui.command_output import output
 from kmd.file_storage.workspaces import current_workspace
 from kmd.action_defs import reload_all_actions
@@ -56,6 +67,10 @@ def load(*paths: str) -> None:
     # TODO: Track and expose to the user which extensions are loaded.
 
 
+_commands: Dict[str, CommandFunction] = {}
+_actions: Dict[str, Action] = {}
+
+
 def load_xonsh_commands():
     kmd_commands = {}
 
@@ -73,7 +88,10 @@ def load_xonsh_commands():
     #
     # aliases["reload"] = reload  # type: ignore
 
-    for func in all_commands():
+    global _commands
+    _commands = all_commands()
+
+    for func in _commands.values():
         kmd_commands[func.__name__] = wrap_with_exception_printing(wrap_for_shell_args(func))
 
     aliases.update(kmd_commands)  # type: ignore  # noqa: F821
@@ -81,10 +99,12 @@ def load_xonsh_commands():
 
 def load_xonsh_actions():
     kmd_actions = {}
-    # Load all actions as xonsh commands.
-    actions = reload_all_actions()
 
-    for action in actions.values():
+    # Load all actions as xonsh commands.
+    global _actions
+    _actions = reload_all_actions()
+
+    for action in _actions.values():
         kmd_actions[action.name] = ShellCallableAction(action)
 
     aliases.update(kmd_actions)  # type: ignore  # noqa: F821
@@ -126,19 +146,58 @@ def post_initialize():
         output()
 
 
-if _is_interactive:
-    welcome()
+@contextual_completer
+def command_or_action_completer(context: CompletionContext) -> CompleterResult:
+    """
+    Completes command names. We don't complete on regular shell commands to keep it cleaner.
+    """
+    if context.command and context.command.arg_index == 0:
+        command_completions = {
+            RichCompletion(
+                c.__name__, description=single_line(c.__doc__ or ""), style=COLOR_COMMAND
+            )
+            for c in _commands.values()
+        }
+        action_completions = {
+            RichCompletion(
+                a.name,
+                display=f"{a.name} {EMOJI_ACTION}",
+                description=single_line(a.description or ""),
+                style=COLOR_ACTION,
+            )
+            for a in _actions.values()
+        }
+        return command_completions | action_completions
 
-initialize()
 
-post_initialize()
+MAX_COMPLETIONS = 80
 
 
-# TODO: Completion for action and command args, e.g. known URLs, resource titles, concepts, parameters and values, etc.
-# Also use preconditions to filter out what items apply to a given action.
-# def _action_completer(cls, prefix, line, begidx, endidx, ctx):
-#     return ["https://"]
-# __xonsh__.completers["foo"] = _action_completer
+@contextual_completer
+def item_completer(context: CompletionContext) -> CompleterResult:
+    """
+    If the current command is an action, complete with paths that match the precondition
+    for that action.
+    """
+    if context.command and context.command.arg_index >= 1:
+        action_name = context.command.args[0].value
+        action = _actions.get(action_name)
+
+        if action and action.precondition:
+            ws = current_workspace()
+            matching_items = list(
+                items_matching_precondition(ws, action.precondition, max_results=MAX_COMPLETIONS)
+            )
+            # Too many matches is just not useful.
+            if len(matching_items) < MAX_COMPLETIONS:
+                return {
+                    RichCompletion(
+                        str(item.store_path),
+                        display=f"{item.store_path} ({action.precondition.name}) ",
+                        description=item.title or "",
+                    )
+                    for item in matching_items
+                }
 
 
 def _kmd_xonsh_prompt():
@@ -151,4 +210,20 @@ def _kmd_xonsh_prompt():
     return f"{workspace_str} {{{PROMPT_COLOR_NORMAL}}}❯{{RESET}} "
 
 
-__xonsh__.env["PROMPT"] = _kmd_xonsh_prompt  # type: ignore  # noqa: F821
+def shell_setup():
+    add_one_completer("command_or_action_completer", command_or_action_completer, "start")
+    add_one_completer("item_completer", item_completer, "start")
+
+    __xonsh__.env["PROMPT"] = _kmd_xonsh_prompt  # type: ignore  # noqa: F821
+
+
+# Startup:
+
+if _is_interactive:
+    welcome()
+
+initialize()
+
+post_initialize()
+
+shell_setup()

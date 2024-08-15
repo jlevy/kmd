@@ -69,6 +69,10 @@ COLOR_TIMING = "blue"
 
 COLOR_CALL = "yellow"
 
+COLOR_COMMAND = "bold black"
+
+COLOR_ACTION = "bold black"
+
 
 ## Formatting
 
@@ -87,7 +91,7 @@ SYMBOL_SENT = "S"
 
 ## Emojis
 
-EMOJI_PROCESS = "⛭"
+EMOJI_ACTION = "⛭"
 
 EMOJI_WARN = "△"
 
@@ -106,6 +110,7 @@ EMOJI_ASSISTANT = "🤖"
 EMOJI_TRUE = "✓"
 
 EMOJI_FALSE = "✗"
+
 
 ## Rich setup
 
@@ -141,7 +146,7 @@ class KmdHighlighter(RegexHighlighter):
             r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
             r"(?P<code_span>`[^`]+`)",
             # Emoji colors:
-            f"(?P<process>{EMOJI_PROCESS})",
+            f"(?P<process>{EMOJI_ACTION})",
             f"(?P<success>{EMOJI_SUCCESS})",
             f"(?P<timing>{EMOJI_TIMING})",
             f"(?P<warn>{EMOJI_WARN})",

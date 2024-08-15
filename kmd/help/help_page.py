@@ -21,7 +21,7 @@ def output_help_page(base_only: bool = False) -> None:
     output_markdown(workspace_and_file_formats.__doc__)
 
     output_heading("Available commands")
-    for command in all_commands():
+    for command in all_commands().values():
         doc = command.__doc__ if command.__doc__ else ""
         output(format_name_and_description(command.__name__, doc))
         output()
