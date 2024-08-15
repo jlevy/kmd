@@ -179,7 +179,7 @@ def _assemble_paths(*paths: Optional[str]) -> List[StorePath]:
     no paths are given.
     """
     ws = current_workspace()
-    store_paths = [StorePath(path) for path in paths if path is not None]
+    store_paths = [StorePath(path) for path in paths if path]
     if not store_paths:
         store_paths = ws.get_selection()
         if not store_paths:

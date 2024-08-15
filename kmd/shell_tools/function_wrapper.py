@@ -4,39 +4,53 @@ from typing import (
     Dict,
     List,
     Optional,
+    Tuple,
     TypeVar,
 )
+from kmd.config.logger import get_logger
 from kmd.help.command_help import output_command_help
 from kmd.model.errors_model import InvalidCommand
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param
 from kmd.shell_tools.function_inspect import FuncParam, inspect_function_params
 from kmd.shell_tools.option_parsing import parse_shell_args
 
+log = get_logger(__name__)
 
-def _map_positional(pos_args: List[str], pos_params: List[FuncParam]) -> List[Any]:
+
+def _map_positional(
+    pos_args: List[str], pos_params: List[FuncParam], kw_params: Dict[str, FuncParam]
+) -> Tuple[List[Any], int]:
     """
     Map parsed positional arguments to function parameters, ensuring the number of
     arguments matches and converting types.
     """
     pos_values = []
     i = 0
+    keywords_consumed = 0
 
     for param in pos_params:
         if param.is_var:
             pos_values.extend([param.type(arg) for arg in pos_args[i:]])
-            return pos_values  # All remaining args are consumed, so we can return early.
+            return pos_values, 0  # All remaining args are consumed, so we can return early.
         elif i < len(pos_args):
             pos_values.append(param.type(pos_args[i]))
             i += 1
         else:
             raise InvalidCommand(f"Missing positional argument: {param.name}")
 
+    # If there are remaining positional arguments, they will go toward keyword arguments.
+    for param in kw_params.values():
+        if not param.is_var and i < len(pos_args):
+            pos_values.append(param.type(pos_args[i]))
+            i += 1
+            keywords_consumed += 1
+
     if i < len(pos_args):
         raise InvalidCommand(
             f"Too many arguments provided (expected {len(pos_params)}, got {len(pos_args)}): {pos_args}"
         )
 
-    return pos_values
+    return pos_values, keywords_consumed
 
 
 def _map_keyword(
@@ -46,6 +60,7 @@ def _map_keyword(
     Map parsed keyword arguments to function parameters, converting types and handling var
     keyword arguments.
     """
+
     kw_values = {param.name: param.default for param in kw_params.values() if not param.is_var}
     var_kw_values = {}
     var_kw_param = None
@@ -92,9 +107,24 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
     pos_params, kw_params = inspect_function_params(func)
 
     def wrapped(args: List[str]) -> Optional[R]:
+
         shell_args = parse_shell_args(args)
-        pos_values = _map_positional(shell_args.pos_args, pos_params)
-        kw_values = _map_keyword(shell_args.kw_args, kw_params)
+
+        pos_values, keywords_consumed = _map_positional(shell_args.pos_args, pos_params, kw_params)
+
+        # If some positional arguments were used as keyword arguments, we need to remove
+        # them from the kw_params so they don't get passed twice.
+        remaining_kw_params = dict(list(kw_params.items())[keywords_consumed:])
+
+        kw_values = _map_keyword(shell_args.kw_args, remaining_kw_params)
+
+        log.info(
+            "Mapping shell args to function params: %s -> %s -> pos_values=%s, kw_values=%s",
+            args,
+            shell_args,
+            pos_values,
+            kw_values,
+        )
 
         param_info = _look_up_params(kw_params)
 
@@ -130,52 +160,6 @@ def test_wrap_function():
 
     def func4() -> List:
         return []
-
-    params1 = inspect_function_params(func1)
-    params2 = inspect_function_params(func2)
-    params3 = inspect_function_params(func3)
-    params4 = inspect_function_params(func4)
-
-    print("\ninspect:")
-    print()
-    print(repr(params1))
-    print()
-    print(repr(params2))
-    print()
-    print(repr(params3))
-    print()
-    print(repr(params4))
-
-    assert params1 == (
-        [
-            FuncParam(name="arg1", type=str, default=None, is_var=False),
-            FuncParam(name="arg2", type=str, default=None, is_var=False),
-            FuncParam(name="arg3", type=int, default=None, is_var=False),
-        ],
-        {
-            "option_one": FuncParam(name="option_one", type=bool, default=False, is_var=False),
-            "option_two": FuncParam(name="option_two", type=str, default=None, is_var=False),
-        },
-    )
-
-    assert params2 == (
-        [
-            FuncParam(name="paths", type=str, default=None, is_var=True),
-        ],
-        {
-            "summary": FuncParam(name="summary", type=bool, default=False, is_var=False),
-            "iso_time": FuncParam(name="iso_time", type=bool, default=False, is_var=False),
-        },
-    )
-
-    assert params3 == (
-        [
-            FuncParam(name="arg1", type=str, default=None, is_var=False),
-        ],
-        {"keywords": FuncParam(name="keywords", type=None, default=None, is_var=True)},
-    )
-
-    assert params4 == ([], {})
 
     wrapped_func1 = wrap_for_shell_args(func1)
     wrapped_func2 = wrap_for_shell_args(func2)

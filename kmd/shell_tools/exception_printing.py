@@ -31,6 +31,11 @@ R = TypeVar("R")
 def wrap_with_exception_printing(func: Callable[..., R]) -> Callable[[List[str]], Optional[R]]:
     def command(*args) -> Optional[R]:
         try:
+            log.info(
+                "Wrapped function call: %s(%s)",
+                func.__name__,
+                (", ".join(str(arg) for arg in args)),
+            )
             return func(*args)
         except NONFATAL_EXCEPTIONS as e:
             log.error(f"[{COLOR_ERROR}]Command error:[/{COLOR_ERROR}] %s", summarize_traceback(e))
