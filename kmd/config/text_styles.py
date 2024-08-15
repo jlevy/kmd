@@ -69,9 +69,9 @@ COLOR_TIMING = "blue"
 
 COLOR_CALL = "yellow"
 
-COLOR_COMMAND = "bold black"
+COLOR_COMMAND = "bold default"
 
-COLOR_ACTION = "bold black"
+COLOR_ACTION = "bold default"
 
 
 ## Formatting

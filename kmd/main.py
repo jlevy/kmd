@@ -149,9 +149,13 @@ def customize_xonsh_settings(is_interactive: bool):
         "XONSH_INTERACTIVE": is_interactive,
         "XONSH_SHOW_TRACEBACK": XONSH_SHOW_TRACEBACK,
         "AUTO_SUGGEST": False,
-        # Completions can be "none", "single", "multi", or "readline"
+        # Completions can be "none", "single", "multi", or "readline".
         # https://xon.sh/envvars.html#completions-display
         "COMPLETIONS_DISPLAY": "single",
+        # Number of rows in the fancier prompt toolkit completion menu.
+        "COMPLETIONS_MENU_ROWS": 8,
+        # Mode is "default" or "menu-complete".
+        "COMPLETION_MODE": "menu-complete",
         # Mouse support for completions should be off since it interferes with other mouse scrolling.
         "MOUSE_SUPPORT": False,
         # Start with default colors then override prompt toolkit colors

@@ -27,6 +27,7 @@ from kmd.config.text_styles import (
     PROMPT_COLOR_WARN,
 )
 from kmd.model.actions_model import Action
+from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_checks import (
     items_matching_precondition,
 )
@@ -41,16 +42,23 @@ from kmd.commands.commands import welcome
 from kmd.model.errors_model import InvalidStoreState
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 
-setup()
+setup()  # Call to config logging before anything else.
 
 log = get_logger(__name__)
+
+_commands: Dict[str, CommandFunction] = {}
+_actions: Dict[str, Action] = {}
+_is_interactive = __xonsh__.env["XONSH_INTERACTIVE"]  # type: ignore  # noqa: F821
+
+
+MAX_COMPLETIONS = 500
 
 
 # We add action loading here direcctly in the xontrib so we can update the aliases.
 @kmd_command
 def load(*paths: str) -> None:
     """
-    Load Python extensions into kmd. Simply imports and the defined actions should use
+    Load kmd Python extensions. Simply imports and the defined actions should use
     @kmd_action to register themselves.
     """
     for path in paths:
@@ -65,10 +73,6 @@ def load(*paths: str) -> None:
 
     log.message("Imported extensions and reloaded actions: %s", ", ".join(paths))
     # TODO: Track and expose to the user which extensions are loaded.
-
-
-_commands: Dict[str, CommandFunction] = {}
-_actions: Dict[str, Action] = {}
 
 
 def load_xonsh_commands():
@@ -108,9 +112,6 @@ def load_xonsh_actions():
         kmd_actions[action.name] = ShellCallableAction(action)
 
     aliases.update(kmd_actions)  # type: ignore  # noqa: F821
-
-
-_is_interactive = __xonsh__.env["XONSH_INTERACTIVE"]  # type: ignore  # noqa: F821
 
 
 def initialize():
@@ -157,6 +158,7 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
                 c.__name__, description=single_line(c.__doc__ or ""), style=COLOR_COMMAND
             )
             for c in _commands.values()
+            if c.__name__.startswith(context.command.prefix)
         }
         action_completions = {
             RichCompletion(
@@ -166,11 +168,9 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
                 style=COLOR_ACTION,
             )
             for a in _actions.values()
+            if a.name.startswith(context.command.prefix)
         }
         return command_completions | action_completions
-
-
-MAX_COMPLETIONS = 80
 
 
 @contextual_completer
@@ -183,10 +183,16 @@ def item_completer(context: CompletionContext) -> CompleterResult:
         action_name = context.command.args[0].value
         action = _actions.get(action_name)
 
+        prefix = context.command.prefix
+        matches_prefix = Precondition(
+            lambda item: bool(item.store_path and item.store_path.startswith(prefix))
+        )
+
         if action and action.precondition:
             ws = current_workspace()
+            match_precondition = action.precondition & matches_prefix
             matching_items = list(
-                items_matching_precondition(ws, action.precondition, max_results=MAX_COMPLETIONS)
+                items_matching_precondition(ws, match_precondition, max_results=MAX_COMPLETIONS)
             )
             # Too many matches is just not useful.
             if len(matching_items) < MAX_COMPLETIONS:
@@ -197,6 +203,7 @@ def item_completer(context: CompletionContext) -> CompleterResult:
                         description=item.title or "",
                     )
                     for item in matching_items
+                    if item.store_path and item.store_path.startswith(context.command.prefix)
                 }
 
 
