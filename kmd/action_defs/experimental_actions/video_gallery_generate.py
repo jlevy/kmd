@@ -10,7 +10,7 @@ log = get_logger(__name__)
 
 # FIXME: Combine with geneate_webpage as a single action, storing the config type in the config item.
 @kmd_action
-class GenerateVideoGallery(Action):
+class VideoGalleryGenerate(Action):
     def __init__(self):
         super().__init__(
             name="video_gallery_generate",

@@ -13,7 +13,7 @@ You get a full environment with all actions, completions, and other commands.
 
 Ensure you have a modern Python 3.12+ and Poetry (this part assumes MacOS):
 
-```
+```shell
 # Install pyenv and pipx if needed:
 brew update
 brew install pyenv
@@ -39,7 +39,7 @@ poetry self add poetry-plugin-up
 
 There aren't pre-built releases yet. Check out the code and install the package dependencies:
 
-```
+```shell
 poetry install
 ```
 
@@ -50,7 +50,7 @@ Configuring at least OpenAI, Deepgram, Anthropic, and Groq (for Llama 3) is reco
 
 These keys should go in the `.env` file in your current directory.
 
-```
+```shell
 # Set up API secrets:
 cp .env.template .env 
 vi .env # Edit the file to add all desired API keys
@@ -60,7 +60,7 @@ vi .env # Edit the file to add all desired API keys
 
 To run:
 
-```
+```shell
 poetry run kmd
 ```
 
@@ -68,7 +68,7 @@ Optionally, to install kmd globally in current user's Python virtual environment
 conveniently use `kmd` anywhere, make sure you have a usable Python 3.12+ environment
 active (such as using `pyenv`), then:
 
-```
+```shell
 ./install_local.sh
 ```
 
@@ -76,34 +76,49 @@ This does a pip install of the wheel so you can run it as `kmd`.
 
 ## Using kmd
 
-Use `kmd_help` within the shell for full documentation. Some brief examples:
+Use `kmd_help` within the shell for full documentation.
 
-```
+Or just get started with some brief examples. Try these commands one at a time
+to see how it works:
+
+```shell
 # Set up a workspace to test things out:
 workspace fitness
 
 # A short transcription:
 transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
 
-# A transcription with multiple speakers:
-transcribe 'https://www.youtube.com/watch?v=uUd7LleJuqM'
+# Take a look at the output:
+show
+
 # Now manipulate that transcription (note we are using the outputs of each previous command,
 # which are auto-selected as input to each next command):
+strip_html
 break_into_paragraphs
 summarize_as_bullets
 create_pdf
 
-# Get all videos on a channel and then download and transcribe them:
+# Note transcription works with multiple speakers:
+transcribe 'https://www.youtube.com/watch?v=uUd7LleJuqM'
+
+# Get all videos on a channel and then download and transcribe them all:
 list_channel 'https://www.youtube.com/@Kboges'
 transcribe
 
-# Processing a really long document with sliding windows:
-transcribe 'https://www.youtube.com/watch?v=juD99_sPWGU'
-strip_html
-break_into_paragraphs
-summarize_as_bullets
+# Process a really long document with sliding windows, and a combo
+# action that transcribes, formats, and includes timestamps and summaries:
+transcribe_format_summarize_annotate_video 'https://www.youtube.com/watch?v=juD99_sPWGU'
 
-# Combine all the above into combo and sequence actions:
+# Now look at these as a web page:
+webpage_config
+# Edit the config if desired:
+edit
+# Now generate the webpage
+webpage_generate
+# And look at it in the browser:
+show
+
+# Combine several of the above actions in a sequence action:
 transcribe_and_format_video_with_description 'https://www.youtube.com/watch?v=XRQnWomofIY'
 ```
 

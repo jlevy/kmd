@@ -1,4 +1,5 @@
 from kmd.commands.command_registry import all_commands
+from kmd.docs.topics import about_kmd, faq, workspace_and_file_formats
 from kmd.text_ui.command_output import (
     format_name_and_description,
     output,
@@ -6,7 +7,6 @@ from kmd.text_ui.command_output import (
     output_markdown,
 )
 from kmd.config.logger import get_logger
-from kmd.docs import about_kmd, workspace_and_file_formats
 
 log = get_logger(__name__)
 
@@ -19,6 +19,9 @@ def output_help_page(base_only: bool = False) -> None:
 
     output_heading("Workspace and File Formats")
     output_markdown(workspace_and_file_formats.__doc__)
+
+    output_heading("Frequently Asked Questions")
+    output_markdown(faq.__doc__)
 
     output_heading("Available commands")
     for command in all_commands().values():

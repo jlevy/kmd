@@ -9,7 +9,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class ConfigureWebpage(Action):
+class WebpageConfig(Action):
     def __init__(self):
         super().__init__(
             name="webpage_config",

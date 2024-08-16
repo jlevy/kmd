@@ -4,7 +4,7 @@ from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 
 define_llm_action(
     name="describe_briefly",
-    description="Very brief description of text, in at most three sentences.",
+    description="Write a brief description of a text, in at most three sentences.",
     model=DEFAULT_CAREFUL_MODEL,
     system_message=LLMMessage(
         """

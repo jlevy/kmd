@@ -152,13 +152,16 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
     """
     Completes command names. We don't complete on regular shell commands to keep it cleaner.
     """
+
     if context.command and context.command.arg_index == 0:
+        prefix = context.command.prefix
+
         command_completions = {
             RichCompletion(
                 c.__name__, description=single_line(c.__doc__ or ""), style=COLOR_COMMAND
             )
             for c in _commands.values()
-            if c.__name__.startswith(context.command.prefix)
+            if c.__name__.startswith(prefix)
         }
         action_completions = {
             RichCompletion(
@@ -168,9 +171,17 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
                 style=COLOR_ACTION,
             )
             for a in _actions.values()
-            if a.name.startswith(context.command.prefix)
+            if a.name.startswith(prefix)
         }
-        return command_completions | action_completions
+
+        completions: CompleterResult = command_completions | action_completions
+
+        # Tab on an empty line also suggests help.
+        if prefix.strip() == "":
+            help_completion = RichCompletion("?", description="Ask a question to get help.")
+            completions = {help_completion} | completions
+
+        return completions
 
 
 @contextual_completer
@@ -179,18 +190,20 @@ def item_completer(context: CompletionContext) -> CompleterResult:
     If the current command is an action, complete with paths that match the precondition
     for that action.
     """
+
     if context.command and context.command.arg_index >= 1:
         action_name = context.command.args[0].value
         action = _actions.get(action_name)
 
         prefix = context.command.prefix
-        matches_prefix = Precondition(
+
+        is_prefix_match = Precondition(
             lambda item: bool(item.store_path and item.store_path.startswith(prefix))
         )
 
         if action and action.precondition:
             ws = current_workspace()
-            match_precondition = action.precondition & matches_prefix
+            match_precondition = action.precondition & is_prefix_match
             matching_items = list(
                 items_matching_precondition(ws, match_precondition, max_results=MAX_COMPLETIONS)
             )
@@ -207,6 +220,30 @@ def item_completer(context: CompletionContext) -> CompleterResult:
                 }
 
 
+from kmd.docs.topics.faq import __doc__ as faq_doc
+import re
+
+
+@contextual_completer
+def help_question_completer(context: CompletionContext) -> CompleterResult:
+    """
+    Suggest help questions after a `?` on the command line.
+    """
+    if (
+        context.command
+        and context.command.arg_index == 0
+        and context.command.prefix.lstrip() == "?"
+    ):
+        # Extract questions from the FAQ.
+        questions = re.findall(r"^#+ (.+\?)\s*$", faq_doc, re.MULTILINE)
+
+        assert len(questions) > 2
+        return {RichCompletion(question) for question in questions}
+
+
+# FIXME: Option completions.
+
+
 def _kmd_xonsh_prompt():
     from kmd.file_storage.workspaces import current_workspace_name
 
@@ -220,6 +257,7 @@ def _kmd_xonsh_prompt():
 def shell_setup():
     add_one_completer("command_or_action_completer", command_or_action_completer, "start")
     add_one_completer("item_completer", item_completer, "start")
+    add_one_completer("help_question_completer", help_question_completer, "start")
 
     __xonsh__.env["PROMPT"] = _kmd_xonsh_prompt  # type: ignore  # noqa: F821
 
