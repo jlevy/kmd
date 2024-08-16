@@ -14,25 +14,25 @@ from typing import (
 )
 from dataclasses import dataclass
 
+from kmd.model.params_model import ALL_COMMON_PARAMS, Param
+
 
 @dataclass(frozen=True)
 class FuncParam:
     name: str
     type: Type
     default: Any
-    is_var: bool
+    is_varargs: bool
 
 
-def inspect_function_params(
-    func: Callable[..., Any]
-) -> Tuple[List[FuncParam], Dict[str, FuncParam]]:
+def inspect_function_params(func: Callable[..., Any]) -> Tuple[List[FuncParam], List[FuncParam]]:
     """
     Extract parameters from a function's variable names and type annotations. Return the
     positional and keyword parameters.
     """
     signature = inspect.signature(func)
     pos_args: List[FuncParam] = []
-    kw_args: Dict[str, FuncParam] = {}
+    kw_args: List[FuncParam] = []
 
     for param in signature.parameters.values():
         param_name = param.name
@@ -71,15 +71,39 @@ def inspect_function_params(
             if param.default == param.empty:
                 pos_args.append(func_param)
             else:
-                kw_args[param_name] = func_param
+                kw_args.append(func_param)
         elif param_kind == Parameter.VAR_POSITIONAL:
             pos_args.append(func_param)
         elif param_kind == Parameter.KEYWORD_ONLY:
-            kw_args[param_name] = func_param
+            kw_args.append(func_param)
         elif param_kind == Parameter.VAR_KEYWORD:
-            kw_args[param_name] = func_param
+            kw_args.append(func_param)
 
     return pos_args, kw_args
+
+
+def _look_up_func_param(param: FuncParam) -> Param:
+    return ALL_COMMON_PARAMS.get(param.name) or Param(param.name, type=param.type)
+
+
+def _look_up_func_params(kw_params: List[FuncParam]) -> List[Param]:
+    return [_look_up_func_param(func_param) for func_param in kw_params]
+
+
+ParamInfo = Tuple[List[FuncParam], List[FuncParam], List[Param]]
+
+
+def collect_param_info(func: Callable[..., Any]) -> ParamInfo:
+    """
+    Assign info on positional and keyword paramaters for a function, as well as docs for
+    them (if available, matching based on paramater name), to the function's `__param_info__`
+    attribute.
+    """
+    if not hasattr(func, "__param_info__"):
+        pos_params, kw_params = inspect_function_params(func)
+        func.__param_info__ = (pos_params, kw_params, _look_up_func_params(kw_params))
+
+    return func.__param_info__
 
 
 ## Tests
@@ -123,35 +147,31 @@ def test_inspect_function_params():
     print()
     print(repr(params4))
 
-    assert params0 == ([], {"path": FuncParam(name="path", type=str, default=None, is_var=False)})
+    assert params0 == ([], [FuncParam(name="path", type=str, default=None, is_varargs=False)])
 
     assert params1 == (
         [
-            FuncParam(name="arg1", type=str, default=None, is_var=False),
-            FuncParam(name="arg2", type=str, default=None, is_var=False),
-            FuncParam(name="arg3", type=int, default=None, is_var=False),
+            FuncParam(name="arg1", type=str, default=None, is_varargs=False),
+            FuncParam(name="arg2", type=str, default=None, is_varargs=False),
+            FuncParam(name="arg3", type=int, default=None, is_varargs=False),
         ],
-        {
-            "option_one": FuncParam(name="option_one", type=bool, default=False, is_var=False),
-            "option_two": FuncParam(name="option_two", type=str, default=None, is_var=False),
-        },
+        [
+            FuncParam(name="option_one", type=bool, default=False, is_varargs=False),
+            FuncParam(name="option_two", type=str, default=None, is_varargs=False),
+        ],
     )
 
     assert params2 == (
+        [FuncParam(name="paths", type=str, default=None, is_varargs=True)],
         [
-            FuncParam(name="paths", type=str, default=None, is_var=True),
+            FuncParam(name="summary", type=bool, default=False, is_varargs=False),
+            FuncParam(name="iso_time", type=bool, default=False, is_varargs=False),
         ],
-        {
-            "summary": FuncParam(name="summary", type=bool, default=False, is_var=False),
-            "iso_time": FuncParam(name="iso_time", type=bool, default=False, is_var=False),
-        },
     )
 
     assert params3 == (
-        [
-            FuncParam(name="arg1", type=str, default=None, is_var=False),
-        ],
-        {"keywords": FuncParam(name="keywords", type=None, default=None, is_var=True)},
+        [FuncParam(name="arg1", type=str, default=None, is_varargs=False)],
+        [FuncParam(name="keywords", type=None, default=None, is_varargs=True)],
     )
 
-    assert params4 == ([], {})
+    assert params4 == ([], [])

@@ -61,7 +61,7 @@ COLOR_WARN = "bright_red"
 
 COLOR_ERROR = "bright_red"
 
-COLOR_PROCESS = "magenta"
+COLOR_PROCESS = "cyan"
 
 COLOR_SAVED = "blue"
 

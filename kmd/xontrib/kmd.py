@@ -12,6 +12,7 @@ import os
 import runpy
 import threading
 import time
+import re
 from typing import Dict
 from xonsh.completers.tools import contextual_completer, CompletionContext, CompleterResult
 from xonsh.completers.completer import add_one_completer, RichCompletion
@@ -32,6 +33,7 @@ from kmd.preconditions.precondition_checks import (
     items_matching_precondition,
 )
 from kmd.shell_tools.action_wrapper import ShellCallableAction
+from kmd.shell_tools.function_inspect import ParamInfo
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
 from kmd.text_formatting.text_formatting import single_line
 from kmd.text_ui.command_output import output
@@ -41,6 +43,7 @@ from kmd.commands import commands
 from kmd.commands.commands import welcome
 from kmd.model.errors_model import InvalidStoreState
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
+
 
 setup()  # Call to config logging before anything else.
 
@@ -207,7 +210,7 @@ def item_completer(context: CompletionContext) -> CompleterResult:
             matching_items = list(
                 items_matching_precondition(ws, match_precondition, max_results=MAX_COMPLETIONS)
             )
-            # Too many matches is just not useful.
+            # Too many matches is not so useful.
             if len(matching_items) < MAX_COMPLETIONS:
                 return {
                     RichCompletion(
@@ -216,12 +219,8 @@ def item_completer(context: CompletionContext) -> CompleterResult:
                         description=item.title or "",
                     )
                     for item in matching_items
-                    if item.store_path and item.store_path.startswith(context.command.prefix)
+                    if item.store_path and item.store_path.startswith(prefix)
                 }
-
-
-from kmd.docs.topics.faq import __doc__ as faq_doc
-import re
 
 
 @contextual_completer
@@ -235,13 +234,55 @@ def help_question_completer(context: CompletionContext) -> CompleterResult:
         and context.command.prefix.lstrip() == "?"
     ):
         # Extract questions from the FAQ.
+        from kmd.docs.topics.faq import __doc__ as faq_doc
+
         questions = re.findall(r"^#+ (.+\?)\s*$", faq_doc, re.MULTILINE)
 
         assert len(questions) > 2
         return {RichCompletion(question) for question in questions}
 
 
-# FIXME: Option completions.
+@contextual_completer
+def options_completer(context: CompletionContext) -> CompleterResult:
+    """
+    Suggest options completions after a `-` or `--` on the command line.
+    """
+    if context.command and context.command.arg_index > 0:
+        prefix = context.command.prefix
+
+        if prefix.startswith("-"):
+            command_name = context.command.args[0].value
+
+            command = _commands.get(command_name)
+            action = _actions.get(command_name)
+
+            if command:
+                param_info: ParamInfo | None = getattr(command, "__param_info__", None)
+                if param_info:
+                    _pos_params, _kw_params, kw_docs = param_info
+                    completions: CompleterResult = {
+                        RichCompletion(param.shell_prefix(), description=param.description or "")
+                        for param in kw_docs
+                        if param.shell_prefix().startswith(prefix)
+                    }
+                    if "--help".startswith(prefix):
+                        completions |= {
+                            RichCompletion("--help", description="Show more help for this command.")
+                        }
+                    return completions
+
+            if action:
+                param_docs = action.params()
+                completions = {
+                    RichCompletion(param.shell_prefix(), description=param.description or "")
+                    for param in param_docs
+                    if param.shell_prefix().startswith(prefix)
+                }
+                if "--help".startswith(prefix):
+                    completions |= {
+                        RichCompletion("--help", description="Show more help for this action.")
+                    }
+                return completions
 
 
 def _kmd_xonsh_prompt():
@@ -258,6 +299,7 @@ def shell_setup():
     add_one_completer("command_or_action_completer", command_or_action_completer, "start")
     add_one_completer("item_completer", item_completer, "start")
     add_one_completer("help_question_completer", help_question_completer, "start")
+    add_one_completer("options_completer", options_completer, "start")
 
     __xonsh__.env["PROMPT"] = _kmd_xonsh_prompt  # type: ignore  # noqa: F821
 

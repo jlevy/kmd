@@ -10,15 +10,17 @@ from typing import (
 from kmd.config.logger import get_logger
 from kmd.help.command_help import output_command_help
 from kmd.model.errors_model import InvalidCommand
-from kmd.model.params_model import ALL_COMMON_PARAMS, Param
-from kmd.shell_tools.function_inspect import FuncParam, inspect_function_params
+from kmd.shell_tools.function_inspect import (
+    FuncParam,
+    collect_param_info,
+)
 from kmd.shell_tools.option_parsing import parse_shell_args
 
 log = get_logger(__name__)
 
 
 def _map_positional(
-    pos_args: List[str], pos_params: List[FuncParam], kw_params: Dict[str, FuncParam]
+    pos_args: List[str], pos_params: List[FuncParam], kw_params: List[FuncParam]
 ) -> Tuple[List[Any], int]:
     """
     Map parsed positional arguments to function parameters, ensuring the number of
@@ -29,7 +31,7 @@ def _map_positional(
     keywords_consumed = 0
 
     for param in pos_params:
-        if param.is_var:
+        if param.is_varargs:
             pos_values.extend([param.type(arg) for arg in pos_args[i:]])
             return pos_values, 0  # All remaining args are consumed, so we can return early.
         elif i < len(pos_args):
@@ -39,8 +41,8 @@ def _map_positional(
             raise InvalidCommand(f"Missing positional argument: {param.name}")
 
     # If there are remaining positional arguments, they will go toward keyword arguments.
-    for param in kw_params.values():
-        if not param.is_var and i < len(pos_args):
+    for param in kw_params:
+        if not param.is_varargs and i < len(pos_args):
             pos_values.append(param.type(pos_args[i]))
             i += 1
             keywords_consumed += 1
@@ -53,26 +55,25 @@ def _map_positional(
     return pos_values, keywords_consumed
 
 
-def _map_keyword(
-    kw_args: Dict[str, Optional[str]], kw_params: Dict[str, FuncParam]
-) -> Dict[str, Any]:
+def _map_keyword(kw_args: Dict[str, Optional[str]], kw_params: List[FuncParam]) -> Dict[str, Any]:
     """
     Map parsed keyword arguments to function parameters, converting types and handling var
     keyword arguments.
     """
 
-    kw_values = {param.name: param.default for param in kw_params.values() if not param.is_var}
+    kw_values = {param.name: param.default for param in kw_params if not param.is_varargs}
     var_kw_values = {}
     var_kw_param = None
 
-    for param in kw_params.values():
-        if param.is_var:
+    for param in kw_params:
+        if param.is_varargs:
             var_kw_param = param
             break
 
     for key, value in kw_args.items():
-        if key in kw_params:
-            kw_values[key] = kw_params[key].type(value)  # Convert value to type.
+        matching_param = next((param for param in kw_params if param.name == key), None)
+        if matching_param:
+            kw_values[key] = matching_param.type(value)  # Convert value to type.
         elif var_kw_param:
             var_kw_values[key] = value
         else:
@@ -84,18 +85,6 @@ def _map_keyword(
     return kw_values
 
 
-def _look_up_params(kw_params: Dict[str, FuncParam]) -> Dict[str, Param]:
-
-    def get_param(name: str, param: FuncParam) -> Param:
-        return ALL_COMMON_PARAMS.get(param.name) or Param(name, type=param.type)
-
-    return {
-        name: param
-        for name, param in ((name, get_param(name, param)) for name, param in kw_params.items())
-        if param is not None
-    }
-
-
 R = TypeVar("R")
 
 
@@ -104,17 +93,21 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
     Wrap a function to accept a list of string shell arguments, parse them, and call the
     original function.
     """
-    pos_params, kw_params = inspect_function_params(func)
+    pos_params, kw_params, kw_param_docs = collect_param_info(func)
 
     def wrapped(args: List[str]) -> Optional[R]:
 
         shell_args = parse_shell_args(args)
 
+        if shell_args.show_help:
+            output_command_help(func.__name__, func.__doc__, kw_param_docs)
+            return
+
         pos_values, keywords_consumed = _map_positional(shell_args.pos_args, pos_params, kw_params)
 
         # If some positional arguments were used as keyword arguments, we need to remove
         # them from the kw_params so they don't get passed twice.
-        remaining_kw_params = dict(list(kw_params.items())[keywords_consumed:])
+        remaining_kw_params = kw_params[keywords_consumed:]
 
         kw_values = _map_keyword(shell_args.kw_args, remaining_kw_params)
 
@@ -125,13 +118,6 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
             pos_values,
             kw_values,
         )
-
-        param_info = _look_up_params(kw_params)
-
-        if shell_args.show_help:
-            output_command_help(func.__name__, func.__doc__, param_info)
-
-            return None
 
         return func(*pos_values, **kw_values)
 

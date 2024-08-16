@@ -521,6 +521,8 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
 
         output(f"\n{total_files} items total in {total_files} folders", color=COLOR_EMPH)
 
+    output()
+
 
 @kmd_command
 def graph_view() -> None:

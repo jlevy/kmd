@@ -54,6 +54,12 @@ class Param:
                 f"Invalid value for {self.name} (expected type {self.type.__name__}): {value}"
             ) from e
 
+    def shell_prefix(self) -> str:
+        if self.type == bool:
+            return f"--{self.name}"
+        else:
+            return f"--{self.name}="
+
 
 # Parameters set globally such as in the workspace.
 GLOBAL_PARAMS = {
@@ -99,23 +105,24 @@ COMMON_ACTION_PARAMS = {
     ),
 }
 
-# Parameters that are used when a command is invoked.
-RUNTIME_PARAMS = {
+# Parameters that are available when an action is invoked.
+RUNTIME_ACTION_PARAMS = {
     "rerun": Param(
         "rerun",
         "Rerun an action that would otherwise be skipped because the output already exists.",
         type=bool,
     ),
-    "refetch": Param(
-        "refetch",
-        "Do not take content from media and web page caches. Re-fetch and update cache instead.",
-        type=bool,
-    ),
+    # TODO: Implement.
+    # "refetch": Param(
+    #     "refetch",
+    #     "Do not take content from media and web page caches. Re-fetch and update cache instead.",
+    #     type=bool,
+    # ),
 }
 
 USER_SETTABLE_PARAMS = {**GLOBAL_PARAMS, **COMMON_ACTION_PARAMS}
 
-ALL_COMMON_PARAMS = {**GLOBAL_PARAMS, **COMMON_ACTION_PARAMS, **RUNTIME_PARAMS}
+ALL_COMMON_PARAMS = {**GLOBAL_PARAMS, **COMMON_ACTION_PARAMS, **RUNTIME_ACTION_PARAMS}
 
 ParamValues = Dict[str, Any]
 

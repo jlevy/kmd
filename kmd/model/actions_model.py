@@ -9,7 +9,7 @@ from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.lang_tools.inflection import plural
 from kmd.model.language_models import LLM
 from kmd.model.operations_model import Operation, Source
-from kmd.model.params_model import ALL_COMMON_PARAMS, ParamValues, TextUnit
+from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.preconditions_model import Precondition
 from kmd.text_formatting.text_formatting import clean_description, format_lines
 from kmd.util.obj_utils import abbreviate_obj
@@ -139,6 +139,9 @@ class Action(ABC):
             set(f.name for f in fields(self) if not f.name.startswith("_"))
             - set(self._NON_PARAM_FIELDS)
         )
+
+    def params(self) -> List[Param]:
+        return [ALL_COMMON_PARAMS.get(name) or Param(name, type=str) for name in self.param_names()]
 
     def nondefault_params(self):
         changed_params: Dict[str, Any] = {}
