@@ -96,7 +96,6 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
     pos_params, kw_params, kw_param_docs = collect_param_info(func)
 
     def wrapped(args: List[str]) -> Optional[R]:
-
         shell_args = parse_shell_args(args)
 
         if shell_args.show_help:
@@ -130,7 +129,6 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
 
 
 def test_wrap_function():
-
     def func1(
         arg1: str, arg2: str, arg3: int, option_one: bool = False, option_two: Optional[str] = None
     ) -> List:

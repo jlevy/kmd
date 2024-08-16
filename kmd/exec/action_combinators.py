@@ -26,13 +26,13 @@ from kmd.util.type_utils import not_none
 log = get_logger(__name__)
 
 
-def look_up_actions(action_names: List[str]) -> list[Action]:
+def look_up_actions(action_names: List[str]) -> List[Action]:
     return [look_up_action(action_name) for action_name in action_names]
 
 
 def define_action_sequence(
     name: str,
-    action_names: list[str],
+    action_names: List[str],
     description: Optional[str] = None,
     on_each_input: bool = False,
     precondition: Optional[Precondition] = None,

@@ -101,7 +101,7 @@ create_pdf
 # Note transcription works with multiple speakers:
 transcribe 'https://www.youtube.com/watch?v=uUd7LleJuqM'
 
-# Get all videos on a channel and then download and transcribe them all:
+# Or all videos on a channel and then download and transcribe them all:
 list_channel 'https://www.youtube.com/@Kboges'
 transcribe
 
@@ -113,13 +113,14 @@ transcribe_format_summarize_annotate_video 'https://www.youtube.com/watch?v=juD9
 webpage_config
 # Edit the config if desired:
 edit
-# Now generate the webpage
+# Now generate the webpage:
 webpage_generate
 # And look at it in the browser:
 show
 
 # Combine several of the above actions in a sequence action:
 transcribe_and_format_video_with_description 'https://www.youtube.com/watch?v=XRQnWomofIY'
+show
 ```
 
 ## Other Ways to Run kmd
@@ -180,6 +181,9 @@ poetry build
 pytest
 # Just one file, with outputs:
 pytest -s kmd/text_docs/text_doc.py
+
+# Fix formatting/linkting issues:
+ruff check --fix
 
 # Upgrade packages:
 poetry up

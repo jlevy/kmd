@@ -1,4 +1,4 @@
-from typing import List, Type, Tuple, Callable
+from typing import List, Type, Tuple, Callable, Dict
 from kmd.model.actions_model import ANY_ARGS, ONE_ARG, Action, ForEachItemAction
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError
@@ -25,11 +25,11 @@ def each_item_wrapper(action: Action) -> Action:
         def run_item(self, item: Item) -> Item:
             result_items = action.run([item]).items
             if len(result_items) < 1:
-                raise ContentError(f"Action {action.name} returned no items")
+                raise ContentError(f"Action `{action.name}` returned no items")
             return result_items[0]
 
     if action.expected_args != ONE_ARG:
-        raise ValueError(f"Action {action.name} must expect exactly one argument")
+        raise ValueError(f"Action `{action.name}` must expect exactly one argument")
 
     return EachItemWrapper(
         name=action.name,
@@ -66,7 +66,7 @@ def kmd_action_wrapped(wrapper: ActionWrapper) -> Callable[[Type[Action]], Type[
     return decorator
 
 
-def instantiate_actions() -> dict[str, Action]:
+def instantiate_actions() -> Dict[str, Action]:
     actions_map = {}
     for cls, wrapper in _actions:
         action: Action = wrapper(cls())  # type: ignore

@@ -442,7 +442,6 @@ _expected_doc = dedent(
 
 
 def test_normalize_markdown():
-
     parsed = marko.parse(_original_doc)
     print("---Parsed")
     print(parsed)

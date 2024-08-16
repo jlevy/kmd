@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Type
+from typing import Dict, Optional, Any, Type, List
 from kmd.config.logger import get_logger
 from kmd.config.settings import DEFAULT_CAREFUL_MODEL, DEFAULT_FAST_MODEL
 from kmd.model.constants import LANGUAGE_LIST
@@ -19,7 +19,7 @@ class Param:
 
     name: str
     description: Optional[str] = None
-    valid_values: Optional[list[str]] = None
+    valid_values: Optional[List[str]] = None
     default_value: Optional[str] = None
     type: Type = str
 

@@ -96,19 +96,19 @@ class Paragraph:
         return reversed(enum_sents) if reverse else enum_sents
 
     def size(self, unit: TextUnit) -> int:
-        if unit == TextUnit.PARAGRAPHS:
+        if unit == TextUnit.paragraphs:
             return 1
-        if unit == TextUnit.SENTENCES:
+        if unit == TextUnit.sentences:
             return len(self.sentences)
 
         base_size = sum(sent.size(unit) for sent in self.sentences)
-        if unit == TextUnit.BYTES:
+        if unit == TextUnit.bytes:
             return base_size + (len(self.sentences) - 1) * size_in_bytes(SENT_BR_STR)
-        if unit == TextUnit.CHARS:
+        if unit == TextUnit.chars:
             return base_size + (len(self.sentences) - 1) * len(SENT_BR_STR)
-        if unit == TextUnit.WORDS:
+        if unit == TextUnit.words:
             return base_size
-        if unit == TextUnit.WORDTOKS:
+        if unit == TextUnit.wordtoks:
             return base_size + (len(self.sentences) - 1)
 
         raise ValueError(f"Unsupported unit for Paragraph: {unit}")
@@ -191,16 +191,16 @@ class TextDoc:
         last_fit_index = None
         last_fit_offset = 0
 
-        if unit == TextUnit.BYTES:
+        if unit == TextUnit.bytes:
             size_sent_break = size_in_bytes(SENT_BR_STR)
             size_para_break = size_in_bytes(PARA_BR_STR)
-        elif unit == TextUnit.CHARS:
+        elif unit == TextUnit.chars:
             size_sent_break = len(SENT_BR_STR)
             size_para_break = len(PARA_BR_STR)
-        elif unit == TextUnit.WORDS:
+        elif unit == TextUnit.words:
             size_sent_break = 0
             size_para_break = 0
-        elif unit == TextUnit.WORDTOKS:
+        elif unit == TextUnit.wordtoks:
             size_sent_break = 1
             size_para_break = 1
         else:
@@ -296,25 +296,25 @@ class TextDoc:
             last_para.sentences.append(sent)
 
     def size(self, unit: TextUnit) -> int:
-        if unit == TextUnit.PARAGRAPHS:
+        if unit == TextUnit.paragraphs:
             return len(self.paragraphs)
-        if unit == TextUnit.SENTENCES:
+        if unit == TextUnit.sentences:
             return sum(len(para.sentences) for para in self.paragraphs)
 
         base_size = sum(para.size(unit) for para in self.paragraphs)
-        if unit == TextUnit.BYTES:
+        if unit == TextUnit.bytes:
             return base_size + (len(self.paragraphs) - 1) * size_in_bytes(PARA_BR_STR)
-        if unit == TextUnit.CHARS:
+        if unit == TextUnit.chars:
             return base_size + (len(self.paragraphs) - 1) * len(PARA_BR_STR)
-        if unit == TextUnit.WORDS:
+        if unit == TextUnit.words:
             return base_size
-        if unit == TextUnit.WORDTOKS:
+        if unit == TextUnit.wordtoks:
             return base_size + (len(self.paragraphs) - 1)
 
         raise ValueError(f"Unsupported unit for TextDoc: {unit}")
 
     def size_summary(self) -> str:
-        return f"{self.size(TextUnit.BYTES)} bytes ({self.size(TextUnit.PARAGRAPHS)} paragraphs, {self.size(TextUnit.SENTENCES)} sentences, {self.size(TextUnit.WORDS)} words, {self.size(TextUnit.WORDTOKS)} wordtoks)"
+        return f"{self.size(TextUnit.bytes)} bytes ({self.size(TextUnit.paragraphs)} paragraphs, {self.size(TextUnit.sentences)} sentences, {self.size(TextUnit.words)} words, {self.size(TextUnit.wordtoks)} wordtoks)"
 
     def as_wordtok_to_sent(self, bof_eof=False) -> Generator[Tuple[str, SentIndex], None, None]:
         if bof_eof:
@@ -433,19 +433,19 @@ def test_seek_doc():
     doc = TextDoc.from_text(_simple_test_doc)
 
     offset = 1
-    sent_index, sent_offset = doc.seek_to_sent(offset, TextUnit.BYTES)
+    sent_index, sent_offset = doc.seek_to_sent(offset, TextUnit.bytes)
     print(f"Seeked to {sent_index} offset {sent_offset} for offset {offset} bytes")
     assert sent_index == SentIndex(para_index=0, sent_index=0)
     assert sent_offset == 0
 
     offset = len("This is the first paragraph.")
-    sent_index, sent_offset = doc.seek_to_sent(offset, TextUnit.BYTES)
+    sent_index, sent_offset = doc.seek_to_sent(offset, TextUnit.bytes)
     print(f"Seeked to {sent_index} offset {sent_offset} for offset {offset} bytes")
     assert sent_index == SentIndex(para_index=0, sent_index=0)
     assert sent_offset == 0
 
     offset = len("This is the first paragraph. ")
-    sent_index, sent_offset = doc.seek_to_sent(offset, TextUnit.BYTES)
+    sent_index, sent_offset = doc.seek_to_sent(offset, TextUnit.bytes)
     print(f"Seeked to {sent_index} offset {sent_offset} for offset {offset} bytes")
     assert sent_index == SentIndex(para_index=0, sent_index=1)
     assert sent_offset == offset
@@ -453,13 +453,13 @@ def test_seek_doc():
     offset = len(
         "This is the first paragraph. It has multiple sentences.\n\nThis is the second paragraph."
     )
-    sent_index, sent_offset = doc.seek_to_sent(offset, TextUnit.BYTES)
+    sent_index, sent_offset = doc.seek_to_sent(offset, TextUnit.bytes)
     print(f"Seeked to {sent_index} offset {sent_offset} for offset {offset} bytes")
     assert sent_index == SentIndex(para_index=1, sent_index=0)
     assert sent_offset == len("This is the first paragraph. It has multiple sentences.\n\n")
 
     offset = len(_simple_test_doc) + 10
-    sent_index, sent_offset = doc.seek_to_sent(offset, TextUnit.BYTES)
+    sent_index, sent_offset = doc.seek_to_sent(offset, TextUnit.bytes)
     print(f"Seeked to {sent_index} offset {sent_offset} for offset {offset} bytes")
     assert sent_index == SentIndex(para_index=2, sent_index=2)
 
@@ -477,7 +477,6 @@ _short_test_doc = dedent(
 
 
 def test_sub_doc():
-
     doc = TextDoc.from_text(_short_test_doc)
 
     sub_doc_start = SentIndex(1, 1)
@@ -563,7 +562,6 @@ _sentence_test_html = 'This is <span data-timestamp="1.234">a test</span>.'
 
 
 def test_wordtokization():
-
     for sentence in _sentence_tests:
         wordtoks = raw_text_to_wordtoks(sentence)
         reassembled_sentence = "".join(wordtoks)

@@ -109,7 +109,6 @@ def collect_param_info(func: Callable[..., Any]) -> ParamInfo:
 
 
 def test_inspect_function_params():
-
     def func0(path: Optional[str] = None) -> List:
         return [path]
 

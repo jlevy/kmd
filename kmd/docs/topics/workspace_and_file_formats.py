@@ -30,7 +30,7 @@ File formats and conventions:
   HTML. A common use case is to add `<span>` or `<div>` tags to wrap sections of
   the document with semantic meaning. Any HTML can be used but some conventions
   are helpful:
-  
+
 
   - Timestamps from a transcription: `<span data-timestamp="12.34">Some
     trancribed text.</span>`

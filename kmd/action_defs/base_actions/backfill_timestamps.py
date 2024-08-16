@@ -31,23 +31,22 @@ class BackfillSourceTimestamps(CachedItemAction):
             """,
             expected_args=ONE_OR_MORE_ARGS,
             precondition=is_readable_text & ~is_timestamped_text,
-            chunk_unit=TextUnit.PARAGRAPHS,
+            chunk_unit=TextUnit.paragraphs,
         )
 
-        if self.chunk_unit not in (TextUnit.SENTENCES, TextUnit.PARAGRAPHS):
+        if self.chunk_unit not in (TextUnit.sentences, TextUnit.paragraphs):
             raise InvalidInput(
                 f"Only support sentences and paragraphs for chunk unit: {self.chunk_unit}"
             )
 
-        if self.chunk_unit == TextUnit.SENTENCES:
+        if self.chunk_unit == TextUnit.sentences:
             self.citation_tokens = [SENT_BR_TOK, PARA_BR_TOK, EOF_TOK]
-        elif self.chunk_unit == TextUnit.PARAGRAPHS:
+        elif self.chunk_unit == TextUnit.paragraphs:
             self.citation_tokens = [PARA_BR_TOK, EOF_TOK]
         else:
             raise UnexpectedError(f"Invalid text unit: {self.chunk_unit}")
 
     def run_item(self, item: Item) -> Item:
-
         source_item = find_upstream_item(item, is_timestamped_text)
 
         source_url = source_item.url
@@ -93,7 +92,7 @@ class BackfillSourceTimestamps(CachedItemAction):
             if wordtok in self.citation_tokens:
                 # If we're inserting citations at paragraph breaks, we need to back up to the beginning of the paragraph.
                 # If we're inserting citations at sentence breaks, we can just use the per-sentence timestamps.
-                if self.chunk_unit == TextUnit.PARAGRAPHS:
+                if self.chunk_unit == TextUnit.paragraphs:
                     start_para_index, start_para_wordtok = (
                         search_tokens(item_wordtoks)
                         .at(wordtok_offset)

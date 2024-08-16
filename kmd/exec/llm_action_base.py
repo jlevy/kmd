@@ -36,7 +36,6 @@ def _sliding_llm_transform(
     windowing: Optional[WindowSettings],
     diff_filter: DiffFilter,
 ) -> str:
-
     def llm_transform(input_doc: TextDoc) -> TextDoc:
         return TextDoc.from_text(
             llm_completion(

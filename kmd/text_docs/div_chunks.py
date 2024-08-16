@@ -124,14 +124,13 @@ _med_test_doc = dedent(
 
 
 def test_chunk_paras_as_divs():
-
-    assert chunk_paras_into_divs("", 7, TextUnit.WORDS) == ""
+    assert chunk_paras_into_divs("", 7, TextUnit.words) == ""
     assert (
-        chunk_paras_into_divs("hello", 100, TextUnit.WORDS)
+        chunk_paras_into_divs("hello", 100, TextUnit.words)
         == '<div class="chunk">\n\nhello\n\n</div>'
     )
 
-    chunked = chunk_paras_into_divs(_med_test_doc, 7, TextUnit.WORDS)
+    chunked = chunk_paras_into_divs(_med_test_doc, 7, TextUnit.words)
 
     print(chunked)
 

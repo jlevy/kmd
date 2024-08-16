@@ -3,7 +3,7 @@ Storage and caching of downloaded and processed web pages.
 """
 
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Optional, List, Dict
 import os
 from os import path
 import time
@@ -72,8 +72,8 @@ class DirStore:
         return local_path if path.exists(local_path) else None
 
     def find_all(
-        self, keys: list[str], folder: Optional[str] = None, suffix: Optional[str] = None
-    ) -> dict[str, Optional[Path]]:
+        self, keys: List[str], folder: Optional[str] = None, suffix: Optional[str] = None
+    ) -> Dict[str, Optional[Path]]:
         """
         Look up all existing cached results for the set of keys. This should work fine but could
         be optimized for large batches.

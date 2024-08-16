@@ -2,7 +2,7 @@ import os
 import re
 from pathlib import Path
 import time
-from typing import Generator, List, Optional, Tuple
+from typing import Generator, List, Optional, Tuple, Dict
 from os.path import join, relpath, commonpath
 from os import path
 from slugify import slugify
@@ -131,7 +131,7 @@ class FileStore:
 
         # TODO: Move this to its own IdentifierIndex class, and make it exactly mirror disk state.
         self.uniquifier = Uniquifier()
-        self.id_map: dict[ItemId, StorePath] = {}
+        self.id_map: Dict[ItemId, StorePath] = {}
 
         self._id_index_init()
 
@@ -466,14 +466,14 @@ class FileStore:
         move_file(self.archive_dir / store_path, original_path)
         return StorePath(store_path)
 
-    def set_selection(self, selection: list[StorePath]):
+    def set_selection(self, selection: List[StorePath]):
         for store_path in selection:
             if not (self.base_dir / store_path).exists():
                 raise FileNotFoundError(f"Selection not found: {store_path}")
 
         self.selection.set(selection)
 
-    def get_selection(self) -> list[StorePath]:
+    def get_selection(self) -> List[StorePath]:
         try:
             store_paths = self.selection.read()
             filtered_store_paths = [StorePath(path) for path in store_paths if self.exists(path)]
@@ -486,7 +486,7 @@ class FileStore:
         except OSError:
             raise InvalidStoreState("No selection saved in workspace")
 
-    def unselect(self, unselect_paths: list[StorePath]):
+    def unselect(self, unselect_paths: List[StorePath]):
         current_selection = self.get_selection()
         new_selection = [path for path in current_selection if path not in unselect_paths]
         self.set_selection(new_selection)

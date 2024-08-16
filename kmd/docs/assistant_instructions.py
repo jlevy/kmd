@@ -71,7 +71,7 @@ Always follow these guidelines:
 
 - If they ask for a task where the requirements are unclear, ask for additional
   details on what is needed.
-  
+
 - If they ask for a task that is not covered by the current set of actions, you
   may suggest adding a new action and give the source for a new `Action` subclass
   or a call to `register_llm_action()`.

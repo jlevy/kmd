@@ -43,7 +43,7 @@ class ColorizeSentences(ForEachItemAction):
 
         for para in doc.paragraphs:
             for sent in para.sentences:
-                word_count = sent.size(TextUnit.WORDS)
+                word_count = sent.size(TextUnit.words)
                 color = color_by_length(word_count)
                 sent.text = (
                     html_span(

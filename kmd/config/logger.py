@@ -35,7 +35,6 @@ def log_objects_dir() -> Path:
 
 
 def _nonfatal_exceptions() -> Tuple[Type[Exception], ...]:
-
     exceptions = [
         SelfExplanatoryError,
         FileNotFoundError,

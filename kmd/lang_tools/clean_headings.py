@@ -38,7 +38,6 @@ def clean_heading(heading: str) -> str:
 
 
 def summary_heading(values: List[str]) -> str:
-
     return llm_completion(
         DEFAULT_FAST_MODEL,
         system_message=LLMMessage(

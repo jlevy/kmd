@@ -17,7 +17,6 @@ GLOBAL_CACHE_NAME = "kmd_cache"
 
 @dataclass
 class Settings:
-
     media_cache_dir: Path
     """The media cache directory."""
 

@@ -22,23 +22,23 @@ class TextUnit(Enum):
     Text units of measure.
     """
 
-    BYTES = "bytes"
-    CHARS = "chars"
-    WORDS = "words"
-    WORDTOKS = "wordtoks"
-    PARAGRAPHS = "paragraphs"
-    SENTENCES = "sentences"
+    bytes = "bytes"
+    chars = "chars"
+    words = "words"
+    wordtoks = "wordtoks"
+    paragraphs = "paragraphs"
+    sentences = "sentences"
 
 
 def size(text: str, unit: TextUnit) -> int:
-    if unit == TextUnit.BYTES:
+    if unit == TextUnit.bytes:
         return size_in_bytes(text)
-    elif unit == TextUnit.CHARS:
+    elif unit == TextUnit.chars:
         return len(text)
-    elif unit == TextUnit.WORDS:
+    elif unit == TextUnit.words:
         # Roughly accurate for HTML, text, or Markdown docs.
         return len(html_to_plaintext(text).split())
-    elif unit == TextUnit.WORDTOKS:
+    elif unit == TextUnit.wordtoks:
         return size_in_wordtoks(text)
     else:
         raise UnexpectedError(f"Unsupported unit for string: {unit}")

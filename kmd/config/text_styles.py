@@ -76,7 +76,7 @@ COLOR_ACTION_TEXT = "bold default"
 
 ## Formatting
 
-NBSP = "\u00A0"
+NBSP = "\u00a0"
 
 HRULE = ("⋯ " * (CONSOLE_WRAP_WIDTH // 2)).strip()
 

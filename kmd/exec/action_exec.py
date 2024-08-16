@@ -171,7 +171,7 @@ def run_action(
         # Log info.
         log.info("Action `%s` result: %s", action_name, result)
         log.message(
-            "%s Action done: %s completed with %s %s",
+            "%s Action done: `%s` completed with %s %s",
             EMOJI_CALL_END,
             action_name,
             len(result.items),

@@ -171,7 +171,6 @@ def tally_calls(
     log_func = getattr(log, level.lower())
 
     def decorator(func):
-
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             start_time = time.time()

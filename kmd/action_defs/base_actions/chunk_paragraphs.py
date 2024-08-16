@@ -22,7 +22,7 @@ class ChunkParagraphs(CachedItemAction):
             expected_args=ONE_OR_MORE_ARGS,
             precondition=is_readable_text,
             chunk_size=2000,
-            chunk_unit=TextUnit.WORDS,
+            chunk_unit=TextUnit.words,
         )
 
     def run_item(self, item: Item) -> Item:

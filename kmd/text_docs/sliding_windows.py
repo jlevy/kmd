@@ -86,7 +86,7 @@ def test_sliding_window():
     window_size = 80
     window_shift = 60
 
-    windows = list(sliding_word_window(doc, window_size, window_shift, TextUnit.BYTES))
+    windows = list(sliding_word_window(doc, window_size, window_shift, TextUnit.bytes))
     pprint(windows)
 
     sentence_windows = [
@@ -103,9 +103,9 @@ def test_sliding_window():
     for sub_doc in windows:
         sub_text = sub_doc.reassemble()
 
-        print(f"\n\n---Sub-document length {size(sub_text, TextUnit.BYTES)}")
+        print(f"\n\n---Sub-document length {size(sub_text, TextUnit.bytes)}")
         pprint(sub_text)
 
-        assert size(sub_text, TextUnit.BYTES) <= window_size
+        assert size(sub_text, TextUnit.bytes) <= window_size
 
         assert sub_text in doc.reassemble()

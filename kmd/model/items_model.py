@@ -6,7 +6,7 @@ from dataclasses import asdict, dataclass, field, fields, replace
 import dataclasses
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional, Tuple, Type, TypeVar
+from typing import Any, List, Optional, Tuple, Type, TypeVar, Dict
 from kmd.config.logger import get_logger
 from kmd.model.graph_model import Link, Node
 from kmd.model.media_model import MediaMetadata
@@ -178,12 +178,12 @@ class ItemRelations:
     Relations of a given item to other items.
     """
 
-    derived_from: Optional[list[Locator]] = None
+    derived_from: Optional[List[Locator]] = None
 
     # TODO: Other relations.
-    # citations: Optional[list[Locator]] = None
-    # named_entities: Optional[list[Locator]] = None
-    # related_concepts: Optional[list[Locator]] = None
+    # citations: Optional[List[Locator]] = None
+    # named_entities: Optional[List[Locator]] = None
+    # related_concepts: Optional[List[Locator]] = None
 
 
 UNTITLED = "Untitled"
@@ -247,7 +247,7 @@ class Item:
             self.relations = ItemRelations(**self.relations)
 
     @classmethod
-    def from_dict(cls, item_dict: dict[str, Any], **kwargs) -> "Item":
+    def from_dict(cls, item_dict: Dict[str, Any], **kwargs) -> "Item":
         """
         Deserialize fields from a dict that may incude string and dict values.
         """

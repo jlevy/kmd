@@ -41,5 +41,5 @@ def reload_all_actions(base_only: bool = False) -> Dict[str, Action]:
 def look_up_action(action_name: str, base_only: bool = False) -> Action:
     actions = load_all_actions(base_only=base_only)
     if action_name not in actions:
-        raise InvalidInput(f"Action not found: {action_name}")
+        raise InvalidInput(f"Action not found: `{action_name}`")
     return actions[action_name]

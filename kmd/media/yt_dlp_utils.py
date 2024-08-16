@@ -1,7 +1,7 @@
 from datetime import date
 import os
 import tempfile
-from typing import Any
+from typing import Any, Dict
 import yt_dlp
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ApiResultError
@@ -20,7 +20,7 @@ def parse_date(upload_date: str | date) -> date:
     raise ValueError(f"Invalid date: {upload_date}")
 
 
-def ydl_extract_info(url: Url) -> dict[str, Any]:
+def ydl_extract_info(url: Url) -> Dict[str, Any]:
     ydl_opts = {
         "extract_flat": "in_playlist",  # Extract metadata only, without downloading.
         "quiet": True,

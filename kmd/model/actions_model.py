@@ -127,16 +127,16 @@ class Action(ABC):
 
     def validate_args(self, args: List[str]) -> None:
         if len(args) != 0 and self.expected_args == NO_ARGS:
-            raise InvalidInput(f"Action {self.name} does not expect any arguments")
+            raise InvalidInput(f"Action `{self.name}` does not expect any arguments")
         if len(args) != 1 and self.expected_args == ONE_ARG:
-            raise InvalidInput(f"Action {self.name} expects exactly one argument")
+            raise InvalidInput(f"Action `{self.name}` expects exactly one argument")
         if self.expected_args.max_args is not None and len(args) > self.expected_args.max_args:
             raise InvalidInput(
-                f"Action {self.name} expects at most {self.expected_args.max_args} arguments"
+                f"Action `{self.name}` expects at most {self.expected_args.max_args} arguments"
             )
         if self.expected_args.min_args is not None and len(args) < self.expected_args.min_args:
             raise InvalidInput(
-                f"Action {self.name} expects at least {self.expected_args.min_args} arguments"
+                f"Action `{self.name}` expects at least {self.expected_args.min_args} arguments"
             )
 
     def validate_precondition(self, items: ActionInput) -> None:
