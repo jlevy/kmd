@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import copy
 from dataclasses import dataclass, field, fields
+from enum import Enum
 from textwrap import dedent
 from typing import Any, Dict, List, Optional
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_logger
@@ -94,14 +95,6 @@ class Action(ABC):
     interactive_input: bool = False
     """Does this action ask for input interactively?"""
 
-    _NON_PARAM_FIELDS = [
-        "name",
-        "description",
-        "precondition",
-        "expected_args",
-        "interactive_input",
-    ]
-
     # These are set if they make sense, i.e. it's an LLM action.
     model: Optional[LLM] = None
     language: Optional[str] = None
@@ -110,6 +103,23 @@ class Action(ABC):
     title_template: Optional[TitleTemplate] = None
     template: Optional[LLMTemplate] = None
     system_message: Optional[LLMMessage] = None
+
+    _NON_PARAM_FIELDS = [
+        "name",
+        "description",
+        "precondition",
+        "expected_args",
+        "interactive_input",
+    ]
+
+    # Long fields we don't want to include in the summary.
+    _NON_SUMMARY_FIELDS = [
+        "title_template",
+        "template",
+        "system_message",
+        "title_template",
+        "windowing",
+    ]
 
     def __post_init__(self):
         # Class is frozen but we do want to update the description.
@@ -143,11 +153,26 @@ class Action(ABC):
     def params(self) -> List[Param]:
         return [ALL_COMMON_PARAMS.get(name) or Param(name, type=str) for name in self.param_names()]
 
-    def nondefault_params(self):
+    def param_summary(self) -> Dict[str, str]:
+        """
+        Readable, serializable summary of the action's non-default parameters.
+        """
+
+        def stringify(value: Any) -> str:
+            if isinstance(value, Enum):
+                return value.name
+            return str(value)
+
+        summary_param_names = sorted(
+            set(f.name for f in fields(self) if not f.name.startswith("_"))
+            - set(self._NON_PARAM_FIELDS)
+            - set(self._NON_SUMMARY_FIELDS)
+        )
         changed_params: Dict[str, Any] = {}
-        for param_name in self.param_names():
-            if getattr(self, param_name):
-                changed_params[param_name] = getattr(self, param_name)
+        for param_name in summary_param_names:
+            value = getattr(self, param_name)
+            if value:
+                changed_params[param_name] = stringify(value)
         return changed_params
 
     def update_with_params(self, param_values: ParamValues, strict: bool = False) -> "Action":

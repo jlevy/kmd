@@ -12,7 +12,7 @@ from kmd.model.items_model import Format
 from kmd.text_docs.window_settings import WINDOW_BR, WINDOW_BR_SEP, WindowSettings
 from kmd.text_formatting.markdown_normalization import normalize_markdown
 from kmd.text_docs.sliding_windows import sliding_para_window, sliding_word_window
-from kmd.text_docs.text_diffs import ALL_CHANGES, DiffOpFilter, diff_docs, find_best_alignment
+from kmd.text_docs.text_diffs import DiffFilter, diff_docs, filter_accept_all, find_best_alignment
 from kmd.text_docs.text_doc import (
     Paragraph,
     TextDoc,
@@ -39,7 +39,7 @@ def filtered_transform(
     doc: TextDoc,
     transform_func: TextDocTransform,
     windowing: Optional[WindowSettings],
-    diff_filter: DiffOpFilter = ALL_CHANGES,
+    diff_filter: DiffFilter = filter_accept_all,
 ) -> TextDoc:
     """
     Apply a transform with sliding window across the input doc, enforcing the changes it's

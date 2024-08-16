@@ -61,7 +61,7 @@ COLOR_WARN = "bright_red"
 
 COLOR_ERROR = "bright_red"
 
-COLOR_PROCESS = "cyan"
+COLOR_ACTION = "magenta"
 
 COLOR_SAVED = "blue"
 
@@ -69,9 +69,9 @@ COLOR_TIMING = "blue"
 
 COLOR_CALL = "yellow"
 
-COLOR_COMMAND = "bold default"
+COLOR_COMMAND_TEXT = "bold default"
 
-COLOR_ACTION = "bold default"
+COLOR_ACTION_TEXT = "bold default"
 
 
 ## Formatting
@@ -146,7 +146,7 @@ class KmdHighlighter(RegexHighlighter):
             r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
             r"(?P<code_span>`[^`]+`)",
             # Emoji colors:
-            f"(?P<process>{EMOJI_ACTION})",
+            f"(?P<action>{EMOJI_ACTION})",
             f"(?P<success>{EMOJI_SUCCESS})",
             f"(?P<timing>{EMOJI_TIMING})",
             f"(?P<warn>{EMOJI_WARN})",
@@ -196,7 +196,7 @@ RICH_STYLES = {
     "kmd.path": Style(color=COLOR_PATH),
     "kmd.filename": Style(color=COLOR_VALUE),
     # Emoji colors:
-    "kmd.process": Style(color=COLOR_PROCESS, bold=True),
+    "kmd.action": Style(color=COLOR_ACTION, bold=True),
     "kmd.success": Style(color=COLOR_SUCCESSS, bold=True),
     "kmd.timing": Style(color=COLOR_TIMING, bold=True),
     "kmd.warn": Style(color=COLOR_WARN, bold=True),

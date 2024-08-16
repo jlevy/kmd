@@ -16,7 +16,7 @@ from kmd.model.language_models import LLM
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import has_div_chunks, is_readable_text
 from kmd.text_docs.div_chunks import parse_chunk_divs, chunk_wrapper
-from kmd.text_docs.text_diffs import ALL_CHANGES, DiffOpFilter
+from kmd.text_docs.text_diffs import DiffFilterType, DiffFilter
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.sliding_transforms import (
     WindowSettings,
@@ -34,7 +34,7 @@ def _sliding_llm_transform(
     template: LLMTemplate,
     input: str,
     windowing: Optional[WindowSettings],
-    diff_filter: DiffOpFilter,
+    diff_filter: DiffFilter,
 ) -> str:
 
     def llm_transform(input_doc: TextDoc) -> TextDoc:
@@ -59,7 +59,7 @@ class LLMAction(CachedItemAction):
     precondition: Precondition = is_readable_text
 
     windowing: Optional[WindowSettings] = None
-    diff_filter: Optional[DiffOpFilter] = None
+    diff_filter: Optional[DiffFilterType] = None
 
     def run_item(self, item: Item) -> Item:
         return run_llm_transform(self, item)
@@ -91,13 +91,14 @@ def run_llm_transform(action: LLMAction, item: Item) -> Item:
     result_item = item.derived_copy(body=None, format=Format.markdown)
 
     if action.windowing:
+        diff_filter = action.diff_filter or DiffFilterType.accept_all
         result_item.body = _sliding_llm_transform(
             action.model,
             action.system_message,
             action.template,
             item.body,
             action.windowing,
-            action.diff_filter or ALL_CHANGES,
+            diff_filter.get_filter(),
         )
     else:
         result_item.body = llm_completion(

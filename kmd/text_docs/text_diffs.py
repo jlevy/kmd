@@ -90,20 +90,46 @@ class DiffStats:
         return f"add/remove +{self.added}/-{self.removed} out of {self.input_size} total"
 
 
-DiffOpFilter = Callable[[DiffOp], bool]
+DiffFilter = Callable[[DiffOp], bool]
 
-ONLY_BREAKS_AND_SPACES: DiffOpFilter = lambda diff_op: all(
-    is_break_or_space(tok) for tok in diff_op.left + diff_op.right
-)
-"""Only accepts changes to sentence and paragraph breaks and whitespace."""
 
-ONLY_PUNCT_AND_SPACES: DiffOpFilter = lambda diff_op: all(
-    not is_word(tok) for tok in diff_op.left + diff_op.right
-)
-"""Only accepts changes to punctuation and whitespace."""
+def filter_only_breaks_and_spaces(diff_op: DiffOp) -> bool:
+    return all(is_break_or_space(tok) for tok in diff_op.left + diff_op.right)
 
-ALL_CHANGES: DiffOpFilter = lambda diff_op: True
-"""Accepts all changes."""
+
+def filter_only_punct_and_spaces(diff_op: DiffOp) -> bool:
+    return all(not is_word(tok) for tok in diff_op.left + diff_op.right)
+
+
+def filter_accept_all(diff_op: DiffOp) -> bool:
+    return True
+
+
+class DiffFilterType(Enum):
+    """
+    Enum for different types of diff filters. Helps make these serializable.
+    """
+
+    only_breaks_and_spaces = "only_breaks_and_spaces"
+    """Only accepts changes to sentence and paragraph breaks and whitespace."""
+
+    only_punct_and_spaces = "only_punct_and_spaces"
+    """Only accepts changes to punctuation and whitespace."""
+
+    accept_all = "accept_all"
+    """Accepts all changes."""
+
+    def get_filter(self) -> DiffFilter:
+        filter_map = {
+            DiffFilterType.only_breaks_and_spaces: filter_only_breaks_and_spaces,
+            DiffFilterType.only_punct_and_spaces: filter_only_punct_and_spaces,
+            DiffFilterType.accept_all: filter_accept_all,
+        }
+
+        try:
+            return filter_map[self]
+        except KeyError:
+            raise ValueError(f"Unknown DiffFilterType: {self}")
 
 
 @dataclass
@@ -148,7 +174,7 @@ class TextDiff:
 
         return result
 
-    def filter(self, accept_fn: DiffOpFilter) -> Tuple["TextDiff", "TextDiff"]:
+    def filter(self, accept_fn: DiffFilter) -> Tuple["TextDiff", "TextDiff"]:
         """
         Return two diffs, one that only has accepted operations and one that only has
         rejected operations.
@@ -438,7 +464,7 @@ def test_filter_br_and_space():
 
     diff = diff_wordtoks(wordtoks1, wordtoks2)
 
-    accepted, rejected = diff.filter(ONLY_BREAKS_AND_SPACES)
+    accepted, rejected = diff.filter(DiffFilterType.only_breaks_and_spaces.get_filter())
 
     accepted_result = accepted.apply_to(wordtoks1)
     rejected_result = rejected.apply_to(wordtoks1)

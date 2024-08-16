@@ -5,7 +5,7 @@ from kmd.config.logger import get_logger
 from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
 from kmd.model.language_models import LLM
 from kmd.text_docs.sliding_transforms import WindowSettings
-from kmd.text_docs.text_diffs import DiffOpFilter
+from kmd.text_docs.text_diffs import DiffFilterType
 
 log = get_logger(__name__)
 
@@ -18,7 +18,7 @@ def define_llm_action(
     template: LLMTemplate,
     title_template: TitleTemplate = TitleTemplate("{title}"),
     windowing: Optional[WindowSettings] = None,
-    diff_filter: Optional[DiffOpFilter] = None,
+    diff_filter: Optional[DiffFilterType] = None,
     **kwargs,
 ):
     """

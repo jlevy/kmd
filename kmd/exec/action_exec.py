@@ -88,7 +88,7 @@ def run_action(
     # If the inputs are paths, record the input paths with hashes.
     # TODO: Also save the parameters/options that were used.
     inputs = [Input(StorePath(arg), ws.hash(StorePath(arg))) for arg in args if is_store_path(arg)]
-    operation = Operation(action_name, inputs, action.nondefault_params())
+    operation = Operation(action_name, inputs, action.param_summary())
     log.message("%s Action: %s", EMOJI_CALL_BEGIN, operation.command_line())
     log.info("Operation is: %s", operation)
 

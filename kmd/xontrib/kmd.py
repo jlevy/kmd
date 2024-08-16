@@ -20,8 +20,8 @@ from kmd.commands.command_registry import CommandFunction, all_commands, kmd_com
 from kmd.config.setup import setup
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import (
-    COLOR_ACTION,
-    COLOR_COMMAND,
+    COLOR_ACTION_TEXT,
+    COLOR_COMMAND_TEXT,
     EMOJI_ACTION,
     EMOJI_WARN,
     PROMPT_COLOR_NORMAL,
@@ -161,7 +161,7 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
 
         command_completions = {
             RichCompletion(
-                c.__name__, description=single_line(c.__doc__ or ""), style=COLOR_COMMAND
+                c.__name__, description=single_line(c.__doc__ or ""), style=COLOR_COMMAND_TEXT
             )
             for c in _commands.values()
             if c.__name__.startswith(prefix)
@@ -171,7 +171,7 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
                 a.name,
                 display=f"{a.name} {EMOJI_ACTION}",
                 description=single_line(a.description or ""),
-                style=COLOR_ACTION,
+                style=COLOR_ACTION_TEXT,
             )
             for a in _actions.values()
             if a.name.startswith(prefix)

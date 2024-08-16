@@ -2,7 +2,7 @@ from kmd.exec.action_builders import define_llm_action
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.config.settings import DEFAULT_FAST_MODEL
-from kmd.text_docs.text_diffs import ONLY_BREAKS_AND_SPACES
+from kmd.text_docs.text_diffs import DiffFilterType
 from kmd.text_docs.window_settings import WINDOW_2K_WORDTOKS
 
 
@@ -43,5 +43,5 @@ define_llm_action(
         """
     ),
     windowing=WINDOW_2K_WORDTOKS,
-    diff_filter=ONLY_BREAKS_AND_SPACES,
+    diff_filter=DiffFilterType.only_breaks_and_spaces,
 )
