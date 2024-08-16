@@ -230,6 +230,9 @@ class FileStore:
         suffix = item.get_full_suffix()
         return StorePath(folder_path / _join_filename(slug, suffix))
 
+    def reload(self):
+        self.__init__(self.base_dir)
+
     def exists(self, store_path: StorePath) -> bool:
         return (self.base_dir / store_path).exists()
 

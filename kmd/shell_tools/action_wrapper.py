@@ -1,4 +1,3 @@
-from typing import Dict, Iterable, List
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_console, get_logger
 from kmd.config.text_styles import (
     COLOR_ERROR,
@@ -8,7 +7,7 @@ from kmd.exec.action_exec import run_action
 from kmd.commands import commands
 from kmd.help.command_help import output_command_help
 from kmd.model.actions_model import Action
-from kmd.model.params_model import ALL_COMMON_PARAMS, RUNTIME_ACTION_PARAMS, Param
+from kmd.model.params_model import RUNTIME_ACTION_PARAMS
 from kmd.shell_tools.exception_printing import summarize_traceback
 from kmd.shell_tools.option_parsing import parse_shell_args
 from kmd.util.log_calls import log_tallies

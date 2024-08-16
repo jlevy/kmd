@@ -2,7 +2,6 @@ import os
 from os.path import getmtime, basename, getsize, join
 import re
 import subprocess
-from textwrap import dedent
 from typing import List, Optional, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
@@ -59,27 +58,14 @@ def welcome() -> None:
     Print a welcome message.
     """
 
+    from kmd.docs.topics.welcome import __doc__ as welcome_doc
+
     output()
     output(LOGO, color=COLOR_LOGO)
     output()
     output("Welcome to kmd.\n", color=COLOR_HEADING)
     output()
-    # output(f"\n{len(kmd_commands)} commands and {len(kmd_actions)} actions are available.")
-    output(
-        dedent(
-            """
-            Use `kmd_help` for help and available commands. Use `logs` for detailed logs.
-            Press <Tab> to autocomplete actions and commands. 
-
-            You may also simply ask a question about kmd or what you want to do. Type any
-            question (ending in ?) on the command line to invoke the kmd assistant.
-            Press `?` to get suggested questions.
-
-            Try: `what is kmd?` or `how can I transcribe a YouTube video?`
-            """
-        ).strip(),
-        text_wrap=Wrap.WRAP_FULL,
-    )
+    output(welcome_doc, text_wrap=Wrap.WRAP_FULL)
 
 
 @kmd_command
@@ -127,6 +113,18 @@ def workspace(workspace_name: Optional[str] = None) -> None:
         output_status(f"Changed to workspace: {ws_name}")
 
     current_workspace().log_store_info()
+
+
+@kmd_command
+def reload_workspace() -> None:
+    """
+    Reload the current workspace. Helpful for debugging to reset in-memory state.
+    """
+    current_workspace().reload()
+
+    output()
+    current_workspace().log_store_info()
+    output()
 
 
 @kmd_command

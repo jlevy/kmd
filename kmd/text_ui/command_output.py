@@ -61,7 +61,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
                         replace_whitespace=False,
                         break_long_words=False,
                         break_on_hyphens=False,
-                    )
+                    ).lstrip(" ")
                 )
             elif text_wrap == Wrap.WRAP_FULL:
                 wrapped_paragraphs.append(
@@ -73,7 +73,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
                         replace_whitespace=True,
                         break_long_words=False,
                         break_on_hyphens=False,
-                    )
+                    ).lstrip(" ")
                 )
             elif text_wrap == Wrap.WRAP_INDENT:
                 wrapped_paragraphs.append(
@@ -85,7 +85,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
                         replace_whitespace=True,
                         break_long_words=False,
                         break_on_hyphens=False,
-                    )
+                    ).lstrip(" ")
                 )
             elif text_wrap == Wrap.HANGING_INDENT:
                 wrapped_paragraphs.append(
@@ -97,7 +97,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
                         replace_whitespace=True,
                         break_long_words=False,
                         break_on_hyphens=False,
-                    )
+                    ).lstrip(" ")
                 )
 
         return "\n\n".join(wrapped_paragraphs)
