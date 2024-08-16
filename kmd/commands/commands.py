@@ -237,7 +237,7 @@ def param(*args: str) -> None:
         for key, value in new_key_vals.items():
             action_param = USER_SETTABLE_PARAMS[key]
             if value and action_param.valid_values and value not in action_param.valid_values:
-                raise InvalidInput(f"Unrecognized value for action parameter {key}: {value}")
+                raise InvalidInput(f"Unrecognized value for action parameter `{key}`: {value}")
 
         current_params = ws.get_params()
         new_params = {**current_params, **new_key_vals}

@@ -1,7 +1,6 @@
 from textwrap import indent
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
-    ONE_OR_MORE_ARGS,
     CachedItemAction,
 )
 from kmd.model.errors_model import ContentError, InvalidInput, UnexpectedError
@@ -29,7 +28,6 @@ class BackfillSourceTimestamps(CachedItemAction):
               Seeks through the document this doc is derived from for timestamps and inserts them
               into the text of the current doc. Source must have similar tokens.
             """,
-            expected_args=ONE_OR_MORE_ARGS,
             precondition=is_readable_text & ~is_timestamped_text,
             chunk_unit=TextUnit.paragraphs,
         )

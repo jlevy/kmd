@@ -34,11 +34,22 @@ console = get_console()
 
 class Wrap(Enum):
     NONE = "none"
-    WRAP = "wrap"  # Basic wrapping but preserves whitespace.
-    WRAP_FULL = "wrap_full"  # Also replaces whitespace.
-    WRAP_INDENT = "wrap_indent"  # Wrap and indent.
-    INDENT_ONLY = "indent_only"  # Just indent.
-    HANGING_INDENT = "hanging_indent"  # Wrap with hanging indent.
+    """No wrapping."""
+
+    WRAP = "wrap"
+    """Basic wrapping but preserves whitespace within paragraphs."""
+
+    WRAP_FULL = "wrap_full"
+    """Wraps and also normalizes whitespace."""
+
+    WRAP_INDENT = "wrap_indent"
+    """Wrap and also indent."""
+
+    INDENT_ONLY = "indent_only"
+    """Just indent."""
+
+    HANGING_INDENT = "hanging_indent"
+    """Wrap with hanging indent (indented except for the first line)."""
 
 
 def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
@@ -85,7 +96,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
                         replace_whitespace=True,
                         break_long_words=False,
                         break_on_hyphens=False,
-                    ).lstrip(" ")
+                    )
                 )
             elif text_wrap == Wrap.HANGING_INDENT:
                 wrapped_paragraphs.append(

@@ -16,6 +16,7 @@ from kmd.text_formatting.text_formatting import clean_description, format_lines
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_utils import format_key_value
 from kmd.util.string_template import StringTemplate
+from kmd.util.type_utils import instantiate_as_type
 
 
 log = get_logger(__name__)
@@ -195,7 +196,10 @@ class Action(ABC):
                     )
                     continue
 
-            # TODO: Sanity check types as well.
+            # Convert value to the appropriate type.
+            if param_name in action_param_names:
+                field_info = next(f for f in fields(self) if f.name == param_name)
+                value = instantiate_as_type(value, field_info.type)
 
             # Update the action.
             if param_name in ALL_COMMON_PARAMS and param_name in action_param_names:
@@ -233,6 +237,10 @@ class ForEachItemAction(Action):
     An action that simply processes each arg one after the other. If "non fatal" errors are
     encountered, they are reported and processing continues with the next item.
     """
+
+    def __post_init__(self):
+        super().__post_init__()
+        object.__setattr__(self, "expected_args", ONE_OR_MORE_ARGS)
 
     def run(self, items: ActionInput) -> ActionResult:
         result_items = []

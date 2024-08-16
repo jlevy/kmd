@@ -1,6 +1,5 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
-    ONE_OR_MORE_ARGS,
     ForEachItemAction,
 )
 from kmd.model.errors_model import InvalidInput
@@ -31,7 +30,6 @@ class ColorizeSentences(ForEachItemAction):
         super().__init__(
             name="colorize_sentences",
             description="Color each sentence based on its length.",
-            expected_args=ONE_OR_MORE_ARGS,
             precondition=is_readable_text,
         )
 

@@ -1,6 +1,5 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
-    ONE_OR_MORE_ARGS,
     Action,
     ActionInput,
     ActionResult,
@@ -24,7 +23,6 @@ class Concat(Action):
         super().__init__(
             name="concat",
             description="Concatenate the given text documents into a single document. Adds titles to each section.",
-            expected_args=ONE_OR_MORE_ARGS,
             precondition=has_text_body,
         )
 

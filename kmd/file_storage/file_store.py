@@ -509,7 +509,7 @@ class FileStore:
             path.abspath(self.base_dir),
             len(self.uniquifier),
         )
-        log.info("Logging to: %s", log_file().absolute())
+        log.message("Logging to: %s", log_file().absolute())
         log.info("Media cache: %s", get_settings().media_cache_dir)
         log.info("Web cache: %s", get_settings().web_cache_dir)
 

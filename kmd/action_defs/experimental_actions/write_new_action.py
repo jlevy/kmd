@@ -67,7 +67,6 @@ class WriteNewAction(LLMAction):
                                 super().__init__(
                                     name="strip_html",
                                     description="Strip HTML tags from text or Markdown.",
-                                    expected_args=ONE_OR_MORE_ARGS,
                                 )
 
                             def run_item(self, item: Item) -> Item:

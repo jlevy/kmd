@@ -1,6 +1,5 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
-    ONE_OR_MORE_ARGS,
     CachedItemAction,
 )
 from kmd.model.errors_model import InvalidInput
@@ -19,7 +18,6 @@ class ChunkParagraphs(CachedItemAction):
         super().__init__(
             name="chunk_paragraphs",
             description="Group paragraphs into chunks, demarcated by div tags.",
-            expected_args=ONE_OR_MORE_ARGS,
             precondition=is_readable_text,
             chunk_size=2000,
             chunk_unit=TextUnit.words,

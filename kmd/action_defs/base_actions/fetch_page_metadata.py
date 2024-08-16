@@ -2,7 +2,6 @@ from kmd.exec.action_registry import kmd_action
 from kmd.media import web
 from kmd.media.media_services import get_media_metadata
 from kmd.model.actions_model import (
-    ONE_OR_MORE_ARGS,
     ForEachItemAction,
 )
 from kmd.model.errors_model import InvalidInput, WebFetchError
@@ -19,7 +18,6 @@ class FetchPageMetadata(ForEachItemAction):
         super().__init__(
             name="fetch_page_metadata",
             description="Fetches a web page for title, description, and thumbnail, if available.",
-            expected_args=ONE_OR_MORE_ARGS,
             precondition=is_url,
         )
 

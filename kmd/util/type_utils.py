@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Type, TypeVar, get_args, get_origin
+from typing import Any, Dict, Optional, Type, TypeVar, Union, get_args, get_origin
 from dataclasses import is_dataclass, fields
 
 T = TypeVar("T")
@@ -67,3 +67,23 @@ def as_dataclass(dict_data: Dict[str, Any], dataclass_type: Type[T]) -> T:
             dataclass_fields[k] = v
 
     return dataclass_type(**dataclass_fields)
+
+
+def instantiate_as_type(value: Any, target_type: Type[T]) -> T | None:
+    """
+    Convert the given value to the specified target type.
+    Handles Optional or Union types by trying each possible type.
+    """
+    if value is None:
+        return None
+
+    origin = get_origin(target_type)
+    if origin is Union:
+        for arg in get_args(target_type):
+            try:
+                return arg(value)
+            except (ValueError, TypeError):
+                continue
+        raise ValueError(f"Cannot convert {value} to any type in {target_type}")
+    else:
+        return target_type(value)

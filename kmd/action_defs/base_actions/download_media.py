@@ -1,7 +1,6 @@
 from kmd.media.media_download import download_audio
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
-    ONE_OR_MORE_ARGS,
     ForEachItemAction,
 )
 from kmd.model.errors_model import InvalidInput
@@ -18,7 +17,6 @@ class DownloadMedia(ForEachItemAction):
         super().__init__(
             name="download_media",
             description="Download and save audio from a podcast or video. Only saves to media cache; does not create new items.",
-            expected_args=ONE_OR_MORE_ARGS,
             precondition=is_url,
         )
 

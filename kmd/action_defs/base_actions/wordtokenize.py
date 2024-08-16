@@ -1,6 +1,5 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
-    ONE_OR_MORE_ARGS,
     ForEachItemAction,
 )
 from kmd.model.errors_model import InvalidInput
@@ -18,7 +17,6 @@ class Wordtokenize(ForEachItemAction):
         super().__init__(
             name="wordtokenize",
             description="For debugging: Break text into word tokens.",
-            expected_args=ONE_OR_MORE_ARGS,
             precondition=has_text_body,
         )
 

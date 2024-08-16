@@ -1,5 +1,5 @@
 from kmd.exec.action_registry import kmd_action
-from kmd.model.actions_model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult
+from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import has_text_body
 from kmd.web_gen.video_gallery import video_gallery_config
@@ -13,7 +13,6 @@ class VideoGalleryConfig(Action):
         super().__init__(
             name="video_gallery_config",
             description="Set up a video gallery config with YouTube videos and their descriptions.",
-            expected_args=ONE_OR_MORE_ARGS,
             precondition=has_text_body,
         )
 
