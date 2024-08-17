@@ -238,9 +238,7 @@ class ForEachItemAction(Action):
     encountered, they are reported and processing continues with the next item.
     """
 
-    def __post_init__(self):
-        super().__post_init__()
-        object.__setattr__(self, "expected_args", ONE_OR_MORE_ARGS)
+    expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
 
     def run(self, items: ActionInput) -> ActionResult:
         result_items = []

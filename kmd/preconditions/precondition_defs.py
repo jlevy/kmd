@@ -5,7 +5,7 @@ from kmd.provenance.timestamps import TimestampExtractor
 from kmd.media.media_services import get_media_id, youtube
 from kmd.model.errors_model import PreconditionFailure
 from kmd.model.items_model import Format, Item, ItemType
-from kmd.text_chunks.div_chunks import div_begin_tag
+from kmd.text_chunks.parse_divs import div_begin_tag
 
 
 @precondition
