@@ -72,14 +72,16 @@ active (such as using `pyenv`), then:
 ./install_local.sh
 ```
 
-This does a pip install of the wheel so you can run it as `kmd`.
+This does a pip install of the wheel so you can run it as `kmd` anywhere.
 
 ## Using kmd
 
-Use `kmd_help` within the shell for full documentation.
+Tab completion is your friend! Just press tab to get lists of commands and guidance on
+help from the LLM-based assistant. Type `?` or use `kmd_help` within the shell for full
+documentation.
 
-Or just get started with some brief examples. Try these commands one at a time
-to see how it works:
+Get started with some brief examples. Try these commands one at a time to see how it
+works:
 
 ```shell
 # Set up a workspace to test things out:
@@ -136,6 +138,19 @@ kmd transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
 ```
 
 ## Tips for Use with Other Tools
+
+### Choosing a Terminal
+
+You can use any favorite terminal to run kmd, but I recommend trying a try to
+[Hyper](https://hyper.is/) with the [Hyper-K](https://github.com/jlevy/hyper-k)
+plugin.
+
+I tried half a dozen different popular terminals on Mac (Terminal, Warp, Kitty, etc.),
+and none were as easy to customize as I'd like.
+
+Hyper-K is a plugin I've written that makes using a tool like kmd much easier
+in small ways, especially by letting you click commands and file paths with
+the mouse to type them, and by easily viewing thumbnail images.
 
 ### MacOS
 

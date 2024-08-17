@@ -7,6 +7,7 @@ import dataclasses
 from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional, Tuple, Type, TypeVar, Dict
+from slugify import slugify
 from kmd.config.logger import get_logger
 from kmd.model.graph_model import Link, Node
 from kmd.model.media_model import MediaMetadata
@@ -187,6 +188,8 @@ class ItemRelations:
 
 
 UNTITLED = "Untitled"
+
+SLUG_MAX_LEN = 64
 
 
 @dataclass
@@ -430,6 +433,14 @@ class Item:
             final_text += suffix
 
         return final_text
+
+    def title_slug(self, max_len: int = SLUG_MAX_LEN) -> str:
+        """
+        Get a readable slugified version of the title for this item (may not be unique).
+        """
+        title = self.abbrev_title(max_len=max_len, with_last_op=True)
+        slug = slugify(title, max_length=max_len, separator="_")
+        return slug
 
     def abbrev_description(self, max_len: int = 1000) -> str:
         """

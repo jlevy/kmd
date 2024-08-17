@@ -1,25 +1,29 @@
 import os
-import re
 from pathlib import Path
 import time
 from typing import Generator, List, Optional, Tuple, Dict
 from os.path import join, relpath, commonpath
 from os import path
-from slugify import slugify
 from strif import copyfile_atomic
 from kmd.config.settings import get_settings
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.model.params_model import ParamValues
 from kmd.query.vector_index import WsVectorIndex
 from kmd.config.text_styles import EMOJI_SUCCESS
-from kmd.file_storage.filenames import parse_filename
+from kmd.file_storage.filenames import (
+    item_type_folder_for,
+    format_from_ext,
+    join_filename,
+    parse_check_filename,
+    parse_filename,
+    skippable_file,
+)
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.model.errors_model import InvalidFilename, InvalidStoreState
 from kmd.model.locators import StorePath
 from kmd.model.items_model import FileExt, Format, Item, ItemId, ItemType
 from kmd.model.canon_url import canonicalize_url
 from kmd.text_formatting.text_formatting import format_lines
-from kmd.lang_tools.inflection import plural
 from kmd.util.file_utils import move_file
 from kmd.util.hash_utils import hash_file
 from kmd.util.log_calls import format_duration
@@ -30,86 +34,6 @@ from kmd.config.logger import get_logger, log_file
 
 log = get_logger(__name__)
 
-
-## File Naming Conventions
-
-
-FILENAME_SLUG_MAX_LEN = 64
-
-# For folder names, note -> notes, question -> questions, etc.
-_type_to_folder = {name: plural(name) for name, _value in ItemType.__members__.items()}
-
-
-def item_type_to_folder(item_type: ItemType) -> str:
-    return _type_to_folder[item_type.name]
-
-
-def _folder_for(item: Item) -> Path:
-    """
-    Relative Path for the folder containing this item type.
-    """
-    return Path(item_type_to_folder(item.type))
-
-
-def _slug_for(item: Item) -> str:
-    """
-    Get a readable slugified version of the title for this item (may not be unique).
-    """
-    title = item.abbrev_title(max_len=FILENAME_SLUG_MAX_LEN, with_last_op=True)
-    slug = slugify(title, max_length=FILENAME_SLUG_MAX_LEN, separator="_")
-    return slug
-
-
-def _join_filename(base_slug: str, full_suffix: str) -> str:
-    return f"{base_slug}.{full_suffix}"
-
-
-## File Utilities
-
-
-def _parse_check_filename(filename: str) -> Tuple[str, ItemType, FileExt]:
-    # Python files can have only one dot (like file.py) but others should have a type
-    # (like file.resource.yml).
-    if filename.endswith(".py"):
-        dirname, name, _, ext = parse_filename(filename, expect_type_ext=False)
-        item_type = ItemType.extension.value
-    else:
-        dirname, name, item_type, ext = parse_filename(filename, expect_type_ext=True)
-    try:
-        return name, ItemType[item_type], FileExt[ext]
-    except KeyError as e:
-        raise InvalidFilename(f"Unknown type or extension for file: {filename}: {e}")
-
-
-def _format_from_ext(file_ext: FileExt) -> Optional[Format]:
-    file_ext_to_format = {
-        FileExt.html: Format.html,
-        FileExt.md: Format.markdown,
-        FileExt.txt: Format.plaintext,
-        FileExt.pdf: Format.pdf,
-        FileExt.yml: None,  # We will need to look at a YAML file to determine format.
-        FileExt.py: Format.python,
-    }
-    return file_ext_to_format[file_ext]
-
-
-_partial_file_pattern = re.compile(r".*\.partial\.[a-z0-9]+$")
-
-
-def skippable_file(filename: str) -> bool:
-    """
-    Check if a file should be skipped when processing a directory.
-    This skips .., .archive, .settings, __pycache__, .partial.xxx, etc.
-    """
-
-    return len(filename) > 1 and (
-        filename.startswith(".")
-        or filename.startswith("__")
-        or bool(_partial_file_pattern.match(filename))
-    )
-
-
-## Store Implementation
 
 ARCHIVE_DIR = ".archive"
 CACHE_DIR = ".cache"
@@ -174,11 +98,11 @@ class FileStore:
         Update metadata index with a new item.
         """
         try:
-            name, item_type, file_ext = _parse_check_filename(store_path)
+            name, item_type, file_ext = parse_check_filename(store_path)
         except InvalidFilename:
             log.debug("Skipping file with invalid name: %s", store_path)
             return
-        self.uniquifier.add(name, _join_filename(item_type.name, file_ext.name))
+        self.uniquifier.add(name, join_filename(item_type.name, file_ext.name))
 
         item = self.load(store_path)
         item_id = item.item_id()
@@ -212,23 +136,23 @@ class FileStore:
         Get a suitable filename for this item that is close to the slugified title yet also unique.
         Also return the old filename if it's different.
         """
-        slug = _slug_for(item)
+        slug = item.title_slug()
         full_suffix = item.get_full_suffix()
         # Get a unique name per item type.
         unique_slug, old_slugs = self.uniquifier.uniquify_historic(slug, full_suffix)
 
         # Suffix files with both item type and a suitable file extension.
-        new_unique_filename = _join_filename(unique_slug, full_suffix)
+        new_unique_filename = join_filename(unique_slug, full_suffix)
 
-        old_filename = _join_filename(old_slugs[0], full_suffix) if old_slugs else None
+        old_filename = join_filename(old_slugs[0], full_suffix) if old_slugs else None
 
         return new_unique_filename, old_filename
 
     def _default_path_for(self, item: Item) -> StorePath:
-        folder_path = _folder_for(item)
-        slug = _slug_for(item)
+        folder_path = item_type_folder_for(item)
+        slug = item.title_slug()
         suffix = item.get_full_suffix()
-        return StorePath(folder_path / _join_filename(slug, suffix))
+        return StorePath(folder_path / join_filename(slug, suffix))
 
     def reload(self):
         self.__init__(self.base_dir)
@@ -292,7 +216,7 @@ class FileStore:
             return store_path, None
         else:
             # We need to generate a new filename.
-            folder_path = _folder_for(item)
+            folder_path = item_type_folder_for(item)
             filename, old_filename = self._new_filename_for(item)
             store_path = folder_path / filename
 
@@ -368,13 +292,13 @@ class FileStore:
         """
         Load item at the given path.
         """
-        _name, item_type, file_ext = _parse_check_filename(store_path)
+        _name, item_type, file_ext = parse_check_filename(store_path)
         if FileExt.is_text(file_ext):
             # This is a known text format or a YAML file, so we can read the whole thing.
             return read_item(self.base_dir / store_path, self.base_dir)
         else:
             # This is a PDF or other binary file, so we just return the metadata.
-            format = _format_from_ext(file_ext)
+            format = format_from_ext(file_ext)
             return Item(
                 type=item_type,
                 external_path=str(self.base_dir / store_path),
