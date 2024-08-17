@@ -9,13 +9,14 @@ from kmd.model.actions_model import (
     CachedItemAction,
 )
 from kmd.model.errors_model import InvalidInput, UnexpectedError
+from kmd.model.html_conventions import CHUNK
 from kmd.model.items_model import UNTITLED, Format, Item
 from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.model.language_models import LLM
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import has_div_chunks, is_readable_text
-from kmd.text_docs.div_chunks import parse_chunk_divs, chunk_wrapper
+from kmd.text_chunks.div_chunks import parse_chunk_divs, chunk_wrapper
 from kmd.text_docs.text_diffs import DiffFilterType, DiffFilter
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.sliding_transforms import (
@@ -133,12 +134,12 @@ class ChunkedLLMAction(LLMAction):
             raise UnexpectedError("LLM action missing parameters")
 
         output = []
-        for chunk in parse_chunk_divs(item.body):
+        for chunk in parse_chunk_divs(item.body, CHUNK):
             llm_response = llm_completion(
                 self.model,
                 system_message=self.system_message,
                 template=self.template,
-                input=chunk.content,
+                input=chunk.content(),
             )
 
             output.append(
@@ -146,7 +147,7 @@ class ChunkedLLMAction(LLMAction):
                     join_blocks(
                         html_div(llm_response, self.result_class_name, padding="\n\n"),
                         html_div(
-                            chunk.content, self.original_class_name, safe=True, padding="\n\n"
+                            chunk.content(), self.original_class_name, safe=True, padding="\n\n"
                         ),
                     )
                 )

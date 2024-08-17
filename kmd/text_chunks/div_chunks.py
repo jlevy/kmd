@@ -2,13 +2,16 @@ from dataclasses import dataclass
 import re
 from textwrap import dedent
 from typing import Generator, Optional
-from kmd.model.html_conventions import CHUNK, CHUNK_DIV_BEGIN, DIV_END
-from kmd.text_docs.para_groups import para_groups_by_size
+from kmd.model.html_conventions import CHUNK, ORIGINAL
+from kmd.text_chunks.para_groups import para_groups_by_size
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_formatting.html_in_md import div_wrapper
+from kmd.util.obj_utils import abbreviate_obj
 
 
 chunk_wrapper = div_wrapper(class_name=CHUNK, padding="\n\n")
+
+original_wrapper = div_wrapper(class_name=ORIGINAL, padding="\n\n")
 
 
 def chunk_paras_into_divs(text: str, min_size: int, unit: TextUnit) -> str:
@@ -24,42 +27,76 @@ def chunk_paras_into_divs(text: str, min_size: int, unit: TextUnit) -> str:
 
 @dataclass
 class Chunk:
-    content: str
+    original_text: str
     offset: int
+    content_start: int
+    content_end: int
+    class_name: str
     begin_marker: Optional[str] = None
     end_marker: Optional[str] = None
 
+    def content(self) -> str:
+        return self.original_text[self.content_start : self.content_end]
 
-def parse_chunk_divs(text: str) -> Generator[Chunk, None, None]:
+    def __str__(self):
+        return abbreviate_obj(self)
+
+
+def div_begin_tag(class_name: str) -> str:
+    return f'<div class="{class_name}">'
+
+
+def div_end_tag() -> str:
+    return "</div>"
+
+
+div_pattern = re.compile(r"(<div\b[^>]*>|</div>)")
+
+
+def parse_chunk_divs(text: str, class_name: str) -> Generator[Chunk, None, None]:
     """
     Parse a string and yield non-empty Chunks based on `<div class="chunk">`/`</div>` blocks.
 
     Text outside chunk divs is returned in Chunks with None markers.
-    Handles nested divs correctly and skips empty chunks.
+    Handles nested divs correctly and skips empty (whitespace-only) chunks.
     """
     current_pos = 0
     text_length = len(text)
-    div_pattern = re.compile(r"(<div\b[^>]*>|</div>)")
+
+    div_begin = div_begin_tag(class_name)
+    div_end = div_end_tag()
 
     while current_pos < text_length:
-        chunk_start = text.find(CHUNK_DIV_BEGIN, current_pos)
+        chunk_start = text.find(div_begin, current_pos)
 
         if chunk_start == -1:
             # No more chunk divs, yield remaining non-empty text as a Chunk with None markers.
             remaining_text = text[current_pos:].strip()
             if remaining_text:
-                yield Chunk(remaining_text, current_pos, None, None)
+                yield Chunk(
+                    original_text=text,
+                    offset=current_pos,
+                    content_start=current_pos,
+                    content_end=text_length,
+                    class_name=class_name,
+                )
             break
 
         if chunk_start > current_pos:
             # Yield non-empty text before the chunk div as a Chunk with None markers.
             pre_chunk_text = text[current_pos:chunk_start].strip()
             if pre_chunk_text:
-                yield Chunk(pre_chunk_text, current_pos, None, None)
+                yield Chunk(
+                    original_text=text,
+                    offset=current_pos,
+                    content_start=current_pos,
+                    content_end=chunk_start,
+                    class_name=class_name,
+                )
 
         # Find the matching end div.
         nesting_level = 1
-        chunk_end = chunk_start + len(CHUNK_DIV_BEGIN)
+        chunk_end = chunk_start + len(div_begin)
         while nesting_level > 0 and chunk_end < text_length:
             match = div_pattern.search(text, chunk_end)
             if not match:
@@ -77,11 +114,19 @@ def parse_chunk_divs(text: str) -> Generator[Chunk, None, None]:
             chunk_end = text_length
 
         # Yield chunk content with begin and end markers.
-        content_start = chunk_start + len(CHUNK_DIV_BEGIN)
-        content_end = chunk_end - len(DIV_END)
+        content_start = chunk_start + len(div_begin)
+        content_end = chunk_end - len(div_end)
         chunk_content = text[content_start:content_end].strip()
         if chunk_content:
-            yield Chunk(chunk_content, chunk_start, CHUNK_DIV_BEGIN, DIV_END)
+            yield Chunk(
+                original_text=text,
+                offset=chunk_start,
+                content_start=content_start,
+                content_end=content_end,
+                class_name=class_name,
+                begin_marker=div_begin,
+                end_marker=div_end,
+            )
 
         current_pos = chunk_end
 
@@ -89,7 +134,15 @@ def parse_chunk_divs(text: str) -> Generator[Chunk, None, None]:
         # Yield any remaining non-empty text as a Chunk with None markers.
         remaining_text = text[current_pos:].strip()
         if remaining_text:
-            yield Chunk(remaining_text, current_pos, None, None)
+            yield Chunk(
+                original_text=text,
+                offset=current_pos,
+                content_start=current_pos,
+                content_end=text_length,
+                class_name=class_name,
+                begin_marker=None,
+                end_marker=None,
+            )
 
 
 ## Tests
@@ -132,7 +185,7 @@ def test_chunk_paras_as_divs():
 
     chunked = chunk_paras_into_divs(_med_test_doc, 7, TextUnit.words)
 
-    print(chunked)
+    print("Chunked doc:\n---\n" + chunked + "\n---")
 
     expected_first_chunk = dedent(
         """
@@ -151,13 +204,20 @@ def test_chunk_paras_as_divs():
     assert chunked.count("<div class=") == 4
     assert chunked.count("</div>") == 5  # Extra spurious </div>.
 
-    parsed = list(parse_chunk_divs(chunked))
+    parsed = list(parse_chunk_divs(chunked, "chunk"))
 
-    print("\n\n".join(str(chunk) for chunk in parsed))
+    print("Parsed chunked doc:\n\n")
+    for chunk in parsed:
+        print(chunk, ":")
+        print("---\n" + chunked[chunk.content_start : chunk.content_end] + "\n---")
+        print()
 
     assert parsed[0] == Chunk(
-        content="# Title\n\nHello World. This is an example sentence. And here's another one!",
+        original_text=chunked,
         offset=0,
+        content_start=len(div_begin_tag("chunk")),
+        content_end=97,
+        class_name="chunk",
         begin_marker='<div class="chunk">',
         end_marker="</div>",
     )

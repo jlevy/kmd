@@ -12,7 +12,3 @@ SPEAKER_LABEL = "speaker-label"
 # Data attributes:
 DATA_TIMESTAMP = "data-timestamp"
 DATA_SPEAKER_ID = "data-speaker-id"
-
-# Chunk indicators:
-CHUNK_DIV_BEGIN = '<div class="chunk">'
-DIV_END = "</div>"
