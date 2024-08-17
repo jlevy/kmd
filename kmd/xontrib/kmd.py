@@ -13,7 +13,7 @@ import runpy
 import threading
 import time
 import re
-from typing import Dict
+from typing import Dict, Iterable, List, Tuple, cast
 from xonsh.completers.tools import contextual_completer, CompletionContext, CompleterResult
 from xonsh.completers.completer import add_one_completer, RichCompletion
 from kmd.commands.command_registry import CommandFunction, all_commands, kmd_command
@@ -150,6 +150,15 @@ def post_initialize():
         output()
 
 
+def _completion_match(prefix: str, values: Iterable[str]) -> List[str]:
+    """
+    Match a prefix against a list of items and return prefix matches and substring matches.
+    """
+    prefix_matches = [value for value in values if value.startswith(prefix)]
+    substring_matches = [value for value in values if prefix in value]
+    return prefix_matches + substring_matches
+
+
 @contextual_completer
 def command_or_action_completer(context: CompletionContext) -> CompleterResult:
     """
@@ -159,32 +168,39 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
     if context.command and context.command.arg_index == 0:
         prefix = context.command.prefix
 
-        command_completions = {
+        command_matches = _completion_match(prefix, [c.__name__ for c in _commands.values()])
+        command_completions = [
             RichCompletion(
-                c.__name__, description=single_line(c.__doc__ or ""), style=COLOR_COMMAND_TEXT
+                name,
+                description=single_line(_commands[name].__doc__ or ""),
+                style=COLOR_COMMAND_TEXT,
             )
-            for c in _commands.values()
-            if c.__name__.startswith(prefix)
-        }
-        action_completions = {
-            RichCompletion(
-                a.name,
-                display=f"{a.name} {EMOJI_ACTION}",
-                description=single_line(a.description or ""),
-                style=COLOR_ACTION_TEXT,
-            )
-            for a in _actions.values()
-            if a.name.startswith(prefix)
-        }
+            for name in command_matches
+        ]
 
-        completions: CompleterResult = command_completions | action_completions
+        action_matches = _completion_match(prefix, [a.name for a in _actions.values()])
+        action_completions = [
+            RichCompletion(
+                name,
+                display=f"{name} {EMOJI_ACTION}",
+                description=single_line(_actions[name].description or ""),
+                style=COLOR_ACTION_TEXT,
+                append_space=True,
+            )
+            for name in action_matches
+        ]
+
+        def completion_sort(completion: RichCompletion) -> Tuple[int, str]:
+            return (len(completion.value), completion.value)
+
+        completions = sorted(command_completions + action_completions, key=completion_sort)
 
         # Tab on an empty line also suggests help.
         if prefix.strip() == "":
             help_completion = RichCompletion("?", description="Ask a question to get help.")
-            completions = {help_completion} | completions
+            completions = [help_completion] + completions
 
-        return completions
+        return set(completions)
 
 
 @contextual_completer
@@ -217,6 +233,7 @@ def item_completer(context: CompletionContext) -> CompleterResult:
                         str(item.store_path),
                         display=f"{item.store_path} ({action.precondition.name}) ",
                         description=item.title or "",
+                        append_space=True,
                     )
                     for item in matching_items
                     if item.store_path and item.store_path.startswith(prefix)
@@ -260,29 +277,35 @@ def options_completer(context: CompletionContext) -> CompleterResult:
                 param_info: ParamInfo | None = getattr(command, "__param_info__", None)
                 if param_info:
                     _pos_params, _kw_params, kw_docs = param_info
-                    completions: CompleterResult = {
-                        RichCompletion(param.shell_prefix(), description=param.description or "")
+                    completions = [
+                        RichCompletion(
+                            param.shell_prefix(),
+                            description=param.description or "",
+                            append_space=True,
+                        )
                         for param in kw_docs
                         if param.shell_prefix().startswith(prefix)
-                    }
+                    ]
                     if "--help".startswith(prefix):
-                        completions |= {
+                        completions.append(
                             RichCompletion("--help", description="Show more help for this command.")
-                        }
-                    return completions
+                        )
+                    return set(completions)
 
             if action:
                 param_docs = action.params()
-                completions = {
-                    RichCompletion(param.shell_prefix(), description=param.description or "")
+                completions = [
+                    RichCompletion(
+                        param.shell_prefix(), description=param.description or "", append_space=True
+                    )
                     for param in param_docs
                     if param.shell_prefix().startswith(prefix)
-                }
+                ]
                 if "--help".startswith(prefix):
-                    completions |= {
+                    completions.append(
                         RichCompletion("--help", description="Show more help for this action.")
-                    }
-                return completions
+                    )
+                return set(completions)
 
 
 def _kmd_xonsh_prompt():
