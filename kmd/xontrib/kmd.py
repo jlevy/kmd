@@ -13,7 +13,7 @@ import runpy
 import threading
 import time
 import re
-from typing import Dict, Iterable, List, Tuple, cast
+from typing import Dict, Iterable, List, Tuple
 from xonsh.completers.tools import contextual_completer, CompletionContext, CompleterResult
 from xonsh.completers.completer import add_one_completer, RichCompletion
 from kmd.commands.command_registry import CommandFunction, all_commands, kmd_command
@@ -26,6 +26,7 @@ from kmd.config.text_styles import (
     EMOJI_WARN,
     PROMPT_COLOR_NORMAL,
     PROMPT_COLOR_WARN,
+    PROMPT_MAIN,
 )
 from kmd.model.actions_model import Action
 from kmd.model.preconditions_model import Precondition
@@ -84,6 +85,9 @@ def load_xonsh_commands():
     # kmd command aliases in xonsh.
     kmd_commands["kmd_help"] = commands.kmd_help
     kmd_commands["load"] = load
+
+    # Override default ? command.
+    kmd_commands["?"] = "assist"
 
     # TODO: Figure out how to get this to work:
     # aliases["py_help"] = help
@@ -150,12 +154,15 @@ def post_initialize():
         output()
 
 
-def _completion_match(prefix: str, values: Iterable[str]) -> List[str]:
+def _completion_match(query: str, values: Iterable[str]) -> List[str]:
     """
     Match a prefix against a list of items and return prefix matches and substring matches.
     """
-    prefix_matches = [value for value in values if value.startswith(prefix)]
-    substring_matches = [value for value in values if prefix in value]
+    options = [(value.lower().strip(), value) for value in values]
+    query = query.lower().strip()
+
+    prefix_matches = [value for (norm_value, value) in options if norm_value.startswith(query)]
+    substring_matches = [value for (norm_value, value) in options if query in norm_value]
     return prefix_matches + substring_matches
 
 
@@ -210,34 +217,37 @@ def item_completer(context: CompletionContext) -> CompleterResult:
     for that action.
     """
 
-    if context.command and context.command.arg_index >= 1:
-        action_name = context.command.args[0].value
-        action = _actions.get(action_name)
+    try:
+        if context.command and context.command.arg_index >= 1:
+            action_name = context.command.args[0].value
+            action = _actions.get(action_name)
 
-        prefix = context.command.prefix
+            prefix = context.command.prefix
 
-        is_prefix_match = Precondition(
-            lambda item: bool(item.store_path and item.store_path.startswith(prefix))
-        )
-
-        if action and action.precondition:
-            ws = current_workspace()
-            match_precondition = action.precondition & is_prefix_match
-            matching_items = list(
-                items_matching_precondition(ws, match_precondition, max_results=MAX_COMPLETIONS)
+            is_prefix_match = Precondition(
+                lambda item: bool(item.store_path and item.store_path.startswith(prefix))
             )
-            # Too many matches is not so useful.
-            if len(matching_items) < MAX_COMPLETIONS:
-                return {
-                    RichCompletion(
-                        str(item.store_path),
-                        display=f"{item.store_path} ({action.precondition.name}) ",
-                        description=item.title or "",
-                        append_space=True,
-                    )
-                    for item in matching_items
-                    if item.store_path and item.store_path.startswith(prefix)
-                }
+
+            if action and action.precondition:
+                ws = current_workspace()
+                match_precondition = action.precondition & is_prefix_match
+                matching_items = list(
+                    items_matching_precondition(ws, match_precondition, max_results=MAX_COMPLETIONS)
+                )
+                # Too many matches is not so useful.
+                if len(matching_items) < MAX_COMPLETIONS:
+                    return {
+                        RichCompletion(
+                            str(item.store_path),
+                            display=f"{item.store_path} ({action.precondition.name}) ",
+                            description=item.title or "",
+                            append_space=True,
+                        )
+                        for item in matching_items
+                        if item.store_path and item.store_path.startswith(prefix)
+                    }
+    except InvalidStoreState:
+        return
 
 
 @contextual_completer
@@ -245,18 +255,25 @@ def help_question_completer(context: CompletionContext) -> CompleterResult:
     """
     Suggest help questions after a `?` on the command line.
     """
-    if (
-        context.command
-        and context.command.arg_index == 0
-        and context.command.prefix.lstrip() == "?"
-    ):
-        # Extract questions from the FAQ.
-        from kmd.docs.topics.faq import __doc__ as faq_doc
+    if context.command:
+        command = context.command
+        arg_index = context.command.arg_index
+        prefix = context.command.prefix.lstrip()
 
-        questions = re.findall(r"^#+ (.+\?)\s*$", faq_doc, re.MULTILINE)
+        # ?some question
+        # ? some question
+        if (arg_index == 0 and prefix.startswith("?")) or (
+            arg_index == 1 and command.args[0].value == "?"
+        ):
+            query = prefix.lstrip("? ")
 
-        assert len(questions) > 2
-        return {RichCompletion(question) for question in questions}
+            # Extract questions from the FAQ.
+            from kmd.docs.topics.faq import __doc__ as faq_doc
+
+            questions = re.findall(r"^#+ (.+\?)\s*$", faq_doc, re.MULTILINE)
+            assert len(questions) > 2
+
+            return {RichCompletion(question) for question in _completion_match(query, questions)}
 
 
 @contextual_completer
@@ -315,7 +332,7 @@ def _kmd_xonsh_prompt():
     workspace_str = (
         f"{{{PROMPT_COLOR_NORMAL}}}" + name if name else f"{{{PROMPT_COLOR_WARN}}}(no workspace)"
     )
-    return f"{workspace_str} {{{PROMPT_COLOR_NORMAL}}}❯{{RESET}} "
+    return f"{workspace_str} {{{PROMPT_COLOR_NORMAL}}}{PROMPT_MAIN}{{RESET}} "
 
 
 def shell_setup():

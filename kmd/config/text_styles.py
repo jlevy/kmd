@@ -39,6 +39,8 @@ COLOR_EMPH = "bright_green"
 
 COLOR_OUTPUT = "yellow"
 
+COLOR_PROMPT = "yellow"
+
 COLOR_HELP = "bright_blue"
 
 COLOR_ASSISTANCE = "italic bright_blue"
@@ -89,7 +91,11 @@ SYMBOL_PARA = "¶"
 SYMBOL_SENT = "S"
 
 
-## Emojis
+## Symbols and emojis
+
+PROMPT_MAIN = "❯"
+
+PROMPT_ASSIST = "(help) ❯"
 
 EMOJI_ACTION = "⛭"
 

@@ -7,6 +7,7 @@ from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
 from kmd.action_defs import load_all_actions
+from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.help.assistant import assistance
 from kmd.help.help_page import output_help_page
 from kmd.commands.command_registry import kmd_command
@@ -35,6 +36,7 @@ from kmd.config.text_styles import (
     EMOJI_TRUE,
     EMOJI_WARN,
     LOGO,
+    PROMPT_ASSIST,
     SPINNER,
 )
 from kmd.file_storage.file_store import skippable_file
@@ -87,11 +89,19 @@ def logs() -> None:
 
 
 @kmd_command
-def assist(input: str) -> None:
+def assist(input: Optional[str] = None) -> None:
     """
     Invoke the kmd assistant. You don't normally need this command as it is the same as just
     asking a question (a question ending with ?) on the kmd console.
     """
+    if not input:
+        input = prompt_simple_string(
+            "What do you need help with? (Ask any question or press enter to see main `kmd_help` page.)",
+            prompt_symbol=PROMPT_ASSIST,
+        )
+        if not input.strip():
+            kmd_help()
+            return
     with get_console().status("Thinking…", spinner=SPINNER):
         output_assistance(assistance(input))
 
