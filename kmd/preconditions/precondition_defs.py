@@ -5,7 +5,6 @@ from kmd.provenance.timestamps import TimestampExtractor
 from kmd.media.media_services import get_media_id, youtube
 from kmd.model.errors_model import PreconditionFailure
 from kmd.model.items_model import Format, Item, ItemType
-from kmd.text_chunks.parse_divs import div_begin_tag
 
 
 @precondition
@@ -50,7 +49,7 @@ def is_html(item: Item) -> bool:
 
 @precondition
 def has_div_chunks(item: Item) -> bool:
-    return bool(item.body and item.body.find(div_begin_tag(CHUNK)) != -1)
+    return bool(item.body and item.body.find('<div class="chunk">') != -1)
 
 
 @precondition

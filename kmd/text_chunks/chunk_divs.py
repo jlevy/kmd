@@ -1,7 +1,9 @@
 from textwrap import dedent
+from typing import List
+from kmd.model.errors_model import InvalidInput
 from kmd.model.html_conventions import CHUNK, ORIGINAL
 from kmd.text_chunks.para_groups import para_groups_by_size
-from kmd.text_chunks.parse_divs import Chunk, div_begin_tag, parse_chunk_divs
+from kmd.text_chunks.parse_divs import TextNode, parse_divs
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_formatting.html_in_md import div_wrapper
 
@@ -22,7 +24,23 @@ def chunk_paras_into_divs(text: str, min_size: int, unit: TextUnit) -> str:
     return "\n\n".join(chunk_wrapper(chunk.reassemble()) for chunk in chunks)
 
 
+def parse_chunk_divs(text: str) -> List[TextNode]:
+    """
+    Parse div chunks into TextNodes.
+    """
+
+    text_node = parse_divs(text)
+
+    chunk_divs = text_node.children_with_class_names(CHUNK)
+
+    if not chunk_divs:
+        raise InvalidInput("No chunk divs found in text.")
+
+    return chunk_divs
+
+
 ## Tests
+
 
 _med_test_doc = dedent(
     """
@@ -81,21 +99,34 @@ def test_chunk_paras_as_divs():
     assert chunked.count("<div class=") == 4
     assert chunked.count("</div>") == 5  # Extra spurious </div>.
 
-    parsed = list(parse_chunk_divs(chunked, "chunk"))
 
-    print("Parsed chunked doc:\n\n")
-    for chunk in parsed:
-        print(chunk, ":")
-        print("---\n" + chunked[chunk.content_start : chunk.content_end] + "\n---")
-        print()
+def test_parse_chunk_divs():
+    text = dedent(
+        """
+        <div class="chunk">
 
-    assert parsed[0] == Chunk(
-        original_text=chunked,
-        offset=0,
-        content_start=len(div_begin_tag("chunk")),
-        content_end=97,
-        class_name="chunk",
-        begin_marker='<div class="chunk">',
-        end_marker="</div>",
+        Chunk 1 text.
+
+        </div>
+
+        <div class="chunk">
+
+        Chunk 2 text.
+
+        </div>
+
+        <div class="chunk">Empty chunk.</div>
+
+        """
     )
-    assert len(parsed) == 4
+
+    chunk_divs = parse_chunk_divs(text)
+
+    print("\n---")
+    for chunk_div in chunk_divs:
+        print(chunk_div.reassemble())
+        print("---")
+
+    assert chunk_divs[0].reassemble() == """<div class="chunk">\nChunk 1 text.\n</div>"""
+    assert chunk_divs[0].content.strip() == "Chunk 1 text."
+    assert len(chunk_divs) == 3

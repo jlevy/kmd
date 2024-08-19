@@ -36,13 +36,14 @@ def tag_with_attrs(
     cls: Optional[str] = None,
     attrs: Optional[Dict[str, str]] = None,
     safe: bool = False,
-    padding: str = "",
+    padding: Optional[str] = None,
 ) -> str:
     attr_str = f' class="{escape_attribute(cls)}"' if cls else ""
     if attrs:
         attr_str += "".join(f' {k}="{escape_attribute(v)}"' for k, v in attrs.items())
-    if not padding and tag in ["div", "p"]:
-        padding = "\n"
+    # Default padding for div and p tags.
+    if padding is None:
+        padding = "\n" if tag in ["div", "p"] else ""
     return f"<{tag}{attr_str}>{padding}{escape_md_html(text, safe)}{padding}</{tag}>"
 
 
@@ -63,7 +64,7 @@ def html_div(
     class_name: Optional[str] = None,
     attrs: Optional[Dict[str, str]] = None,
     safe: bool = False,
-    padding: str = "",
+    padding: Optional[str] = None,
 ) -> str:
     """
     Write a div tag for use in Markdown, with the given text and optional class and attributes.
@@ -97,7 +98,7 @@ def identity_wrapper(text: str) -> str:
 
 
 def div_wrapper(
-    class_name: Optional[str] = None, safe: bool = True, padding: str = "\n"
+    class_name: Optional[str] = None, safe: bool = True, padding: Optional[str] = "\n"
 ) -> Wrapper:
     def div_wrapper_func(text: str) -> str:
         return html_div(text, class_name, safe=safe, padding=padding)
