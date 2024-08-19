@@ -1,5 +1,4 @@
 import re
-from kmd.model.html_conventions import CHUNK
 from kmd.model.preconditions_model import precondition
 from kmd.provenance.timestamps import TimestampExtractor
 from kmd.media.media_services import get_media_id, youtube

@@ -2,6 +2,7 @@
 
 # Class names:
 ORIGINAL = "original"
+RESULT = "result"
 CHUNK = "chunk"
 CITATION = "citation"
 DESCRIPTION = "description"

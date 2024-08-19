@@ -1,8 +1,10 @@
 from kmd.config.settings import DEFAULT_CAREFUL_MODEL
-from kmd.exec.llm_action_base import ChunkedLLMAction
+from kmd.exec.llm_action_base import ChunkedLLMAction, llm_transform_str
 from kmd.model.actions_model import LLMMessage, LLMTemplate
-from kmd.model.html_conventions import ORIGINAL, SUMMARY
+from kmd.model.html_conventions import SUMMARY
 from kmd.exec.action_registry import kmd_action
+from kmd.text_chunks.parse_divs import TextNode
+from kmd.text_chunks.chunk_divs import div, get_original, insert_chunk_child
 
 
 @kmd_action
@@ -10,10 +12,8 @@ class ChunkedSummaryBullets(ChunkedLLMAction):
     def __init__(self):
         super().__init__(
             name="chunked_summary_bullets",
-            description="Summarize text as bullet points.",
+            description="Summarize text as bullet points. Processes each div chunk.",
             model=DEFAULT_CAREFUL_MODEL,
-            result_class_name=SUMMARY,
-            original_class_name=ORIGINAL,
             system_message=LLMMessage(
                 """
                 You are a careful and precise editor.
@@ -52,3 +52,12 @@ class ChunkedSummaryBullets(ChunkedLLMAction):
                 """
             ),
         )
+
+    def process_chunk(self, chunk: TextNode) -> str:
+        transform_input = get_original(chunk)
+
+        llm_response = llm_transform_str(self, transform_input)
+
+        new_div = div(SUMMARY, llm_response)
+
+        return insert_chunk_child(chunk, new_div)

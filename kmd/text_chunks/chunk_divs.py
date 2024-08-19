@@ -5,12 +5,14 @@ from kmd.model.html_conventions import CHUNK, ORIGINAL
 from kmd.text_chunks.para_groups import para_groups_by_size
 from kmd.text_chunks.parse_divs import TextNode, parse_divs
 from kmd.text_docs.text_doc import TextDoc, TextUnit
-from kmd.text_formatting.html_in_md import div_wrapper
+from kmd.text_formatting.html_in_md import div_wrapper, html_div, html_join_blocks
 
 
-chunk_wrapper = div_wrapper(class_name=CHUNK, padding="\n\n")
+div_chunk = div_wrapper(class_name=CHUNK, padding="\n\n")
 
-original_wrapper = div_wrapper(class_name=ORIGINAL, padding="\n\n")
+
+def div(class_name: str, contents: str) -> str:
+    return div_wrapper(class_name=class_name, padding="\n\n")(contents)
 
 
 def chunk_paras_into_divs(text: str, min_size: int, unit: TextUnit) -> str:
@@ -21,7 +23,7 @@ def chunk_paras_into_divs(text: str, min_size: int, unit: TextUnit) -> str:
     doc = TextDoc.from_text(text)
 
     chunks = para_groups_by_size(doc, min_size, unit)
-    return "\n\n".join(chunk_wrapper(chunk.reassemble()) for chunk in chunks)
+    return "\n\n".join(div_chunk(chunk.reassemble()) for chunk in chunks)
 
 
 def parse_chunk_divs(text: str) -> List[TextNode]:
@@ -31,12 +33,50 @@ def parse_chunk_divs(text: str) -> List[TextNode]:
 
     text_node = parse_divs(text)
 
-    chunk_divs = text_node.children_with_class_names(CHUNK)
+    chunk_divs = text_node.children_by_class_names(CHUNK)
 
     if not chunk_divs:
         raise InvalidInput("No chunk divs found in text.")
 
     return chunk_divs
+
+
+def add_original(chunk: TextNode) -> str:
+    """
+    Wrap the chunk contents in an "original" div if it's not already there.
+    """
+    has_original_div = bool(chunk.child_by_class_name(ORIGINAL))
+    if has_original_div:
+        return chunk.contents
+    else:
+        return div(ORIGINAL, chunk.contents.strip())
+
+
+def get_original(chunk: TextNode) -> str:
+    """
+    Use "original" div contents if it exists, otherwise use the whole contents.
+    """
+    original = chunk.child_by_class_name(ORIGINAL)
+    return original.contents if original else chunk.contents
+
+
+def insert_chunk_child(chunk: TextNode, new_child_str: str, insert_before: bool = True) -> str:
+    """
+    Insert a new child into a chunk div. Wrap the chunk contents in an "original" div
+    if it's not already there.
+    """
+
+    if chunk.class_name != CHUNK:
+        raise ValueError(f"Expected a div chunk: {chunk}")
+
+    chunk_str = add_original(chunk)
+
+    if insert_before:
+        blocks = [new_child_str, chunk_str]
+    else:
+        blocks = [chunk_str, new_child_str]
+
+    return div_chunk(html_join_blocks(*blocks))
 
 
 ## Tests
@@ -80,6 +120,7 @@ def test_chunk_paras_as_divs():
 
     chunked = chunk_paras_into_divs(_med_test_doc, 7, TextUnit.words)
 
+    print("\n---test_chunk_paras_as_divs---")
     print("Chunked doc:\n---\n" + chunked + "\n---")
 
     expected_first_chunk = dedent(
@@ -122,11 +163,50 @@ def test_parse_chunk_divs():
 
     chunk_divs = parse_chunk_divs(text)
 
-    print("\n---")
+    print("\n---test_parse_chunk_divs---")
     for chunk_div in chunk_divs:
         print(chunk_div.reassemble())
         print("---")
 
-    assert chunk_divs[0].reassemble() == """<div class="chunk">\nChunk 1 text.\n</div>"""
-    assert chunk_divs[0].content.strip() == "Chunk 1 text."
+    assert chunk_divs[0].reassemble() == """<div class="chunk">\n\nChunk 1 text.\n\n</div>"""
+    assert chunk_divs[0].contents.strip() == "Chunk 1 text."
     assert len(chunk_divs) == 3
+
+
+def test_insert_chunk_child():
+    chunk = parse_divs(div_chunk("Chunk text.")).children[0]
+
+    new_child_str = html_div("New child text.", class_name="new", padding="\n\n")
+
+    new_chunk_str = insert_chunk_child(chunk, new_child_str)
+
+    print("\n---test_insert_chunk_child---")
+    print("\nInserting into chunk:")
+    print(chunk.original_text)
+    print("\nNew child:")
+    print(new_child_str)
+    print("\nNew chunk:")
+    print(new_chunk_str)
+
+    assert (
+        new_chunk_str
+        == dedent(
+            """
+            <div class="chunk">
+
+            <div class="new">
+
+            New child text.
+
+            </div>
+
+            <div class="original">
+
+            Chunk text.
+
+            </div>
+
+            </div>
+            """
+        ).strip()
+    )

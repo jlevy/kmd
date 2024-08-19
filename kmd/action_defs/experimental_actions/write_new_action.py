@@ -1,7 +1,7 @@
 from textwrap import dedent
 from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 from kmd.exec.action_registry import kmd_action
-from kmd.exec.llm_action_base import LLMAction, run_llm_transform
+from kmd.exec.llm_action_base import LLMAction, llm_transform_item
 from kmd.help.assistant import assistant_preamble
 from kmd.file_storage.workspaces import current_workspace
 from kmd.form_input.prompt_input import prompt_simple_string
@@ -113,7 +113,7 @@ class WriteNewAction(LLMAction):
         workspace = current_workspace()
         workspace.save(description_item)
 
-        result_item = run_llm_transform(self, description_item)
+        result_item = llm_transform_item(self, description_item)
         result_item.type = ItemType.extension
         result_item.format = Format.python
 

@@ -27,7 +27,7 @@ def _litellm_completion(model: str, messages: List[Dict[str, str]]) -> str:
     return result
 
 
-@log_calls(level="info")
+@log_calls(level="message")
 def llm_completion(
     model: LLM,
     system_message: LLMMessage,

@@ -85,7 +85,7 @@ def html_a(text: str, href: str, safe: bool = False) -> str:
     return f'<a href="{href}">{text}</a>'
 
 
-def join_blocks(*blocks: str) -> str:
+def html_join_blocks(*blocks: str) -> str:
     return "\n\n".join(blocks)
 
 
@@ -98,7 +98,7 @@ def identity_wrapper(text: str) -> str:
 
 
 def div_wrapper(
-    class_name: Optional[str] = None, safe: bool = True, padding: Optional[str] = "\n"
+    class_name: Optional[str] = None, safe: bool = True, padding: Optional[str] = "\n\n"
 ) -> Wrapper:
     def div_wrapper_func(text: str) -> str:
         return html_div(text, class_name, safe=safe, padding=padding)
@@ -137,10 +137,10 @@ def test_html():
 
 def test_div_wrapper():
     safe_wrapper = div_wrapper(class_name="foo")
-    assert safe_wrapper("<div>text</div>") == '<div class="foo">\n<div>text</div>\n</div>'
+    assert safe_wrapper("<div>text</div>") == '<div class="foo">\n\n<div>text</div>\n\n</div>'
 
     unsafe_wrapper = div_wrapper(class_name="foo", safe=False)
     assert (
         unsafe_wrapper("<div>text</div>")
-        == '<div class="foo">\n&lt;div&gt;text&lt;/div&gt;\n</div>'
+        == '<div class="foo">\n\n&lt;div&gt;text&lt;/div&gt;\n\n</div>'
     )
