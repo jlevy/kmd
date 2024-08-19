@@ -176,6 +176,12 @@ class Action(ABC):
                 changed_params[param_name] = stringify(value)
         return changed_params
 
+    def param_summary_str(self) -> str:
+        summary_str = format_lines(
+            [format_key_value(name, value) for name, value in self.param_summary().items()]
+        )
+        return f"Parameters:\n{summary_str}"
+
     def update_with_params(self, param_values: ParamValues, strict: bool = False) -> "Action":
         """
         Update the action with the given parameters and return a new Action.

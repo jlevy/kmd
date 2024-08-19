@@ -1,5 +1,6 @@
 from textwrap import dedent
 from typing import List
+from kmd.config.logger import get_logger
 from kmd.model.errors_model import InvalidInput
 from kmd.model.html_conventions import CHUNK, ORIGINAL
 from kmd.text_chunks.para_groups import para_groups_by_size
@@ -7,6 +8,7 @@ from kmd.text_chunks.parse_divs import TextNode, parse_divs
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_formatting.html_in_md import div_wrapper, html_div, html_join_blocks
 
+log = get_logger(__name__)
 
 div_chunk = div_wrapper(class_name=CHUNK, padding="\n\n")
 
@@ -23,7 +25,10 @@ def chunk_paras_into_divs(text: str, min_size: int, unit: TextUnit) -> str:
     doc = TextDoc.from_text(text)
 
     chunks = para_groups_by_size(doc, min_size, unit)
-    return "\n\n".join(div_chunk(chunk.reassemble()) for chunk in chunks)
+    div_chunks = [div_chunk(chunk.reassemble()) for chunk in chunks]
+
+    log.message("Added %s div chunks on doc size %s.", len(div_chunks), doc.size_summary())
+    return "\n\n".join(div_chunks)
 
 
 def parse_chunk_divs(text: str) -> List[TextNode]:

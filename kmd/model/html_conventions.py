@@ -2,13 +2,17 @@
 
 # Class names:
 ORIGINAL = "original"
-RESULT = "result"
 CHUNK = "chunk"
+RESULT = "result"
+
 CITATION = "citation"
 DESCRIPTION = "description"
-SUMMARY = "summary"
+
 FULL_TEXT = "full-text"
 SPEAKER_LABEL = "speaker-label"
+
+SUMMARY = "summary"
+CONCEPTS = "concepts"
 
 # Data attributes:
 DATA_TIMESTAMP = "data-timestamp"
