@@ -2,13 +2,13 @@ from abc import ABC, abstractmethod
 from copy import copy
 from dataclasses import dataclass, field, fields
 from enum import Enum
-from textwrap import dedent
 from typing import Any, Dict, List, Optional
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_logger
+from kmd.lang_tools.inflection import plural
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
-from kmd.lang_tools.inflection import plural
 from kmd.model.language_models import LLM
+from kmd.model.llm_message_model import LLMMessage, LLMTemplate
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.preconditions_model import Precondition
@@ -41,20 +41,6 @@ class TitleTemplate(StringTemplate):
 
     def __init__(self, template: str):
         super().__init__(template.strip(), allowed_fields=["title", "action_name"])
-
-
-class LLMTemplate(StringTemplate):
-    """A template for an LLM request."""
-
-    def __init__(self, template: str):
-        super().__init__(dedent(template), allowed_fields=["body"])
-
-
-class LLMMessage(str):
-    """A message for an LLM."""
-
-    def __new__(cls, value: str):
-        return super().__new__(cls, dedent(value))
 
 
 # For now these are simple but we will want to support other hints or output data in the future.
@@ -240,8 +226,8 @@ class Action(ABC):
 @dataclass(frozen=True)
 class ForEachItemAction(Action):
     """
-    An action that simply processes each arg one after the other. If "non fatal" errors are
-    encountered, they are reported and processing continues with the next item.
+    Abastract base action that simply processes each arg one after the other. If "non fatal"
+    errors are encountered, they are reported and processing continues with the next item.
     """
 
     expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
@@ -308,9 +294,9 @@ def preassemble_single_output(
 @dataclass(frozen=True)
 class CachedItemAction(ForEachItemAction):
     """
-    A simple action that processes each input returns a single text output for each,
-    with the output title etc. derived from the first input item. Caches and skips
-    items that have already been processed.
+    Abstract base action that simpply processes each input and returns a single text output for each.
+    The output title etc. are derived from the first input item. Caches and skips items that have
+    already been processed.
     """
 
     # Implementing this makes caching work.

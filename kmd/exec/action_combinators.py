@@ -49,6 +49,8 @@ def define_action_sequence(
 
     action_wrapper = each_item_wrapper if on_each_input else no_wrapper
 
+    look_up_actions(action_names)  # Validate action names.
+
     @kmd_action_wrapped(wrapper=action_wrapper)
     class SequenceAction(Action):
         def __init__(self):

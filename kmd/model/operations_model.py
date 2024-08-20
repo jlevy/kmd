@@ -103,10 +103,13 @@ class Operation:
     def quoted_options(self):
         return [f"--{k}={quote_if_needed(str(v))}" for k, v in self.options.items()]
 
-    def command_line(self):
+    def command_line(self, with_options=True):
         cmd = f"{self.action_name}"
 
-        all_args = self.quoted_options() + self.quoted_args()
+        all_args = []
+        if with_options:
+            all_args += self.quoted_options()
+        all_args += self.quoted_args()
         if all_args:
             cmd += " " + " ".join(all_args)
 

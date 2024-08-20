@@ -1,7 +1,7 @@
 from textwrap import dedent
 from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 from kmd.exec.action_registry import kmd_action
-from kmd.exec.llm_action_base import LLMAction, llm_transform_item
+from kmd.exec.llm_transforms import llm_transform_item
 from kmd.help.assistant import assistant_preamble
 from kmd.file_storage.workspaces import current_workspace
 from kmd.form_input.prompt_input import prompt_simple_string
@@ -14,6 +14,7 @@ from kmd.model.actions_model import (
     TitleTemplate,
 )
 from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.llm_actions_model import LLMAction
 from kmd.util.lazyobject import lazyobject
 
 

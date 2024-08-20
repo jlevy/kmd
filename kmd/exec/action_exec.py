@@ -89,8 +89,9 @@ def run_action(
     # TODO: Also save the parameters/options that were used.
     inputs = [Input(StorePath(arg), ws.hash(StorePath(arg))) for arg in args if is_store_path(arg)]
     operation = Operation(action_name, inputs, action.param_summary())
-    log.message("%s Action: %s", EMOJI_CALL_BEGIN, operation.command_line())
-    log.message("%s", action.param_summary_str())
+    log.message("%s Action: %s", EMOJI_CALL_BEGIN, operation.command_line(with_options=False))
+    if len(action.param_summary()) > 0:
+        log.message("%s", action.param_summary_str())
     log.info("Operation is: %s", operation)
 
     # Ensure input items are already saved in the workspace and load the corresponding items.

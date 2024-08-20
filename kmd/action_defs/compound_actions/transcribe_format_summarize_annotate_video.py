@@ -6,7 +6,7 @@ define_action_sequence(
     "transcribe_format_summarize_annotate_video",
     [
         "transcribe_format_video",
-        "chunk_paragraphs",
+        "add_chunks",
         "chunked_summary_bullets",
         "add_description",
     ],

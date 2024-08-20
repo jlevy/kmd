@@ -1,8 +1,9 @@
 from kmd.config.settings import DEFAULT_CAREFUL_MODEL
-from kmd.exec.llm_action_base import ChunkedLLMAction, llm_transform_str
+from kmd.exec.llm_transforms import llm_transform_str
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.html_conventions import SUMMARY
 from kmd.exec.action_registry import kmd_action
+from kmd.model.llm_actions_model import ChunkedLLMAction
 from kmd.text_chunks.parse_divs import TextNode
 from kmd.text_chunks.chunk_divs import div, get_original, insert_chunk_child
 
