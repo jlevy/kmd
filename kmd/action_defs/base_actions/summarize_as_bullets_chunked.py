@@ -9,10 +9,10 @@ from kmd.text_chunks.chunk_divs import div, get_original, insert_chunk_child
 
 
 @kmd_action
-class ChunkedSummaryBullets(ChunkedLLMAction):
+class SummarizeAsBulletsChunked(ChunkedLLMAction):
     def __init__(self):
         super().__init__(
-            name="chunked_summary_bullets",
+            name="summarize_as_bullets_chunked",
             description="Summarize text as bullet points. Processes each div chunk.",
             model=DEFAULT_CAREFUL_MODEL,
             system_message=LLMMessage(

@@ -6,8 +6,9 @@ define_action_sequence(
     "transcribe_format_summarize_annotate_video",
     [
         "transcribe_format_video",
-        "add_chunks",
-        "chunked_summary_bullets",
+        "chunkify",
+        "find_concepts_chunked",
+        "summarize_as_bullets_chunked",
         "add_description",
     ],
     description="A fancy action to transcribe a video, format the transcript into paragraphs, backfill timestamps, and add a summary and description.",

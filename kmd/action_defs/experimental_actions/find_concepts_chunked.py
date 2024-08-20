@@ -13,10 +13,10 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class ChunkedFindConcepts(ChunkedLLMAction):
+class FindConceptsChunked(ChunkedLLMAction):
     def __init__(self):
         super().__init__(
-            name="chunked_find_concepts",
+            name="find_concepts_chunked",  # Updated name
             description="Identify the key concepts in a text. Processes each div chunk.",
             model=DEFAULT_CAREFUL_MODEL,
             system_message=LLMMessage(

@@ -13,10 +13,10 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class AddChunks(CachedItemAction):
+class Chunkify(CachedItemAction):
     def __init__(self):
         super().__init__(
-            name="add_chunks",
+            name="chunkify",
             description="Group paragraphs into chunks, demarcated by div tags. If desired, this can be just one chunk.",
             precondition=is_readable_text,
             chunk_size=2000,
