@@ -1,19 +1,10 @@
 import html
 from textwrap import indent
-from typing import Any, Iterable
+from typing import Any, Iterable, List
 import regex
 from strif import abbreviate_str
 
 DEFAULT_INDENT = "    "
-
-
-def format_lines(
-    values: Iterable[Any], prefix: str = DEFAULT_INDENT, line_break: str = "\n"
-) -> str:
-    """
-    Simple indented or prefixed formatting of values one per line.
-    """
-    return indent(line_break.join(str(value) for value in values), prefix).rstrip()
 
 
 def plaintext_to_html(text: str):
@@ -28,13 +19,6 @@ def plaintext_to_html(text: str):
     )
 
 
-def single_line(text: str) -> str:
-    """
-    Convert newlines and other whitespace to spaces.
-    """
-    return regex.sub(r"\s+", " ", text).strip()
-
-
 def html_to_plaintext(text: str):
     """
     Convert HTML to plaintext, stripping tags and converting entities.
@@ -46,19 +30,32 @@ def html_to_plaintext(text: str):
     return clean_text
 
 
+def format_lines(
+    values: Iterable[Any], prefix: str = DEFAULT_INDENT, line_break: str = "\n"
+) -> str:
+    """
+    Simple indented or prefixed formatting of values one per line.
+    """
+    return indent(line_break.join(str(value) for value in values), prefix).rstrip()
+
+
+def single_line(text: str) -> str:
+    """
+    Convert newlines and other whitespace to spaces.
+    """
+    return regex.sub(r"\s+", " ", text).strip()
+
+
+def split_paragraphs(text: str) -> List[str]:
+    return [p.strip() for p in regex.split(r"\n{2,}", text)]
+
+
 def clean_title(text: str) -> str:
     """
     Clean up arbitrary text to make it suitable for a title. Convert all whitespace to spaces.
     Only allows the most common punctuation, letters, and numbers, but not Markdown, code characters etc.
     """
     return regex.sub(r"[^\p{L}\p{N},./:;'!?/@%&()+“”‘’…–—-]+", " ", text).strip()
-
-
-def clean_description(text: str) -> str:
-    """
-    Clean up txt to make it suitable for a description. Convert all whitespace to spaces.
-    """
-    return regex.sub(r"\s+", " ", text).strip()
 
 
 def _trim_trailing_punctuation(text: str) -> str:

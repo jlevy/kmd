@@ -21,13 +21,12 @@ from kmd.config.text_styles import (
     COLOR_HINT,
     COLOR_KEY,
     COLOR_OUTPUT,
-    COLOR_PLAIN,
     COLOR_RESPONSE,
     CONSOLE_WRAP_WIDTH,
     EMOJI_ASSISTANT,
     HRULE,
 )
-from kmd.text_formatting.text_formatting import DEFAULT_INDENT
+from kmd.text_formatting.text_formatting import DEFAULT_INDENT, split_paragraphs
 
 console = get_console()
 
@@ -58,7 +57,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
     elif text_wrap == Wrap.INDENT_ONLY:
         return indent(text, prefix="    ")
     elif text_wrap in [Wrap.WRAP, Wrap.WRAP_FULL, Wrap.WRAP_INDENT, Wrap.HANGING_INDENT]:
-        paragraphs = text.split("\n\n")
+        paragraphs = split_paragraphs(text)
         wrapped_paragraphs = []
 
         for paragraph in paragraphs:
@@ -72,7 +71,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
                         replace_whitespace=False,
                         break_long_words=False,
                         break_on_hyphens=False,
-                    ).lstrip(" ")
+                    )
                 )
             elif text_wrap == Wrap.WRAP_FULL:
                 wrapped_paragraphs.append(
@@ -84,7 +83,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
                         replace_whitespace=True,
                         break_long_words=False,
                         break_on_hyphens=False,
-                    ).lstrip(" ")
+                    )
                 )
             elif text_wrap == Wrap.WRAP_INDENT:
                 wrapped_paragraphs.append(
@@ -108,7 +107,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
                         replace_whitespace=True,
                         break_long_words=False,
                         break_on_hyphens=False,
-                    ).lstrip(" ")
+                    )
                 )
 
         return "\n\n".join(wrapped_paragraphs)
@@ -130,7 +129,7 @@ def format_name_and_description(name: str, doc: str, extra_note: Optional[str] =
         ((" " + extra_note, COLOR_HINT) if extra_note else ""),
         (": ", COLOR_HINT),
         "\n",
-        (wrapped, COLOR_PLAIN),
+        wrapped,
     )
 
 

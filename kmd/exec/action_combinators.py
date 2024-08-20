@@ -44,7 +44,9 @@ def define_action_sequence(
     if not action_names or len(action_names) <= 1:
         raise InvalidInput("Action must have at least two sub-actions: %s", action_names)
 
-    extra_desc = "This action is a sequence of these actions: " + ", ".join(action_names) + "."
+    extra_desc = "This action is a sequence of these actions:\n\n" + ", ".join(
+        f"`{name}`" for name in action_names
+    )
     seq_description = "\n\n".join([description, extra_desc]) if description else extra_desc
 
     action_wrapper = each_item_wrapper if on_each_input else no_wrapper
@@ -213,7 +215,9 @@ def define_action_combo(
     if not action_names or len(action_names) <= 1:
         raise InvalidInput("Action must have at least two sub-actions: %s", action_names)
 
-    extra_desc = "This action combines outputs of these actions: " + ", ".join(action_names) + "."
+    extra_desc = "This action is a combination of these actions:\n\n" + ", ".join(
+        f"`{name}`" for name in action_names
+    )
     combo_description = "\n\n".join([description, extra_desc]) if description else extra_desc
 
     action_wrapper = each_item_wrapper if on_each_input else no_wrapper

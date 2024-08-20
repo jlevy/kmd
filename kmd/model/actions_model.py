@@ -12,7 +12,8 @@ from kmd.model.llm_message_model import LLMMessage, LLMTemplate
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.preconditions_model import Precondition
-from kmd.text_formatting.text_formatting import clean_description, format_lines
+from kmd.text_formatting.text_formatting import format_lines
+from kmd.text_ui.command_output import fill_text
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_utils import format_key_value
 from kmd.util.string_template import StringTemplate
@@ -110,7 +111,7 @@ class Action(ABC):
 
     def __post_init__(self):
         # Class is frozen but we do want to update the description.
-        object.__setattr__(self, "description", clean_description(self.description))
+        object.__setattr__(self, "description", fill_text(self.description))
 
     def validate_args(self, args: List[str]) -> None:
         if len(args) != 0 and self.expected_args == NO_ARGS:
