@@ -20,13 +20,16 @@ define_llm_action(
     ),
     template=LLMTemplate(
         """
-        Proofread the following text according to these rules:
+        You are a careful and precise editor. Proofread the following text according to these rules:
 
         - Correct only typos or spelling, grammar, capitalization, or punctuation mistakes.
 
         - Write out only the final corrected text.
 
-        - If input is a single phrase that looks like a question, be sure to add a question mark at the end.
+        - Make punctuation and capitalization changes to fit the Chicago Manual of Style.
+
+        - If input is a sentence or question without punctuation, be sure to add a period or
+          question mark at the end, as appropriate.
 
         - Do not alter the meaning of any of the text or change the style of writing.
 
@@ -36,8 +39,9 @@ define_llm_action(
 
         - Preserve all Markdown formatting.
 
-        - ONLY GIVE THE CORRECTED TEXT, with no other commentary.
+        - If unsure about how to make a correction, leave that portion of the text unchanged.
         
+        - ONLY GIVE THE CORRECTED TEXT, with no other commentary. 
         Original text:
         
         {body}

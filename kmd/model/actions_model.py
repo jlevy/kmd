@@ -105,7 +105,6 @@ class Action(ABC):
         "title_template",
         "template",
         "system_message",
-        "title_template",
         "windowing",
     ]
 

@@ -25,11 +25,11 @@ define_llm_action(
 
         - Break the following text into paragraphs so it is readable and organized.
 
-        - Add oriented quotation marks so quotes are “like this” and not "like this".
+        - Add a paragraph break whenever the topic changes.
 
-        - Make any other punctuation changes to fit the Chicago Manual of Style.
+        - Paragraphs can be short or up to several sentences long.
 
-        - Do *not* change any words of the text. Add line breaks and punctuation and formatting changes only.
+        - Do *not* change any words of the text. Add line breaks only.
 
         - Preserve all Markdown formatting.
 
