@@ -47,6 +47,8 @@ def filtered_transform(
 
     If windowing is None, apply the transform to the entire document at once.
     """
+    has_filter = diff_filter != filter_accept_all
+
     if not windowing:
         transformed_doc = transform_func(doc)
     else:
@@ -57,36 +59,40 @@ def filtered_transform(
 
             transformed_doc = transform_func(input_doc)
 
-            # Check the transform did what it should have.
-            diff = diff_docs(input_doc, transformed_doc)
-            accepted_diff, rejected_diff = diff.filter(diff_filter)
+            if has_filter:
+                # Check the transform did what it should have.
+                diff = diff_docs(input_doc, transformed_doc)
+                accepted_diff, rejected_diff = diff.filter(diff_filter)
 
-            assert diff.left_size() == input_doc.size(TextUnit.wordtoks)
-            assert accepted_diff.left_size() == input_doc.size(TextUnit.wordtoks)
-            assert rejected_diff.left_size() == input_doc.size(TextUnit.wordtoks)
+                assert diff.left_size() == input_doc.size(TextUnit.wordtoks)
+                assert accepted_diff.left_size() == input_doc.size(TextUnit.wordtoks)
+                assert rejected_diff.left_size() == input_doc.size(TextUnit.wordtoks)
 
-            log.info(
-                "Accepted transform changes:\n%s",
-                format_lines(str(accepted_diff).splitlines()),
-            )
-
-            # Note any rejections.
-            rejected_changes = rejected_diff.changes()
-            if rejected_changes:
-                log.message(
-                    "Filtering extraneous changes:\n%s",
-                    format_lines(rejected_diff.as_diff_str(False).splitlines()),
+                log.info(
+                    "Accepted transform changes:\n%s",
+                    format_lines(str(accepted_diff).splitlines()),
                 )
 
-            # Apply only the accepted changes.
-            final_doc = TextDoc.from_wordtoks(accepted_diff.apply_to(input_doc.as_wordtoks()))
+                # Note any rejections.
+                rejected_changes = rejected_diff.changes()
+                if rejected_changes:
+                    log.message(
+                        "Filtering extraneous changes:\n%s",
+                        format_lines(rejected_diff.as_diff_str(False).splitlines()),
+                    )
 
-            log.message(
-                "Word token changes:\n%s",
-                format_lines(
-                    [f"Accepted: {accepted_diff.stats()}", f"Rejected: {rejected_diff.stats()}"]
-                ),
-            )
+                # Apply only the accepted changes.
+                final_doc = TextDoc.from_wordtoks(accepted_diff.apply_to(input_doc.as_wordtoks()))
+                log.message(
+                    "Word token changes:\n%s",
+                    format_lines(
+                        [f"Accepted: {accepted_diff.stats()}", f"Rejected: {rejected_diff.stats()}"]
+                    ),
+                )
+            else:
+                diff = None
+                accepted_diff, rejected_diff = None, None
+                final_doc = transformed_doc
 
             log.save_object(
                 "Input doc normalized",
@@ -103,9 +109,13 @@ def filtered_transform(
                 "transform_and_check_diff",
                 normalize_markdown(transformed_doc.reassemble()),
             )
-            log.save_object("Transform diff", "transform_and_check_diff", diff)
-            # log.save_object("Accepted diff", "transform_and_check_diff", accepted_diff)
-            log.save_object("Rejected diff", "transform_and_check_diff", rejected_diff)
+            if diff:
+                log.save_object("Transform diff", "transform_and_check_diff", diff)
+            # if accepted_diff:
+            #     log.save_object("Accepted diff", "transform_and_check_diff", accepted_diff)
+            if rejected_diff:
+                log.save_object("Rejected diff", "transform_and_check_diff", rejected_diff)
+
             log.save_object("Final doc", "transform_and_check_diff", final_doc.reassemble())
 
             return final_doc
