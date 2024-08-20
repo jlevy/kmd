@@ -267,7 +267,7 @@ class FileStore:
             if item.created_at:
                 created_time = item.created_at.timestamp()
                 modified_time = item.modified_at.timestamp() if item.modified_at else created_time
-                os.utime(full_path, (created_time, modified_time))
+                os.utime(full_path, (modified_time, modified_time))
 
             # Check if it's an exact duplicate of the previous file, to reduce clutter.
             if old_store_path:

@@ -208,7 +208,7 @@ class Item:
     file_ext: Optional[FileExt] = None
 
     created_at: datetime = field(default_factory=datetime.now)
-    modified_at: datetime = field(default_factory=datetime.now)
+    modified_at: Optional[datetime] = None
 
     # TODO: Consider adding aliases and tags. See also Obsidian frontmatter format:
     # https://help.obsidian.md/Editing+and+formatting/Properties#Default%20properties
@@ -358,9 +358,6 @@ class Item:
             raise ValueError("Cannot get doc id for an item that has not been saved")
         return str(self.store_path)
 
-    def update_modified_at(self):
-        self.modified_at = datetime.now()
-
     def metadata(self, datetime_as_str: bool = False) -> dict[str, Any]:
         """
         Metadata is all relevant non-None fields in easy-to-serialize form.
@@ -502,35 +499,39 @@ class Item:
     def is_url_resource(self) -> bool:
         return self.type == ItemType.resource and self.format == Format.url and self.url is not None
 
-    def _merge_fields(self, other: Optional["Item"] = None, **kwargs) -> dict:
-        defaults = {"store_path": None, "created_at": datetime.now(), "modified_at": datetime.now()}
+    def _merge_fields(
+        self, other: Optional["Item"] = None, update_timestamp: bool = False, **kwargs
+    ) -> dict:
+        timestamp = datetime.now() if update_timestamp else None
+        overrides = {"store_path": None, "created_at": timestamp, "modified_at": None}
+
         # asdict() creates dicts recursively so using __annotations__ to do a shallow copy.
-        base_fields = {field: getattr(self, field) for field in self.__annotations__}
+        fields = {field: getattr(self, field) for field in self.__annotations__}
 
         if other:
             for field in other.__annotations__:
-                base_fields[field] = getattr(other, field)
-            base_fields["extra"] = {**(self.extra or {}), **(other.extra or {})}
+                fields[field] = getattr(other, field)
+            fields["extra"] = {**(self.extra or {}), **(other.extra or {})}
 
-        base_fields.update(defaults)
-        base_fields.update(kwargs)
+        fields.update(overrides)
+        fields.update(kwargs)
 
-        return base_fields
+        return fields
 
-    def new_copy_with(self, **kwargs) -> "Item":
+    def new_copy_with(self, update_timestamp: bool = True, **kwargs) -> "Item":
         """
-        Copy item with the given field updates. Resets store_path and updates timestamps
-        if they are not set.
+        Copy item with the given field updates. Resets store_path to None. Updates
+        created time if requested.
         """
-        new_fields = self._merge_fields(**kwargs)
+        new_fields = self._merge_fields(update_timestamp=update_timestamp, **kwargs)
         return Item(**new_fields)
 
     def merged_copy(self, other: "Item") -> "Item":
         """
         Copy item, merging in fields from another, with the other item's fields
-        taking precedence. Resets store_path and updates timestamps if they are not set.
+        taking precedence. Resets store_path to None.
         """
-        merged_fields = self._merge_fields(other)
+        merged_fields = self._merge_fields(other, update_timestamp=False)
         return Item(**merged_fields)
 
     def derived_copy(self, **kwargs) -> "Item":
@@ -540,7 +541,7 @@ class Item:
         if not self.store_path:
             raise ValueError(f"Cannot derive from an item that has not been saved: {self}")
 
-        new_item = self.new_copy_with(**kwargs)
+        new_item = self.new_copy_with(update_timestamp=True, **kwargs)
         new_item.update_relations(derived_from=[self.store_path])
 
         return new_item

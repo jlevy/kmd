@@ -389,7 +389,7 @@ def preconditions() -> None:
         satisfied = all(precondition(item) for item in items)
         emoji = EMOJI_TRUE if satisfied else " "
         satisfied_str = "satisfied" if satisfied else "not satisfied"
-        output(f"{emoji} {precondition} {satisfied_str}")
+        output(f"{emoji} {precondition} {satisfied_str}", text_wrap=Wrap.NONE)
 
     output()
 
