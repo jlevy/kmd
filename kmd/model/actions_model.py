@@ -4,6 +4,7 @@ from dataclasses import dataclass, field, fields
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_logger
+from kmd.config.text_styles import EMOJI_ACTION
 from kmd.lang_tools.inflection import plural
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
@@ -166,7 +167,7 @@ class Action(ABC):
         summary_str = format_lines(
             [format_key_value(name, value) for name, value in self.param_summary().items()]
         )
-        return f"Parameters:\n{summary_str}"
+        return f"Action params:\n{summary_str}"
 
     def update_with_params(self, param_values: ParamValues, strict: bool = False) -> "Action":
         """
@@ -175,6 +176,7 @@ class Action(ABC):
         new_instance = copy(self)  # Shallow copy.
         action_param_names = self.param_names()
 
+        overrides = []
         for param_name, value in param_values.items():
             # Sanity checks.
             if param_name not in ALL_COMMON_PARAMS and param_name not in action_param_names:
@@ -197,11 +199,14 @@ class Action(ABC):
             if param_name in ALL_COMMON_PARAMS and param_name in action_param_names:
                 # Use object.__setattr__ to update the frozen instance.
                 object.__setattr__(new_instance, param_name, value)
-                log.message(
-                    "Overriding parameter for action `%s`:\n%s",
-                    self.name,
-                    format_lines([format_key_value(param_name, value)]),
-                )
+                overrides.append(format_key_value(param_name, value))
+
+        if overrides:
+            log.message(
+                "Overriding parameters for action `%s`:\n%s",
+                self.name,
+                format_lines(overrides),
+            )
 
         return new_instance
 
@@ -239,11 +244,12 @@ class ForEachItemAction(Action):
 
         for i, item in enumerate(items):
             log.message(
-                "Action `%s` processing item %d of %d: %s",
+                "%s Action `%s`: Item %d of %d:\n%s",
+                EMOJI_ACTION,
                 self.name,
                 i + 1,
                 len(items),
-                item,
+                format_lines([item]),
             )
             try:
                 result_item = self.run_item(item)

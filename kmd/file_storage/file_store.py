@@ -176,17 +176,16 @@ class FileStore:
                     old_item = self.load(default_path)
                     if old_item.item_id() == item_id:
                         log.message(
-                            "Output check: Item id %s already saved (default name):\n%s",
-                            item_id,
-                            format_lines([default_path]),
+                            "Item with id already saved (disk check):\n%s",
+                            format_lines([default_path, item_id]),
                         )
                         store_path = default_path
                         self.id_map[item_id] = default_path
                         return default_path
             if store_path and self.exists(store_path):
                 log.message(
-                    "Output check: Item with id already saved:\n%s",
-                    format_lines([item_id, "    -> " + store_path]),
+                    "Item with id already saved (cache check):\n%s",
+                    format_lines([store_path, item_id]),
                 )
                 return store_path
         return None
@@ -208,9 +207,8 @@ class FileStore:
             # If this item has an identity and we've saved under that id before, use the same store path.
             store_path = self.id_map[item_id]
             log.message(
-                "Post-save check: Item with id %s already saved:\n%s",
-                item_id,
-                format_lines([store_path]),
+                "Item with id already saved (post-save check):\n%s",
+                format_lines([store_path, item_id]),
             )
             return store_path, None
         else:

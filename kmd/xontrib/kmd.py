@@ -29,12 +29,13 @@ from kmd.config.text_styles import (
     PROMPT_MAIN,
 )
 from kmd.model.actions_model import Action
+from kmd.model.params_model import Param
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_checks import (
     items_matching_precondition,
 )
 from kmd.shell_tools.action_wrapper import ShellCallableAction
-from kmd.shell_tools.function_inspect import ParamInfo
+from kmd.shell_tools.function_inspect import get_params
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
 from kmd.text_formatting.text_formatting import single_line
 from kmd.text_ui.command_output import output
@@ -276,6 +277,18 @@ def help_question_completer(context: CompletionContext) -> CompleterResult:
             return {RichCompletion(question) for question in _completion_match(query, questions)}
 
 
+def _param_completions(params: List[Param], prefix: str):
+    return [
+        RichCompletion(
+            param.shell_prefix(),
+            description=param.description or "",
+            append_space=(param.type == bool),
+        )
+        for param in params
+        if param.shell_prefix().startswith(prefix)
+    ]
+
+
 @contextual_completer
 def options_completer(context: CompletionContext) -> CompleterResult:
     """
@@ -284,45 +297,34 @@ def options_completer(context: CompletionContext) -> CompleterResult:
     if context.command and context.command.arg_index > 0:
         prefix = context.command.prefix
 
-        if prefix.startswith("-"):
-            command_name = context.command.args[0].value
+        is_option = prefix.startswith("-")
 
-            command = _commands.get(command_name)
-            action = _actions.get(command_name)
+        command_name = context.command.args[0].value
+
+        command = _commands.get(command_name)
+        action = _actions.get(command_name)
+
+        if is_option:
+            completions = []
+            help_text = ""
+            params = []
 
             if command:
-                param_info: ParamInfo | None = getattr(command, "__param_info__", None)
-                if param_info:
-                    _pos_params, _kw_params, kw_docs = param_info
-                    completions = [
-                        RichCompletion(
-                            param.shell_prefix(),
-                            description=param.description or "",
-                            append_space=True,
-                        )
-                        for param in kw_docs
-                        if param.shell_prefix().startswith(prefix)
-                    ]
-                    if "--help".startswith(prefix):
-                        completions.append(
-                            RichCompletion("--help", description="Show more help for this command.")
-                        )
-                    return set(completions)
+                help_text = "Show more help for this command."
+                params = get_params(command)
+            elif action:
+                help_text = "Show more help for this action."
+                params = action.params()
 
-            if action:
-                param_docs = action.params()
-                completions = [
-                    RichCompletion(
-                        param.shell_prefix(), description=param.description or "", append_space=True
-                    )
-                    for param in param_docs
-                    if param.shell_prefix().startswith(prefix)
-                ]
-                if "--help".startswith(prefix):
-                    completions.append(
-                        RichCompletion("--help", description="Show more help for this action.")
-                    )
-                return set(completions)
+            completions = _param_completions(params, prefix)
+
+            if completions and "--help".startswith(prefix):
+                completions.append(RichCompletion("--help", description=help_text))
+
+            return set(completions) if completions else None
+
+
+# TODO: Complete enum values for enum options.
 
 
 def _kmd_xonsh_prompt():

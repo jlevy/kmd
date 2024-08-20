@@ -105,6 +105,14 @@ def collect_param_info(func: Callable[..., Any]) -> ParamInfo:
     return func.__param_info__
 
 
+def get_params(command: Callable[..., Any]) -> List[Param]:
+    param_info: ParamInfo | None = getattr(command, "__param_info__", None)
+    if param_info:
+        _pos_params, _kw_params, kw_docs = param_info
+        return kw_docs
+    return []
+
+
 ## Tests
 
 

@@ -78,7 +78,7 @@ def run_action(
     if args:
         source_str = "provided args" if provided_args else "selection"
         log.message(
-            "Using %s as inputs to action %s:\n%s", source_str, action_name, format_lines(args)
+            "Using %s as inputs to action `%s`:\n%s", source_str, action_name, format_lines(args)
         )
 
     # Ensure we have the right number of args.
@@ -89,7 +89,7 @@ def run_action(
     # TODO: Also save the parameters/options that were used.
     inputs = [Input(StorePath(arg), ws.hash(StorePath(arg))) for arg in args if is_store_path(arg)]
     operation = Operation(action_name, inputs, action.param_summary())
-    log.message("%s Action: %s", EMOJI_CALL_BEGIN, operation.command_line(with_options=False))
+    log.message("%s Action: `%s`", EMOJI_CALL_BEGIN, operation.command_line(with_options=False))
     if len(action.param_summary()) > 0:
         log.message("%s", action.param_summary_str())
     log.info("Operation is: %s", operation)
@@ -133,7 +133,7 @@ def run_action(
         archived_store_paths = []
 
         log.message(
-            "%s Action skipped: %s completed with %s %s",
+            "%s Action skipped: `%s` completed with %s %s",
             EMOJI_CALL_END,
             action_name,
             len(result.items),

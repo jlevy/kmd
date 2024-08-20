@@ -1,3 +1,5 @@
+from enum import Enum
+from types import NoneType
 from typing import Any, Dict, Optional, Type, TypeVar, Union, get_args, get_origin
 from dataclasses import is_dataclass, fields
 
@@ -69,7 +71,7 @@ def as_dataclass(dict_data: Dict[str, Any], dataclass_type: Type[T]) -> T:
     return dataclass_type(**dataclass_fields)
 
 
-def instantiate_as_type(value: Any, target_type: Type[T]) -> T | None:
+def instantiate_as_type(value: Any, target_type: Type[T]) -> Optional[T]:
     """
     Convert the given value to the specified target type.
     Handles Optional or Union types by trying each possible type.
@@ -79,11 +81,26 @@ def instantiate_as_type(value: Any, target_type: Type[T]) -> T | None:
 
     origin = get_origin(target_type)
     if origin is Union:
+        failed_types = []
         for arg in get_args(target_type):
             try:
-                return arg(value)
+                return instantiate_as_type(value, arg)
             except (ValueError, TypeError):
+                if arg is not NoneType:
+                    failed_types.append(arg)
                 continue
-        raise ValueError(f"Cannot convert {value} to any type in {target_type}")
+
+        extra_info = ""
+        allowed_values = []
+        for t in failed_types:
+            if issubclass(t, Enum):
+                allowed_values.extend([e.value for e in t])
+
+        if allowed_values:
+            extra_info = f" (allowed values: {', '.join(f"`{v}`" for v in allowed_values)})"
+
+        raise ValueError(
+            f"Cannot convert value `{value}` to type {' or '.join(map(str, failed_types))}{extra_info}"
+        )
     else:
         return target_type(value)

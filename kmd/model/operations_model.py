@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 from kmd.model.locators import StorePath
 from kmd.util.log_calls import quote_if_needed
+from kmd.util.parse_utils import format_key_value, format_shell_str
 
 
 @dataclass(frozen=True)
@@ -116,14 +117,14 @@ class Operation:
         return cmd
 
     def as_str(self):
-        return (
-            self.action_name
-            + "("
-            + ",".join(self.hashed_args())
-            + ";"
-            + ",".join(f"{k}={repr(v)}" for k, v in self.options.items())
-            + ")"
+        args_str = ",".join(self.hashed_args())
+        options_str = ",".join(
+            format_key_value(k, v, value_formatter=format_shell_str)
+            for k, v in self.options.items()
         )
+        if options_str:
+            options_str = ";" + options_str
+        return self.action_name + "(" + args_str + options_str + ")"
 
     def __str__(self):
         return f"Operation({self.command_line()})"

@@ -10,8 +10,8 @@ def parse_shell_str(s: str) -> str:
     return shlex.split(s)[0]
 
 
-def format_shell_str(s: str) -> str:
-    return shlex.quote(s)
+def format_shell_str(s: Any) -> str:
+    return shlex.quote(str(s))
 
 
 def parse_python_str(s: str) -> str:
@@ -51,7 +51,7 @@ def parse_key_value(
     return key, value
 
 
-def format_key_value(key: str, value: Any, value_formatter=format_python_str_or_enum) -> str:
+def format_key_value(key: str, value: Any, value_formatter=format_shell_str) -> str:
     """
     Format a key-value pair as a string like `foo=123` or `bar='some value'`.
     """
@@ -72,7 +72,7 @@ def test_key_value_parsing_and_formatting():
     assert parse_key_value("bar = 'some value'") == ("bar", "some value")
     assert parse_key_value("foo=") == ("foo", None)
 
-    assert format_key_value("foo", "123") == "foo='123'"
+    assert format_key_value("foo", "123") == "foo=123"
     assert format_key_value("bar", "some value") == "bar='some value'"
     assert format_key_value("foo", None) == "foo="
     assert format_key_value("foo", "") == "foo=''"

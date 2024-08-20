@@ -75,7 +75,8 @@ def define_action_sequence(
 
                 output_separator()
                 log.message(
-                    "Action sequence `%s` part %s of %s: %s",
+                    "%s Action sequence `%s`: Part %s of %s: `%s`",
+                    EMOJI_ACTION,
                     self.name,
                     i + 1,
                     len(self.action_sequence),
@@ -243,7 +244,7 @@ def define_action_combo(
             for i, action_name in enumerate(self.action_sequence):
                 output_separator()
                 log.message(
-                    "%s Action combo %s part %s of %s: %s",
+                    "%s Action combo `%s`: Part %s of %s: %s",
                     EMOJI_ACTION,
                     self.name,
                     i + 1,
