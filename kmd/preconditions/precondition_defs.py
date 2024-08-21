@@ -5,6 +5,7 @@ from kmd.provenance.timestamps import TimestampExtractor
 from kmd.media.media_services import get_media_id, youtube
 from kmd.model.errors_model import PreconditionFailure
 from kmd.model.items_model import Format, Item, ItemType
+from kmd.text_docs.wordtoks import first_wordtok_is_div
 
 
 @precondition
@@ -55,6 +56,11 @@ def has_div_chunks(item: Item) -> bool:
 @precondition
 def has_annotated_paras(item: Item) -> bool:
     return bool(item.body and item.body.find(f'<p class="{ANNOTATED_PARA}">') != -1)
+
+
+@precondition
+def starts_with_div(item: Item) -> bool:
+    return bool(item.body and first_wordtok_is_div(item.body))
 
 
 @precondition

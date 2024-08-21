@@ -13,7 +13,7 @@ from kmd.config.logger import get_logger
 from kmd.text_docs.sizes import TextUnit, size, size_in_bytes
 from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
 from kmd.model.errors_model import UnexpectedError
-from kmd.lang_tools.sentence_split_spacy import split_sentences
+from kmd.lang_tools.sentence_split_spacy import split_sentences_spacy
 from kmd.text_docs.wordtoks import (
     BOF_TOK,
     EOF_TOK,
@@ -76,7 +76,8 @@ class Paragraph:
     @classmethod
     @tally_calls(level="warning", min_total_runtime=5)
     def from_text(cls, text: str, char_offset: int = -1) -> "Paragraph":
-        sent_values = split_sentences(text)
+        # TODO: Lazily compute sentences for better performance.
+        sent_values = split_sentences_spacy(text)  # Somewhat slow.
         sent_offset = 0
         sentences = []
         for sent_str in sent_values:
@@ -128,8 +129,6 @@ class Paragraph:
 @dataclass
 class TextDoc:
     paragraphs: List[Paragraph]
-
-    # TODO: Could lazily compute paragraphs and wordtoks only for better performance.
 
     @classmethod
     @tally_calls(level="warning", min_total_runtime=5)

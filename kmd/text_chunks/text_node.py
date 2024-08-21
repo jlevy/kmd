@@ -1,5 +1,9 @@
+from copy import copy
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import List, Optional
+from kmd.text_docs.sizes import TextUnit
+from kmd.text_docs.text_doc import TextDoc
 from kmd.text_formatting.html_in_md import div_wrapper
 
 
@@ -32,6 +36,24 @@ class TextNode:
     @property
     def contents(self) -> str:
         return self.original_text[self.content_start : self.content_end]
+
+    @cached_property
+    def text_doc(self) -> TextDoc:
+        return TextDoc.from_text(self.contents)
+
+    def slice_children(self, start: int, end: int) -> "TextNode":
+        if not self.children:
+            raise ValueError("Cannot slice_children on a non-container node.")
+        else:
+            node_copy = copy(self)
+            node_copy.children = node_copy.children[start:end]
+            return node_copy
+
+    def size(self, unit: TextUnit) -> int:
+        if self.children:
+            return sum(child.size(unit) for child in self.children)
+        else:
+            return self.text_doc.size(unit)
 
     def is_whitespace(self) -> bool:
         return not self.children and self.contents.strip() == ""

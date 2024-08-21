@@ -73,6 +73,19 @@ def raw_text_to_wordtoks(text: str, parse_para_br=False, bof_eof=False) -> List[
         return wordtoks
 
 
+def initial_wordtoks(text: str, max_chars: int) -> List[str]:
+    sub_text = text[:max_chars]
+    wordtoks = raw_text_to_wordtoks(sub_text)
+    if wordtoks:
+        wordtoks.pop()  # Drop any cut off token.
+    return wordtoks
+
+
+def first_wordtok_is_div(text: str) -> bool:
+    wordtoks = initial_wordtoks(text, 100)
+    return bool(wordtoks and is_tag(wordtoks[0]) and wordtoks[0].find("<div") >= 0)
+
+
 def join_wordtoks(wordtoks: List[str]) -> str:
     """
     Join wordtoks back into a sentence.

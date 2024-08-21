@@ -35,7 +35,7 @@ nlp = _Spacy()
 
 
 @tally_calls(level="warning", min_total_runtime=5)
-def split_sentences(text: str) -> List[str]:
+def split_sentences_spacy(text: str) -> List[str]:
     """
     Split text into sentences using Spacy. (English.)
     """
