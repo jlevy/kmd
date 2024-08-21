@@ -47,6 +47,8 @@ def tag_with_attrs(
         padding = "\n" if tag in ["div", "p"] else ""
     if padding:
         content = content.strip("\n")
+        if not content:
+            padding = ""
     return f"<{tag}{attr_str}>{padding}{content}{padding}</{tag}>"
 
 

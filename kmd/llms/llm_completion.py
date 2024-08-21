@@ -1,11 +1,13 @@
 from typing import Dict, List
 from textwrap import indent
 from slugify import slugify
+from strif import abbreviate_str
 import litellm
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.errors_model import ApiResultError
 from kmd.model.language_models import LLM
+from kmd.text_formatting.text_formatting import format_lines
 from kmd.util.log_calls import log_calls
 
 
@@ -48,13 +50,16 @@ def llm_completion(
         len(system_message),
         len(user_message),
     )
-    log.info("LLM completion input to model %s:\n%s", model, indent(user_message, "    "))
-    if save_objects:
-        log.save_object(
-            "LLM request",
-            f"llm.{model_slug}",
-            f"""System message: {system_message}\n\nUser message: {user_message}\n""",
-        )
+    log.info(
+        "LLM completion input to model %s:\n%s",
+        model,
+        format_lines(
+            [
+                abbreviate_str(f"System message: {str(system_message)}"),
+                abbreviate_str(f"User message: {user_message}"),
+            ]
+        ),
+    )
 
     text_output = _litellm_completion(
         model.value,
@@ -66,6 +71,16 @@ def llm_completion(
 
     log.info("LLM completion output:\n%s", indent(text_output, "    "))
     if save_objects:
-        log.save_object("LLM response", f"llm.{model_slug}", text_output)
+        log.save_object(
+            "LLM response",
+            f"llm.{model_slug}",
+            "\n\n---\n\n".join(
+                [
+                    f"System message:\n{str(system_message)}",
+                    f"User message:\n{user_message}",
+                    f"Response:\n{text_output}",
+                ]
+            ),
+        )
 
     return text_output

@@ -84,7 +84,8 @@ class CaptionParas(CachedItemLLMAction):
         doc = TextDoc.from_text(item.body)
         output = []
         for para in doc.paragraphs:
-            output.append(self.process_para(para))
+            if para.size(TextUnit.words) > 0:
+                output.append(self.process_para(para))
 
         final_output = "\n\n".join(output)
 

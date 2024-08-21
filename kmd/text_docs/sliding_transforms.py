@@ -104,11 +104,11 @@ def filtered_transform(
                 "transform_and_check_diff",
                 transformed_doc.reassemble(),
             )
-            log.save_object(
-                "Transformed doc normalized",
-                "transform_and_check_diff",
-                normalize_markdown(transformed_doc.reassemble()),
-            )
+            # log.save_object(
+            #     "Transformed doc normalized",
+            #     "transform_and_check_diff",
+            #     normalize_markdown(transformed_doc.reassemble()),
+            # )
             if diff:
                 log.save_object("Transform diff", "transform_and_check_diff", diff)
             # if accepted_diff:
