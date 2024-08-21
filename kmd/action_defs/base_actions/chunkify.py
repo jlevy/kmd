@@ -1,3 +1,4 @@
+from textwrap import dedent
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
     CachedItemAction,
@@ -17,7 +18,13 @@ class Chunkify(CachedItemAction):
     def __init__(self):
         super().__init__(
             name="chunkify",
-            description="Group paragraphs into chunks, demarcated by div tags. If desired, this can be just one chunk.",
+            description=dedent(
+                """
+                Group paragraphs into chunks, demarcated by div tags. If desired, this
+                might be just one chunk, to indicate that the entire document should be
+                processed as one chunk.
+                """
+            ),
             precondition=is_readable_text,
             chunk_size=2000,
             chunk_unit=TextUnit.words,
@@ -31,12 +38,12 @@ class Chunkify(CachedItemAction):
                 f"Chunk size and unit must be set: {self.chunk_size}, {self.chunk_unit}"
             )
 
-        clean_body = chunk_paras_into_divs(item.body, self.chunk_size, self.chunk_unit)
+        chunked_body = chunk_paras_into_divs(item.body, self.chunk_size, self.chunk_unit)
 
         output_item = item.derived_copy(
             type=ItemType.note,
             format=Format.markdown,
-            body=clean_body,
+            body=chunked_body,
         )
 
         return output_item

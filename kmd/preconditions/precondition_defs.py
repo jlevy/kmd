@@ -1,4 +1,5 @@
 import re
+from kmd.model.html_conventions import ANNOTATED_PARA, CHUNK
 from kmd.model.preconditions_model import precondition
 from kmd.provenance.timestamps import TimestampExtractor
 from kmd.media.media_services import get_media_id, youtube
@@ -48,7 +49,12 @@ def is_html(item: Item) -> bool:
 
 @precondition
 def has_div_chunks(item: Item) -> bool:
-    return bool(item.body and item.body.find('<div class="chunk">') != -1)
+    return bool(item.body and item.body.find(f'<div class="{CHUNK}">') != -1)
+
+
+@precondition
+def has_annotated_paras(item: Item) -> bool:
+    return bool(item.body and item.body.find(f'<p class="{ANNOTATED_PARA}">') != -1)
 
 
 @precondition

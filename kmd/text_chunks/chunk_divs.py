@@ -3,7 +3,7 @@ from typing import List
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import InvalidInput
 from kmd.model.html_conventions import CHUNK, ORIGINAL
-from kmd.text_chunks.para_groups import para_groups_by_size
+from kmd.text_chunks.para_groups import text_doc_chunk_paras
 from kmd.text_chunks.parse_divs import TextNode, parse_divs
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_formatting.html_in_md import div_wrapper, html_div, html_join_blocks
@@ -24,7 +24,7 @@ def chunk_paras_into_divs(text: str, min_size: int, unit: TextUnit, class_name: 
     """
     doc = TextDoc.from_text(text)
 
-    chunks = para_groups_by_size(doc, min_size, unit)
+    chunks = text_doc_chunk_paras(doc, min_size, unit)
     div_chunks = [div(class_name, chunk.reassemble()) for chunk in chunks]
 
     log.message("Added %s div chunks on doc size %s.", len(div_chunks), doc.size_summary())

@@ -25,7 +25,12 @@ class ShellCallableAction:
         if shell_args.show_help:
             param_docs = self.action.params() + list(RUNTIME_ACTION_PARAMS.values())
 
-            output_command_help(self.action.name, self.action.description, param_docs)
+            output_command_help(
+                self.action.name,
+                self.action.description,
+                param_docs=param_docs,
+                precondition=self.action.precondition,
+            )
 
             return
 
