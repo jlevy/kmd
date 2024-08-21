@@ -36,11 +36,22 @@ class TextNode:
     def is_whitespace(self) -> bool:
         return not self.children and self.contents.strip() == ""
 
-    def children_by_class_names(self, *class_names: str) -> List["TextNode"]:
-        return [child for child in self.children if child.class_name in class_names]
+    def children_by_class_names(
+        self, *class_names: str, recursive: bool = False
+    ) -> List["TextNode"]:
+        def collect_children(node: "TextNode") -> List["TextNode"]:
+            matching_children = [
+                child for child in node.children if child.class_name in class_names
+            ]
+            if recursive:
+                for child in node.children:
+                    matching_children.extend(collect_children(child))
+            return matching_children
+
+        return collect_children(self)
 
     def child_by_class_name(self, class_name: str) -> Optional["TextNode"]:
-        nodes = self.children_by_class_names(class_name)
+        nodes = self.children_by_class_names(class_name, recursive=False)
         if len(nodes) == 0:
             return None
         if len(nodes) > 1:

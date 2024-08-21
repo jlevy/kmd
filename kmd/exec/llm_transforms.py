@@ -41,7 +41,7 @@ def windowed_llm_transform(
     return result_doc
 
 
-def llm_transform_str(action: LLMAction, input_str: str) -> str:
+def llm_transform_str(action: LLMAction, input_str: str, normalize: bool = True) -> str:
     if not action.model or not action.system_message or not action.template:
         raise InvalidInput(
             f"LLM actions expect a model, system_message, and template: {action.name}"
@@ -66,7 +66,8 @@ def llm_transform_str(action: LLMAction, input_str: str) -> str:
             input=input_str,
         )
 
-    result_str = normalize_markdown(result_str)
+    if normalize:
+        result_str = normalize_markdown(result_str)
 
     return result_str
 

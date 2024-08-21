@@ -12,6 +12,11 @@ FULL_TEXT = "full-text"
 SPEAKER_LABEL = "speaker-label"
 
 SUMMARY = "summary"
+
+ANNOTATED_PARA = "annotated-para"
+PARA = "para"
+PARA_CAPTION = "para-caption"
+
 CONCEPTS = "concepts"
 
 # Data attributes:

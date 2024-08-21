@@ -26,8 +26,9 @@ class CustomHTMLRenderer(marko.HTMLRenderer):
 
     def render_html_block(self, element: HTMLBlock) -> str:
         if self.div_pattern.match(element.body.strip()):
-            return f"\n<p>{element.body.strip()}</p>\n"
-        return element.body
+            return f"\n{element.body.strip()}\n"
+        else:
+            return element.body
 
 
 standard_markdown = marko.Markdown()

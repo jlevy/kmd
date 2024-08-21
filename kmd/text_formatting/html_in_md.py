@@ -42,9 +42,12 @@ def tag_with_attrs(
     if attrs:
         attr_str += "".join(f' {k}="{escape_attribute(v)}"' for k, v in attrs.items())
     # Default padding for div and p tags.
+    content = escape_md_html(text, safe)
     if padding is None:
         padding = "\n" if tag in ["div", "p"] else ""
-    return f"<{tag}{attr_str}>{padding}{escape_md_html(text, safe)}{padding}</{tag}>"
+    if padding:
+        content = content.strip("\n")
+    return f"<{tag}{attr_str}>{padding}{content}{padding}</{tag}>"
 
 
 def html_span(

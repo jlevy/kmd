@@ -11,10 +11,11 @@ from kmd.model.actions_model import (
     ExpectedArgs,
 )
 from kmd.model.errors_model import InvalidInput
+from kmd.model.html_conventions import CHUNK
 from kmd.model.items_model import UNTITLED, Format, Item
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import has_div_chunks, is_readable_text
-from kmd.text_chunks.chunk_divs import parse_chunk_divs
+from kmd.text_chunks.chunk_divs import parse_divs_by_class
 from kmd.text_chunks.parse_divs import TextNode
 from kmd.text_docs.sliding_transforms import WindowSettings
 from kmd.text_docs.text_diffs import DiffFilterType
@@ -66,6 +67,7 @@ class ChunkedLLMAction(CachedItemLLMAction):
     """
 
     precondition: Optional[Precondition] = has_div_chunks
+    chunk_class: str = CHUNK
 
     def run_item(self, item: Item) -> Item:
 
@@ -73,7 +75,7 @@ class ChunkedLLMAction(CachedItemLLMAction):
             raise InvalidInput(f"LLM actions expect a body: {self.name} on {item}")
 
         output = []
-        for chunk in parse_chunk_divs(item.body):
+        for chunk in parse_divs_by_class(item.body, self.chunk_class):
             output.append(self.process_chunk(chunk))
 
         result_item = item.derived_copy(body="\n\n".join(output), format=Format.md_html)

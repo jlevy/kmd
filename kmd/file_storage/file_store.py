@@ -206,8 +206,8 @@ class FileStore:
         elif item_id in self.id_map:
             # If this item has an identity and we've saved under that id before, use the same store path.
             store_path = self.id_map[item_id]
-            log.message(
-                "Item with id already saved (post-save check):\n%s",
+            log.info(
+                "Found existing item with same id:\n%s",
                 format_lines([store_path, item_id]),
             )
             return store_path, None

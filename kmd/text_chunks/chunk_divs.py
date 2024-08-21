@@ -13,11 +13,11 @@ log = get_logger(__name__)
 div_chunk = div_wrapper(class_name=CHUNK, padding="\n\n")
 
 
-def div(class_name: str, contents: str) -> str:
-    return div_wrapper(class_name=class_name, padding="\n\n")(contents)
+def div(class_name: str, *blocks: str) -> str:
+    return div_wrapper(class_name=class_name, padding="\n\n")(html_join_blocks(*blocks))
 
 
-def chunk_paras_into_divs(text: str, min_size: int, unit: TextUnit) -> str:
+def chunk_paras_into_divs(text: str, min_size: int, unit: TextUnit, class_name: str = CHUNK) -> str:
     """
     Add HTML "chunk" divs around paragraphs, where each chunk is at least the
     specified minimum size.
@@ -25,25 +25,25 @@ def chunk_paras_into_divs(text: str, min_size: int, unit: TextUnit) -> str:
     doc = TextDoc.from_text(text)
 
     chunks = para_groups_by_size(doc, min_size, unit)
-    div_chunks = [div_chunk(chunk.reassemble()) for chunk in chunks]
+    div_chunks = [div(class_name, chunk.reassemble()) for chunk in chunks]
 
     log.message("Added %s div chunks on doc size %s.", len(div_chunks), doc.size_summary())
     return "\n\n".join(div_chunks)
 
 
-def parse_chunk_divs(text: str) -> List[TextNode]:
+def parse_divs_by_class(text: str, class_name: str = CHUNK) -> List[TextNode]:
     """
     Parse div chunks into TextNodes.
     """
 
     text_node = parse_divs(text)
 
-    chunk_divs = text_node.children_by_class_names(CHUNK)
+    matched_divs = text_node.children_by_class_names(class_name, recursive=True)
 
-    if not chunk_divs:
-        raise InvalidInput("No chunk divs found in text.")
+    if not matched_divs:
+        raise InvalidInput(f"No `{class_name}` divs found in text.")
 
-    return chunk_divs
+    return matched_divs
 
 
 def add_original(chunk: TextNode) -> str:
@@ -65,13 +65,15 @@ def get_original(chunk: TextNode) -> str:
     return original.contents if original else chunk.contents
 
 
-def insert_chunk_child(chunk: TextNode, new_child_str: str, insert_before: bool = True) -> str:
+def insert_chunk_child(
+    chunk: TextNode, new_child_str: str, insert_before: bool = True, class_name: str = CHUNK
+) -> str:
     """
     Insert a new child into a chunk div. Wrap the chunk contents in an "original" div
     if it's not already there.
     """
 
-    if chunk.class_name != CHUNK:
+    if chunk.class_name != class_name:
         raise ValueError(f"Expected a div chunk: {chunk}")
 
     chunk_str = add_original(chunk)
@@ -81,7 +83,7 @@ def insert_chunk_child(chunk: TextNode, new_child_str: str, insert_before: bool 
     else:
         blocks = [chunk_str, new_child_str]
 
-    return div_chunk(html_join_blocks(*blocks))
+    return div(class_name, html_join_blocks(*blocks))
 
 
 ## Tests
@@ -166,7 +168,7 @@ def test_parse_chunk_divs():
         """
     )
 
-    chunk_divs = parse_chunk_divs(text)
+    chunk_divs = parse_divs_by_class(text)
 
     print("\n---test_parse_chunk_divs---")
     for chunk_div in chunk_divs:

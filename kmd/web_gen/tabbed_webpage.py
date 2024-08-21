@@ -53,7 +53,7 @@ def webpage_config(items: List[Item]) -> Item:
     config = TabbedWebpage(title=title, tabs=tabs, show_tabs=len(tabs) > 1)
 
     config_item = Item(
-        title=f"Config for {title}",
+        title=f"{title} (config)",
         type=ItemType.config,
         format=Format.yaml,
         body=to_yaml_string(asdict(config)),
