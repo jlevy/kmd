@@ -7,7 +7,7 @@ from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import has_div_chunks, is_readable_text
-from kmd.text_chunks.div_chunks import chunk_text_into_divs
+from kmd.text_chunks.div_elements import chunk_text_as_divs
 from kmd.text_docs.sizes import TextUnit
 
 log = get_logger(__name__)
@@ -39,7 +39,7 @@ class Chunkify(CachedItemAction):
                 f"Chunk size and unit must be set: {self.chunk_size}, {self.chunk_unit}"
             )
 
-        chunked_body = chunk_text_into_divs(item.body, self.chunk_size, self.chunk_unit)
+        chunked_body = chunk_text_as_divs(item.body, self.chunk_size, self.chunk_unit)
 
         output_item = item.derived_copy(
             type=ItemType.note,

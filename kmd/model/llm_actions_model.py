@@ -10,12 +10,12 @@ from kmd.model.actions_model import (
     TransformAction,
 )
 from kmd.model.errors_model import InvalidInput
-from kmd.model.doc_elements import CHUNK, RESULT
+from kmd.model.doc_elements import CHUNK, ORIGINAL, RESULT
 from kmd.model.items_model import UNTITLED, Format, Item
 from kmd.model.language_models import LLM
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import has_div_chunks
-from kmd.text_chunks.div_chunks import div, insert_chunk_child
+from kmd.text_chunks.div_elements import div, div_insert_sibling
 from kmd.text_chunks.parse_divs import parse_divs_by_class, TextNode
 
 
@@ -73,4 +73,4 @@ class ChunkedLLMAction(CachedLLMAction):
         llm_response = llm_transform_str(self, chunk.contents)
         new_div = div(RESULT, llm_response)
 
-        return insert_chunk_child(chunk, new_div)
+        return div_insert_sibling(chunk, new_div, container_class=CHUNK, sibling_class=ORIGINAL)

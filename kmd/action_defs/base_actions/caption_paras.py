@@ -6,7 +6,7 @@ from kmd.model.doc_elements import ANNOTATED_PARA, PARA_CAPTION, PARA
 from kmd.exec.action_registry import kmd_action
 from kmd.model.items_model import Format, Item
 from kmd.model.llm_actions_model import CachedLLMAction
-from kmd.text_chunks.div_chunks import div
+from kmd.text_chunks.div_elements import div
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_docs.text_doc import Paragraph, TextDoc
 
