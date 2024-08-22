@@ -18,7 +18,7 @@ from kmd.text_docs.wordtoks import BOF_TOK, EOF_TOK, PARA_BR_TOK, SENT_BR_TOK, s
 log = get_logger(__name__)
 
 
-@kmd_action
+@kmd_action()
 class BackfillSourceTimestamps(CachedItemAction):
     def __init__(self):
         super().__init__(

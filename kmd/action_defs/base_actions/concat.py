@@ -14,7 +14,7 @@ from kmd.util.type_utils import not_none
 log = get_logger(__name__)
 
 
-@kmd_action
+@kmd_action()
 class Concat(Action):
     separator = "\n\n"
     section_template = "## {title}"

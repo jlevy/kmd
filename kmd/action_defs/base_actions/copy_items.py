@@ -9,7 +9,7 @@ from kmd.config.logger import get_logger
 log = get_logger(__name__)
 
 
-@kmd_action
+@kmd_action()
 class CopyAction(ForEachItemAction):
     def __init__(self):
         super().__init__(

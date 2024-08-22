@@ -13,7 +13,7 @@ from kmd.text_docs.sizes import TextUnit
 log = get_logger(__name__)
 
 
-@kmd_action
+@kmd_action()
 class Chunkify(CachedItemAction):
     def __init__(self):
         super().__init__(

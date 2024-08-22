@@ -22,7 +22,7 @@ def assistant_coding_preamble() -> LLMMessage:
     return LLMMessage(assistant_preamble(False, False))
 
 
-@kmd_action
+@kmd_action()
 class WriteNewAction(TransformAction):
     def __init__(self):
         super().__init__(
@@ -60,7 +60,7 @@ class WriteNewAction(TransformAction):
                         from kmd.text_formatting.text_formatting import html_to_plaintext
 
 
-                        @kmd_action
+                        @kmd_action()
                         class StripHtml(EachItemAction):
                             def __init__(self):
                                 super().__init__(

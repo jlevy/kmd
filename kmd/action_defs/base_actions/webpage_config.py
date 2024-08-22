@@ -8,7 +8,7 @@ from kmd.web_gen.tabbed_webpage import webpage_config
 log = get_logger(__name__)
 
 
-@kmd_action
+@kmd_action()
 class WebpageConfig(Action):
     def __init__(self):
         super().__init__(

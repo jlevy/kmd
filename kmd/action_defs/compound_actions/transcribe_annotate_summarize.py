@@ -1,15 +1,15 @@
-from kmd.exec.action_registry import kmd_each_item_action
+from kmd.exec.action_registry import kmd_action
 from kmd.preconditions.precondition_defs import is_url
 from kmd.exec.compound_actions import SequenceAction
 
 
-@kmd_each_item_action
+@kmd_action(for_each_item=True)
 class TranscribeAnnotateSummarize(SequenceAction):
     def __init__(self):
         super().__init__(
             name="transcribe_annotate_summarize",
             action_names=[
-                "transcribe_format",
+                "transcribe_and_format",
                 "caption_paras",
                 "chunkify",
                 "find_concepts_chunked",

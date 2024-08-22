@@ -29,7 +29,7 @@ def define_llm_action(
     Convenience method to register an LLM action.
     """
 
-    @kmd_action
+    @kmd_action()
     class CustomLLMAction(CachedLLMAction):
         def __init__(self):
             super().__init__(

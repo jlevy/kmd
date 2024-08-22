@@ -24,7 +24,7 @@ def color_by_length(count: int) -> str:
     return color
 
 
-@kmd_action
+@kmd_action()
 class ColorizeSentences(ForEachItemAction):
     def __init__(self):
         super().__init__(

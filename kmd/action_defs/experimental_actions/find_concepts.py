@@ -7,7 +7,7 @@ from kmd.config.logger import get_logger
 log = get_logger(__name__)
 
 
-@kmd_action
+@kmd_action()
 class FindConcepts(CachedLLMAction):
     def __init__(self):
         super().__init__(

@@ -11,7 +11,7 @@ from kmd.text_formatting.text_formatting import html_to_plaintext
 log = get_logger(__name__)
 
 
-@kmd_action
+@kmd_action()
 class StripHtml(CachedItemAction):
     def __init__(self):
         super().__init__(

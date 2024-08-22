@@ -12,7 +12,7 @@ from kmd.preconditions.precondition_defs import is_url
 log = get_logger(__name__)
 
 
-@kmd_action
+@kmd_action()
 class FetchPageMetadata(ForEachItemAction):
     def __init__(self):
         super().__init__(

@@ -7,7 +7,7 @@ from kmd.text_chunks.parse_divs import TextNode
 from kmd.text_chunks.div_chunks import div, get_original, insert_chunk_child
 
 
-@kmd_action
+@kmd_action()
 class SummarizeAsBulletsChunked(ChunkedLLMAction):
     def __init__(self):
         super().__init__(

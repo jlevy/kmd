@@ -11,7 +11,7 @@ from kmd.text_docs.wordtoks import raw_text_to_wordtoks, visualize_wordtoks
 log = get_logger(__name__)
 
 
-@kmd_action
+@kmd_action()
 class Wordtokenize(ForEachItemAction):
     def __init__(self):
         super().__init__(

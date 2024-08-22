@@ -48,27 +48,17 @@ def _register_action(cls: Type[Action], wrapper: ActionWrapper) -> Type[Action]:
     return cls
 
 
-def kmd_action(cls: Type[Action]) -> Type[Action]:
+def kmd_action(for_each_item: bool = False) -> Callable[[Type[Action]], Type[Action]]:
     """
     Annotation to register an action.
-    """
-    return _register_action(cls, no_wrapper)
 
-
-def kmd_each_item_action(cls: Type[Action]) -> Type[Action]:
-    """
-    Decorator for registering an action that processes each input item one at a time.
-    """
-    return _register_action(cls, each_item_wrapper)
-
-
-def kmd_action_wrapped(wrapper: ActionWrapper) -> Callable[[Type[Action]], Type[Action]]:
-    """
-    Annotation to register an action, also wrapping it with additional functionality.
+    If `for_each_item` is True, the action should accept a single item will be wrapped
+    so that it runs on each input item for multiple inputs.
     """
 
     def decorator(cls: Type[Action]) -> Type[Action]:
-        return _register_action(cls, wrapper)
+        actual_wrapper = each_item_wrapper if for_each_item else no_wrapper
+        return _register_action(cls, actual_wrapper)
 
     return decorator
 

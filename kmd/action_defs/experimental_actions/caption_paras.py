@@ -14,7 +14,7 @@ from kmd.text_docs.text_doc import Paragraph, TextDoc
 log = get_logger(__name__)
 
 
-@kmd_action
+@kmd_action()
 class CaptionParas(CachedLLMAction):
     def __init__(self):
         super().__init__(

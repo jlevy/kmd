@@ -7,7 +7,7 @@ from kmd.web_gen.video_gallery import video_gallery_config
 log = get_logger(__name__)
 
 
-@kmd_action
+@kmd_action()
 class VideoGalleryConfig(Action):
     def __init__(self):
         super().__init__(

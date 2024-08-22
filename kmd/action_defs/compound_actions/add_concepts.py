@@ -1,10 +1,10 @@
 from kmd.exec.compound_actions import ComboAction, combine_with_divs
-from kmd.exec.action_registry import kmd_each_item_action
+from kmd.exec.action_registry import kmd_action
 from kmd.model.html_conventions import CONCEPTS, FULL_TEXT
 from kmd.preconditions.precondition_defs import is_readable_text
 
 
-@kmd_each_item_action
+@kmd_action(for_each_item=True)
 class AddConcepts(ComboAction):
     def __init__(self):
         super().__init__(
