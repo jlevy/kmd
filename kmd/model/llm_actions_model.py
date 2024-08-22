@@ -10,7 +10,7 @@ from kmd.model.actions_model import (
     TransformAction,
 )
 from kmd.model.errors_model import InvalidInput
-from kmd.model.html_conventions import CHUNK, RESULT
+from kmd.model.doc_elements import CHUNK, RESULT
 from kmd.model.items_model import UNTITLED, Format, Item
 from kmd.model.language_models import LLM
 from kmd.model.preconditions_model import Precondition

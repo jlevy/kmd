@@ -1,6 +1,6 @@
 from textwrap import dedent
 from kmd.config.logger import get_logger
-from kmd.model.html_conventions import CHUNK, ORIGINAL
+from kmd.model.doc_elements import CHUNK, ORIGINAL
 from kmd.text_chunks.chunk_utils import chunk_children, chunk_paras
 from kmd.text_chunks.parse_divs import TextNode, parse_divs
 from kmd.text_docs.text_doc import TextDoc, TextUnit
@@ -117,7 +117,7 @@ _med_test_doc = dedent(
 ).strip()
 
 
-def test_chunk_paras_as_divs():
+def test_chunk_text_into_divs():
     assert chunk_text_into_divs("", 7, TextUnit.words) == ""
     assert (
         chunk_text_into_divs("hello", 100, TextUnit.words)

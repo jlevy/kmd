@@ -1,7 +1,8 @@
-from kmd.exec.compound_actions import ComboAction, combine_with_divs
+from kmd.exec.compound_actions import ComboAction
 from kmd.exec.action_registry import kmd_action
-from kmd.model.html_conventions import CONCEPTS, FULL_TEXT
+from kmd.model.doc_elements import CONCEPTS, FULL_TEXT
 from kmd.preconditions.precondition_defs import is_readable_text
+from kmd.exec.combiners import combine_with_divs
 
 
 @kmd_action(for_each_item=True)

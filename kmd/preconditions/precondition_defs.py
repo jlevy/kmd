@@ -1,5 +1,5 @@
 import re
-from kmd.model.html_conventions import ANNOTATED_PARA, CHUNK
+from kmd.model.doc_elements import ANNOTATED_PARA, CHUNK
 from kmd.model.preconditions_model import precondition
 from kmd.provenance.timestamps import TimestampExtractor
 from kmd.media.media_services import get_media_id, youtube

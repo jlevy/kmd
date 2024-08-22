@@ -2,7 +2,7 @@ from kmd.config.logger import get_logger
 from kmd.exec.llm_transforms import llm_transform_str
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.errors_model import InvalidInput
-from kmd.model.html_conventions import ANNOTATED_PARA, PARA_CAPTION, PARA
+from kmd.model.doc_elements import ANNOTATED_PARA, PARA_CAPTION, PARA
 from kmd.exec.action_registry import kmd_action
 from kmd.model.items_model import Format, Item
 from kmd.model.llm_actions_model import CachedLLMAction

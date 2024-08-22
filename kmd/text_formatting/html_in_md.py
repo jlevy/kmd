@@ -5,7 +5,7 @@ confusions of using full HTML escaping (like unnecessary &quot;s etc.)
 """
 
 from typing import Callable, Optional, Dict
-from kmd.model.html_conventions import DATA_SPEAKER_ID, DATA_TIMESTAMP, SPEAKER_LABEL
+from kmd.model.doc_elements import DATA_SPEAKER_ID, DATA_TIMESTAMP, SPEAKER_LABEL
 
 
 def escape_md_html(s: str, safe: bool = False) -> str:

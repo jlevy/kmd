@@ -1,6 +1,6 @@
 from kmd.exec.llm_transforms import llm_transform_str
 from kmd.model.actions_model import LLMMessage, LLMTemplate
-from kmd.model.html_conventions import SUMMARY
+from kmd.model.doc_elements import SUMMARY
 from kmd.exec.action_registry import kmd_action
 from kmd.model.llm_actions_model import ChunkedLLMAction
 from kmd.text_chunks.parse_divs import TextNode
