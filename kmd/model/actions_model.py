@@ -13,6 +13,9 @@ from kmd.model.llm_message_model import LLMMessage, LLMTemplate
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.preconditions_model import Precondition
+from kmd.preconditions.precondition_defs import is_readable_text
+from kmd.text_docs.sliding_transforms import WindowSettings
+from kmd.text_docs.text_diffs import DiffFilterType
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.text_ui.command_output import fill_text
 from kmd.util.obj_utils import abbreviate_obj
@@ -231,7 +234,7 @@ class Action(ABC):
 @dataclass(frozen=True)
 class ForEachItemAction(Action):
     """
-    Abastract base action that simply processes each arg one after the other. If "non fatal"
+    Abstract base action that simply processes each arg one after the other. If "non fatal"
     errors are encountered, they are reported and processing continues with the next item.
     """
 
@@ -300,7 +303,7 @@ def preassemble_single_output(
 @dataclass(frozen=True)
 class CachedItemAction(ForEachItemAction):
     """
-    Abstract base action that simpply processes each input and returns a single text output for each.
+    Abstract base action that simply processes each input and returns a single text output for each.
     The output title etc. are derived from the first input item. Caches and skips items that have
     already been processed.
     """
@@ -308,3 +311,20 @@ class CachedItemAction(ForEachItemAction):
     # Implementing this makes caching work.
     def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
         return ActionResult([preassemble_single_output(operation, self, items, type=ItemType.note)])
+
+
+@dataclass(frozen=True)
+class TransformAction(Action):
+    """
+    Abstract base for actions with windowed transforms.
+    """
+
+    expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
+    precondition: Optional[Precondition] = is_readable_text
+
+    windowing: Optional[WindowSettings] = None
+    diff_filter: Optional[DiffFilterType] = None
+
+    @abstractmethod
+    def run(self, items: ActionInput) -> ActionResult:
+        pass

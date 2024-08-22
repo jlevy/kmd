@@ -5,7 +5,6 @@ from typing import List
 from kmd.model.errors_model import InvalidInput
 from kmd.model.html_conventions import CHUNK
 from kmd.text_chunks.text_node import TextNode
-from kmd.text_formatting.html_in_md import html_div
 
 
 DIV_TAGS = re.compile(r"(<div\b[^>]*>|</div>)", re.IGNORECASE)

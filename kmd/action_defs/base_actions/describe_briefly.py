@@ -1,11 +1,9 @@
 from kmd.exec.action_builders import define_llm_action
 from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
-from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 
 define_llm_action(
     name="describe_briefly",
     description="Write a brief description of a text, in at most three sentences.",
-    model=DEFAULT_CAREFUL_MODEL,
     system_message=LLMMessage(
         """
         You are a careful and precise editor.

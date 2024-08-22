@@ -55,6 +55,13 @@ def kmd_action(cls: Type[Action]) -> Type[Action]:
     return _register_action(cls, no_wrapper)
 
 
+def kmd_each_item_action(cls: Type[Action]) -> Type[Action]:
+    """
+    Decorator for registering an action that processes each input item one at a time.
+    """
+    return _register_action(cls, each_item_wrapper)
+
+
 def kmd_action_wrapped(wrapper: ActionWrapper) -> Callable[[Type[Action]], Type[Action]]:
     """
     Annotation to register an action, also wrapping it with additional functionality.

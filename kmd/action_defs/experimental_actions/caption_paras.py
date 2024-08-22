@@ -1,12 +1,11 @@
 from kmd.config.logger import get_logger
-from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 from kmd.exec.llm_transforms import llm_transform_str
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.errors_model import InvalidInput
 from kmd.model.html_conventions import ANNOTATED_PARA, PARA_CAPTION, PARA
 from kmd.exec.action_registry import kmd_action
 from kmd.model.items_model import Format, Item
-from kmd.model.llm_actions_model import CachedItemLLMAction
+from kmd.model.llm_actions_model import CachedLLMAction
 from kmd.text_chunks.div_chunks import div
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_docs.text_doc import Paragraph, TextDoc
@@ -16,12 +15,11 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class CaptionParas(CachedItemLLMAction):
+class CaptionParas(CachedLLMAction):
     def __init__(self):
         super().__init__(
             name="caption_paras",
             description="Caption each paragraph in the text with a very short summary.",
-            model=DEFAULT_CAREFUL_MODEL,
             system_message=LLMMessage(
                 """
                 You are a careful and precise editor.

@@ -65,24 +65,28 @@ create_pdf
 # Note transcription works with multiple speakers:
 transcribe 'https://www.youtube.com/watch?v=uUd7LleJuqM'
 
-# Get all videos on a channel and then download and transcribe them all:
+# Or all videos on a channel and then download and transcribe them all:
 list_channel 'https://www.youtube.com/@Kboges'
 transcribe
 
-# Process a really long document with sliding windows, and a combo
-# action that transcribes, formats, and includes timestamps and summaries:
-transcribe_format_summarize_annotate_video 'https://www.youtube.com/watch?v=juD99_sPWGU'
+# Process a really long document (this one is a 3 hour interview) with sliding windows,
+# and a sequence action that transcribes, formats, and includes timestamps for each
+# paragraph:
+transcribe_format 'https://www.youtube.com/watch?v=juD99_sPWGU'
 
 # Now look at these as a web page:
 webpage_config
 # Edit the config if desired:
 edit
-# Now generate the webpage
+# Now generate the webpage:
 webpage_generate
 # And look at it in the browser:
 show
 
-# Combine several of the above actions in a sequence action:
-transcribe_and_format_video_with_description 'https://www.youtube.com/watch?v=XRQnWomofIY'
+# Combine more actions in a more complex combo action, adding paragraph annotations and concepts:
+transcribe_annotate_summarize 'https://www.youtube.com/watch?v=XRQnWomofIY'
+webpage_config
+webpage_generate
+show
 ```
 """

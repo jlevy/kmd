@@ -13,6 +13,9 @@ div_chunk = div_wrapper(class_name=CHUNK, padding="\n\n")
 
 
 def div(class_name: str, *blocks: str) -> str:
+    """
+    Convenience to create Markdown-compatible div with HTML in its own paragraphs.
+    """
     return div_wrapper(class_name=class_name, padding="\n\n")(html_join_blocks(*blocks))
 
 

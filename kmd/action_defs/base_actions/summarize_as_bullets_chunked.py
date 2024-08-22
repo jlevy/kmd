@@ -1,4 +1,3 @@
-from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 from kmd.exec.llm_transforms import llm_transform_str
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.html_conventions import SUMMARY
@@ -14,7 +13,6 @@ class SummarizeAsBulletsChunked(ChunkedLLMAction):
         super().__init__(
             name="summarize_as_bullets_chunked",
             description="Summarize text as bullet points. Processes each div chunk.",
-            model=DEFAULT_CAREFUL_MODEL,
             system_message=LLMMessage(
                 """
                 You are a careful and precise editor.

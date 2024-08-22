@@ -5,7 +5,7 @@ from kmd.model.items_model import UNTITLED, Format, Item
 from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.model.language_models import LLM
-from kmd.model.llm_actions_model import LLMAction
+from kmd.model.actions_model import TransformAction
 from kmd.model.llm_message_model import LLMMessage, LLMTemplate
 from kmd.text_docs.text_diffs import DiffFilterType, DiffFilter
 from kmd.text_docs.text_doc import TextDoc
@@ -44,14 +44,25 @@ def windowed_llm_transform(
 
 
 def llm_transform_str(
-    action: LLMAction, input_str: str, normalize: bool = True, check_no_results: bool = True
+    action: TransformAction, input_str: str, normalize: bool = True, check_no_results: bool = True
 ) -> str:
-    if not action.model or not action.system_message or not action.template:
-        raise InvalidInput(
-            f"LLM actions expect a model, system_message, and template: {action.name}"
-        )
+    if not action.model:
+        raise InvalidInput(f"LLM action `{action.name}` is missing a model")
+    if not action.system_message:
+        raise InvalidInput(f"LLM action `{action.name}` is missing a system message")
+    if not action.template:
+        raise InvalidInput(f"LLM action `{action.name}` is missing a template")
+
+    setup.api_setup()
 
     if action.windowing:
+        log.message(
+            "Running LLM sliding transform action `%s` with model %s: %s %s",
+            action.name,
+            action.model,
+            action.windowing,
+            "with filter" if action.diff_filter else "without filter",  # TODO: Give filters names.
+        )
         diff_filter = action.diff_filter or DiffFilterType.accept_all
 
         result_str = windowed_llm_transform(
@@ -63,6 +74,12 @@ def llm_transform_str(
             diff_filter.get_filter(),
         ).reassemble()
     else:
+        log.message(
+            "Running simple LLM transform action `%s` with model %s",
+            action.name,
+            action.model,
+        )
+
         result_str = llm_completion(
             action.model,
             system_message=action.system_message,
@@ -77,7 +94,7 @@ def llm_transform_str(
     return result_str
 
 
-def llm_transform_item(action: LLMAction, item: Item) -> Item:
+def llm_transform_item(action: TransformAction, item: Item) -> Item:
     """
     Run an LLM transform action on the input, optionally using a sliding window.
     """
@@ -85,15 +102,7 @@ def llm_transform_item(action: LLMAction, item: Item) -> Item:
     if not item.body:
         raise InvalidInput(f"LLM actions expect a body: {action.name} on {item}")
 
-    setup.api_setup()
-    log.message(
-        "Running LLM sliding transform action %s with model %s: %s %s",
-        action.name,
-        action.model,
-        action.windowing,
-        "with filter" if action.diff_filter else "without filter",  # TODO: Give filters names.
-    )
-    log.info("Input item: %s", item)
+    log.info("LLM transform in item: %s", item)
 
     result_item = item.derived_copy(body=None, format=Format.markdown)
 

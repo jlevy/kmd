@@ -1,66 +1,47 @@
-from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Optional
 from kmd.config.logger import get_logger
+from kmd.config.settings import DEFAULT_CAREFUL_MODEL
+from kmd.exec.llm_transforms import llm_transform_item, llm_transform_str
 from kmd.model.actions_model import (
-    ONE_OR_MORE_ARGS,
-    Action,
     ActionInput,
     ActionResult,
     CachedItemAction,
-    ExpectedArgs,
+    TransformAction,
 )
 from kmd.model.errors_model import InvalidInput
-from kmd.model.html_conventions import CHUNK
+from kmd.model.html_conventions import CHUNK, RESULT
 from kmd.model.items_model import UNTITLED, Format, Item
+from kmd.model.language_models import LLM
 from kmd.model.preconditions_model import Precondition
-from kmd.preconditions.precondition_defs import has_div_chunks, is_readable_text
+from kmd.preconditions.precondition_defs import has_div_chunks
+from kmd.text_chunks.div_chunks import div, insert_chunk_child
 from kmd.text_chunks.parse_divs import parse_divs_by_class, TextNode
-from kmd.text_docs.sliding_transforms import WindowSettings
-from kmd.text_docs.text_diffs import DiffFilterType
 
 
 log = get_logger(__name__)
 
 
 @dataclass(frozen=True)
-class LLMAction(Action):
+class CachedLLMAction(TransformAction, CachedItemAction):
     """
-    Abstract base for LLM actions. Override with templates or other customizations.
+    Base LLM action that processes each item and is cached.
     """
 
-    expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
-    precondition: Optional[Precondition] = is_readable_text
-
-    windowing: Optional[WindowSettings] = None
-    diff_filter: Optional[DiffFilterType] = None
-
-    @abstractmethod
-    def run(self, items: ActionInput) -> ActionResult:
-        pass
-
-
-@dataclass(frozen=True)
-class CachedItemLLMAction(LLMAction, CachedItemAction):
-    """
-    Abstract base LLM action that is also cached.
-    """
+    model: Optional[LLM] = DEFAULT_CAREFUL_MODEL
 
     def run(self, items: ActionInput) -> ActionResult:
         return super(CachedItemAction, self).run(items)
 
-    @abstractmethod
     def run_item(self, item: Item) -> Item:
         """
-        A basic implementationn would be:
-
-        return llm_transform_item(self, item)
+        Override to customize item handling.
         """
-        pass
+        return llm_transform_item(self, item)
 
 
 @dataclass(frozen=True)
-class ChunkedLLMAction(CachedItemLLMAction):
+class ChunkedLLMAction(CachedLLMAction):
     """
     Base class for LLM actions that operate on chunks that are already marked with divs.
     """
@@ -69,7 +50,6 @@ class ChunkedLLMAction(CachedItemLLMAction):
     chunk_class: str = CHUNK
 
     def run_item(self, item: Item) -> Item:
-
         if not item.body:
             raise InvalidInput(f"LLM actions expect a body: {self.name} on {item}")
 
@@ -86,12 +66,11 @@ class ChunkedLLMAction(CachedItemLLMAction):
 
         return result_item
 
-    @abstractmethod
     def process_chunk(self, chunk: TextNode) -> str:
         """
-        A basic implementationn would be:
-
-        llm_response = llm_transform_str(self, chunk.contents)
-        return insert_chunk_child(chunk, llm_response)
+        Override to customize chunk handling.
         """
-        pass
+        llm_response = llm_transform_str(self, chunk.contents)
+        new_div = div(RESULT, llm_response)
+
+        return insert_chunk_child(chunk, new_div)
