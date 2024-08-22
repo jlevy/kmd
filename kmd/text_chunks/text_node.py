@@ -5,6 +5,7 @@ from typing import List, Optional
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_formatting.html_in_md import div_wrapper
+from kmd.text_formatting.text_formatting import format_lines
 
 
 @dataclass
@@ -54,6 +55,57 @@ class TextNode:
             return sum(child.size(unit) for child in self.children)
         else:
             return self.text_doc.size(unit)
+
+    def structure_summary(self) -> dict[str, int]:
+        """
+        Recursively tally the number of non-empty leaf nodes of different types as CSS-style paths.
+        For example
+
+        { "_total": 7, "div.chunk": 5, "div.chunk > div.summary": 2, "div.chunk > div.content": 5 }
+
+        would mean that there were 7 chunk divs, each with a content div, and 2 with
+        a summary div within it.
+        """
+
+        def path_join(*selectors: str) -> str:
+            return " > ".join(selectors)
+
+        def tally_recursive(node: "TextNode", path: List[str], tally: dict) -> None:
+            # Skip leaf nodes.
+            if not node.children and not node.tag_name and not node.class_name:
+                return
+
+            tag_selector = node.tag_name if node.tag_name else ""
+            class_selector = f".{node.class_name}" if node.class_name else ""
+            selector = f"{tag_selector}{class_selector}"
+            new_path = path + [selector] if selector else path
+
+            # Increment counts.
+            path_key = path_join(*new_path)
+            if path_key:
+                tally[path_key] = tally.get(path_key, 0) + 1
+
+            for child in node.children:
+                tally_recursive(child, new_path, tally)
+
+        tally: dict[str, int] = {}
+        tally_recursive(self, [], tally)
+
+        sorted_tally = dict(sorted(tally.items()))
+        return sorted_tally
+
+    def structure_summary_str(self) -> str:
+        structure_summary = self.structure_summary()
+        if not structure_summary:
+            return "No recognized HTML structure tags"
+        else:
+            return "HTML structure tag counts:\n" + format_lines(
+                [f"{count:5d}  {path}" for path, count in self.structure_summary().items()],
+                prefix="",
+            )
+
+    def size_summary(self) -> str:
+        return f"{self.structure_summary_str()}\n{self.text_doc.size_summary()}"
 
     def is_whitespace(self) -> bool:
         return not self.children and self.contents.strip() == ""

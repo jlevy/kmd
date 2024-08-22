@@ -106,35 +106,40 @@ def _parse_divs_recursive(
 
 ## Tests
 
+_test_text = dedent(
+    """
+
+    <div class="outer">
+        Outer content paragraph 1.
+
+        Outer content paragraph 2.
+        <div class="inner">
+            Inner content.
+            <div>
+                Nested content.
+            </div>
+
+            <div class="nested-inner">
+
+                Nested inner content.
+                <div>
+                    Deeply nested content.
+                </div>
+            </div>
+
+            
+        </div>
+        Outer content paragraph 3.
+    </div>
+    """
+)
+
+
+def _strip_lines(text):
+    return [line.strip() for line in text.strip().split("\n")]
+
 
 def test_parse_divs():
-    text = dedent(
-        """
-
-        <div class="outer">
-            Outer content paragraph 1.
-
-            Outer content paragraph 2.
-            <div class="inner">
-                Inner content.
-                <div>
-                    Nested content.
-                </div>
-
-                <div class="nested-inner">
-
-                    Nested inner content.
-                    <div>
-                        Deeply nested content.
-                    </div>
-                </div>
-
-                
-            </div>
-            Outer content paragraph 3.
-        </div>
-        """
-    )
 
     def validate_node(node: TextNode, original_text: str):
         assert node.original_text == original_text
@@ -156,15 +161,15 @@ def test_parse_divs():
         for child in node.children:
             validate_node(child, original_text)
 
-    node = parse_divs(text, skip_whitespace=False)
+    node = parse_divs(_test_text, skip_whitespace=False)
 
-    node_no_whitespace = parse_divs(text, skip_whitespace=True)
+    node_no_whitespace = parse_divs(_test_text, skip_whitespace=True)
 
     reassembled = node.reassemble(padding="")
 
     print()
-    print(f"Original text (length {len(text)}):")
-    print(text)
+    print(f"Original text (length {len(_test_text)}):")
+    print(_test_text)
 
     print()
     print("Parsed text:")
@@ -182,8 +187,56 @@ def test_parse_divs():
     print("Reassembled text (normalized padding):")
     print(node.reassemble())
 
-    validate_node(node, text)
+    validate_node(node, _test_text)
 
     assert reassembled.count("<div") == reassembled.count("</div")
 
-    assert node.reassemble(padding="") == text
+    assert node.reassemble(padding="") == _test_text
+
+
+def test_structure_summary_str_1():
+
+    doc = """
+        <div class="chunk">Chunk1</div>
+        <div class="chunk">Chunk2</div>
+        <div class="chunk">Chunk3</div>
+        """
+
+    node = parse_divs(doc)
+    summary_str = node.structure_summary_str()
+
+    print()
+    print("Structure summary:")
+    print(summary_str)
+
+    expected_summary = dedent(
+        """
+        HTML structure tag counts:
+            3  div.chunk
+        """
+    ).strip()
+
+    assert _strip_lines(summary_str) == _strip_lines(expected_summary)
+
+
+def test_structure_summary_str_2():
+
+    node = parse_divs(_test_text)
+    summary_str = node.structure_summary_str()
+
+    print()
+    print("Structure summary:")
+    print(summary_str)
+
+    expected_summary = dedent(
+        """
+        HTML structure tag counts:
+            1  div.outer
+            1  div.outer > div.inner
+            1  div.outer > div.inner > div
+            1  div.outer > div.inner > div.nested-inner
+            1  div.outer > div.inner > div.nested-inner > div
+        """
+    ).strip()
+
+    assert _strip_lines(summary_str) == _strip_lines(expected_summary)

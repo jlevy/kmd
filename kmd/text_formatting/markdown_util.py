@@ -142,9 +142,9 @@ def test_markdown_to_html():
         This is a paragraph with a <div>div</div> tag.
         This is a paragraph with an <a href='https://example.com'>example link</a>.</p>
 
-        <p><div class="div1">This is a div.</div></p>
+        <div class="div1">This is a div.</div>
 
-        <p><div class="div2">This is a second div.</div></p>
+        <div class="div2">This is a second div.</div>
         """
     )
 

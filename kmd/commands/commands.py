@@ -15,6 +15,7 @@ from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.media.web import fetch_and_cache
 from kmd.preconditions import ALL_PRECONDITIONS
 from kmd.preconditions.precondition_checks import actions_matching_paths
+from kmd.text_chunks.parse_divs import parse_divs
 from kmd.text_ui.command_output import (
     Wrap,
     format_name_and_description,
@@ -315,6 +316,25 @@ def unarchive(*paths: str) -> None:
     for path in paths:
         store_path = ws.unarchive(StorePath(path))
         output_status(f"Unarchived: {store_path}")
+
+
+@kmd_command
+def size_summary(*paths: str) -> None:
+    """
+    Show a summary of the size of the items at the given paths.
+    """
+    ws = current_workspace()
+    output()
+    for path in paths:
+        item = ws.load(StorePath(path))
+        output(f"{path}:", color=COLOR_EMPH)
+
+        if item.body:
+            parsed_body = parse_divs(item.body)
+            output(f"{parsed_body.size_summary()}", text_wrap=Wrap.INDENT_ONLY)
+        else:
+            output("No text body", text_wrap=Wrap.INDENT_ONLY)
+        output()
 
 
 @kmd_command
