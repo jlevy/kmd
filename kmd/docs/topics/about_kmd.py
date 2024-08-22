@@ -69,9 +69,12 @@ Kmd makes a few kinds of messy text manipulations easier:
 
 - Reusable LLM actions: A common kind of action is to invoke an LLM (like
   GPT-4o) on a text item, with a given system and user prompt template. New LLM
-  actions can be added with a few lines of Python by calling the
-  `define_llm_action()` function.
-
+  actions can be added with a few lines of Python by subclassing an action
+  base class, typically `Action`, `CachedItemAction` (for any action that
+  doesn't need to be rerun if it has the same single output), `CachedLLMAction`
+  (if it also is performing an LLM-based transform), or `ChunkedLLMAction`
+  (if it will be processing a document broken into <div class="chunk"> elements).
+  `
 - Sliding window transformations: LLMs can have trouble processing large inputs,
   not just because of context window and because they may make more mistakes
   when making lots of changes at once. Kmd supports running actions in a sliding

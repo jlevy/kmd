@@ -1,35 +1,40 @@
-from kmd.exec.action_builders import define_llm_action
+from kmd.model.llm_actions_model import CachedLLMAction
 from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
+from kmd.exec.action_registry import kmd_action
 
-define_llm_action(
-    name="describe_briefly",
-    description="Write a brief description of a text, in at most three sentences.",
-    system_message=LLMMessage(
-        """
-        You are a careful and precise editor.
-        You give exactly the results requested without additional commentary.
-        """
-    ),
-    title_template=TitleTemplate("Summary of {title}"),
-    template=LLMTemplate(
-        """
-        Give a brief description of the entire text below, as a summary of two or three sentences.
-        Write it concisely and clearly, in a form suitable for a short description of a web page
-        or article.
 
-        - Use simple and precise language.
+@kmd_action()
+class DescribeBriefly(CachedLLMAction):
+    def __init__(self):
+        super().__init__(
+            name="describe_briefly",
+            description="Write a brief description of a text, in at most three sentences.",
+            system_message=LLMMessage(
+                """
+                You are a careful and precise editor.
+                You give exactly the results requested without additional commentary.
+                """
+            ),
+            title_template=TitleTemplate("Summary of {title}"),
+            template=LLMTemplate(
+                """
+                Give a brief description of the entire text below, as a summary of two or three sentences.
+                Write it concisely and clearly, in a form suitable for a short description of a web page
+                or article.
 
-        - Simply state the facts or claims without referencing the text or the author. For example, if the
-          text is about cheese being nutritious, you can say "Cheese is nutritious." But do NOT
-          say "The author says cheese is nutritious" or "According to the text, cheese is nutritious."
+                - Use simple and precise language.
 
-        - If the content is missing so brief that it can't be described, simply say "(No description.)"
-        
-        Original text:
+                - Simply state the facts or claims without referencing the text or the author. For example, if the
+                  text is about cheese being nutritious, you can say "Cheese is nutritious." But do NOT
+                  say "The author says cheese is nutritious" or "According to the text, cheese is nutritious."
 
-        {body}
+                - If the content is missing so brief that it can't be described, simply say "(No description.)"
+                
+                Original text:
 
-        Brief description of the text:
-        """
-    ),
-)
+                {body}
+
+                Brief description of the text:
+                """
+            ),
+        )
