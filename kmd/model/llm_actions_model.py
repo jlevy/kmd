@@ -15,8 +15,7 @@ from kmd.model.html_conventions import CHUNK
 from kmd.model.items_model import UNTITLED, Format, Item
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import has_div_chunks, is_readable_text
-from kmd.text_chunks.chunk_divs import parse_divs_by_class
-from kmd.text_chunks.parse_divs import TextNode
+from kmd.text_chunks.parse_divs import parse_divs_by_class, TextNode
 from kmd.text_docs.sliding_transforms import WindowSettings
 from kmd.text_docs.text_diffs import DiffFilterType
 

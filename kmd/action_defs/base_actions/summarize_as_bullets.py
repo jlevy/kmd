@@ -37,7 +37,7 @@ define_llm_action(
         - Do NOT give any additional response at the beginning, such as "Here are the concise bullet points".
           Simply give the summary.
 
-        - If the input is very short or so unclear you can't summarize it, simply output "(No summary.)".
+        - If the input is very short or so unclear you can't summarize it, simply output "(No results)".
 
         Input text:
 

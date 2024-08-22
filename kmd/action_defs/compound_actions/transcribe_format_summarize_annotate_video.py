@@ -6,6 +6,7 @@ define_action_sequence(
     "transcribe_format_summarize_annotate_video",
     [
         "transcribe_format_video",
+        "caption_paras",
         "chunkify",
         "find_concepts_chunked",
         "summarize_as_bullets_chunked",

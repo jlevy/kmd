@@ -5,7 +5,7 @@ from kmd.model.html_conventions import SUMMARY
 from kmd.exec.action_registry import kmd_action
 from kmd.model.llm_actions_model import ChunkedLLMAction
 from kmd.text_chunks.parse_divs import TextNode
-from kmd.text_chunks.chunk_divs import div, get_original, insert_chunk_child
+from kmd.text_chunks.div_chunks import div, get_original, insert_chunk_child
 
 
 @kmd_action
@@ -43,7 +43,7 @@ class SummarizeAsBulletsChunked(ChunkedLLMAction):
                 - Do NOT give any additional response at the beginning, such as "Here are the concise bullet points".
                   Simply give the summary.
 
-                - If the input is very short or so unclear you can't summarize it, simply output "(No summary available)".
+                - If the input is very short or so unclear you can't summarize it, simply output "(No results)".
 
                 Input text:
 

@@ -114,7 +114,7 @@ _med_test_doc = dedent(
 ).strip()
 
 
-def test_chunk_text_into_divs():
+def test_chunk_paras_as_divs():
     assert chunk_text_into_divs("", 7, TextUnit.words) == ""
     assert (
         chunk_text_into_divs("hello", 100, TextUnit.words)

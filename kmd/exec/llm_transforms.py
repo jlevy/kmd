@@ -25,6 +25,7 @@ def windowed_llm_transform(
     input: str,
     windowing: Optional[WindowSettings],
     diff_filter: DiffFilter,
+    check_no_results: bool = True,
 ) -> TextDoc:
     def doc_transform(input_doc: TextDoc) -> TextDoc:
         return TextDoc.from_text(
@@ -33,6 +34,7 @@ def windowed_llm_transform(
                 system_message=system_message,
                 template=template,
                 input=input_doc.reassemble(),
+                check_no_results=check_no_results,
             )
         )
 
@@ -41,7 +43,9 @@ def windowed_llm_transform(
     return result_doc
 
 
-def llm_transform_str(action: LLMAction, input_str: str, normalize: bool = True) -> str:
+def llm_transform_str(
+    action: LLMAction, input_str: str, normalize: bool = True, check_no_results: bool = True
+) -> str:
     if not action.model or not action.system_message or not action.template:
         raise InvalidInput(
             f"LLM actions expect a model, system_message, and template: {action.name}"
@@ -64,6 +68,7 @@ def llm_transform_str(action: LLMAction, input_str: str, normalize: bool = True)
             system_message=action.system_message,
             template=action.template,
             input=input_str,
+            check_no_results=check_no_results,
         )
 
     if normalize:

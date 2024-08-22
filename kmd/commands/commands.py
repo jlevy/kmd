@@ -321,13 +321,14 @@ def unarchive(*paths: str) -> None:
 @kmd_command
 def size_summary(*paths: str) -> None:
     """
-    Show a summary of the size of the items at the given paths.
+    Show a summary of the size and HTML structure of the items at the given paths.
     """
+    store_paths = _assemble_paths(*paths)
     ws = current_workspace()
     output()
-    for path in paths:
-        item = ws.load(StorePath(path))
-        output(f"{path}:", color=COLOR_EMPH)
+    for store_path in store_paths:
+        item = ws.load(store_path)
+        output(f"{store_path}:", color=COLOR_EMPH)
 
         if item.body:
             parsed_body = parse_divs(item.body)

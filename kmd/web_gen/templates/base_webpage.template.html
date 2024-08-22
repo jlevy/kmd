@@ -228,9 +228,52 @@
       .summary {
         font-family: "Varta", sans-serif;
         font-size: 0.95rem;
-        margin: 1rem 0;
+        margin: 2rem 0;
         padding: 1rem;
         background-color: var(--color-bg);
+      }
+
+      .summary::before {
+        content: "Summary";
+        display: block;
+        text-align: center;
+        font-family: var(--font-sans);
+        font-weight: 500;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+      }
+
+      .concepts {
+        font-family: "Varta", sans-serif;
+        font-size: 0.95rem;
+        font-weight: bold;
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid var(--color-hint);
+        column-count: 3;
+        column-gap: 2rem;
+
+        padding-top: 3.5rem;
+        position: relative;
+      }
+
+      .concepts::before {
+        content: "Concepts";
+        display: block;
+        text-align: center;
+        font-family: var(--font-sans);
+        font-weight: 500;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+
+        /* Hack to center the header above the columns */
+        position: absolute;
+        top: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
       }
 
       .full-text {

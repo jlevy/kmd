@@ -265,7 +265,7 @@ def sliding_para_window_transform(
                 new_doc.paragraphs[0].sentences[0].text = (
                     settings.separator + new_doc.paragraphs[0].sentences[0].text
                 )
-            except KeyError:
+            except (KeyError, IndexError):
                 pass
         transformed_paras.extend(new_doc.paragraphs)
 

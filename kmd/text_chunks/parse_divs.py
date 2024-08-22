@@ -1,8 +1,11 @@
 import re
 from textwrap import dedent
 import copy
-
+from typing import List
+from kmd.model.errors_model import InvalidInput
+from kmd.model.html_conventions import CHUNK
 from kmd.text_chunks.text_node import TextNode
+from kmd.text_formatting.html_in_md import html_div
 
 
 DIV_TAGS = re.compile(r"(<div\b[^>]*>|</div>)", re.IGNORECASE)
@@ -102,6 +105,21 @@ def _parse_divs_recursive(
             current_offset = child_node.end_offset
 
     return result
+
+
+def parse_divs_by_class(text: str, class_name: str = CHUNK) -> List[TextNode]:
+    """
+    Parse div chunks into TextNodes.
+    """
+
+    text_node = parse_divs(text)
+
+    matched_divs = text_node.children_by_class_names(class_name, recursive=True)
+
+    if not matched_divs:
+        raise InvalidInput(f"No `{class_name}` divs found in text.")
+
+    return matched_divs
 
 
 ## Tests
@@ -240,3 +258,35 @@ def test_structure_summary_str_2():
     ).strip()
 
     assert _strip_lines(summary_str) == _strip_lines(expected_summary)
+
+
+def test_parse_chunk_divs():
+    text = dedent(
+        """
+        <div class="chunk">
+
+        Chunk 1 text.
+
+        </div>
+
+        <div class="chunk">
+
+        Chunk 2 text.
+
+        </div>
+
+        <div class="chunk">Empty chunk.</div>
+
+        """
+    )
+
+    chunk_divs = parse_divs_by_class(text)
+
+    print("\n---test_parse_chunk_divs---")
+    for chunk_div in chunk_divs:
+        print(chunk_div.reassemble())
+        print("---")
+
+    assert chunk_divs[0].reassemble() == """<div class="chunk">\n\nChunk 1 text.\n\n</div>"""
+    assert chunk_divs[0].contents.strip() == "Chunk 1 text."
+    assert len(chunk_divs) == 3

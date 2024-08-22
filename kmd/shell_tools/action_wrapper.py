@@ -10,6 +10,7 @@ from kmd.model.actions_model import Action
 from kmd.model.params_model import RUNTIME_ACTION_PARAMS
 from kmd.shell_tools.exception_printing import summarize_traceback
 from kmd.shell_tools.option_parsing import parse_shell_args
+from kmd.text_ui.command_output import output
 from kmd.util.log_calls import log_tallies
 
 log = get_logger(__name__)
@@ -47,6 +48,7 @@ class ShellCallableAction:
                 run_action(self.action, *args, rerun=rerun)
             # We don't return the result to keep the xonsh shell output clean.
         except NONFATAL_EXCEPTIONS as e:
+            output()
             log.error(f"[{COLOR_ERROR}]Action error:[/{COLOR_ERROR}] %s", summarize_traceback(e))
             log.info("Action error details: %s", e, exc_info=True)
             return

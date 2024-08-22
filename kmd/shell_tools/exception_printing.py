@@ -21,7 +21,7 @@ def summarize_traceback(exception: Exception) -> str:
             # and not line.lstrip().startswith("File ")
             and not line.lstrip().startswith("The above exception") and not line.startswith("    ")
         ]
-        + ["Run `logs` for details."]
+        + ["\nRun `logs` for details."]
     )
 
 

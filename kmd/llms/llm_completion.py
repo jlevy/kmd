@@ -4,6 +4,7 @@ from slugify import slugify
 from strif import abbreviate_str
 import litellm
 from kmd.config.logger import get_logger
+from kmd.llms.llm_checks import is_no_results
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.errors_model import ApiResultError
 from kmd.model.language_models import LLM
@@ -36,6 +37,7 @@ def llm_completion(
     template: LLMTemplate,
     input: str,
     save_objects: bool = True,
+    check_no_results: bool = True,
 ) -> str:
     """
     Perform an LLM completion. Input is inserted into the template with a `body` parameter.
@@ -70,6 +72,11 @@ def llm_completion(
     )
 
     log.info("LLM completion output:\n%s", indent(text_output, "    "))
+
+    if check_no_results and is_no_results(text_output):
+        log.message("No results for LLM transform, will ignore: %r", text_output)
+        text_output = ""
+
     if save_objects:
         log.save_object(
             "LLM response",

@@ -100,7 +100,7 @@ class TextNode:
             return "No recognized HTML structure tags"
         else:
             return "HTML structure tag counts:\n" + format_lines(
-                [f"{count:5d}  {path}" for path, count in self.structure_summary().items()],
+                [f"{count:6d}  {path}" for path, count in self.structure_summary().items()],
                 prefix="",
             )
 

@@ -1,4 +1,5 @@
 from typing import Callable, Generator, TypeVar
+from kmd.text_chunks.text_node import TextNode
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 
 
@@ -30,15 +31,35 @@ def chunk_generator(
         yield slicer(doc, start_index, total_size)
 
 
-def text_doc_chunk_paras(
-    doc: TextDoc, min_size: int, unit: TextUnit
-) -> Generator[TextDoc, None, None]:
+def chunk_paras(doc: TextDoc, min_size: int, unit: TextUnit) -> Generator[TextDoc, None, None]:
     """
     Generate TextDoc chunks where each chunk is at least the specified minimum size.
     """
-    condition = lambda subdoc: subdoc.size(unit) >= min_size
-    total_paragraphs = len(doc.paragraphs)
-    slicer = lambda d, start, end: d.sub_paras(start, end)
 
-    for chunk in chunk_generator(doc, condition, slicer, total_paragraphs):
-        yield chunk
+    def condition(slice: TextDoc) -> bool:
+        return slice.size(unit) >= min_size
+
+    def slicer(doc: TextDoc, start: int, end: int) -> TextDoc:
+        return doc.sub_paras(start, end)
+
+    total_paragraphs = len(doc.paragraphs)
+
+    yield from chunk_generator(doc, condition, slicer, total_paragraphs)
+
+
+def chunk_children(
+    node: TextNode, min_size: int, unit: TextUnit
+) -> Generator[TextNode, None, None]:
+    """
+    Generate TextNode chunks where each chunk is at least the specified minimum size.
+    """
+
+    def condition(slice: TextNode) -> bool:
+        return slice.size(unit) >= min_size
+
+    def slicer(node: TextNode, start: int, end: int) -> TextNode:
+        return node.slice_children(start, end)
+
+    total_children = len(node.children)
+
+    yield from chunk_generator(node, condition, slicer, total_children)

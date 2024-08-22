@@ -1,15 +1,13 @@
-from strif import abbreviate_str
 from kmd.config.logger import get_logger
 from kmd.config.settings import DEFAULT_CAREFUL_MODEL
 from kmd.exec.llm_transforms import llm_transform_str
-from kmd.llms.llm_checks import fuzzy_match
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.errors_model import InvalidInput
 from kmd.model.html_conventions import ANNOTATED_PARA, PARA_CAPTION, PARA
 from kmd.exec.action_registry import kmd_action
 from kmd.model.items_model import Format, Item
 from kmd.model.llm_actions_model import CachedItemLLMAction
-from kmd.text_chunks.chunk_divs import div
+from kmd.text_chunks.div_chunks import div
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_docs.text_doc import Paragraph, TextDoc
 
@@ -50,7 +48,7 @@ class CaptionParas(CachedItemLLMAction):
                 - DO NOT INCLUDE any other commentary.
 
                 - If the input is very short or so unclear you can't summarize it, simply output
-                  "(No summary available)".
+                  "(No results)".
 
                 Sample input text:
 
@@ -99,15 +97,6 @@ class CaptionParas(CachedItemLLMAction):
         para_str = para.reassemble()
         if para.size(TextUnit.words) > 25:
             llm_response = llm_transform_str(self, para_str)
-
-            if fuzzy_match(llm_response, "(No summary available)"):
-                llm_response = ""
-
-                log.message(
-                    "No summary available for paragraph: got '%s': %s",
-                    llm_response,
-                    abbreviate_str(para_str),
-                )
 
         new_div = div(ANNOTATED_PARA, div(PARA_CAPTION, llm_response), div(PARA, para.reassemble()))
 
