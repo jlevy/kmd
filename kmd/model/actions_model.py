@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from copy import copy
 from dataclasses import dataclass, field, fields
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_logger
 from kmd.config.text_styles import EMOJI_ACTION
 from kmd.lang_tools.inflection import plural
@@ -196,7 +196,7 @@ class Action(ABC):
             # Convert value to the appropriate type.
             if param_name in action_param_names:
                 field_info = next(f for f in fields(self) if f.name == param_name)
-                value = instantiate_as_type(value, field_info.type)
+                value = instantiate_as_type(value, cast(type, field_info.type))
 
             # Update the action.
             if param_name in ALL_COMMON_PARAMS and param_name in action_param_names:

@@ -7,6 +7,7 @@ from kmd.model.actions_model import (
     ActionInput,
     ActionResult,
     CachedItemAction,
+    ForEachItemAction,
     TransformAction,
 )
 from kmd.model.errors_model import InvalidInput
@@ -23,7 +24,7 @@ log = get_logger(__name__)
 
 
 @dataclass(frozen=True)
-class CachedLLMAction(TransformAction, CachedItemAction):
+class LLMAction(TransformAction, ForEachItemAction):
     """
     Base LLM action that processes each item and is cached.
     """
@@ -31,13 +32,23 @@ class CachedLLMAction(TransformAction, CachedItemAction):
     model: Optional[LLM] = DEFAULT_CAREFUL_MODEL
 
     def run(self, items: ActionInput) -> ActionResult:
-        return super(CachedItemAction, self).run(items)
+        return super(ForEachItemAction, self).run(items)
 
     def run_item(self, item: Item) -> Item:
         """
         Override to customize item handling.
         """
         return llm_transform_item(self, item)
+
+
+@dataclass(frozen=True)
+class CachedLLMAction(LLMAction, CachedItemAction):
+    """
+    Base LLM action that processes each item and is cached.
+    """
+
+    def run(self, items: ActionInput) -> ActionResult:
+        return super(CachedItemAction, self).run(items)
 
 
 @dataclass(frozen=True)

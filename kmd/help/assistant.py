@@ -17,7 +17,7 @@ def assistant_preamble(skip_api: bool = False, base_only: bool = False) -> str:
 
     return dedent(
         f"""
-        {fill_markdown(assistant_instructions.__doc__)}
+        {fill_markdown(not_none(assistant_instructions.__doc__))} 
 
 
         {output_as_string(lambda: output_help_page(base_only))}

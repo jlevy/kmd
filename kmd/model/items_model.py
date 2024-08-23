@@ -260,7 +260,7 @@ class Item:
         def set_field(key: str, default: Any, cls: Type[T]) -> T:
             try:
                 if key in item_dict:
-                    return cls(item_dict[key])
+                    return cls(item_dict[key])  # type: ignore
                 else:
                     return default
             except (KeyError, ValueError) as e:

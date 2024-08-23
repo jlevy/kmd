@@ -61,7 +61,9 @@ def _tree_links(element, include_internal=False):
 
 
 def extract_links(file_path: str, include_internal=False) -> List[str]:
-    """Extract all links from a Markdown file. Future: Include textual and section context."""
+    """
+    Extract all links from a Markdown file. Future: Include textual and section context.
+    """
 
     with open(file_path, "r") as file:
         content = file.read()
@@ -84,7 +86,9 @@ def _tree_bullet_points(element):
 
 
 def extract_bullet_points(content: str) -> List[str]:
-    """Extract list item values from a Markdown file."""
+    """
+    Extract list item values from a Markdown file.
+    """
 
     document = marko.parse(content)
     return _tree_bullet_points(document)
