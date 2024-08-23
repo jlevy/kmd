@@ -34,6 +34,11 @@ def has_text_body(item: Item) -> bool:
 
 
 @precondition
+def has_html_body(item: Item) -> bool:
+    return has_body(item) and item.format in (Format.html, Format.md_html)
+
+
+@precondition
 def is_plaintext(item: Item) -> bool:
     return has_body(item) and item.format == Format.plaintext
 

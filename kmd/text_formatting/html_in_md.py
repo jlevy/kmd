@@ -6,6 +6,7 @@ confusions of using full HTML escaping (like unnecessary &quot;s etc.)
 
 from typing import Callable, Optional, Dict
 from kmd.model.doc_elements import DATA_SPEAKER_ID, DATA_TIMESTAMP, SPEAKER_LABEL
+import re
 
 
 def escape_md_html(s: str, safe: bool = False) -> str:
@@ -91,7 +92,7 @@ def html_a(text: str, href: str, safe: bool = False) -> str:
 
 
 def html_join_blocks(*blocks: str) -> str:
-    return "\n\n".join(blocks)
+    return "\n\n".join(block.strip("\n") for block in blocks)
 
 
 Wrapper = Callable[[str], str]
@@ -102,9 +103,16 @@ def identity_wrapper(text: str) -> str:
     return text
 
 
+def _check_class_name(class_name: Optional[str]) -> None:
+    if class_name and not re.match(r"^[a-zA-Z_][a-zA-Z0-9_-]*$", class_name):
+        raise ValueError(f"Expected a valid CSS class name but got: '{class_name}'")
+
+
 def div_wrapper(
     class_name: Optional[str] = None, safe: bool = True, padding: Optional[str] = "\n\n"
 ) -> Wrapper:
+    _check_class_name(class_name)
+
     def div_wrapper_func(text: str) -> str:
         return html_div(text, class_name, safe=safe, padding=padding)
 
@@ -112,6 +120,8 @@ def div_wrapper(
 
 
 def span_wrapper(class_name: Optional[str] = None, safe: bool = True) -> Wrapper:
+    _check_class_name(class_name)
+
     def span_wrapper_func(text: str) -> str:
         return html_span(text, class_name, safe=safe)
 

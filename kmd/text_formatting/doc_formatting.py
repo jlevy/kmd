@@ -22,10 +22,10 @@ def normalize_formatting(text: str, format: Optional[Format], width=DEFAULT_WRAP
     """
     if format == Format.plaintext:
         return wrap_plaintext(text, width=width)
-    elif format == Format.markdown:
+    elif format == Format.markdown or format == Format.md_html:
         return normalize_markdown(text)
-    elif format == Format.md_html or format == Format.html:
-        # We don't currently format these as it's usually confusing.
+    elif format == format == Format.html:
+        # We don't currently format as it's usually confusing.
         return text
     else:
         return text

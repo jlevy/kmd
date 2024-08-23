@@ -5,7 +5,7 @@ from kmd.model.actions_model import (
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
-from kmd.preconditions.precondition_defs import has_text_body
+from kmd.preconditions.precondition_defs import has_html_body, has_text_body
 from kmd.text_formatting.text_formatting import html_to_plaintext
 
 log = get_logger(__name__)
@@ -16,8 +16,8 @@ class StripHtml(CachedItemAction):
     def __init__(self):
         super().__init__(
             name="strip_html",
-            description="Strip HTML tags from text or Markdown.",
-            precondition=has_text_body,
+            description="Strip HTML tags from HTML or Markdown.",
+            precondition=has_html_body | has_text_body,
         )
 
     def run_item(self, item: Item) -> Item:
