@@ -1,4 +1,7 @@
 """
+
+ABOUT KMD
+
 Kmd is an extensible command-line tool for exploring and organizing knowledge.
 It includes tasks like editing and summarizing text, transcribing videos,
 generating PDFs or webpages, and more.
@@ -12,28 +15,33 @@ operation if it's already complete. Some slow actions (like downloading and
 transcribing videos) automatically produce cached outputs (stored in the
 `kmd_cache` directory) to make things faster.
 
-Kmd is built on top of xonsh, a Python-powered shell language. Most things are
-invoked via kmd commands and kmd actions, but you also have access to the full
-power of Python and the shell when needed.
+Kmd is built on top of xonsh, a Python-powered shell language. This lets you
+run all kmd commands, as well as have access to intelligent auto-complete.
+In xonsh, you also have access to the full power of Python and the shell
+when needed.
 
 On top of this, kmd understands its own code and APIs and can help you use and
 even extend it. At any time you can ask a question and have the LLM-based assistant
 help you in how to use kmd. Anything you type that ends in a `?` is sent to the
 assistant.
 
-Kmd operates on “items”, which are URLs, files, text or Markdown notes, or other
+
+ITEMS AND FILE FORMATS
+
+Kmd operates on **items**, which are URLs, files, text or Markdown notes, or other
 documents. These are stored as simple files, in a single directory, called a
-“workspace”. Typically, you want a workspace for a single topic or project. By
+**workspace**. Typically, you want a workspace for a single topic or project. By
 convention, workspace directories should have a `.kb` suffix, such as
 `fitness.kb`.
 
 Within a workspace, files are organized into folders by type, including
 resources, notes, configs, and exports. Most text items are stored in Markdown
 format with YAML front matter (the same format used by Jekyll or other static
-site generators). Actions can produce export items in any other format, like a
-PDF or a webpage.
+site generators), optionaly with some HTML for structure if needed. But with
+kmd you can process or export items in any other format you wish, like a PDF
+or a webpage.
 
-All items have a “source path”, which is simply the path of the file relative to
+All items have a **source path**, which is simply the path of the file relative to
 the workspace directory. Item files are named in a simple and readable way, that
 reflects the title of the item, its type, its format, and in some cases its
 provenance. For example,
@@ -50,6 +58,14 @@ on an original document), the sources are listed in a `derived_from` array
 within the `relations` metadata. This means actions can find citations or other
 data on the provenance of a given piece of information.
 
+
+COMMANDS AND ACTIONS
+
+Most things are done in kmd via kmd **commands**, which are built-in operations
+(like listing or selecting files to process), and kmd **actions**, which are
+an extensible set of capabilities, like formatting documents, transcribing
+videos, or any arbitrary use of APIs.
+
 Kmd actions are a set of operations that can operate on one or more items and
 produce one or more new items. Actions can invoke APIs, use LLMs, or perform
 any other operation that's scriptable in Python. You specify inputs to actions
@@ -60,10 +76,19 @@ stored as new items in the workspace. URLs or resources can be added manually,
 but this is normally not necessary.
 
 Actions can be chained together in convenient ways. The output of any command is
-always marked as the current “selection”, which is then automatically available
+always marked as the current **selection**, which is then automatically available
 for input on a subsequent command. This is sort of like Unix pipes, but is more
 convenient and incremental, and allows you to sequence actions, multiple output
 items becoming the input of another action.
+
+Actions also have **preconditions**, which reflect what kinds of content they
+can be run on. For example, transcription only works on media URL resources,
+while summarization works on readable text such as Markdown. This catches
+errors and allows you to find actions that might apply to a given selected
+set of items using `suggest_actions`.
+
+
+USEFUL FEATURES
 
 Kmd makes a few kinds of messy text manipulations easier:
 
