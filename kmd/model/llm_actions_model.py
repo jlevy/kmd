@@ -15,7 +15,7 @@ from kmd.model.items_model import UNTITLED, Format, Item
 from kmd.model.language_models import LLM
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import has_div_chunks
-from kmd.text_chunks.div_elements import div, div_insert_sibling
+from kmd.text_chunks.div_elements import div, div_get_original, div_insert_wrapped
 from kmd.text_chunks.parse_divs import parse_divs_by_class, TextNode
 
 
@@ -70,7 +70,8 @@ class ChunkedLLMAction(CachedLLMAction):
         """
         Override to customize chunk handling.
         """
-        llm_response = llm_transform_str(self, chunk.contents)
+        transform_input = div_get_original(chunk, child_name=ORIGINAL)
+        llm_response = llm_transform_str(self, transform_input)
         new_div = div(RESULT, llm_response)
 
-        return div_insert_sibling(chunk, new_div, container_class=CHUNK, sibling_class=ORIGINAL)
+        return div_insert_wrapped(chunk, [new_div], container_class=CHUNK, original_class=ORIGINAL)

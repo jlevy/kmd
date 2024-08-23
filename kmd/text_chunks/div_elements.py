@@ -1,8 +1,9 @@
 from textwrap import dedent
+from typing import List
 from kmd.config.logger import get_logger
 from kmd.model.doc_elements import CHUNK, ORIGINAL
 from kmd.text_chunks.chunk_utils import chunk_children, chunk_paras
-from kmd.text_chunks.parse_divs import TextNode, parse_divs
+from kmd.text_chunks.parse_divs import TextNode, parse_divs, parse_divs_single
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_docs.wordtoks import first_wordtok_is_div
 from kmd.text_formatting.html_in_md import div_wrapper, html_join_blocks
@@ -17,46 +18,36 @@ def div(class_name: str, *blocks: str) -> str:
     return div_wrapper(class_name=class_name, padding="\n\n")(html_join_blocks(*blocks))
 
 
-def div_wrap_if_needed(element: TextNode, class_name: str) -> str:
+def div_get_original(element: TextNode, child_name: str = ORIGINAL) -> str:
     """
-    Wrap the chunk contents in an "original" div if it's not already there.
+    Get content of the named child element if it exists, otherwise use the whole contents.
     """
-    has_original_div = bool(element.child_by_class_name(class_name))
-    if has_original_div:
-        return element.contents
-    else:
-        return div(class_name, element.contents.strip())
-
-
-def div_get_child_if_present(element: TextNode, class_name: str) -> str:
-    """
-    Use named child element if it exists, otherwise use the whole contents.
-    """
-    child = element.child_by_class_name(class_name)
+    child = element.child_by_class_name(child_name)
     return child.contents if child else element.contents
 
 
-def div_insert_sibling(
+def div_insert_wrapped(
     element: TextNode,
-    new_child_str: str,
-    container_class: str,
-    sibling_class: str,
-    insert_before: bool = True,
+    new_child_blocks: List[str],
+    container_class: str = CHUNK,
+    original_class: str = ORIGINAL,
+    at_front: bool = True,
 ) -> str:
     """
-    Insert a new child into a chunk div. Wrap the previous chunk contents in an "original" div
-    if it's not already there.
+    Insert new children into a div element. As a base case, wrap the original
+    content in a child div if it's not already present as a child.
     """
 
-    if element.class_name != container_class:
-        raise ValueError(f"Expected a container div '{element}' but got: {element}")
-
-    chunk_str = div_wrap_if_needed(element, sibling_class)
-
-    if insert_before:
-        blocks = [new_child_str, chunk_str]
+    original_element = element.child_by_class_name(original_class)
+    if original_element:
+        prev_contents = element.contents
     else:
-        blocks = [chunk_str, new_child_str]
+        prev_contents = div(original_class, element.contents)
+
+    if at_front:
+        blocks = [*new_child_blocks, prev_contents]
+    else:
+        blocks = [prev_contents, *new_child_blocks]
 
     return div(container_class, html_join_blocks(*blocks))
 
@@ -91,27 +82,70 @@ def chunk_text_as_divs(text: str, min_size: int, unit: TextUnit, class_name: str
 
 
 def test_div_insert_child():
-    chunk = parse_divs(div(CHUNK, "Chunk text.")).children[0]
+    node1 = parse_divs_single("Chunk text.")
+    node2 = parse_divs_single(div(CHUNK, "Chunk text."))
 
-    new_child_str = div("new", "New child text.")
+    child_str = div("new", "New child text.")
 
-    new_chunk_str = div_insert_sibling(
-        chunk, new_child_str, container_class=CHUNK, sibling_class=ORIGINAL
-    )
+    new_result1 = div_insert_wrapped(node1, [child_str])
+    new_result2 = div_insert_wrapped(node2, [child_str])
 
     print("\n---test_div_insert_child---")
-    print("\nInserting into chunk:")
-    print(chunk.original_text)
-    print("\nNew child:")
-    print(new_child_str)
-    print("\nNew chunk:")
-    print(new_chunk_str)
+    print("\nnode1:")
+    print(node1.original_text)
+    print("\nnode2:")
+    print(node2.original_text)
+    print("\nnew_child_str:")
+    print(child_str)
+    print("\nnew_result1:")
+    print(new_result1)
+    print("\nnew_result2:")
+    print(new_result2)
 
     assert (
-        new_chunk_str
+        new_result1
         == dedent(
             """
             <div class="chunk">
+
+            <div class="new">
+
+            New child text.
+
+            </div>
+
+            <div class="original">
+
+            Chunk text.
+
+            </div>
+
+            </div>
+            """
+        ).strip()
+    )
+
+    assert new_result2 == new_result1
+
+    node3 = parse_divs_single(new_result1)
+
+    another_child_str = div("another", "Another child text.")
+
+    new_result3 = div_insert_wrapped(node3, [another_child_str])
+    print("\nnew_result3:")
+    print(new_result3)
+
+    assert (
+        new_result3
+        == dedent(
+            """
+            <div class="chunk">
+
+            <div class="another">
+
+            Another child text.
+
+            </div>
 
             <div class="new">
 

@@ -31,6 +31,13 @@ def parse_divs(text: str, skip_whitespace: bool = True) -> TextNode:
     return parsed
 
 
+def parse_divs_single(text: str, skip_whitespace: bool = True) -> TextNode:
+    """
+    Parse into a single TextNode.
+    """
+    return parse_divs(text, skip_whitespace=skip_whitespace).children[0]
+
+
 def _skip_whitespace_nodes(node: TextNode) -> TextNode:
     filtered_node = copy.copy(node)
     filtered_node.children = [

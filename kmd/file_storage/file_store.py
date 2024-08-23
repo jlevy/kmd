@@ -184,7 +184,7 @@ class FileStore:
                         return default_path
             if store_path and self.exists(store_path):
                 log.message(
-                    "Item with id already saved (cache check):\n%s",
+                    "Item with id already saved:\n%s",
                     format_lines([store_path, item_id]),
                 )
                 return store_path

@@ -28,7 +28,7 @@ class Transcribe(CachedItemAction):
         result_item = item.derived_copy(
             type=ItemType.note,
             body=transcription,
-            format=Format.md_html,  # Important to note this since we put in timestamp spans.
+            format=Format.html,  # Important to note this since we put in timestamp spans.
             file_ext=FileExt.md,
         )
 

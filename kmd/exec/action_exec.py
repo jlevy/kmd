@@ -118,8 +118,7 @@ def run_action(
                 log.message("Output already exists, but running anyway since rerun requested.")
             else:
                 log.message(
-                    "All outputs already saved so skipping action `%s`:\n%s",
-                    action_name,
+                    "All outputs already saved so skipping action (use --rerun to force run):\n%s",
                     format_lines(already_present),
                 )
                 cached_items = [ws.load(not_none(store_path)) for store_path in already_present]

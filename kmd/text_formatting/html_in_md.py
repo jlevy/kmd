@@ -92,6 +92,9 @@ def html_a(text: str, href: str, safe: bool = False) -> str:
 
 
 def html_join_blocks(*blocks: str) -> str:
+    """
+    Join block elements, with double newlines for better Markdown compatibility.
+    """
     return "\n\n".join(block.strip("\n") for block in blocks)
 
 

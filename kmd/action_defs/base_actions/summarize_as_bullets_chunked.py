@@ -1,10 +1,10 @@
 from kmd.exec.llm_transforms import llm_transform_str
 from kmd.model.actions_model import LLMMessage, LLMTemplate
-from kmd.model.doc_elements import CHUNK, ORIGINAL, SUMMARY
+from kmd.model.doc_elements import SUMMARY
 from kmd.exec.action_registry import kmd_action
 from kmd.model.llm_actions_model import ChunkedLLMAction
 from kmd.text_chunks.parse_divs import TextNode
-from kmd.text_chunks.div_elements import div, div_get_child_if_present, div_insert_sibling
+from kmd.text_chunks.div_elements import div, div_get_original, div_insert_wrapped
 
 
 @kmd_action()
@@ -53,10 +53,8 @@ class SummarizeAsBulletsChunked(ChunkedLLMAction):
         )
 
     def process_chunk(self, chunk: TextNode) -> str:
-        transform_input = div_get_child_if_present(chunk, ORIGINAL)
-
+        transform_input = div_get_original(chunk)
         llm_response = llm_transform_str(self, transform_input)
-
         new_div = div(SUMMARY, llm_response)
 
-        return div_insert_sibling(chunk, new_div, container_class=CHUNK, sibling_class=ORIGINAL)
+        return div_insert_wrapped(chunk, [new_div])

@@ -4,10 +4,10 @@ from kmd.exec.compound_actions import SequenceAction
 
 
 @kmd_action(for_each_item=True)
-class TranscribeAndFormat(SequenceAction):
+class TranscribeFormat(SequenceAction):
     def __init__(self):
         super().__init__(
-            name="transcribe_and_format",
+            name="transcribe_format",
             action_names=[
                 "transcribe",
                 "strip_html",
