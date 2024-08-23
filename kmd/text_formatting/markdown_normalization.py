@@ -17,6 +17,7 @@ def _normalize_html_comments(text: str, break_str: str = "\n\n") -> str:
     """
     Put HTML comments as standalone paragraphs.
     """
+    # TODO: Probably want do this for <div>s too.
     return _ensure_surrounding_breaks(text, [("<!--", "-->")], break_str=break_str)
 
 
@@ -60,6 +61,9 @@ class CustomParser(Parser):
         self.block_elements["HTMLBlock"] = CustomHTMLBlock
 
 
+LineWrapper = Callable[[str, str, str], str]
+
+
 class MarkdownNormalizer(Renderer):
     """
     Render Markdown in normalized form.
@@ -70,7 +74,7 @@ class MarkdownNormalizer(Renderer):
     Based on: https://github.com/frostming/marko/blob/master/marko/md_renderer.py
     """
 
-    def __init__(self, line_wrapper: Callable[[str, str, str], str]) -> None:
+    def __init__(self, line_wrapper: LineWrapper) -> None:
         super().__init__()
         self._prefix: str = ""  # The prefix on the first line, with a bullet, such as `  - `.
         self._second_prefix: str = ""  # The prefix on subsequent lines, such as `    `.
@@ -297,7 +301,7 @@ def normalize_markdown(markdown_text: str, line_wrapper=wrap_lines_and_break_sen
     markdown_text = markdown_text.strip() + "\n"
 
     # If we want to normalize HTML blocks or comments.
-    # markdown_text = _normalize_html_comments(markdown_text)
+    markdown_text = _normalize_html_comments(markdown_text)
 
     # Normalize the markdown and wrap lines.
     parser = CustomParser()
@@ -325,118 +329,120 @@ def test_normalize_html_comments():
 
 _original_doc = dedent(
     """
-    # This is a header
+# This is a header
 
-    This is sentence one. This is sentence two.
-    This is sentence three.
-    This is sentence four. This is sentence 5. This is sentence six.
-    Seven. Eight. Nine. Ten.
-    A [link](https://example.com). Some *emphasis* and **strong emphasis** and `code`.
-    And a     super-super-super-super-super-super-super-hyphenated veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long word.
-    This is a sentence with many words and words and words and words and words and words and words and words.
-    And another with words and
-    words and words split across a line.
+This is sentence one. This is sentence two.
+This is sentence three.
+This is sentence four. This is sentence 5. This is sentence six.
+Seven. Eight. Nine. Ten.
+A [link](https://example.com). Some *emphasis* and **strong emphasis** and `code`.
+And a     super-super-super-super-super-super-super-hyphenated veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery long word.
+This is a sentence with many words and words and words and words and words and words and words and words.
+And another with words and
+words and words split across a line.
 
-    A second paragraph.
+A second paragraph.
 
 
-    - This is a list item
-    - This is another list item
-        - A sub item
-          - A sub sub item
-    - This is a third list item with many words and words and words and words and words and words and words and words
+- This is a list item
+- This is another list item
+    - A sub item
+        - A sub sub item
+- This is a third list item with many words and words and words and words and words and words and words and words
+
+    - A sub item
+    - Another sub item
+
     
-      - A sub item
-      - Another sub item
+    - Another sub item (after a line break)
 
-      
-      - Another sub item (after a line break)
+A third paragraph.
 
-    A third paragraph.
+## Sub-heading
 
-    ## Sub-heading
+1. This is a numbered list item
+2. This is another numbered list item
 
-    1. This is a numbered list item
-    2. This is another numbered list item
-    
-    <!--window-br-->
+<!--window-br-->
 
-    <!--window-br--> Words and words and words and words and words and <span data-foo="bar">some HTML</span> and words and words and words and words and words and words.
+<!--window-br--> Words and words and words and words and words and <span data-foo="bar">some HTML</span> and words and words and words and words and words and words.
 
-    <span data-foo="bar">Inline HTML.</span> And some following words and words and words and words and words and words.
+<span data-foo="bar">Inline HTML.</span> And some following words and words and words and words and words and words.
 
-    <h1 data-foo="bar">Block HTML.</h1> And some following words.
+<h1 data-foo="bar">Block HTML.</h1> And some following words.
 
-    <div class="foo">
-    Some more HTML. Words and words and words and words and    words and <span data-foo="bar">more HTML</span> and words and words and words and words and words and words.</div>
+<div class="foo">
+Some more HTML. Words and words and words and words and    words and <span data-foo="bar">more HTML</span> and words and words and words and words and words and words.</div>
 
-    > This is a quote block. With a couple sentences.
+> This is a quote block. With a couple sentences.
 
     """
 ).lstrip()
 
 _expected_doc = dedent(
     """
-    # This is a header
+# This is a header
 
-    This is sentence one.
-    This is sentence two.
-    This is sentence three.
-    This is sentence four.
-    This is sentence 5. This is sentence six.
-    Seven. Eight. Nine.
-    Ten. A [link](https://example.com).
-    Some *emphasis* and **strong emphasis** and `code`. And a
-    super-super-super-super-super-super-super-hyphenated
-    veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery
-    long word.
-    This is a sentence with many words and words and words and words and words and words and
-    words and words.
-    And another with words and words and words split across a line.
+This is sentence one.
+This is sentence two.
+This is sentence three.
+This is sentence four.
+This is sentence 5. This is sentence six.
+Seven. Eight. Nine.
+Ten. A [link](https://example.com).
+Some *emphasis* and **strong emphasis** and `code`. And a
+super-super-super-super-super-super-super-hyphenated
+veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery
+long word.
+This is a sentence with many words and words and words and words and words and words and
+words and words.
+And another with words and words and words split across a line.
 
-    A second paragraph.
+A second paragraph.
 
-    - This is a list item
+- This is a list item
 
-    - This is another list item
+- This is another list item
 
-    - A sub item
+  - A sub item
 
-        - A sub sub item
+    - A sub sub item
 
-    - This is a third list item with many words and words and words and words and words and
-    words and words and words
+- This is a third list item with many words and words and words and words and words and
+  words and words and words
 
-    - A sub item
+  - A sub item
 
-    - Another sub item
+  - Another sub item
 
-    - Another sub item (after a line break)
+  - Another sub item (after a line break)
 
-    A third paragraph.
+A third paragraph.
 
-    ## Sub-heading
+## Sub-heading
 
-    1. This is a numbered list item
+1. This is a numbered list item
 
-    2. This is another numbered list item
+2. This is another numbered list item
 
-    <!--window-br-->
+<!--window-br-->
 
-    <!--window-br--> Words and words and words and words and words and <span data-foo="bar">some
-    HTML</span> and words and words and words and words and words and words.
+<!--window-br-->
 
-    <span data-foo="bar">Inline HTML.</span> And some following words and words and words and
-    words and words and words.
+Words and words and words and words and words and <span data-foo="bar">some HTML</span> and
+words and words and words and words and words and words.
 
-    <h1 data-foo="bar">Block HTML.</h1> And some following words.
+<span data-foo="bar">Inline HTML.</span> And some following words and words and words and
+words and words and words.
 
-    <div class="foo"> Some more HTML. Words and words and words and words and words and <span
-    data-foo="bar">more HTML</span> and words and words and words and words and words and
-    words.</div>
+<h1 data-foo="bar">Block HTML.</h1> And some following words.
 
-    > This is a quote block.
-    > With a couple sentences.
+<div class="foo"> Some more HTML. Words and words and words and words and words and <span
+data-foo="bar">more HTML</span> and words and words and words and words and words and
+words.</div>
+
+> This is a quote block.
+> With a couple sentences.
     """
 ).lstrip()
 
@@ -453,4 +459,4 @@ def test_normalize_markdown():
     print("---After")
     print(normalized_doc)
 
-    # assert normalized_doc == _expected_doc
+    assert normalized_doc == _expected_doc
