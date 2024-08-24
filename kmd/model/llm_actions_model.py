@@ -18,6 +18,7 @@ from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import has_div_chunks
 from kmd.text_chunks.div_elements import div, div_get_original, div_insert_wrapped
 from kmd.text_chunks.parse_divs import parse_divs_by_class, TextNode
+from kmd.text_formatting.markdown_normalization import normalize_markdown
 
 
 log = get_logger(__name__)
@@ -38,7 +39,10 @@ class LLMAction(TransformAction, ForEachItemAction):
         """
         Override to customize item handling.
         """
-        return llm_transform_item(self, item)
+        item = llm_transform_item(self, item)
+        if item.body:
+            item.body = normalize_markdown(item.body)
+        return item
 
 
 @dataclass(frozen=True)

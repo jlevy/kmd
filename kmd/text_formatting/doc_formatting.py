@@ -20,12 +20,13 @@ def normalize_formatting(text: str, format: Optional[Format], width=DEFAULT_WRAP
     """
     Normalize text formatting by wrapping lines and normalizing Markdown.
     """
+
     if format == Format.plaintext:
         return wrap_plaintext(text, width=width)
     elif format == Format.markdown or format == Format.md_html:
         return normalize_markdown(text)
-    elif format == format == Format.html:
-        # We don't currently format as it's usually confusing.
+    elif format == Format.html:
+        # We don't currently auto-format HTML as we sometimes use HTML with specifically chosen line breaks.
         return text
     else:
         return text

@@ -44,7 +44,7 @@ def windowed_llm_transform(
 
 
 def llm_transform_str(
-    action: TransformAction, input_str: str, normalize: bool = True, check_no_results: bool = True
+    action: TransformAction, input_str: str, check_no_results: bool = True
 ) -> str:
     if not action.model:
         raise InvalidInput(f"LLM action `{action.name}` is missing a model")
@@ -87,9 +87,6 @@ def llm_transform_str(
             input=input_str,
             check_no_results=check_no_results,
         )
-
-    if normalize:
-        result_str = normalize_markdown(result_str)
 
     return result_str
 

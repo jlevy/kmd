@@ -13,7 +13,7 @@ from kmd.model.actions_model import (
     TitleTemplate,
 )
 from kmd.model.items_model import Format, Item, ItemType
-from kmd.model.actions_model import TransformAction
+from kmd.model.llm_actions_model import LLMAction
 from kmd.util.lazyobject import lazyobject
 
 
@@ -23,7 +23,7 @@ def assistant_coding_preamble() -> LLMMessage:
 
 
 @kmd_action()
-class WriteNewAction(TransformAction):
+class WriteNewAction(LLMAction):
     def __init__(self):
         super().__init__(
             name="write_new_action",
@@ -43,29 +43,33 @@ class WriteNewAction(TransformAction):
                     - If desired behavior of the code is not clear from the description, add
                     comment placeholders in the code so it can be filled in later.
 
-                    - Subclass Action or EachItemAction (if the input and output are one item).
-
+                    - Subclass Action or in most cases, a subclass of it like CachedItemAction
+                      or CachedLLMAction (these two actions are the most common ones, and operate
+                      on one item at a time).
+    .
                     To illustrate, here is an example of the correct format for an action that
                     strips HTML tags:
 
-                        from kmd.action_exec.action_registry import kmd_action
+                        from kmd.exec.action_registry import kmd_action
                         from kmd.model.actions_model import (
-                            ONE_OR_MORE_ARGS,
-                            EachItemAction,
+                            CachedItemAction,
                         )
                         from kmd.model.errors_model import InvalidInput
                         from kmd.model.items_model import Format, Item, ItemType
                         from kmd.config.logger import get_logger
-                        from kmd.text_docs.wordtoks import raw_text_to_wordtoks, visualize_wordtoks
+                        from kmd.preconditions.precondition_defs import has_html_body, has_text_body
                         from kmd.text_formatting.text_formatting import html_to_plaintext
+
+                        log = get_logger(__name__)
 
 
                         @kmd_action()
-                        class StripHtml(EachItemAction):
+                        class StripHtml(CachedItemAction):
                             def __init__(self):
                                 super().__init__(
                                     name="strip_html",
-                                    description="Strip HTML tags from text or Markdown.",
+                                    description="Strip HTML tags from HTML or Markdown.",
+                                    precondition=has_html_body | has_text_body,
                                 )
 
                             def run_item(self, item: Item) -> Item:
@@ -73,9 +77,10 @@ class WriteNewAction(TransformAction):
                                     raise InvalidInput(f"Item must have a body")
 
                                 clean_body = html_to_plaintext(item.body)
-                                new_title = item.title + " (clean text)"
                                 output_item = item.derived_copy(
-                                    type=ItemType.note, title=new_title, body=clean_body, format=Format.markdown
+                                    type=ItemType.note,
+                                    format=Format.markdown,
+                                    body=clean_body,
                                 )
 
                                 return output_item

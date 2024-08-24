@@ -5,7 +5,7 @@ from kmd.exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_metadat
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
-from kmd.model.actions_model import Action, ActionResult
+from kmd.model.actions_model import NO_ARGS, Action, ActionResult
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidStoreState
 from kmd.model.items_model import Item, State
@@ -75,6 +75,11 @@ def run_action(
 
     # Collect args from the provided args or otherwise the current selection.
     args = collect_args(*provided_args)
+
+    # As a special case for convenience, if the action expects no args, ignore any pre-selected inputs.
+    if action.expected_args == NO_ARGS:
+        args = []
+
     if args:
         source_str = "provided args" if provided_args else "selection"
         log.message(
