@@ -6,6 +6,7 @@ from kmd.media.media_services import get_media_id, youtube
 from kmd.model.errors_model import PreconditionFailure
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.text_docs.wordtoks import first_wordtok_is_div
+from kmd.text_formatting.markdown_util import extract_bullet_points
 
 
 @precondition
@@ -46,6 +47,18 @@ def is_plaintext(item: Item) -> bool:
 @precondition
 def is_markdown(item: Item) -> bool:
     return has_body(item) and item.format in (Format.markdown, Format.md_html)
+
+
+@precondition
+def is_markdown_list(item: Item) -> bool:
+    try:
+        return (
+            is_markdown(item)
+            and item.body is not None
+            and len(extract_bullet_points(item.body)) >= 2
+        )
+    except TypeError:
+        return False
 
 
 @precondition

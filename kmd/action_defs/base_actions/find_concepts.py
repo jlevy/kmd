@@ -1,8 +1,12 @@
+from kmd.exec.llm_transforms import llm_transform_item
 from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
 from kmd.exec.action_registry import kmd_action
+from kmd.model.items_model import Item
 from kmd.model.llm_actions_model import CachedLLMAction
 from kmd.text_docs.window_settings import WINDOW_4_PARA
 from kmd.config.logger import get_logger
+from kmd.text_formatting.markdown_normalization import normalize_concepts_list
+from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
 
@@ -50,3 +54,8 @@ class FindConcepts(CachedLLMAction):
             ),
             windowing=WINDOW_4_PARA,
         )
+
+    def run_item(self, item: Item) -> Item:
+        item = llm_transform_item(self, item)
+        item.body = normalize_concepts_list(not_none(item.body))
+        return item
