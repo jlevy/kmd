@@ -50,6 +50,7 @@ from kmd.lang_tools.inflection import plural
 from kmd.config.logger import get_logger, log_file
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
+from kmd.util.type_utils import not_none
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 
 log = get_logger(__name__)
@@ -68,7 +69,7 @@ def welcome() -> None:
     output()
     output("Welcome to kmd.\n", color=COLOR_HEADING)
     output()
-    output(welcome_doc, text_wrap=Wrap.WRAP_FULL)
+    output(not_none(welcome_doc), text_wrap=Wrap.WRAP_FULL)
 
 
 @kmd_command

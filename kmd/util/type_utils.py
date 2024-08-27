@@ -50,7 +50,7 @@ def as_dataclass(dict_data: Dict[str, Any], dataclass_type: Type[T]) -> T:
     with the dataclass's constructor.
     """
 
-    field_types = {f.name: f.type for f in fields(dataclass_type)}
+    field_types = {f.name: f.type for f in fields(dataclass_type)} # type: ignore
     dataclass_fields = {}
 
     for k, v in dict_data.items():
@@ -58,7 +58,7 @@ def as_dataclass(dict_data: Dict[str, Any], dataclass_type: Type[T]) -> T:
         origin_type = get_origin(field_type)
 
         if origin_type is list and isinstance(v, list):
-            item_type = get_args(field_type)[0]
+            item_type: Type = get_args(field_type)[0]
             if is_dataclass(item_type):
                 dataclass_fields[k] = [as_dataclass(item, item_type) for item in v]
             else:
@@ -103,4 +103,4 @@ def instantiate_as_type(value: Any, target_type: Type[T]) -> Optional[T]:
             f"Cannot convert value `{value}` to type {' or '.join(map(str, failed_types))}{extra_info}"
         )
     else:
-        return target_type(value)
+        return target_type(value)  # type: ignore
