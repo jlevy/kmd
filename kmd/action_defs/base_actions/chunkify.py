@@ -6,7 +6,7 @@ from kmd.model.actions_model import (
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
-from kmd.preconditions.precondition_defs import has_div_chunks, is_readable_text
+from kmd.preconditions.precondition_defs import has_div_chunks, is_text_doc
 from kmd.text_chunks.div_elements import chunk_text_as_divs
 from kmd.text_docs.sizes import TextUnit
 
@@ -26,7 +26,7 @@ class Chunkify(CachedItemAction):
                 """
             ),
             # Don't chunkify if already chunkified.
-            precondition=is_readable_text & ~has_div_chunks,
+            precondition=is_text_doc & ~has_div_chunks,
             chunk_size=2000,
             chunk_unit=TextUnit.words,
         )

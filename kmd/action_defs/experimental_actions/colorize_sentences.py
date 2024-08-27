@@ -4,7 +4,7 @@ from kmd.model.actions_model import (
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
-from kmd.preconditions.precondition_defs import is_readable_text
+from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_formatting.html_in_md import html_span
 from kmd.text_formatting.text_formatting import single_line
@@ -30,7 +30,7 @@ class ColorizeSentences(ForEachItemAction):
         super().__init__(
             name="colorize_sentences",
             description="Color each sentence based on its length.",
-            precondition=is_readable_text,
+            precondition=is_text_doc,
         )
 
     def run_item(self, item: Item) -> Item:

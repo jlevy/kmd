@@ -26,7 +26,7 @@ def is_url(item: Item) -> bool:
 
 @precondition
 def has_body(item: Item) -> bool:
-    return bool(item.body)
+    return bool(item.body and item.body.strip())
 
 
 @precondition
@@ -96,8 +96,11 @@ def has_many_paragraphs(item: Item) -> bool:
 
 
 @precondition
-def is_readable_text(item: Item) -> bool:
-    return is_plaintext(item) or is_markdown(item)
+def is_text_doc(item: Item) -> bool:
+    """
+    A document that can be processed by LLMs and other plaintext tools.
+    """
+    return (is_plaintext(item) or is_markdown(item)) and has_body(item)
 
 
 @precondition

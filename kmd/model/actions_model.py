@@ -13,7 +13,7 @@ from kmd.model.llm_message_model import LLMMessage, LLMTemplate
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.preconditions_model import Precondition
-from kmd.preconditions.precondition_defs import is_readable_text
+from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.text_docs.sliding_transforms import WindowSettings
 from kmd.text_docs.text_diffs import DiffFilterType
 from kmd.text_formatting.text_formatting import format_lines
@@ -323,7 +323,7 @@ class TransformAction(Action):
     """
 
     expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
-    precondition: Optional[Precondition] = is_readable_text
+    precondition: Optional[Precondition] = is_text_doc
 
     windowing: Optional[WindowSettings] = None
     diff_filter: Optional[DiffFilterType] = None

@@ -6,7 +6,7 @@ from kmd.model.actions_model import (
 from kmd.model.errors_model import ContentError, InvalidInput, UnexpectedError
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
-from kmd.preconditions.precondition_defs import is_timestamped_text, is_readable_text
+from kmd.preconditions.precondition_defs import is_timestamped_text, is_text_doc
 from kmd.provenance.source_items import find_upstream_item
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_formatting.citations import add_citation_to_text, format_timestamp_citation
@@ -28,7 +28,7 @@ class BackfillSourceTimestamps(CachedItemAction):
               Seeks through the document this doc is derived from for timestamps and inserts them
               into the text of the current doc. Source must have similar tokens.
             """,
-            precondition=is_readable_text & ~is_timestamped_text,
+            precondition=is_text_doc & ~is_timestamped_text,
             chunk_unit=TextUnit.paragraphs,
         )
 
