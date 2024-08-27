@@ -13,7 +13,6 @@ from kmd.text_docs.sliding_transforms import (
     WindowSettings,
     filtered_transform,
 )
-from kmd.text_formatting.markdown_normalization import normalize_markdown
 
 log = get_logger(__name__)
 

@@ -60,6 +60,9 @@ class ActionResult:
     replaces_input: bool = False
     """If True, a hint to archive the input items."""
 
+    skip_duplicates: bool = False
+    """If True, do not save duplicate items (based on identity)."""
+
     def __str__(self):
         return abbreviate_obj(self, field_max_len=80)
 

@@ -28,16 +28,15 @@ class LLM(Enum):
         return self.value
 
 
-MODEL_LIST = [model.value for model in LLM]
+LLM_LIST = [model.value for model in LLM]
 
 
-def get_model(model_name: str) -> LLM:
-    # Look up model by key or value.
-    try:
-        return LLM[model_name]
-    except KeyError:
-        try:
-            # Then by value:
-            return LLM(model_name)
-        except ValueError:
-            raise ValueError(f"No model found with name: '{model_name}'")
+class EmbeddingModel(Enum):
+    """
+    LiteLLM embedding models.
+
+    For current list of models see: https://docs.litellm.ai/docs/embedding/supported_embedding
+    """
+
+    text_embedding_3_large = "text-embedding-3-large"
+    text_embedding_3_small = "text-embedding-3-small"

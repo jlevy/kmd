@@ -2,13 +2,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 from cachetools import cached
-from kmd.model.language_models import LLM
+from kmd.model.language_models import LLM, EmbeddingModel
 
 
 # Important: These are the default models for many actions.
 # The user may override them with parameters.
 DEFAULT_CAREFUL_MODEL = LLM.gpt_4o
 DEFAULT_FAST_MODEL = LLM.gpt_4o_mini
+
+DEFAULT_EMBEDDING_MODEL = EmbeddingModel.text_embedding_3_large
 
 APP_NAME = "kmd"
 

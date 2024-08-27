@@ -5,7 +5,7 @@ from kmd.model.items_model import Item
 from kmd.model.llm_actions_model import CachedLLMAction
 from kmd.text_docs.window_settings import WINDOW_4_PARA
 from kmd.config.logger import get_logger
-from kmd.text_formatting.markdown_normalization import normalize_concepts_list
+from kmd.concepts.normalize_concepts import normalize_concepts_list
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)

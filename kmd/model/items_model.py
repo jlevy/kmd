@@ -435,7 +435,8 @@ class Item:
         """
         Get a readable slugified version of the title for this item (may not be unique).
         """
-        title = self.abbrev_title(max_len=max_len, with_last_op=True)
+        simple_title = self.type == ItemType.concept
+        title = self.abbrev_title(max_len=max_len, with_last_op=not simple_title)
         slug = slugify(title, max_length=max_len, separator="_")
         return slug
 

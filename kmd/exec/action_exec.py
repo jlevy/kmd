@@ -157,8 +157,22 @@ def run_action(
                 item.state = override_state
 
         # Save the result items. This is done here; the action itself should not worry about saving.
+        skipped_paths = []
         for item in result.items:
+            if result.skip_duplicates:
+                store_path = ws.find_by_id(item)
+                if store_path:
+                    skipped_paths.append(store_path)
+                    continue
+
             ws.save(item)
+
+        if skipped_paths:
+            log.message(
+                "Skipping saving %s items already saved:\n%s",
+                len(skipped_paths),
+                format_lines(skipped_paths),
+            )
 
         input_store_paths = [StorePath(not_none(item.store_path)) for item in input_items]
         result_store_paths = [StorePath(not_none(item.store_path)) for item in result.items]

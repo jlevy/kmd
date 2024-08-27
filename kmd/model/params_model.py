@@ -3,7 +3,7 @@ from typing import Dict, Optional, Any, Type, List
 from kmd.config.logger import get_logger
 from kmd.config.settings import DEFAULT_CAREFUL_MODEL, DEFAULT_FAST_MODEL
 from kmd.model.constants import LANGUAGE_LIST
-from kmd.model.language_models import MODEL_LIST
+from kmd.model.language_models import LLM_LIST
 from kmd.text_docs.sizes import TextUnit
 from kmd.util.type_utils import is_truthy
 
@@ -66,13 +66,13 @@ GLOBAL_PARAMS = {
     "assistant_model": Param(
         "assistant_model",
         "The name of the LLM used by the kmd assistant for regular (complex) requests.",
-        MODEL_LIST,
+        LLM_LIST,
         default_value=DEFAULT_CAREFUL_MODEL.value,
     ),
     "assistant_model_fast": Param(
         "assistant_model_fast",
         "The name of the LLM used by the kmd assistant for fast responses.",
-        MODEL_LIST,
+        LLM_LIST,
         default_value=DEFAULT_FAST_MODEL.value,
     ),
 }
@@ -82,7 +82,7 @@ COMMON_ACTION_PARAMS = {
     "model": Param(
         "model",
         "The name of the LLM.",
-        MODEL_LIST,
+        LLM_LIST,
         default_value=None,  # Let actions set defaults.
     ),
     "language": Param(

@@ -14,6 +14,7 @@ from kmd.text_docs.sizes import TextUnit, size, size_in_bytes
 from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
 from kmd.model.errors_model import UnexpectedError
 from kmd.lang_tools.sentence_split_spacy import split_sentences_spacy
+from kmd.text_docs.tiktoken_utils import tiktoken_len
 from kmd.text_docs.wordtoks import (
     BOF_TOK,
     EOF_TOK,
@@ -101,6 +102,9 @@ class Paragraph:
             return 1
         if unit == TextUnit.sentences:
             return len(self.sentences)
+
+        if unit == TextUnit.tiktokens:
+            return tiktoken_len(self.reassemble())
 
         base_size = sum(sent.size(unit) for sent in self.sentences)
         if unit == TextUnit.bytes:
@@ -299,6 +303,9 @@ class TextDoc:
             return len(self.paragraphs)
         if unit == TextUnit.sentences:
             return sum(len(para.sentences) for para in self.paragraphs)
+
+        if unit == TextUnit.tiktokens:
+            return tiktoken_len(self.reassemble())
 
         base_size = sum(para.size(unit) for para in self.paragraphs)
         if unit == TextUnit.bytes:
@@ -648,3 +655,13 @@ def test_html_tokenization():
         False,
         False,
     ]
+
+
+def test_tiktoken_len():
+    doc = TextDoc.from_text(_med_test_doc)
+
+    len = doc.size(TextUnit.tiktokens)
+    print("--Tiktoken len:")
+    print(len)
+
+    assert len > 100

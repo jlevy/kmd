@@ -1,19 +1,19 @@
+from kmd.concepts.normalize_concepts import normalize_concepts_list
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import CachedItemAction
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import is_markdown_list
-from kmd.text_formatting.markdown_normalization import normalize_concepts_list
 
 log = get_logger(__name__)
 
 
 @kmd_action()
-class NormalizeConcepts(CachedItemAction):
+class NormalizeConceptList(CachedItemAction):
     def __init__(self):
         super().__init__(
-            name="normalize_concepts",
+            name="normalize_concept_list",
             description="Normalize, capitalize, sort, and remove duplicates from a Markdown list of concepts.",
             precondition=is_markdown_list,
         )

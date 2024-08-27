@@ -1,5 +1,6 @@
 from enum import Enum
 from kmd.config.logger import get_logger
+from kmd.text_docs.tiktoken_utils import tiktoken_len
 from kmd.text_formatting.text_formatting import html_to_plaintext
 from kmd.model.errors_model import UnexpectedError
 from kmd.text_docs.wordtoks import (
@@ -28,6 +29,7 @@ class TextUnit(Enum):
     wordtoks = "wordtoks"
     paragraphs = "paragraphs"
     sentences = "sentences"
+    tiktokens = "tiktokens"
 
 
 def size(text: str, unit: TextUnit) -> int:
@@ -40,5 +42,7 @@ def size(text: str, unit: TextUnit) -> int:
         return len(html_to_plaintext(text).split())
     elif unit == TextUnit.wordtoks:
         return size_in_wordtoks(text)
+    elif unit == TextUnit.tiktokens:
+        return tiktoken_len(text)
     else:
         raise UnexpectedError(f"Unsupported unit for string: {unit}")

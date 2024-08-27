@@ -10,9 +10,7 @@ from marko.parser import Parser
 from marko.source import Source
 from marko.block import HTMLBlock
 from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
-from kmd.lang_tools.capitalization import capitalize_cms
 from kmd.lang_tools.sentence_split_regex import split_sentences_fast
-from kmd.text_formatting.markdown_util import as_bullet_points, extract_bullet_points
 
 
 def _normalize_html_comments(text: str, break_str: str = "\n\n") -> str:
@@ -317,15 +315,6 @@ def wrap_markdown(markdown_text: str) -> str:
     Normalize and wrap Markdown text for reading on the console.
     """
     return normalize_markdown(markdown_text, line_wrapper=wrap_lines_to_width)
-
-
-def normalize_concepts_list(markdown_text: str) -> str:
-    """
-    Normalize, capitalize, sort, and remove duplicates from a Markdown list of concepts.
-    """
-    concepts = extract_bullet_points(markdown_text)
-    normalized_concepts = sorted(set(capitalize_cms(concept) for concept in concepts))
-    return as_bullet_points(normalized_concepts)
 
 
 ## Tests
