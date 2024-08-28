@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass, field
-from typing import Optional, Dict, Iterable, Set
+from typing import Dict, Iterable, Optional, Set
 from strif import abbreviate_list
 from kmd.config.logger import get_logger
 
@@ -22,6 +22,7 @@ class Link:
     source: str
     target: str
     relationship: str
+    distance: Optional[float] = None
 
 
 @dataclass
@@ -44,10 +45,10 @@ class GraphData:
             self.nodes[node.id] = node
         self.links.update(links)
 
-    def validate(self) -> "GraphData":
+    def prune(self) -> "GraphData":
         """
         Ensure the graph is valid by pruning edges to nonexistent nodes.
-        Returns the new, validated graph.
+        Returns the new graph.
         """
         valid_links = set()
         missing_ids = set()

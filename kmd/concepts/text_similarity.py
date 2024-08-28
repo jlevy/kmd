@@ -64,7 +64,7 @@ def relate_texts_by_embedding(
     return relatedness_matrix
 
 
-def find_near_duplicates(
+def find_related_pairs(
     relatedness_matrix: pd.DataFrame, threshold: float = 0.9
 ) -> List[Tuple[str, str, float]]:
     log.message(
@@ -73,7 +73,7 @@ def find_near_duplicates(
         threshold,
     )
 
-    near_duplicates: List[Tuple[str, str, float]] = []
+    pairs: List[Tuple[str, str, float]] = []
     keys = relatedness_matrix.index.tolist()
 
     for i, key1 in enumerate(keys):
@@ -82,10 +82,10 @@ def find_near_duplicates(
                 relatedness = relatedness_matrix.at[key1, key2]
                 if relatedness >= threshold:
                     # Put shortest one first.
-                    [skey1, skey2] = sort_by_length([key1, key2])
-                    near_duplicates.append((skey1, skey2, relatedness))
+                    [short_key, long_key] = sort_by_length([key1, key2])
+                    pairs.append((short_key, long_key, relatedness))
 
     # Sort with highest relatedness first.
-    near_duplicates.sort(key=lambda x: x[2], reverse=True)
+    pairs.sort(key=lambda x: x[2], reverse=True)
 
-    return near_duplicates
+    return pairs

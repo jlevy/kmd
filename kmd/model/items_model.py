@@ -6,10 +6,9 @@ from dataclasses import asdict, dataclass, field, fields, replace
 import dataclasses
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional, Tuple, Type, TypeVar, Dict
+from typing import Any, List, Optional, Type, TypeVar, Dict
 from slugify import slugify
 from kmd.config.logger import get_logger
-from kmd.model.graph_model import Link, Node
 from kmd.model.media_model import MediaMetadata
 from kmd.model.operations_model import Operation, OperationSummary, Source
 from kmd.util.time_util import iso_format_z
@@ -401,7 +400,7 @@ class Item:
         """
         return self.store_path or self.abbrev_title()
 
-    def abbrev_title(self, max_len: int = 100, with_last_op: bool = False) -> str:
+    def abbrev_title(self, max_len: int = 100) -> str:
         """
         Get or infer title. Optionally, include the last operation as a parenthetical
         at the end of the title.
@@ -414,8 +413,10 @@ class Item:
             or UNTITLED
         )
 
-        # Add a suffix indicating the last operation, if there was one.
+        # For notes, exports, etc but not for concepts, add a suffix indicating the
+        # last operation, if there was one.
         suffix = ""
+        with_last_op = self.type not in [ItemType.concept, ItemType.resource]
         last_op = with_last_op and self.history and self.history[-1].action_name
         if last_op:
             suffix = f" ({last_op})"
@@ -435,8 +436,7 @@ class Item:
         """
         Get a readable slugified version of the title for this item (may not be unique).
         """
-        simple_title = self.type == ItemType.concept
-        title = self.abbrev_title(max_len=max_len, with_last_op=not simple_title)
+        title = self.abbrev_title(max_len=max_len)
         slug = slugify(title, max_length=max_len, separator="_")
         return slug
 
@@ -592,36 +592,6 @@ class Item:
             self.is_binary == other.is_binary and self.body == other.body
         ) or self.body_text().rstrip() == other.body_text().rstrip()
         return metadata_matches and body_matches
-
-    def as_node_links(self) -> Tuple[Node, List[Link]]:
-        """
-        Node and Links for this item.
-        """
-        if not self.store_path:
-            raise ValueError(f"Expected store path to convert item to node/links: {self}")
-
-        node = Node(
-            id=self.store_path,
-            type=self.type.name,
-            title=self.abbrev_title(with_last_op=True),
-            description=self.abbrev_description(),
-            body=None,  # Skip for now, might add if we find it useful.
-            url=str(self.url) if self.url else None,
-            thumbnail_url=self.thumbnail_url,
-        )
-
-        links = []
-        for f in fields(ItemRelations):
-            relation_list = getattr(self.relations, f.name)
-            if relation_list:
-                for target in relation_list:
-                    links.append(
-                        Link(source=self.store_path, target=str(target), relationship=f.name)
-                    )
-
-        # TODO: Extract other relations here from the content.
-
-        return node, links
 
     def add_to_history(self, operation_summary: OperationSummary):
         if not self.history:

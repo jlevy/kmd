@@ -1,5 +1,5 @@
 from kmd.concepts.embeddings import Embeddings
-from kmd.concepts.text_similarity import find_near_duplicates, relate_texts_by_embedding
+from kmd.concepts.text_similarity import find_related_pairs, relate_texts_by_embedding
 from kmd.exec.action_registry import kmd_action
 from kmd.lang_tools.inflection import lemmatized_equal
 from kmd.model.actions_model import (
@@ -41,7 +41,7 @@ class FindNearDuplicates(Action):
 
         embeddings = Embeddings.embed(keyvals)
         relatedness_matrix = relate_texts_by_embedding(embeddings)
-        near_duplicates = find_near_duplicates(relatedness_matrix, threshold=report_threshold)
+        near_duplicates = find_related_pairs(relatedness_matrix, threshold=report_threshold)
 
         # Give a report on most related items.
         report_lines = []
