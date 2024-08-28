@@ -1,14 +1,19 @@
 from textwrap import dedent
+from typing import Callable
 from cachetools import cached
+from kmd.config.logger import get_logger
 from kmd.llms.llm_completion import llm_completion
 from kmd.config.settings import get_settings
 from kmd.file_storage.workspaces import current_workspace_name, get_param_value
 from kmd.model.actions_model import LLMMessage, LLMTemplate
+from kmd.model.errors_model import KmdRuntimeError
 from kmd.model.language_models import LLM
 from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
 from kmd.docs import api_docs, assistant_instructions
 from kmd.util.type_utils import not_none
+
+log = get_logger(__name__)
 
 
 @cached({})
@@ -26,6 +31,14 @@ def assistant_preamble(skip_api: bool = False, base_only: bool = False) -> str:
         {"" if skip_api else api_docs.__doc__} 
         """
     )
+
+
+def insert_output(func: Callable, name: str) -> str:
+    try:
+        return output_as_string(func)
+    except (KmdRuntimeError, ValueError) as e:
+        log.info("Skipping assistant input for %s: %s", name, e)
+        return f"(No {name} available)"
 
 
 def assistance(input: str, fast: bool = False) -> str:
@@ -47,12 +60,12 @@ def assistance(input: str, fast: bool = False) -> str:
 
             The user's current selection is below:
 
-            {output_as_string(select)}
+            {insert_output(select, "selection")}
 
             The actions with preconditions that match this selection, so are available to run on the
             current selection, are below:
 
-            {output_as_string(applicable_actions)}
+            {insert_output(applicable_actions, "applicable actions")}
             """
         )
     else:

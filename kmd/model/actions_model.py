@@ -236,6 +236,23 @@ class Action(ABC):
 
         return new_instance
 
+    def preassemble_one(
+        self, operation: Operation, items: ActionInput, output_num: int, **kwargs
+    ) -> Item:
+        """
+        Assemble a single output item from the given input items. Include the last Operation
+        so we can do an identity check if the output already exists.
+        """
+        primary_input = items[output_num]
+        item = primary_input.derived_copy(body=None, **kwargs)
+
+        if self.title_template:
+            item.title = self.title_template.format(title=primary_input.title or UNTITLED)
+
+        item.update_history(Source(operation=operation, output_num=output_num))
+
+        return item
+
     def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
         """
         Actions can have a separate preliminary step to pre-assemble outputs. This allows us to
@@ -305,24 +322,6 @@ class ForEachItemAction(Action):
         pass
 
 
-def preassemble_single_output(
-    operation: Operation, action: Action, items: ActionInput, **kwargs
-) -> Item:
-    """
-    Assemble a single output item from the given input items, copying the first
-    input item as a template and empty body.
-    """
-    primary_input = items[0]
-    item = primary_input.derived_copy(body=None, **kwargs)
-
-    if action.title_template:
-        item.title = action.title_template.format(title=primary_input.title or UNTITLED)
-
-    item.update_history(Source(operation=operation, output_num=0))
-
-    return item
-
-
 @dataclass(frozen=True)
 class CachedItemAction(ForEachItemAction):
     """
@@ -333,7 +332,9 @@ class CachedItemAction(ForEachItemAction):
 
     # Implementing this makes caching work.
     def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
-        return ActionResult([preassemble_single_output(operation, self, items, type=ItemType.note)])
+        return ActionResult(
+            [self.preassemble_one(operation, items, output_num=0, type=ItemType.note)]
+        )
 
 
 @dataclass(frozen=True)

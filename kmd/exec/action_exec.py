@@ -1,3 +1,4 @@
+from dataclasses import replace
 import time
 from typing import List, Optional, cast
 from kmd.action_defs import look_up_action
@@ -5,7 +6,7 @@ from kmd.exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_metadat
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
-from kmd.model.actions_model import NO_ARGS, Action, ActionResult, PathOpType
+from kmd.model.actions_model import NO_ARGS, Action, ActionResult, ForEachItemAction, PathOpType
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidStoreState
 from kmd.model.items_model import Item, State
@@ -118,7 +119,14 @@ def run_action(
     if preassembled_result:
         # Check if these items already exist, with last_operation matching action and input fingerprints.
         already_present = [ws.find_by_id(item) for item in preassembled_result.items]
-        if all(already_present):
+        all_present = all(already_present)
+        log.message(
+            "Rerun check for action `%s`: all_present=%s with these items already present:\n%s",
+            action_name,
+            all_present,
+            format_lines(already_present),
+        )
+        if all_present:
             if rerun:
                 log.message("Output already exists, but running anyway since rerun requested.")
             else:
@@ -128,6 +136,8 @@ def run_action(
                 )
                 cached_items = [ws.load(not_none(store_path)) for store_path in already_present]
                 cached_result = ActionResult(cached_items)
+    else:
+        log.message("No rerun check for action `%s` (has no preassembly).", action_name)
 
     if cached_result:
         # Use the cached result.
@@ -148,8 +158,14 @@ def run_action(
         result = action.run(input_items)
 
         # Record the operation and add to the history of each item.
+        was_run_for_each = isinstance(action, ForEachItemAction)
         for i, item in enumerate(result.items):
-            item.update_history(Source(operation=operation, output_num=i))
+            # ForEachItemActions should be treated as if they ran on each item individually.
+            if was_run_for_each:
+                this_op = replace(operation, arguments=[operation.arguments[i]])
+            else:
+                this_op = operation
+            item.update_history(Source(operation=this_op, output_num=i))
 
         # Override the state if requested (this handles marking items as transient).
         if override_state:
@@ -218,7 +234,7 @@ def run_action(
             if path_op_archive:
                 log.message("Archiving %s items based on action result.", len(path_op_archive))
                 for store_path in path_op_archive:
-                    ws.archive(store_path)
+                    ws.archive(store_path, missing_ok=True)
 
             path_op_selection = [
                 path_op.store_path for path_op in path_ops if path_op.op == PathOpType.select

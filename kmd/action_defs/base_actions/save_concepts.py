@@ -5,6 +5,7 @@ from kmd.concepts.concept_formats import (
 )
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
+    ONE_OR_MORE_ARGS,
     Action,
     ActionInput,
     ActionResult,
@@ -25,6 +26,7 @@ class SaveConcepts(Action):
                 Creates a concept item for each value in a markdown list of concepts.
                 Skips existing concepts and duplicates.
                 """,
+            expected_args=ONE_OR_MORE_ARGS,
             precondition=is_markdown_list,
         )
 
