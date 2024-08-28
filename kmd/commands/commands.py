@@ -139,6 +139,21 @@ def reload_workspace() -> None:
     output()
 
 
+def print_selection(selection: List[StorePath]) -> None:
+    """
+    Print the current selection.
+    """
+    if not selection:
+        output_status("No selection.")
+    else:
+        output_status(
+            "Selected %s %s:\n%s",
+            len(selection),
+            plural("item", len(selection)),
+            format_lines(selection),
+        )
+
+
 @kmd_command
 def select(*paths: str) -> None:
     """
@@ -151,15 +166,8 @@ def select(*paths: str) -> None:
         selection = store_paths
     else:
         selection = ws.get_selection()
-    if not selection:
-        output_status("No selection.")
-    else:
-        output_status(
-            "Selected %s %s:\n%s",
-            len(selection),
-            plural("item", len(selection)),
-            format_lines(selection),
-        )
+
+    print_selection(selection)
 
 
 @kmd_command

@@ -271,7 +271,7 @@ def help_question_completer(context: CompletionContext) -> CompleterResult:
             # Extract questions from the FAQ.
             from kmd.docs.topics.faq import __doc__ as faq_doc
 
-            questions = re.findall(r"^#+ (.+\?)\s*$", faq_doc, re.MULTILINE)
+            questions = re.findall(r"^#+ (.+\?)\s*$", faq_doc, re.MULTILINE)  # type: ignore
             assert len(questions) > 2
 
             return {RichCompletion(question) for question in _completion_match(query, questions)}

@@ -5,7 +5,7 @@ from kmd.exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_metadat
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
-from kmd.model.actions_model import NO_ARGS, Action, ActionResult
+from kmd.model.actions_model import NO_ARGS, Action, ActionResult, PathOpType
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidStoreState
 from kmd.model.items_model import Item, State
@@ -169,13 +169,15 @@ def run_action(
 
         if skipped_paths:
             log.message(
-                "Skipping saving %s items already saved:\n%s",
+                "Skipped saving %s items already saved:\n%s",
                 len(skipped_paths),
                 format_lines(skipped_paths),
             )
 
         input_store_paths = [StorePath(not_none(item.store_path)) for item in input_items]
-        result_store_paths = [StorePath(not_none(item.store_path)) for item in result.items]
+        result_store_paths = [
+            StorePath(item.store_path) for item in result.items if item.store_path
+        ]
         old_inputs = sorted(set(input_store_paths) - set(result_store_paths))
 
         # If there is a hint that the action replaces the input, archive any inputs that are not in the result.
@@ -201,9 +203,33 @@ def run_action(
         if elapsed > 1.0:
             log.message("%s Action `%s` took %.1fs.", EMOJI_TIMING, action_name, elapsed)
 
-    # Select the final output (omitting any that were archived).
+    # Implement any path operations from the output and/or select the final output
     if not internal_call:
-        final_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
-        ws.set_selection(final_outputs)
+        if result.path_ops:
+            path_ops = [
+                path_op
+                for path_op in result.path_ops
+                if path_op.store_path not in archived_store_paths
+            ]
+
+            path_op_archive = [
+                path_op.store_path for path_op in path_ops if path_op.op == PathOpType.archive
+            ]
+            if path_op_archive:
+                log.message("Archiving %s items based on action result.", len(path_op_archive))
+                for store_path in path_op_archive:
+                    ws.archive(store_path)
+
+            path_op_selection = [
+                path_op.store_path for path_op in path_ops if path_op.op == PathOpType.select
+            ]
+            if path_op_selection:
+                log.message("Selecting %s items based on action result.", len(path_op_selection))
+                ws.set_selection(path_op_selection)
+        else:
+            # Otherwise if no path_ops returned, default behavior is to select the final
+            # outputs (omitting any that were archived).
+            final_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
+            ws.set_selection(final_outputs)
 
     return result

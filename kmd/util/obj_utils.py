@@ -91,7 +91,7 @@ def abbreviate_obj(
     visited.add(id(value))
 
     if isinstance(value, list):
-        truncated_list = value[:list_max_len] + (["..."] if len(value) > list_max_len else [])
+        truncated_list = value[:list_max_len] + (["…"] if len(value) > list_max_len else [])
         return (
             "["
             + ", ".join(
@@ -101,8 +101,8 @@ def abbreviate_obj(
             + "]"
         )
 
-    if is_dataclass(value):
-        name = value.__class__.__name__
+    if is_dataclass(value) and not isinstance(value, type):
+        name = type(value).__name__
         value_dict = asdict(value)
         return f"{name}(" + _format_kvs(value_dict.items(), field_max_len, value_filter) + ")"
 

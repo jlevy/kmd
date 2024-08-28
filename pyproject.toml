@@ -47,6 +47,7 @@ python-dotenv = "^1.0.1"
 curl-cffi = "^0.7.1"
 thefuzz = "^0.22.1"
 tiktoken = "^0.7.0"
+scipy = "^1.14.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"

@@ -5,7 +5,8 @@ from kmd.model.items_model import Item
 from kmd.model.llm_actions_model import CachedLLMAction
 from kmd.text_docs.window_settings import WINDOW_4_PARA
 from kmd.config.logger import get_logger
-from kmd.concepts.normalize_concepts import normalize_concepts_list
+from kmd.concepts.concept_formats import concepts_from_markdown
+from kmd.text_formatting.markdown_util import as_bullet_points
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
@@ -57,5 +58,5 @@ class FindConcepts(CachedLLMAction):
 
     def run_item(self, item: Item) -> Item:
         item = llm_transform_item(self, item)
-        item.body = normalize_concepts_list(not_none(item.body))
+        item.body = as_bullet_points(concepts_from_markdown(not_none(item.body)))
         return item

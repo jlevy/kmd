@@ -39,7 +39,8 @@ __version__ = get_version()
 # xontrib only (in ~/.xonshrc) but this is not preferred.
 USE_CUSTOM_SHELL = True
 
-XONSH_SHOW_TRACEBACK = False
+# Turn off for cleaner outputs. Likely want this on for development.
+XONSH_SHOW_TRACEBACK = True
 
 
 ## Non-customized xonsh shell setup

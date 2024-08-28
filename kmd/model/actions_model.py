@@ -10,6 +10,7 @@ from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.model.language_models import LLM
 from kmd.model.llm_message_model import LLMMessage, LLMTemplate
+from kmd.model.locators import StorePath
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.preconditions_model import Precondition
@@ -33,12 +34,13 @@ class ExpectedArgs:
     max_args: Optional[int]
 
 
-NO_ARGS = ExpectedArgs(0, 0)
-ONE_ARG = ExpectedArgs(1, 1)
-ONE_OR_NO_ARGS = ExpectedArgs(0, 1)
-TWO_ARGS = ExpectedArgs(2, 2)
 ANY_ARGS = ExpectedArgs(0, None)
+NO_ARGS = ExpectedArgs(0, 0)
+ONE_OR_NO_ARGS = ExpectedArgs(0, 1)
 ONE_OR_MORE_ARGS = ExpectedArgs(1, None)
+ONE_ARG = ExpectedArgs(1, 1)
+TWO_OR_MORE_ARGS = ExpectedArgs(2, None)
+TWO_ARGS = ExpectedArgs(2, 2)
 
 
 class TitleTemplate(StringTemplate):
@@ -52,6 +54,21 @@ class TitleTemplate(StringTemplate):
 ActionInput = List[Item]
 
 
+class PathOpType(Enum):
+    archive = "archive"
+    select = "select"
+
+
+@dataclass(frozen=True)
+class PathOp:
+    """
+    An operation on a path.
+    """
+
+    store_path: StorePath
+    op: PathOpType
+
+
 @dataclass
 class ActionResult:
     items: List[Item]
@@ -62,6 +79,9 @@ class ActionResult:
 
     skip_duplicates: bool = False
     """If True, do not save duplicate items (based on identity)."""
+
+    path_ops: Optional[List[PathOp]] = None
+    """If specified, operations to perform on specific paths, such as selecting items."""
 
     def __str__(self):
         return abbreviate_obj(self, field_max_len=80)

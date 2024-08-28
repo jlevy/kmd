@@ -15,6 +15,11 @@ def is_resource(item: Item) -> bool:
 
 
 @precondition
+def is_concept(item: Item) -> bool:
+    return item.type == ItemType.concept
+
+
+@precondition
 def is_config(item: Item) -> bool:
     return item.type == ItemType.config
 

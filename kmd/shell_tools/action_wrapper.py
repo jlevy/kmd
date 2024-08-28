@@ -5,6 +5,7 @@ from kmd.config.text_styles import (
 )
 from kmd.exec.action_exec import run_action
 from kmd.commands import commands
+from kmd.file_storage.workspaces import current_workspace
 from kmd.help.command_help import output_command_help
 from kmd.model.actions_model import Action
 from kmd.model.params_model import RUNTIME_ACTION_PARAMS
@@ -56,8 +57,10 @@ class ShellCallableAction:
             log_tallies(if_slower_than=10.0)
 
         # Show the current selection.
-        commands.select()
-        commands.applicable_actions(brief=True)
+        selection = current_workspace().get_selection()
+        commands.print_selection(selection)
+        if selection:
+            commands.applicable_actions(brief=True)
 
     def __repr__(self):
         return f"CallableAction({str(self.action)})"

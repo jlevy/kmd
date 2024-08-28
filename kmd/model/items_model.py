@@ -482,6 +482,14 @@ class Item:
         else:
             return f"{self.type.value}.{self.get_file_ext().value}"
 
+    def full_text(self) -> str:
+        """
+        Get the full text of the item, including any title, description, and body.
+        Use for embeddings.
+        """
+        parts = [self.title, self.description, self.body_text().strip()]
+        return "\n\n".join(part for part in parts if part)
+
     def body_text(self) -> str:
         if self.is_binary:
             raise ValueError("Cannot get text content of a binary Item")
