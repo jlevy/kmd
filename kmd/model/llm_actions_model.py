@@ -6,7 +6,7 @@ from kmd.exec.llm_transforms import llm_transform_item, llm_transform_str
 from kmd.model.actions_model import (
     ActionInput,
     ActionResult,
-    CachedItemAction,
+    CachedDocAction,
     ForEachItemAction,
     TransformAction,
 )
@@ -46,13 +46,13 @@ class LLMAction(TransformAction, ForEachItemAction):
 
 
 @dataclass(frozen=True)
-class CachedLLMAction(LLMAction, CachedItemAction):
+class CachedLLMAction(LLMAction, CachedDocAction):
     """
     Base LLM action that processes each item and is cached.
     """
 
     def run(self, items: ActionInput) -> ActionResult:
-        return super(CachedItemAction, self).run(items)
+        return super(CachedDocAction, self).run(items)
 
 
 @dataclass(frozen=True)

@@ -72,7 +72,7 @@ transcribe
 # Process a really long document (this one is a 3 hour interview) with sliding windows,
 # and a sequence action that transcribes, formats, and includes timestamps for each
 # paragraph:
-transcribe_and_format 'https://www.youtube.com/watch?v=juD99_sPWGU'
+transcribe_format 'https://www.youtube.com/watch?v=juD99_sPWGU'
 
 # Now look at these as a web page:
 webpage_config

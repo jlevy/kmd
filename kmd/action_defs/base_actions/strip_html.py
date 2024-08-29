@@ -1,6 +1,6 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import (
-    CachedItemAction,
+    CachedDocAction,
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
@@ -12,7 +12,7 @@ log = get_logger(__name__)
 
 
 @kmd_action()
-class StripHtml(CachedItemAction):
+class StripHtml(CachedDocAction):
     def __init__(self):
         super().__init__(
             name="strip_html",

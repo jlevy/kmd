@@ -1,6 +1,6 @@
 from kmd.concepts.concept_formats import concepts_from_markdown
 from kmd.exec.action_registry import kmd_action
-from kmd.model.actions_model import CachedItemAction
+from kmd.model.actions_model import CachedDocAction
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.config.logger import get_logger
@@ -11,7 +11,7 @@ log = get_logger(__name__)
 
 
 @kmd_action()
-class NormalizeConceptList(CachedItemAction):
+class NormalizeConceptList(CachedDocAction):
     def __init__(self):
         super().__init__(
             name="normalize_concept_list",

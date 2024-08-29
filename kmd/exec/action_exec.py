@@ -121,23 +121,24 @@ def run_action(
         already_present = [ws.find_by_id(item) for item in preassembled_result.items]
         all_present = all(already_present)
         log.message(
-            "Rerun check for action `%s`: all_present=%s with these items already present:\n%s",
-            action_name,
+            "Rerun check: all_present=%s with these items already present:\n%s",
             all_present,
             format_lines(already_present),
         )
         if all_present:
             if rerun:
-                log.message("Output already exists, but running anyway since rerun requested.")
+                log.message("All outputs already exit but running anyway since rerun requested.")
             else:
                 log.message(
-                    "All outputs already saved so skipping action (use --rerun to force run):\n%s",
-                    format_lines(already_present),
+                    "All outputs already exist so skipping action (use --rerun to force run).",
                 )
                 cached_items = [ws.load(not_none(store_path)) for store_path in already_present]
                 cached_result = ActionResult(cached_items)
     else:
-        log.message("No rerun check for action `%s` (has no preassembly).", action_name)
+        log.message(
+            "Rerun check: Will run since `%s` has no rerun check (no preassembly).",
+            action_name,
+        )
 
     if cached_result:
         # Use the cached result.

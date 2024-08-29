@@ -1,5 +1,13 @@
+import inspect
 from typing import List, Type, Tuple, Callable, Dict
-from kmd.model.actions_model import ANY_ARGS, ONE_ARG, Action, ForEachItemAction
+from kmd.model.actions_model import (
+    ANY_ARGS,
+    ONE_ARG,
+    Action,
+    ActionInput,
+    ActionResult,
+    ForEachItemAction,
+)
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError
 from kmd.model.items_model import Item
@@ -21,7 +29,22 @@ def each_item_wrapper(action: Action) -> Action:
     Wrap an action that runs on a single item as one that that processes all input items.
     """
 
-    class EachItemWrapper(ForEachItemAction):
+    class EachItemWrapper(ForEachItemAction, action.__class__):
+
+        def __init__(self):
+            ForEachItemAction.__init__(
+                self, name=action.name, description=action.description, expected_args=ANY_ARGS
+            )
+            # Bit of a hack: We don't know the subclass constructor args so dynamically get the ones we need.
+            action_init_params = inspect.signature(action.__class__.__init__).parameters
+            init_args = {
+                param: getattr(action, param) for param in action_init_params if param != "self"
+            }
+            action.__class__.__init__(self, **init_args)
+
+        def run(self, items: ActionInput) -> ActionResult:
+            return super(ForEachItemAction, self).run(items)
+
         def run_item(self, item: Item) -> Item:
             result_items = action.run([item]).items
             if len(result_items) < 1:
@@ -31,12 +54,7 @@ def each_item_wrapper(action: Action) -> Action:
     if action.expected_args != ONE_ARG:
         raise ValueError(f"Action `{action.name}` must expect exactly one argument")
 
-    return EachItemWrapper(
-        name=action.name,
-        description=action.description,
-        expected_args=ANY_ARGS,
-        precondition=action.precondition,
-    )
+    return EachItemWrapper()
 
 
 def _register_action(cls: Type[Action], wrapper: ActionWrapper) -> Type[Action]:

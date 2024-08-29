@@ -1,9 +1,13 @@
 from typing import Iterable, List
 from kmd.file_storage.file_store import FileStore
 from kmd.model.actions_model import Action
+from kmd.model.errors_model import SkippableError
 from kmd.model.locators import StorePath
 from kmd.model.items_model import Item
 from kmd.model.preconditions_model import Precondition
+from kmd.config.logger import get_logger
+
+log = get_logger(__name__)
 
 
 def actions_matching_paths(
@@ -37,7 +41,13 @@ def items_matching_precondition(
     for store_path in ws.walk_items():
         if max_results > 0 and count >= max_results:
             break
-        item = ws.load(store_path)
+        try:
+            item = ws.load(store_path)
+        except SkippableError:
+            continue
+        except Exception as e:
+            log.info("Ignoring exception loading item %s: %s", store_path, e)
+            continue
         if precondition(item):
             yield item
             count += 1

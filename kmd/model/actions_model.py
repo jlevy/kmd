@@ -104,8 +104,8 @@ class Action(ABC):
     precondition: Optional[Precondition] = None
     """Mainly a sanity check. For simplicity we apply one precondition on all args."""
 
-    expected_args: ExpectedArgs = field(default_factory=lambda: ONE_ARG)
-    """The required number of arguments."""
+    expected_args: ExpectedArgs = ONE_ARG
+    """The required number of arguments. We use exactly one by default to make it easy to wrap in a ForEachItemAction."""
 
     interactive_input: bool = False
     """Does this action ask for input interactively?"""
@@ -237,14 +237,19 @@ class Action(ABC):
         return new_instance
 
     def preassemble_one(
-        self, operation: Operation, items: ActionInput, output_num: int, **kwargs
+        self,
+        operation: Operation,
+        items: ActionInput,
+        output_num: int,
+        type: ItemType,
+        **kwargs,
     ) -> Item:
         """
-        Assemble a single output item from the given input items. Include the last Operation
-        so we can do an identity check if the output already exists.
+        Preassemble a single empty output item from the given input items. Include the title,
+        type, and last Operation so we can do an identity check if the output already exists.
         """
         primary_input = items[output_num]
-        item = primary_input.derived_copy(body=None, **kwargs)
+        item = primary_input.derived_copy(type=type, body=None, **kwargs)
 
         if self.title_template:
             item.title = self.title_template.format(title=primary_input.title or UNTITLED)
@@ -323,9 +328,9 @@ class ForEachItemAction(Action):
 
 
 @dataclass(frozen=True)
-class CachedItemAction(ForEachItemAction):
+class CachedDocAction(ForEachItemAction):
     """
-    Abstract base action that simply processes each input and returns a single text output for each.
+    Abstract base action that simply processes each input and returns a single doc output for each.
     The output title etc. are derived from the first input item. Caches and skips items that have
     already been processed.
     """

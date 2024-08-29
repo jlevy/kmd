@@ -1,4 +1,4 @@
-from kmd.exec.compound_actions import ComboAction
+from kmd.model.compound_actions_model import ComboAction
 from kmd.exec.action_registry import kmd_action
 from kmd.model.doc_elements import CONCEPTS
 from kmd.preconditions.precondition_defs import is_text_doc

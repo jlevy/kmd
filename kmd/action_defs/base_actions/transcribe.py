@@ -1,7 +1,7 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.media.media_download import download_and_transcribe
 from kmd.model.actions_model import (
-    CachedItemAction,
+    CachedDocAction,
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import FileExt, Format, Item, ItemType
@@ -12,7 +12,7 @@ log = get_logger(__name__)
 
 
 @kmd_action()
-class Transcribe(CachedItemAction):
+class Transcribe(CachedDocAction):
     def __init__(self):
         super().__init__(
             name="transcribe",

@@ -1,10 +1,10 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.preconditions.precondition_defs import is_url
-from kmd.exec.compound_actions import SequenceAction
+from kmd.model.compound_actions_model import CachedDocSequence
 
 
 @kmd_action(for_each_item=True)
-class TranscribeFormat(SequenceAction):
+class TranscribeFormat(CachedDocSequence):
     def __init__(self):
         super().__init__(
             name="transcribe_format",
