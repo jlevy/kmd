@@ -8,7 +8,7 @@ from kmd.file_storage.workspaces import current_workspace, ensure_saved
 from kmd.lang_tools.inflection import plural
 from kmd.model.actions_model import NO_ARGS, Action, ActionResult, ForEachItemAction, PathOpType
 from kmd.model.canon_url import canonicalize_url
-from kmd.model.errors_model import InvalidInput, InvalidStoreState
+from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
 from kmd.model.locators import Locator, StorePath, is_store_path
@@ -24,7 +24,7 @@ def collect_args(*args: str) -> List[Locator]:
         try:
             selection_args = current_workspace().get_selection()
             return cast(List[Locator], selection_args)
-        except InvalidStoreState:
+        except InvalidState:
             return []
     else:
         return cast(List[Locator], list(args))

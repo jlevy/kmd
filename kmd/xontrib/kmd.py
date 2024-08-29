@@ -43,7 +43,7 @@ from kmd.file_storage.workspaces import current_workspace
 from kmd.action_defs import reload_all_actions
 from kmd.commands import commands
 from kmd.commands.commands import welcome
-from kmd.model.errors_model import InvalidStoreState
+from kmd.model.errors_model import InvalidState
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 
 
@@ -147,7 +147,7 @@ def post_initialize():
     if _is_interactive:
         try:
             current_workspace().log_store_info()  # Validates and logs info for user.
-        except InvalidStoreState:
+        except InvalidState:
             output(
                 f"{EMOJI_WARN} The current directory is not a workspace. "
                 "Create or switch to a workspace with the `workspace` command."
@@ -247,7 +247,7 @@ def item_completer(context: CompletionContext) -> CompleterResult:
                         for item in matching_items
                         if item.store_path and item.store_path.startswith(prefix)
                     }
-    except InvalidStoreState:
+    except InvalidState:
         return
 
 

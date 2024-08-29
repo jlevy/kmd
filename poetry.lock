@@ -4796,6 +4796,16 @@ pygments = ">=2.13.0,<3.0.0"
 jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
+name = "ripgrepy"
+version = "2.0.0"
+description = ""
+optional = false
+python-versions = "*"
+files = [
+    {file = "ripgrepy-2.0.0.tar.gz", hash = "sha256:6dd871bafe859301097354d1f171540fbc9bd38d3f8f52f8a196dc28522085da"},
+]
+
+[[package]]
 name = "rpds-py"
 version = "0.20.0"
 description = "Python bindings to Rust's persistent data structures (rpds)"
@@ -6766,4 +6776,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "418889d11b71492aa947e58d56de6ed73a604e20eee6e08d284a985f77f6bbd1"
+content-hash = "aaaf5e49bee8111d5221e224187eafecba814473a486911afa6905fad33565c8"

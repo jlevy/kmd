@@ -5,7 +5,7 @@ from cachetools import cached
 from kmd.media.media_download import reset_media_cache_dir
 from kmd.media.web import reset_web_cache_dir
 from kmd.model.canon_url import canonicalize_url
-from kmd.model.errors_model import InvalidStoreState
+from kmd.model.errors_model import InvalidState
 from kmd.model.items_model import Format, Item, ItemType
 from kmd.file_storage.file_store import CACHE_DIR, FileStore
 from kmd.model.locators import Locator, StorePath
@@ -38,7 +38,7 @@ def current_workspace_dir() -> Path:
             return path
         path = path.parent
 
-    raise InvalidStoreState(
+    raise InvalidState(
         f"No workspace found in `{cwd}`.\nA workspace directory should end in .kb; create one with the `workspace` command."
     )
 
@@ -50,7 +50,7 @@ def current_workspace_name() -> Optional[str]:
     workspace_name = None
     try:
         workspace_name = current_workspace_dir().name
-    except InvalidStoreState:
+    except InvalidState:
         pass
     return workspace_name
 
@@ -76,7 +76,7 @@ def current_workspace() -> FileStore:
 def current_workspace_tmp_dir() -> Path:
     try:
         return current_workspace().tmp_dir
-    except InvalidStoreState:
+    except InvalidState:
         return Path(tempfile.gettempdir())
 
 
@@ -114,7 +114,7 @@ def get_param_value(param_name: str) -> Optional[str]:
     """
     try:
         params = current_workspace().get_params()
-    except InvalidStoreState:
+    except InvalidState:
         params = {}
 
     return param_lookup(params, param_name, USER_SETTABLE_PARAMS)

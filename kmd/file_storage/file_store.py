@@ -19,7 +19,7 @@ from kmd.file_storage.filenames import (
     skippable_file,
 )
 from kmd.file_storage.persisted_yaml import PersistedYaml
-from kmd.model.errors_model import InvalidFilename, InvalidStoreState
+from kmd.model.errors_model import InvalidFilename, InvalidState
 from kmd.model.locators import StorePath
 from kmd.model.items_model import FileExt, Format, Item, ItemId, ItemType
 from kmd.model.canon_url import canonicalize_url
@@ -405,7 +405,7 @@ class FileStore:
                 )
             return filtered_store_paths
         except OSError:
-            raise InvalidStoreState("No selection saved in workspace")
+            raise InvalidState("No selection saved in workspace")
 
     def unselect(self, unselect_paths: List[StorePath]):
         current_selection = self.get_selection()

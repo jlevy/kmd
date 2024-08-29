@@ -41,8 +41,8 @@ class InvalidCommand(InvalidInput):
     pass
 
 
-class InvalidStoreState(SelfExplanatoryError):
-    """Raised when the store is not in a valid state for an operation."""
+class InvalidState(SelfExplanatoryError):
+    """Raised when the store or other system state is not in a valid for an operation."""
 
     pass
 

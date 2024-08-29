@@ -220,7 +220,7 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     )
     XSH.load(ctx=ctx, execer=execer, inherit_env=True)
     XSH.shell = Shell(execer=execer)  # type: ignore
-    XSH.shell.shell = CustomShell(execer=execer, ctx=ctx)
+    XSH.shell.shell = CustomShell(execer=execer, ctx=ctx)  # type: ignore
 
     is_interactive = False if single_command else True
 
@@ -241,9 +241,9 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     try:
         if single_command:
             # Run a command.
-            XSH.shell.shell.default(single_command)
+            XSH.shell.shell.default(single_command)  # type: ignore
         else:
-            XSH.shell.shell.cmdloop()
+            XSH.shell.shell.cmdloop()  # type: ignore
     finally:
         postmain(args)
 

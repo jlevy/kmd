@@ -19,8 +19,8 @@ brew update
 brew install pyenv
 brew install pipx
 
-# Install ffmpeg:
-brew install ffmpeg
+# Install ffmpeg and ripgrep, which are needed for certain commands:
+brew install ffmpeg ripgrep
 
 # Ensure you are in the source directory (where .python-version is)
 # and install recent Python if needed:

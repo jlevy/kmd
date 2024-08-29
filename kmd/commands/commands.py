@@ -43,7 +43,7 @@ from kmd.config.text_styles import (
 from kmd.file_storage.file_store import skippable_file
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace
 from kmd.model.params_model import USER_SETTABLE_PARAMS
-from kmd.model.errors_model import InvalidInput
+from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.locators import StorePath
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.lang_tools.inflection import plural
@@ -161,6 +161,7 @@ def select(*paths: str) -> None:
     Get or show the current selection.
     """
     ws = current_workspace()
+
     if paths:
         store_paths = [StorePath(path) for path in paths]
         ws.set_selection(store_paths)
@@ -565,6 +566,31 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
         output(f"\n{total_files} items total in {total_files} folders", color=COLOR_EMPH)
 
     output()
+
+
+@kmd_command
+def search(query_str: str, *paths: str, sort: str = "path") -> None:
+    """
+    Search for a string in files at the given paths and return their store paths.
+    Useful to find all docs or resources matching a string or regex.
+    """
+    from ripgrepy import Ripgrepy, RipGrepNotFound
+
+    strip_prefix = None
+    if not paths:
+        paths = (".",)
+        strip_prefix = "./"
+    try:
+        rg = Ripgrepy(query_str, *paths)
+        results = rg.files_with_matches().sort(sort).run().as_string
+        if strip_prefix:
+            results = "\n".join(
+                line.lstrip(strip_prefix) if line.startswith(strip_prefix) else line
+                for line in results.splitlines()
+            )
+        output("%s", results)
+    except RipGrepNotFound:
+        raise InvalidState("`rg` command not found. Install ripgrep to use the search command.")
 
 
 @kmd_command
