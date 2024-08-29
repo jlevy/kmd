@@ -64,7 +64,7 @@ To run:
 poetry run kmd
 ```
 
-Optionally, to install kmd globally in current user's Python virtual environment (so you can more
+Optionally, to install kmd globally in current user's Python virtual environment so you can
 conveniently use `kmd` anywhere, make sure you have a usable Python 3.12+ environment
 active (such as using `pyenv`), then:
 
@@ -72,7 +72,7 @@ active (such as using `pyenv`), then:
 ./install_local.sh
 ```
 
-This does a pip install of the wheel so you can run it as `kmd` anywhere.
+This does a pip install of the wheel so you can run it as `kmd`.
 
 ## Using kmd
 

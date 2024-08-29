@@ -156,11 +156,15 @@ def print_selection(selection: List[StorePath]) -> None:
 
 
 @kmd_command
-def select(*paths: str) -> None:
+def select(*paths: str, stdin=None) -> None:
     """
     Get or show the current selection.
     """
     ws = current_workspace()
+
+    # FIXME: This seems to hang unless threading is on.
+    if stdin:
+        paths = stdin.read().splitlines()
 
     if paths:
         store_paths = [StorePath(path) for path in paths]

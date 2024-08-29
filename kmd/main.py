@@ -37,7 +37,7 @@ __version__ = get_version()
 # it then supports custom parsing of shell input to include LLM-based assistance, etc.
 # Alternatively, we can run a regular xonsh shell and have it load kmd commands via the
 # xontrib only (in ~/.xonshrc) but this is not preferred.
-USE_CUSTOM_SHELL = True
+USE_KMD_SHELL = True
 
 # Turn off for cleaner outputs. Likely want this on for development.
 XONSH_SHOW_TRACEBACK = True
@@ -233,7 +233,7 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     # Load kmd xontrib for rest of kmd functionality.
     xontribs_load(["kmd.xontrib.kmd"], full_module=True)
 
-    # Imports are so slow we will need to imporove this. Let's time it.
+    # Imports are so slow we will need to improve this. Let's time it.
     startup_time = time.time() - import_start_time
     log.info(f"kmd startup took {startup_time:.2f}s.")
 
@@ -249,10 +249,11 @@ def start_custom_xonsh(single_command: Optional[str] = None):
 
 
 def run_shell(single_command: Optional[str] = None):
-    if USE_CUSTOM_SHELL:
+    if USE_KMD_SHELL:
         start_custom_xonsh(single_command)
     else:
-        # For a regular xonsh init without a customized shell.
+        # For a traditional xonsh init without a customized shell.
+        # This isn't recommended since some features aren't available.
         # When running in regular xonsh we need to load kmd xontrib via xonshrc.
         install_to_xonshrc()
         xonsh.main.main()
