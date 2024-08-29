@@ -33,7 +33,7 @@ def assistant_preamble(skip_api: bool = False, base_only: bool = False) -> str:
     )
 
 
-def insert_output(func: Callable, name: str) -> str:
+def _insert_output(func: Callable, name: str) -> str:
     try:
         return output_as_string(func)
     except (KmdRuntimeError, ValueError) as e:
@@ -41,14 +41,8 @@ def insert_output(func: Callable, name: str) -> str:
         return f"(No {name} available)"
 
 
-def assistance(input: str, fast: bool = False) -> str:
+def assistant_current_state() -> str:
     from kmd.commands.commands import select, applicable_actions  # Avoid circular imports.
-
-    assistant_model = "assistant_model_fast" if fast else "assistant_model"
-
-    model = LLM(not_none(get_param_value(assistant_model)))
-
-    output(f"Getting assistance (model {model})…")
 
     ws_name = current_workspace_name()
     if ws_name:
@@ -60,12 +54,12 @@ def assistance(input: str, fast: bool = False) -> str:
 
             The user's current selection is below:
 
-            {insert_output(select, "selection")}
+            {_insert_output(select, "selection")}
 
             The actions with preconditions that match this selection, so are available to run on the
             current selection, are below:
 
-            {insert_output(applicable_actions, "applicable actions")}
+            {_insert_output(applicable_actions, "applicable actions")}
             """
         )
     else:
@@ -79,13 +73,22 @@ def assistance(input: str, fast: bool = False) -> str:
             - `workspace my_new_workspace`.
             """
         )
+    return current_state_message
+
+
+def assistance(input: str, fast: bool = False) -> str:
+
+    assistant_model = "assistant_model_fast" if fast else "assistant_model"
+
+    model = LLM(not_none(get_param_value(assistant_model)))
+
+    output(f"Getting assistance (model {model})…")
 
     system_message = LLMMessage(
         f"""
         {assistant_preamble(skip_api=fast)}
 
-        {current_state_message}
-
+        {assistant_current_state()}
         """
         # TODO: Include selection history, command history, any other info about the workspace.
     )

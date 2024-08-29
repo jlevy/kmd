@@ -32,15 +32,15 @@ def each_item_wrapper(action: Action) -> Action:
     class EachItemWrapper(ForEachItemAction, action.__class__):
 
         def __init__(self):
-            ForEachItemAction.__init__(
-                self, name=action.name, description=action.description, expected_args=ANY_ARGS
-            )
             # Bit of a hack: We don't know the subclass constructor args so dynamically get the ones we need.
             action_init_params = inspect.signature(action.__class__.__init__).parameters
             init_args = {
                 param: getattr(action, param) for param in action_init_params if param != "self"
             }
             action.__class__.__init__(self, **init_args)
+            ForEachItemAction.__init__(
+                self, name=action.name, description=action.description, expected_args=ANY_ARGS
+            )
 
         def run(self, items: ActionInput) -> ActionResult:
             return super(ForEachItemAction, self).run(items)

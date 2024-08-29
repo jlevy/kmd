@@ -51,6 +51,7 @@ from kmd.config.logger import get_logger, log_file
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
 from kmd.util.type_utils import not_none
+from kmd.version import get_version
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 
 log = get_logger(__name__)
@@ -516,6 +517,8 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
 
     total_folders, total_files = 0, 0
 
+    output()
+
     for path in paths_to_show:
         # If we're explicitly looking in a hidden directory, show hidden files.
         show_hidden = path is not None and skippable_file(path)
@@ -553,6 +556,8 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
                         display_name,
                         text_wrap=Wrap.NONE,
                     )
+
+            output()
 
             total_folders += 1
             total_files += nfiles
@@ -593,6 +598,14 @@ def canonicalize(*paths: str) -> None:
         select(*canon_paths)
 
     # TODO: Also consider implementing duplicate elimination here.
+
+
+@kmd_command
+def version() -> None:
+    """
+    Show the version of kmd.
+    """
+    output("kmd %s", get_version())
 
 
 # TODO:
