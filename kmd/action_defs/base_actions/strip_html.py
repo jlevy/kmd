@@ -26,7 +26,7 @@ class StripHtml(CachedDocAction):
 
         clean_body = html_to_plaintext(item.body)
         output_item = item.derived_copy(
-            type=ItemType.note,
+            type=ItemType.doc,
             format=Format.markdown,
             body=clean_body,
         )

@@ -45,8 +45,8 @@ All items have a **source path**, which is simply the path of the file relative 
 the workspace directory. Item files are named in a simple and readable way, that
 reflects the title of the item, its type, its format, and in some cases its
 provenance. For example,
-`notes/day_1_workout_introduction_youtube_transcription_timestamps.note.md` is
-an item that is a note (a text file) that is transcription of a YouTube video,
+`docs/day_1_workout_introduction_youtube_transcription_timestamps.doc.md` is
+an item that is a doc (a text file) that is transcription of a YouTube video,
 including timestamps, in Markdown format.
 
 The path (directory and filename) each file is simply a convenient locator for

@@ -13,7 +13,7 @@ File formats and conventions:
   exports.
 
 - Files are named in the format
-  `notes/day_1_workout_introduction_youtube_transcription_timestamps.note.md`.
+  `docs/day_1_workout_introduction_youtube_transcription_timestamps.doc.md`.
   The file suffix indicates the item type (note, resource, etc.) and format
   (.md, .yml, etc.).
 

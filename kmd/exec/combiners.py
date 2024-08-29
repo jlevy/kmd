@@ -57,7 +57,7 @@ def combine_items(
     combo_result = Item(
         title=combo_title,
         body=combo_body,
-        type=ItemType.note,
+        type=ItemType.doc,
         format=results[0].items[0].format,
         relations=relations,
     )

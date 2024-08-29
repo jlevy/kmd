@@ -26,7 +26,7 @@ class Transcribe(CachedDocAction):
 
         transcription = download_and_transcribe(item.url, language=self.language)
         result_item = item.derived_copy(
-            type=ItemType.note,
+            type=ItemType.doc,
             body=transcription,
             format=Format.html,  # Important to note this since we put in timestamp spans.
             file_ext=FileExt.md,

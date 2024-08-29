@@ -40,7 +40,7 @@ def parse_filename(filename: str, expect_type_ext=False) -> Tuple[str, str, str,
     Parse a filename into its path, name, type, and extension parts.
 
     folder/file.name.type.ext -> ("folder", "file.name", "type", "ext")
-    filename.note.txt -> ("", "filename", "note", "txt")
+    filename.doc.txt -> ("", "filename", "note", "txt")
     filename.txt -> ("", "filename", "", "txt")
     filename -> ("", "filename", "", "")
     """

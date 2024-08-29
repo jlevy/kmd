@@ -123,7 +123,7 @@ test_data = GraphData(
             body="This is a description of Concept A.",
         ),
         Node(
-            id="notes/note_b.md",
+            id="docs/doc_b.md",
             type="note",
             title="Note B",
             body="This is a note related to Concept A.",
@@ -145,15 +145,15 @@ test_data = GraphData(
         ),
     ],
     links=[
-        Link(source="concepts/concept_a.md", target="notes/note_b.md", relationship="related to"),
+        Link(source="concepts/concept_a.md", target="docs/doc_b.md", relationship="related to"),
         Link(
             source="concepts/concept_a.md",
             target="concepts/concept_c.md",
             relationship="related to",
         ),
-        Link(source="notes/note_b.md", target="concepts/concept_c.md", relationship="references"),
+        Link(source="docs/doc_b.md", target="concepts/concept_c.md", relationship="references"),
         Link(
-            source="notes/note_b.md",
+            source="docs/doc_b.md",
             target="resources/resource_d.md",
             relationship="references",
         ),

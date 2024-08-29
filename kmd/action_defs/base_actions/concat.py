@@ -37,7 +37,7 @@ class Concat(Action):
         concatenated_text = self.separator.join(titled_body(item) for item in items if item.body)
 
         result_item = items[0].derived_copy(
-            type=ItemType.note,
+            type=ItemType.doc,
             body=concatenated_text,
         )
 

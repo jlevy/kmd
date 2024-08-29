@@ -42,7 +42,7 @@ class Chunkify(CachedDocAction):
         chunked_body = chunk_text_as_divs(item.body, self.chunk_size, self.chunk_unit)
 
         output_item = item.derived_copy(
-            type=ItemType.note,
+            type=ItemType.doc,
             format=Format.markdown,
             body=chunked_body,
         )

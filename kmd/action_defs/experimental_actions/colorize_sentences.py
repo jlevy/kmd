@@ -54,7 +54,7 @@ class ColorizeSentences(ForEachItemAction):
                 )
 
         output_item = item.derived_copy(
-            type=ItemType.note, body=doc.reassemble(), format=Format.md_html
+            type=ItemType.doc, body=doc.reassemble(), format=Format.md_html
         )
 
         return output_item

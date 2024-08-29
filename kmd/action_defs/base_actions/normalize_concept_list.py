@@ -26,7 +26,7 @@ class NormalizeConceptList(CachedDocAction):
         body = as_bullet_points(concepts_from_markdown(item.body))
 
         output_item = item.derived_copy(
-            type=ItemType.note,
+            type=ItemType.doc,
             format=Format.markdown,
             body=body,
         )

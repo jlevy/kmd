@@ -60,9 +60,9 @@ concept_dark = green_dark
 concept_light = green_light
 concept_lighter = green_lighter
 
-note_dark = blue_dark
-note_light = blue_light
-note_lighter = blue_lighter
+doc_dark = blue_dark
+doc_light = blue_light
+doc_lighter = blue_lighter
 
 resource_dark = cyan_dark
 resource_light = cyan_light

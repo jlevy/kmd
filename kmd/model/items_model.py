@@ -38,7 +38,7 @@ T = TypeVar("T")
 class ItemType(Enum):
     """Kinds of items."""
 
-    note = "note"
+    doc = "doc"
     concept = "concept"
     resource = "resource"
     config = "config"
@@ -273,7 +273,7 @@ class Item:
                 return default
 
         # These are the enum and dataclass fields.
-        type = set_field("type", ItemType.note, ItemType)
+        type = set_field("type", ItemType.doc, ItemType)
         state = set_field("state", State.draft, State)
         format = set_field("format", None, Format)
         file_ext = set_field("file_ext", None, FileExt)

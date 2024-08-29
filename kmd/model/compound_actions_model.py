@@ -107,7 +107,7 @@ class CachedDocSequence(SequenceAction):
     # Implementing this makes caching work.
     def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
         return ActionResult(
-            [self.preassemble_one(operation, items, output_num=0, type=ItemType.note)]
+            [self.preassemble_one(operation, items, output_num=0, type=ItemType.doc)]
         )
 
 
@@ -186,5 +186,5 @@ class CachedDocCombo(ComboAction):
     # Implementing this makes caching work.
     def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
         return ActionResult(
-            [self.preassemble_one(operation, items, output_num=0, type=ItemType.note)]
+            [self.preassemble_one(operation, items, output_num=0, type=ItemType.doc)]
         )

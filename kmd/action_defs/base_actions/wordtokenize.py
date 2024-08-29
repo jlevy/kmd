@@ -29,7 +29,7 @@ class Wordtokenize(ForEachItemAction):
             raw_text_to_wordtoks(item.body, parse_para_br=True, bof_eof=True)
         )
         output_item = item.derived_copy(
-            type=ItemType.note, title=new_title, body=toks_str, format=Format.markdown
+            type=ItemType.doc, title=new_title, body=toks_str, format=Format.markdown
         )
 
         return output_item

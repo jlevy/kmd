@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from copy import copy
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, fields
 from enum import Enum
 from typing import Any, Dict, List, Optional, cast
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_logger
@@ -338,7 +338,7 @@ class CachedDocAction(ForEachItemAction):
     # Implementing this makes caching work.
     def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
         return ActionResult(
-            [self.preassemble_one(operation, items, output_num=0, type=ItemType.note)]
+            [self.preassemble_one(operation, items, output_num=0, type=ItemType.doc)]
         )
 
 
