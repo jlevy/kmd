@@ -161,7 +161,7 @@ def output_as_string(func: Callable, *args: Any, **kwargs: Any) -> str:
 def rprint(*args, **kwargs):
     """Print to global console, unless output stream is redirected."""
 
-    stream = getattr(_output_context, "stream")
+    stream = getattr(_output_context, "stream", None)
     if stream:
         rich.print(*args, **kwargs, file=stream)
     else:

@@ -19,6 +19,7 @@ from xonsh.execer import Execer
 from xonsh.xontribs import xontribs_load
 from pygments.token import Token
 from kmd.config.logger import get_console, get_logger
+from kmd.config.settings import APP_NAME
 from kmd.config.setup import setup
 from kmd.text_ui.command_output import output, output_assistance
 from kmd.help.assistant import assistance
@@ -211,6 +212,15 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     """
 
     args = premain(None)  # No xonsh args.
+
+    # Make process title "kmd" instead of "xonsh".
+    try:
+        from setproctitle import setproctitle as spt
+
+        spt(APP_NAME)
+    except ImportError:
+        pass
+
     ctx = {}
     execer = Execer(
         filename="<stdin>",

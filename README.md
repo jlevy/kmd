@@ -210,5 +210,5 @@ poetry up
 poetry self update
 
 # Debugging: See Python stack traces of all threads:
-pkill -USR1 -f xonsh
+pkill -USR1 kmd
 ```

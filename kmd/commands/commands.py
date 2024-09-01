@@ -162,9 +162,13 @@ def select(*paths: str, stdin=None) -> None:
     """
     ws = current_workspace()
 
-    # FIXME: This seems to hang unless threading is on.
-    if stdin:
-        paths = stdin.read().splitlines()
+    # TODO: Get stdin to work for commands like select.
+    # Globally we have THREAD_SUBPROCS=False to avoid hard-to-interrupt subprocesses.
+    # But xonsh seems to hang with stdin unless we modify the spec to be threadable?
+    # https://xon.sh/tutorial.html#callable-aliases
+    # https://github.com/xonsh/xonsh/blob/main/xonsh/aliases.py#L1070
+    # if stdin:
+    #     paths = stdin.read().splitlines()
 
     if paths:
         store_paths = [StorePath(path) for path in paths]

@@ -90,7 +90,7 @@ R = TypeVar("R")
 
 def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optional[R]]:
     """
-    Wrap a function to accept a list of string shell arguments, parse them, and call the
+    Wrap a function to accept a list of string shell-style arguments, parse them, and call the
     original function.
     """
     pos_params, kw_params, kw_param_docs = collect_param_info(func)
