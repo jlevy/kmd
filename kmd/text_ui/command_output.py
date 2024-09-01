@@ -12,6 +12,7 @@ from textwrap import dedent, indent
 from typing import Any, Callable, Optional
 import rich
 from rich.text import Text
+from rich.markdown import Markdown
 from kmd.config.logger import get_console
 from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_lines_to_width
 from kmd.config.text_styles import (
@@ -169,33 +170,32 @@ def rprint(*args, **kwargs):
 
 
 def output(
-    message: str | Text = "", *args, text_wrap: Wrap = Wrap.WRAP, color=None, extra_indent: str = ""
-):
-    if isinstance(message, str):
-        if color:
-            rprint(Text(fill_text(message % args, text_wrap, extra_indent), color))
-        else:
-            rprint(fill_text(message % args, text_wrap, extra_indent))
-    else:
-        rprint(message)
-
-
-def output_markdown(doc_str: str, extra_indent: str = ""):
-    output(fill_markdown(doc_str), text_wrap=Wrap.NONE, extra_indent=extra_indent)
-
-
-def _output_message(
-    message: str,
+    message: str | Text | Markdown = "",
     *args,
-    text_wrap: Wrap,
-    color: str,
+    text_wrap: Wrap = Wrap.WRAP,
+    color=None,
     transform: Callable[[str], str] = lambda x: x,
     extra_indent: str = "",
+    extra_newlines: bool = False,
 ):
-    text = message % args if args else message
-    rprint()
-    rprint(Text(transform(fill_text(text, text_wrap, extra_indent)), color))
-    rprint()
+    if extra_newlines:
+        rprint()
+    if isinstance(message, str):
+        text = message % args if args else message
+        filled_text = fill_text(transform(text), text_wrap, extra_indent)
+        rprint(Text(filled_text, color) if color else filled_text)
+    else:
+        rprint(message)
+    if extra_newlines:
+        rprint()
+
+
+def output_markdown(doc_str: str, extra_indent: str = "", use_rich_markdown: bool = True):
+    doc = fill_markdown(doc_str)
+    if use_rich_markdown:
+        doc = Markdown(doc, justify="left")
+
+    output(doc, text_wrap=Wrap.NONE, extra_indent=extra_indent)
 
 
 def output_separator():
@@ -203,8 +203,13 @@ def output_separator():
 
 
 def output_status(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
-    _output_message(
-        message, *args, text_wrap=text_wrap, color=COLOR_OUTPUT, extra_indent=extra_indent
+    output(
+        message,
+        *args,
+        text_wrap=text_wrap,
+        color=COLOR_OUTPUT,
+        extra_indent=extra_indent,
+        extra_newlines=True,
     )
 
 
@@ -213,27 +218,33 @@ def output_help(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: 
 
 
 def output_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
-    _output_message(
+    output(
         f"\n{EMOJI_ASSISTANT} " + message,
         *args,
         text_wrap=text_wrap,
         color=COLOR_ASSISTANCE,
         extra_indent=extra_indent,
+        extra_newlines=True,
     )
 
 
 def output_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
-    _output_message(
-        message, *args, text_wrap=text_wrap, color=COLOR_RESPONSE, extra_indent=extra_indent
+    output(
+        message,
+        *args,
+        text_wrap=text_wrap,
+        color=COLOR_RESPONSE,
+        extra_indent=extra_indent,
+        extra_newlines=True,
     )
 
 
 def output_heading(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
-    _output_message(
-        message,
+    output(
+        Markdown(f"## {message.upper()}"),
         *args,
         text_wrap=text_wrap,
         color=COLOR_HEADING,
-        transform=str.upper,
         extra_indent=extra_indent,
+        extra_newlines=True,
     )

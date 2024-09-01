@@ -7,6 +7,7 @@ from kmd.config.text_styles import (
     COLOR_COMMAND_TEXT,
     EMOJI_ACTION,
 )
+from kmd.docs.faq_headings import faq_headings
 from kmd.model.params_model import Param
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_checks import (
@@ -133,12 +134,7 @@ def help_question_completer(context: CompletionContext) -> CompleterResult:
             arg_index == 1 and command.args[0].value == "?"
         ):
             query = prefix.lstrip("? ")
-
-            # Extract questions from the FAQ.
-            from kmd.docs.topics.faq import __doc__ as faq_doc
-
-            questions = re.findall(r"^#+ (.+\?)\s*$", faq_doc, re.MULTILINE)  # type: ignore
-            assert len(questions) > 2
+            questions = faq_headings()
 
             return {RichCompletion(question) for question in _completion_match(query, questions)}
 

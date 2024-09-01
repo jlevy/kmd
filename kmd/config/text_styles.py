@@ -170,6 +170,10 @@ class KmdHighlighter(RegexHighlighter):
 
 
 RICH_STYLES = {
+    "markdown.h1": "bold green",
+    "markdown.h2": "bold green",
+    "markdown.h3": "bold green",
+    "markdown.h4": "bold blue",
     "kmd.ellipsis": Style(color=COLOR_HINT),
     "kmd.indent": Style(color=COLOR_KEY, dim=True),
     "kmd.error": Style(color=COLOR_ERROR, bold=True),

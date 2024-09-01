@@ -1,6 +1,5 @@
 """
-
-ABOUT KMD
+## ABOUT KMD
 
 Kmd is an extensible command-line tool for exploring and organizing knowledge.
 It includes tasks like editing and summarizing text, transcribing videos,
@@ -26,7 +25,7 @@ help you in how to use kmd. Anything you type that ends in a `?` is sent to the
 assistant.
 
 
-ITEMS AND FILE FORMATS
+### Items and File Formats
 
 Kmd operates on **items**, which are URLs, files, text or Markdown notes, or other
 documents. These are stored as simple files, in a single directory, called a
@@ -59,7 +58,7 @@ within the `relations` metadata. This means actions can find citations or other
 data on the provenance of a given piece of information.
 
 
-COMMANDS AND ACTIONS
+### Commands and Actions
 
 Most things are done in kmd via kmd **commands**, which are built-in operations
 (like listing or selecting files to process), and kmd **actions**, which are
@@ -88,7 +87,7 @@ errors and allows you to find actions that might apply to a given selected
 set of items using `suggest_actions`.
 
 
-USEFUL FEATURES
+### Useful Features
 
 Kmd makes a few kinds of messy text manipulations easier:
 

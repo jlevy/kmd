@@ -28,7 +28,8 @@ pyenv install
 
 # Install recent Poetry if needed:
 pipx install poetry
-poetry self update
+poetry self update  
+poetry config virtualenvs.in-project true
 
 # Optional for devs: Poetry plugins to help with dev builds and updates:
 poetry self add "poetry-dynamic-versioning[plugin]"

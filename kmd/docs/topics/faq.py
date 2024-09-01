@@ -1,5 +1,7 @@
 """
-# What is kmd?
+## FREQUENTLY ASKED QUESTIONS
+
+### What is kmd?
 
 Kmd is an extensible command-line power tool for exploring and organizing knowledge.
 
@@ -21,7 +23,7 @@ For more detailed information, you can run `kmd_help` to get background and a li
 of commands and actions.
 
 
-# How do I get started using kmd?
+### How do I get started using kmd?
 
 Run `kmd_help` to get an overview.
 
@@ -34,13 +36,13 @@ you get started. You can also try `sugg
 Type `?` and press tab to see some frequently asked questions.
 
 
-# What models are available?
+### What models are available?
 
 You can use kmd with any APIs or models you like! By default it uses APIs from
 OpenAI, Deepgram, and Anthropic.
 
 
-# How can I transcribe a YouTube video or podcast?
+### How can I transcribe a YouTube video or podcast?
 
 Here is an example of how to transcribe a YouTube video or podcast, then
 do some summarization and editing of it. (Click or copy/paste these commands.)

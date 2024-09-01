@@ -1,4 +1,6 @@
 """
+## WORKSPACE AND FILE FORMATS
+
 A kmd workspace is simply a directory of files. The goal is for a workspace to
 be easy to use not just with kmd but with other editors or tools, so it's
 possible to edit, share, or commit files to version control. It makes sense to
