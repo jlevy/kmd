@@ -1,11 +1,12 @@
 from pathlib import Path
+import re
 import tempfile
 from typing import Optional, Tuple
 from cachetools import cached
 from kmd.media.media_download import reset_media_cache_dir
 from kmd.media.web import reset_web_cache_dir
 from kmd.model.canon_url import canonicalize_url
-from kmd.model.errors_model import InvalidState
+from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.file_storage.file_store import CACHE_DIR, FileStore
@@ -21,11 +22,44 @@ log = get_logger(__name__)
 KB_SUFFIX = ".kb"
 
 
-def canon_workspace_name(name: str) -> Tuple[str, str]:
-    name = name.strip("/ ")
-    workspace_name = name.removesuffix(KB_SUFFIX)
-    workspace_dir = name if name.endswith(KB_SUFFIX) else f"{name}{KB_SUFFIX}"
-    return workspace_name, workspace_dir
+def check_strict_workspace_name(ws_name: str):
+    if not re.match(r"^[\w-]+$", ws_name):
+        raise InvalidInput(
+            f"Use an alphanumeric name (no spaces or special characters) for the workspace name: `{ws_name}`"
+        )
+
+
+def resolve_workspace_name(name: str | Path) -> Tuple[str, Path]:
+    """
+    Parse and resolve the given workspace path or name and return a tuple containing
+    the workspace name and directory path.
+
+    "example" -> "example", Path("example.kb")
+    "example.kb" -> "example", Path("example.kb")
+    "/path/to/example" -> "example", Path("/path/to/example.kb")
+    "." -> "current_dir", Path("/path/to/current_dir")
+    """
+    if not name:
+        raise InvalidInput("Workspace name is required.")
+
+    name = str(name).strip().rstrip("/")
+
+    if "/" in name or name.startswith("."):
+        resolved = Path(name).resolve()
+        parent_dir = resolved.parent
+        name = resolved.name
+    else:
+        parent_dir = Path(".").resolve()
+
+    if (parent_dir / name).exists():
+        ws_name = name
+        ws_path = parent_dir / name
+    else:
+        ws_name = name.removesuffix(KB_SUFFIX)
+        name_with_suffix = name if name.endswith(KB_SUFFIX) else f"{name}{KB_SUFFIX}"
+        ws_path = parent_dir / name_with_suffix
+
+    return ws_name, ws_path
 
 
 def current_workspace_dir() -> Path:

@@ -12,8 +12,10 @@ class Format(Enum):
 
     url = "url"
     html = "html"
-    markdown = "markdown"  # Should be simple and clean Markdown that we can use with LLMs.
-    md_html = "md_html"  # Markdown with HTML. Helps to know this to avoid using with LLMs and auto-formatting.
+    markdown = "markdown"
+    """`markdown` should be simple and clean Markdown that we can use with LLMs."""
+    md_html = "md_html"
+    """`md_html` is Markdown with HTML, used for example when we structure Markdown with divs."""
     plaintext = "plaintext"
     pdf = "pdf"
     yaml = "yaml"

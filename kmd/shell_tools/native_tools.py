@@ -237,7 +237,7 @@ def tail_file(filename: str | Path):
     else:
         command = f"less +G {quoted_filename}"
 
-    log.message("Tailing file: `%s`", command)
+    output("Tailing file: `%s`", command)
     subprocess.run(command, shell=True, check=True)
 
 

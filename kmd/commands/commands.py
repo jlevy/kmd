@@ -43,7 +43,11 @@ from kmd.config.text_styles import (
     SPINNER,
 )
 from kmd.model.file_formats_model import skippable_filename
-from kmd.file_storage.workspaces import canon_workspace_name, current_workspace
+from kmd.file_storage.workspaces import (
+    check_strict_workspace_name,
+    resolve_workspace_name,
+    current_workspace,
+)
 from kmd.model.params_model import USER_SETTABLE_PARAMS
 from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.locators import StorePath
@@ -118,14 +122,15 @@ def workspace(workspace_name: Optional[str] = None) -> None:
     creating it if it doesn't exist. Equivalent to `mkdir some_name.kb`.
     """
     if workspace_name:
-        ws_name, ws_dir = canon_workspace_name(workspace_name)
-        if not re.match(r"^[\w-]+$", ws_name):
-            raise InvalidInput(
-                "Use an alphanumeric name (no spaces or special characters) for the workspace"
-            )
-        os.makedirs(ws_dir, exist_ok=True)
-        os.chdir(ws_dir)
-        output_status(f"Changed to workspace: {ws_name}")
+        ws_name, ws_path = resolve_workspace_name(workspace_name)
+
+        if not ws_path.exists():
+            # Enforce reasonable naming on new workspaces.
+            check_strict_workspace_name(ws_name)
+
+        os.makedirs(ws_path, exist_ok=True)
+        os.chdir(ws_path)
+        output_status(f"Changed to workspace: {ws_name} ({ws_path})")
 
     current_workspace().log_store_info()
 
