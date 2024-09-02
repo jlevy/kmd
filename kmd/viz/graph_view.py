@@ -8,6 +8,7 @@ from kmd.file_storage.workspaces import current_workspace, current_workspace_tmp
 from kmd.model.graph_model import GraphData, Node, Link
 from kmd.model.items_model import Item, ItemRelations, ItemType
 from kmd.shell_tools.native_tools import view_file_native
+from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
 
@@ -99,7 +100,7 @@ def assemble_workspace_graph() -> GraphData:
             if item.type == ItemType.concept:
                 concept_texts.append((not_none(item.store_path), item.full_text()))
         except Exception as e:
-            log.warning("Error processing item: %s: %s", store_path, e, exc_info=e)
+            log.warning("Error processing item: %s: %s", fmt_path(store_path), e, exc_info=e)
 
     links = related_concepts_as_links(concept_texts)
     graph_data.merge([], links)

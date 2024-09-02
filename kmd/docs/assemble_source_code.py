@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import List
+from kmd.text_formatting.text_formatting import fmt_path
 
 
 kmd_base_path = Path(os.path.dirname(__file__)).parent
@@ -38,7 +39,7 @@ def _format_file_or_module(path: Path) -> str:
     elif path.is_dir():
         return _format_source_module(path)
     else:
-        raise ValueError(f"Path for source not found (or not a file/directory): {path}")
+        raise ValueError(f"Path for source not found (or not a file/directory): {fmt_path(path)}")
 
 
 def source_for(*paths: Path) -> str:

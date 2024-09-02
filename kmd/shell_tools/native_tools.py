@@ -19,6 +19,7 @@ from kmd.config.settings import get_settings
 from kmd.model.file_formats_model import parse_filename
 from kmd.model.errors_model import SetupError
 from kmd.model.file_formats_model import file_ext_is_text
+from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import output
 from kmd.config.text_styles import BAT_THEME, COLOR_ERROR, COLOR_HINT
 from kmd.util.url import is_url
@@ -218,7 +219,7 @@ def view_file_native(file_or_url: str | Path):
     elif os.path.isdir(file_or_url):
         native_open(file_or_url)
     else:
-        raise FileNotFoundError(f"File does not exist: {file_or_url}")
+        raise FileNotFoundError(f"File does not exist: {fmt_path(file_or_url)}")
 
 
 def tail_file(filename: str | Path):

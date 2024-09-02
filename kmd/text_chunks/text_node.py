@@ -5,7 +5,7 @@ from typing import List, Optional
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_formatting.html_in_md import div_wrapper
-from kmd.text_formatting.text_formatting import format_lines
+from kmd.text_formatting.text_formatting import fmt_lines
 
 
 @dataclass
@@ -99,7 +99,7 @@ class TextNode:
         if not structure_summary:
             return "No recognized HTML structure tags"
         else:
-            return "HTML structure tag counts:\n" + format_lines(
+            return "HTML structure tag counts:\n" + fmt_lines(
                 [f"{count:6d}  {path}" for path, count in self.structure_summary().items()],
                 prefix="",
             )

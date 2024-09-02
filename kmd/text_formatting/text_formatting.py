@@ -1,4 +1,6 @@
 import html
+from pathlib import Path
+import shlex
 from textwrap import indent
 from typing import Any, Iterable, List
 import regex
@@ -30,9 +32,14 @@ def html_to_plaintext(text: str):
     return clean_text
 
 
-def format_lines(
-    values: Iterable[Any], prefix: str = DEFAULT_INDENT, line_break: str = "\n"
-) -> str:
+def fmt_path(path: str | Path) -> str:
+    """
+    Format a path or filename for display in the shell. This quotes it if it contains whitespace.
+    """
+    return shlex.quote(str(path))
+
+
+def fmt_lines(values: Iterable[Any], prefix: str = DEFAULT_INDENT, line_break: str = "\n") -> str:
     """
     Simple indented or prefixed formatting of values one per line.
     """

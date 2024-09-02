@@ -11,6 +11,7 @@ from enum import Enum
 import requests
 import strif
 from strif import clean_alphanum_hash
+from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.download_url import download_url, user_agent_headers
 from kmd.util.url import Url, normalize_url
 from kmd.config.logger import get_logger
@@ -203,7 +204,7 @@ class WebCache(DirStore):
         url = normalize_url(url)
         local_path = self.find(url, folder=self.folder, suffix=self.suffix)
         if local_path and not self._is_expired(local_path, expiration_sec):
-            log.info("URL in cache, not fetching: %s: %s", url, local_path)
+            log.info("URL in cache, not fetching: %s: %s", url, fmt_path(local_path))
             return local_path, True
         else:
             if self.verbose:

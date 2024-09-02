@@ -1,4 +1,5 @@
 from pathlib import Path
+import shlex
 import shutil
 from strif import move_to_backup
 
@@ -11,7 +12,7 @@ def move_file(src_path: Path, dest_path: Path, keep_backup: bool = True):
     if the destination file already exists.
     """
     if not keep_backup and dest_path.exists():
-        raise FileExistsError(f"Destination file already exists: {dest_path}")
+        raise FileExistsError(f"Destination file already exists: {shlex.quote(str(dest_path))}")
     if keep_backup and src_path.exists() and dest_path.exists():
         move_to_backup(str(dest_path), backup_suffix=".{timestamp}.bak")
 

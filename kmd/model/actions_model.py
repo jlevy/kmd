@@ -17,7 +17,7 @@ from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.text_docs.sliding_transforms import WindowSettings
 from kmd.text_docs.text_diffs import DiffFilterType
-from kmd.text_formatting.text_formatting import format_lines
+from kmd.text_formatting.text_formatting import fmt_lines
 from kmd.text_ui.command_output import fill_text
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_utils import format_key_value
@@ -190,7 +190,7 @@ class Action(ABC):
         return changed_params
 
     def param_summary_str(self) -> str:
-        summary_str = format_lines(
+        summary_str = fmt_lines(
             [format_key_value(name, value) for name, value in self.param_summary().items()]
         )
         return f"Action params:\n{summary_str}"
@@ -231,7 +231,7 @@ class Action(ABC):
             log.message(
                 "Overriding parameters for action `%s`:\n%s",
                 self.name,
-                format_lines(overrides),
+                fmt_lines(overrides),
             )
 
         return new_instance
@@ -297,7 +297,7 @@ class ForEachItemAction(Action):
                 self.name,
                 i + 1,
                 len(items),
-                format_lines([item]),
+                fmt_lines([item]),
             )
             try:
                 result_item = self.run_item(item)

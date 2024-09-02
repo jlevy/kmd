@@ -8,6 +8,7 @@ from kmd.file_storage.frontmatter_format import FmFormat, fmf_read, fmf_write
 from kmd.model.operations_model import OPERATION_FIELDS
 from kmd.text_formatting.doc_formatting import normalize_formatting
 from kmd.config.logger import get_logger
+from kmd.text_formatting.text_formatting import fmt_path
 
 log = get_logger(__name__)
 
@@ -42,8 +43,6 @@ def read_item(full_path: Path, base_dir: Optional[Path]) -> Item:
     store_path = str(full_path.relative_to(base_dir)) if base_dir else None
     body, metadata = fmf_read(full_path)
     if not metadata:
-        raise FileFormatError(
-            f"No metadata found in file: {store_path if store_path else full_path}"
-        )
+        raise FileFormatError(f"No metadata found in file: {fmt_path(full_path)}")
 
     return Item.from_dict(metadata, body=body, store_path=store_path)

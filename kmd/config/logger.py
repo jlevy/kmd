@@ -14,6 +14,7 @@ from xonsh.tools import XonshError
 from typing import Tuple, Type
 from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, RICH_STYLES, KmdHighlighter
 from kmd.model.errors_model import SelfExplanatoryError
+from kmd.text_formatting.text_formatting import fmt_path
 
 LOG_DIR_NAME = ".logs"
 LOG_FILE_NAME = "kmd.log"
@@ -186,7 +187,7 @@ def reset_log_root(log_root: Path):
     global _log_root
     if log_root != _log_root:
         log = get_logger(__name__)
-        log.info("Resetting log root: %s", log_file_path().absolute())
+        log.info("Resetting log root: %s", fmt_path(log_file_path().absolute()))
 
         _log_root = log_root
         logging_setup()

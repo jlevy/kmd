@@ -6,6 +6,7 @@ from kmd.model.locators import StorePath
 from kmd.model.items_model import Item
 from kmd.model.preconditions_model import Precondition
 from kmd.config.logger import get_logger
+from kmd.text_formatting.text_formatting import fmt_path
 
 log = get_logger(__name__)
 
@@ -46,7 +47,7 @@ def items_matching_precondition(
         except SkippableError:
             continue
         except Exception as e:
-            log.info("Ignoring exception loading item %s: %s", store_path, e)
+            log.info("Ignoring exception loading item %s: %s", fmt_path(store_path), e)
             continue
         if precondition(item):
             yield item

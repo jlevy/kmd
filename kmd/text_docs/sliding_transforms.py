@@ -18,7 +18,7 @@ from kmd.text_docs.text_doc import (
     TextDoc,
     TextUnit,
 )
-from kmd.text_formatting.text_formatting import format_lines
+from kmd.text_formatting.text_formatting import fmt_lines
 from kmd.text_docs.wordtoks import (
     join_wordtoks,
 )
@@ -70,7 +70,7 @@ def filtered_transform(
 
                 log.info(
                     "Accepted transform changes:\n%s",
-                    format_lines(str(accepted_diff).splitlines()),
+                    fmt_lines(str(accepted_diff).splitlines()),
                 )
 
                 # Note any rejections.
@@ -78,14 +78,14 @@ def filtered_transform(
                 if rejected_changes:
                     log.message(
                         "Filtering extraneous changes:\n%s",
-                        format_lines(rejected_diff.as_diff_str(False).splitlines()),
+                        fmt_lines(rejected_diff.as_diff_str(False).splitlines()),
                     )
 
                 # Apply only the accepted changes.
                 final_doc = TextDoc.from_wordtoks(accepted_diff.apply_to(input_doc.as_wordtoks()))
                 log.message(
                     "Word token changes:\n%s",
-                    format_lines(
+                    fmt_lines(
                         [f"Accepted: {accepted_diff.stats()}", f"Rejected: {rejected_diff.stats()}"]
                     ),
                 )

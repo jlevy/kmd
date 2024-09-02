@@ -9,6 +9,7 @@ from kmd.config.settings import get_settings
 from kmd.media.media_services import canonicalize_media_url
 from kmd.model.canon_url import thumbnail_url
 from kmd.model.errors_model import WebFetchError
+from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
 from kmd.config.logger import get_logger
@@ -92,7 +93,7 @@ def reset_web_cache_dir(path: Path):
     get_settings().web_cache_dir = path
     global _web_cache
     _web_cache = WebCache(path)
-    log.debug("Using web cache: %s", path)
+    log.debug("Using web cache: %s", fmt_path(path))
 
 
 def fetch_and_cache(url: Url) -> Path:

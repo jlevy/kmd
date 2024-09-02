@@ -22,6 +22,7 @@ from kmd.file_storage.yaml_util import (
     write_yaml,
 )
 from kmd.model.errors_model import FileFormatError
+from kmd.text_formatting.text_formatting import fmt_path
 
 
 class FmFormat(Enum):
@@ -79,7 +80,7 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
         try:
             metadata = from_yaml_string(metadata_str)
         except YAMLError as e:
-            raise FileFormatError(f"Error parsing YAML metadata on {file_path}: {e}")
+            raise FileFormatError(f"Error parsing YAML metadata: {fmt_path(file_path)}: {e}")
     return content, metadata
 
 
@@ -91,10 +92,10 @@ def fmf_read_raw(file_path: Path | str) -> Tuple[str, Optional[str]]:
         with open(file_path, "r") as f:
             lines = f.readlines()
     except UnicodeDecodeError as e:
-        raise FileFormatError(f"File not a text file: {file_path}: {e}")
+        raise FileFormatError(f"File not a text file: {fmt_path(file_path)}: {e}")
 
     if not lines:
-        raise FileFormatError(f"File is empty: {file_path}")
+        raise FileFormatError(f"File is empty: {fmt_path(file_path)}")
 
     metadata_lines = []
     first_line = lines[0].strip()

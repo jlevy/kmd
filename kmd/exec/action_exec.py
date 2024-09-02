@@ -12,7 +12,7 @@ from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
 from kmd.model.locators import Locator, StorePath, is_store_path
-from kmd.text_formatting.text_formatting import format_lines
+from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.util.type_utils import not_none
 from kmd.config.logger import get_logger
 
@@ -84,7 +84,7 @@ def run_action(
     if args:
         source_str = "provided args" if provided_args else "selection"
         log.message(
-            "Using %s as inputs to action `%s`:\n%s", source_str, action_name, format_lines(args)
+            "Using %s as inputs to action `%s`:\n%s", source_str, action_name, fmt_lines(args)
         )
 
     # Ensure we have the right number of args.
@@ -123,7 +123,7 @@ def run_action(
         log.message(
             "Rerun check: all_present=%s with these items already present:\n%s",
             all_present,
-            format_lines(already_present),
+            fmt_lines(already_present),
         )
         if all_present:
             if rerun:
@@ -188,7 +188,7 @@ def run_action(
             log.message(
                 "Skipped saving %s items already saved:\n%s",
                 len(skipped_paths),
-                format_lines(skipped_paths),
+                fmt_lines(skipped_paths),
             )
 
         input_store_paths = [StorePath(not_none(item.store_path)) for item in input_items]
@@ -204,7 +204,7 @@ def run_action(
             for input_store_path in old_inputs:
                 # Note some outputs may be missing if replace_input was used.
                 ws.archive(input_store_path, missing_ok=True)
-                log.message("Archived input item: %s", input_store_path)
+                log.message("Archived input item: %s", fmt_path(input_store_path))
             archived_store_paths.extend(old_inputs)
 
         # Log info.

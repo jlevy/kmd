@@ -5,6 +5,7 @@ from kmd.model.file_formats_model import FileExt, parse_filename
 from kmd.model.items_model import Item, ItemType
 from kmd.lang_tools.inflection import plural
 from kmd.config.logger import get_logger
+from kmd.text_formatting.text_formatting import fmt_path
 
 log = get_logger(__name__)
 
@@ -43,4 +44,4 @@ def parse_check_filename(filename: str) -> Tuple[str, ItemType, FileExt]:
             item_type = ItemType.doc.value
         return name, ItemType[item_type], FileExt[ext]
     except KeyError as e:
-        raise InvalidFilename(f"Unknown type or extension for file: {filename}: {e}")
+        raise InvalidFilename(f"Unknown type or extension for file: {fmt_path(filename)}: {e}")

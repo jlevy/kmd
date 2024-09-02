@@ -4,6 +4,7 @@ from typing import Optional
 from strif import atomic_output_file
 from kmd.media.media_services import canonicalize_media_url, media_services
 from kmd.model.errors_model import InvalidInput, UnexpectedError
+from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.url import Url
 from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
 from kmd.util.web_cache import DirStore
@@ -34,12 +35,12 @@ class MediaCache(DirStore):
         with atomic_output_file(transcript_path) as temp_output:
             with open(temp_output, "w") as f:
                 f.write(content)
-        log.message("Transcript saved to cache: %s", transcript_path)
+        log.message("Transcript saved to cache: %s", fmt_path(transcript_path))
 
     def _read_transcript(self, url) -> Optional[str]:
         transcript_file = self.find(url, suffix=SUFFIX_TRANSCRIPT)
         if transcript_file:
-            log.message("Video transcript already in cache: %s: %s", url, transcript_file)
+            log.message("Video transcript already in cache: %s: %s", url, fmt_path(transcript_file))
             with open(transcript_file, "r") as f:
                 return f.read()
         return None
@@ -51,13 +52,21 @@ class MediaCache(DirStore):
             if not full_audio_file:
                 raise ValueError("No audio file found for: %s" % url)
             downsampled_audio_file = self.path_for(url, suffix=SUFFIX_16KMP3)
-            log.message("Downsampling audio: %s -> %s", full_audio_file, downsampled_audio_file)
+            log.message(
+                "Downsampling audio: %s -> %s",
+                fmt_path(full_audio_file),
+                fmt_path(downsampled_audio_file),
+            )
             downsample_to_16khz(full_audio_file, downsampled_audio_file)
         return downsampled_audio_file
 
     def _do_transcription(self, url, language: Optional[str] = None) -> str:
         downsampled_audio_file = self._do_downsample(url)
-        log.message("Transcribing audio: %s: %s", url, downsampled_audio_file)
+        log.message(
+            "Transcribing audio: %s: %s",
+            url,
+            fmt_path(downsampled_audio_file),
+        )
         transcript = transcribe_audio(downsampled_audio_file, language=language)
         self._write_transcript(url, transcript)
         return transcript
@@ -66,7 +75,7 @@ class MediaCache(DirStore):
         if not no_cache:
             full_audio_file = self.find(url, suffix=SUFFIX_MP3)
             if full_audio_file:
-                log.message("Audio already in cache: %s: %s", url, full_audio_file)
+                log.message("Audio already in cache: %s: %s", url, fmt_path(full_audio_file))
                 return full_audio_file
         log.message("Downloading audio: %s", url)
         mp3_path = _download_audio_with_service(url)
@@ -74,7 +83,7 @@ class MediaCache(DirStore):
         os.rename(mp3_path, full_audio_path)
         self._do_downsample(url)
 
-        log.message("Downloaded media and saved audio to: %s", full_audio_path)
+        log.message("Downloaded media and saved audio to: %s", fmt_path(full_audio_path))
 
         return full_audio_path
 

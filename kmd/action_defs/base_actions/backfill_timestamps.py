@@ -15,6 +15,8 @@ from kmd.provenance.timestamps import TimestampExtractor
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.token_mapping import TokenMapping
 from kmd.text_docs.wordtoks import BOF_TOK, EOF_TOK, PARA_BR_TOK, SENT_BR_TOK, search_tokens
+from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
 
@@ -56,7 +58,9 @@ class BackfillSourceTimestamps(CachedDocAction):
         if not source_item.body:
             raise InvalidInput(f"Source item must have a body: {source_item}")
 
-        log.message("Pulling timestamps from source item: %s", source_item.store_path)
+        log.message(
+            "Pulling timestamps from source item: %s", fmt_path(not_none(source_item.store_path))
+        )
 
         # Parse current doc.
         item_doc = TextDoc.from_text(item.body)

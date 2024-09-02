@@ -8,7 +8,7 @@ from kmd.llms.llm_checks import is_no_results
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.errors_model import ApiResultError
 from kmd.model.language_models import LLM
-from kmd.text_formatting.text_formatting import format_lines
+from kmd.text_formatting.text_formatting import fmt_lines
 from kmd.util.log_calls import log_calls
 
 
@@ -55,7 +55,7 @@ def llm_completion(
     log.info(
         "LLM completion input to model %s:\n%s",
         model,
-        format_lines(
+        fmt_lines(
             [
                 abbreviate_str(f"System message: {str(system_message)}"),
                 abbreviate_str(f"User message: {user_message}"),

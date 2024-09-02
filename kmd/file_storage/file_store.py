@@ -27,7 +27,7 @@ from kmd.model.errors_model import InvalidFilename, InvalidState, SkippableError
 from kmd.model.locators import StorePath
 from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.canon_url import canonicalize_url
-from kmd.text_formatting.text_formatting import format_lines
+from kmd.text_formatting.text_formatting import fmt_path, fmt_lines
 from kmd.util.file_utils import move_file
 from kmd.util.hash_utils import hash_file
 from kmd.util.log_calls import format_duration
@@ -104,7 +104,7 @@ class FileStore:
         try:
             name, item_type, file_ext = parse_check_filename(store_path)
         except InvalidFilename:
-            log.debug("Skipping file with invalid name: %s", store_path)
+            log.debug("Skipping file with invalid name: %s", fmt_path(store_path))
             return
         self.uniquifier.add(name, join_filename(item_type.name, file_ext.name))
 
@@ -118,7 +118,7 @@ class FileStore:
                 if old_path:
                     dup_path = old_path
                     log.info(
-                        "Duplicate items (%s):\n%s", item_id, format_lines([old_path, store_path])
+                        "Duplicate items (%s):\n%s", item_id, fmt_lines([old_path, store_path])
                     )
                 self.id_map[item_id] = store_path
         except SkippableError as e:
@@ -187,7 +187,7 @@ class FileStore:
                     if old_item.item_id() == item_id:
                         log.message(
                             "Item with id already saved (disk check):\n%s",
-                            format_lines([default_path, item_id]),
+                            fmt_lines([default_path, item_id]),
                         )
                         store_path = default_path
                         self.id_map[item_id] = default_path
@@ -195,7 +195,7 @@ class FileStore:
             if store_path and self.exists(store_path):
                 log.message(
                     "Item with id already saved:\n%s",
-                    format_lines([store_path, item_id]),
+                    fmt_lines([store_path, item_id]),
                 )
                 return store_path
         return None
@@ -218,7 +218,7 @@ class FileStore:
             store_path = self.id_map[item_id]
             log.info(
                 "Found existing item with same id:\n%s",
-                format_lines([store_path, item_id]),
+                fmt_lines([store_path, item_id]),
             )
             return store_path, None
         else:
@@ -244,14 +244,14 @@ class FileStore:
             and path.exists(item.external_path)
             and path.commonpath([self.base_dir, item.external_path]) == str(self.base_dir)
         ):
-            log.info("External file already saved: %s", item.external_path)
+            log.info("External file already saved: %s", fmt_path(item.external_path))
             store_path = StorePath(path.relpath(item.external_path, self.base_dir))
         else:
             # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
             store_path, old_store_path = self.find_path_for(item)
             full_path = self.base_dir / store_path
 
-            log.info("Saving item to %s: %s", full_path, item)
+            log.info("Saving item to %s: %s", fmt_path(full_path), item)
 
             # If we're overwriting an existing file, archive it first.
             if full_path.exists():
@@ -292,7 +292,7 @@ class FileStore:
         item.store_path = store_path
         self._id_index_item(store_path)
 
-        log.message("%s Saved item: %s", EMOJI_SUCCESS, store_path)
+        log.message("%s Saved item: %s", EMOJI_SUCCESS, fmt_path(store_path))
         return store_path
 
     def load(self, store_path: StorePath) -> Item:
@@ -343,7 +343,9 @@ class FileStore:
                 )
             format = Format.guess_by_file_ext(file_ext)
             if not format:
-                raise InvalidFilename(f"Unknown format for file (check the file ext?): {file_path}")
+                raise InvalidFilename(
+                    f"Unknown format for file (check the file ext?): {fmt_path(file_path)}"
+                )
 
             with open(file_path, "r") as file:
                 body = file.read()
@@ -375,11 +377,15 @@ class FileStore:
         """
         Archive the item by moving it into the archive directory.
         """
-        log.message("Archiving item: %s -> %s", store_path, Path(ARCHIVE_DIR) / store_path)
+        log.message(
+            "Archiving item: %s -> %s",
+            fmt_path(store_path),
+            fmt_path(Path(ARCHIVE_DIR) / store_path),
+        )
         orig_path = self.base_dir / store_path
         archive_path = self.archive_dir / store_path
         if missing_ok and not orig_path.exists():
-            log.message("Item to archive not found so moving on: %s", orig_path)
+            log.message("Item to archive not found so moving on: %s", fmt_path(orig_path))
             return store_path
         move_file(orig_path, archive_path)
         self._remove_references([store_path])
@@ -390,7 +396,7 @@ class FileStore:
         Unarchive the item by moving back out of the archive directory.
         Path may be with or without the archive dir prefix.
         """
-        log.info("Unarchiving item: %s", store_path)
+        log.info("Unarchiving item: %s", fmt_path(store_path))
         if commonpath([ARCHIVE_DIR, store_path]) == ARCHIVE_DIR:
             store_path = StorePath(relpath(store_path, ARCHIVE_DIR))
         original_path = self.base_dir / store_path
@@ -400,7 +406,7 @@ class FileStore:
     def set_selection(self, selection: List[StorePath]):
         for store_path in selection:
             if not (self.base_dir / store_path).exists():
-                raise FileNotFoundError(f"Selection not found: {store_path}")
+                raise FileNotFoundError(f"Selection not found: {fmt_path(store_path)}")
 
         self.selection.set(selection)
 
@@ -440,7 +446,7 @@ class FileStore:
             path.abspath(self.base_dir),
             len(self.uniquifier),
         )
-        log.message("Logging to: %s", log_file_path().absolute())
+        log.message("Logging to: %s", fmt_path(log_file_path().absolute()))
         log.info("Media cache: %s", get_settings().media_cache_dir)
         log.info("Web cache: %s", get_settings().web_cache_dir)
 
@@ -457,7 +463,7 @@ class FileStore:
         path = self.base_dir / store_path if store_path else self.base_dir
 
         if not path.exists():
-            raise FileNotFoundError(f"Directory not found: {path}")
+            raise FileNotFoundError(f"Directory not found: {fmt_path(path)}")
 
         # Special case of a single file.
         if path.is_file():
@@ -499,7 +505,7 @@ class FileStore:
         """
         Canonicalize an item to make sure its filename and contents are in current format.
         """
-        log.info("Canonicalizing item: %s", store_path)
+        log.info("Canonicalizing item: %s", fmt_path(store_path))
 
         item = self.load(store_path)
         self.archive(store_path)

@@ -24,6 +24,7 @@ from kmd.config.text_styles import (
 )
 from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
+from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import output
 from kmd.file_storage.workspaces import current_workspace
 from kmd.action_defs import reload_all_actions
@@ -58,7 +59,9 @@ def load(*paths: str) -> None:
     reload_all_actions()
     _load_xonsh_actions()
 
-    log.message("Imported extensions and reloaded actions: %s", ", ".join(paths))
+    log.message(
+        "Imported extensions and reloaded actions: %s", ", ".join(fmt_path(p) for p in paths)
+    )
     # TODO: Track and expose to the user which extensions are loaded.
 
 

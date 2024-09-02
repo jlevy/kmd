@@ -4,6 +4,8 @@ from kmd.model.items_model import Item
 from kmd.config.logger import get_logger
 from kmd.model.locators import StorePath
 from kmd.model.preconditions_model import Precondition
+from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
 
@@ -23,7 +25,10 @@ def find_upstream_item(item: Item, precondition: Precondition) -> Item:
 
     for source_item in source_items:
         if precondition(source_item):
-            log.message("Found source item that matches requirements: %s", source_item.store_path)
+            log.message(
+                "Found source item that matches requirements: %s",
+                fmt_path(not_none(source_item.store_path)),
+            )
             return source_item
         else:
             log.message(

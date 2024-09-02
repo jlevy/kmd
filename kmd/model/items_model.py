@@ -23,6 +23,7 @@ from kmd.text_formatting.text_formatting import (
     abbreviate_on_words,
     abbreviate_phrase_in_middle,
     clean_title,
+    fmt_path,
     html_to_plaintext,
     plaintext_to_html,
 )
@@ -183,6 +184,8 @@ class Item:
         """
         item_dict = {**item_dict, **kwargs}
 
+        info_prefix = f"{fmt_path(item_dict['store_path'])}: " if "store_path" in item_dict else ""
+
         # Metadata formats might change over time so it's important to gracefully handle issues.
         def set_field(key: str, default: Any, cls: Type[T]) -> T:
             try:
@@ -192,7 +195,8 @@ class Item:
                     return default
             except (KeyError, ValueError) as e:
                 log.warning(
-                    "Error reading field `%s` so using default `%s`: %s: %s",
+                    "Error reading %sfield `%s` so using default `%s`: %s: %s",
+                    info_prefix,
                     key,
                     default,
                     e,
@@ -233,7 +237,9 @@ class Item:
             key: value for key, value in item_dict.items() if key not in all_fields
         }
         if unexpected_metadata:
-            log.warning("Unexpected metadata on item: %s", unexpected_metadata)
+            log.info(
+                "Skipping unexpected metadata on item: %s: %s", info_prefix, unexpected_metadata
+            )
 
         return Item(
             type=type,

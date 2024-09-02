@@ -27,18 +27,6 @@ class Format(Enum):
         return self not in [Format.pdf, Format.unknown]
 
     @classmethod
-    def from_str(cls, ext_str: str) -> "Format":
-        """
-        Convert a string to a Format enum.
-        Return None for unknown values.
-        """
-        ext = canonicalize_file_ext(ext_str)
-        try:
-            return Format(ext)
-        except ValueError:
-            return Format.unknown
-
-    @classmethod
     def guess_by_file_ext(cls, file_ext: "FileExt") -> Optional["Format"]:
         """
         Guess the format for a given file extension. Doesn't work for .yml since that could be
@@ -74,6 +62,17 @@ class FileExt(Enum):
         return self in [self.txt, self.md, self.yml, self.html, self.json, self.py]
 
     @classmethod
+    def from_str(cls, ext_str: str) -> Optional["FileExt"]:
+        """
+        Convert a string to a FileExt enum.
+        """
+        ext = canonicalize_file_ext(ext_str)
+        try:
+            return FileExt(ext)
+        except ValueError:
+            return None
+
+    @classmethod
     def for_format(cls, format: str | Format) -> Optional["FileExt"]:
         """
         Infer the file extension for a given format.
@@ -99,8 +98,8 @@ def file_ext_is_text(ext: str) -> bool:
     """
     Check if a file extension is a text format.
     """
-    ext = canonicalize_file_ext(ext)
-    return Format.from_str(ext).is_text()
+    file_ext = FileExt.from_str(canonicalize_file_ext(ext))
+    return bool(file_ext and file_ext.is_text())
 
 
 def canonicalize_file_ext(ext: str) -> str:

@@ -1,6 +1,5 @@
 import os
 from os.path import getmtime, basename, getsize, join
-import re
 from typing import List, Optional, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
@@ -51,7 +50,7 @@ from kmd.file_storage.workspaces import (
 from kmd.model.params_model import USER_SETTABLE_PARAMS
 from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.locators import StorePath
-from kmd.text_formatting.text_formatting import format_lines
+from kmd.text_formatting.text_formatting import fmt_path, fmt_lines
 from kmd.lang_tools.inflection import plural
 from kmd.config.logger import get_logger, log_file_path
 from kmd.util.obj_utils import remove_values
@@ -158,7 +157,7 @@ def print_selection(selection: List[StorePath]) -> None:
             "Selected %s %s:\n%s",
             len(selection),
             plural("item", len(selection)),
-            format_lines(selection),
+            fmt_lines(selection),
         )
 
 
@@ -206,7 +205,7 @@ def unselect(*paths: str) -> None:
             len(previous_selection) - len(new_selection),
             plural("item", len(previous_selection) - len(new_selection)),
             len(new_selection),
-            format_lines(new_selection),
+            fmt_lines(new_selection),
         )
 
 
@@ -313,7 +312,7 @@ def add_resource(*files_or_urls: str) -> None:
         "Imported %s %s:\n%s",
         len(store_paths),
         plural("item", len(store_paths)),
-        format_lines(store_paths),
+        fmt_lines(store_paths),
     )
     select(*store_paths)
 
@@ -328,7 +327,7 @@ def archive(*paths: str) -> None:
     for store_path in store_paths:
         ws.archive(store_path)
 
-    output_status(f"Archived:\n{format_lines(store_paths)}")
+    output_status(f"Archived:\n{fmt_lines(store_paths)}")
 
     select()
 
@@ -401,7 +400,7 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
         output(", ".join(f"`{name}`" for name in action_names))
         output()
     else:
-        output_status("Applicable actions for items:\n %s", format_lines(store_paths))
+        output_status("Applicable actions for items:\n %s", fmt_lines(store_paths))
 
         for action in applicable_actions:
             precondition_str = (
@@ -430,7 +429,7 @@ def preconditions() -> None:
 
     items = [ws.load(item) for item in selection]
 
-    output_status("Precondition check for selection:\n %s", format_lines(selection))
+    output_status("Precondition check for selection:\n %s", fmt_lines(selection))
 
     for precondition in ALL_PRECONDITIONS:
         satisfied = all(precondition(item) for item in items)
@@ -451,7 +450,7 @@ def index(*paths: str) -> None:
 
     ws.vector_index.index_items([ws.load(store_path) for store_path in store_paths])
 
-    output_status(f"Indexed:\n{format_lines(store_paths)}")
+    output_status(f"Indexed:\n{fmt_lines(store_paths)}")
 
 
 @kmd_command
@@ -463,7 +462,7 @@ def unindex(*paths: str) -> None:
     ws = current_workspace()
     ws.vector_index.unindex_items([ws.load(store_path) for store_path in store_paths])
 
-    output_status(f"Unindexed:\n{format_lines(store_paths)}")
+    output_status(f"Unindexed:\n{fmt_lines(store_paths)}")
 
 
 def _output_scored_node(scored_node, show_metadata: bool = True):
@@ -563,6 +562,7 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
 
                     parent_dir = basename(store_dirname)
                     display_name = f"{parent_dir}/{filename}" if parent_dir != "." else filename
+                    display_name = fmt_path(display_name)
 
                     # TODO: Show actual lines and words of body text as well as size with wc. Indicate if body is empty.
                     output(
@@ -628,12 +628,14 @@ def canonicalize(*paths: str) -> None:
 
     canon_paths = []
     for store_path in store_paths:
-        log.message("Canonicalizing: %s", store_path)
+        log.message("Canonicalizing: %s", fmt_path(store_path))
         for item_store_path in ws.walk_items(store_path):
             try:
                 ws.canonicalize(item_store_path)
             except InvalidInput as e:
-                log.warning("%s Could not canonicalize %s: %s", EMOJI_WARN, item_store_path, e)
+                log.warning(
+                    "%s Could not canonicalize %s: %s", EMOJI_WARN, fmt_path(item_store_path), e
+                )
             canon_paths.append(item_store_path)
 
     if len(canon_paths) == 1:
