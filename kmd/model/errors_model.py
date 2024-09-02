@@ -47,7 +47,7 @@ class InvalidState(SelfExplanatoryError):
     pass
 
 
-class EnvironmentError(SelfExplanatoryError):
+class SetupError(SelfExplanatoryError):
     """Raised when a package is not installed or something in the environment
     isn't set up right."""
 

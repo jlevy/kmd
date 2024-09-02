@@ -16,11 +16,13 @@ Ensure you have a modern Python 3.12+ and Poetry (this part assumes MacOS):
 ```shell
 # Install pyenv and pipx if needed:
 brew update
-brew install pyenv
-brew install pipx
+brew install pyenv pipx
 
-# Install ffmpeg and ripgrep, which are needed for certain commands:
-brew install ffmpeg ripgrep
+# Install some additional helpful.
+# ffmpeg is needed for video conversions.
+# ripgrep is needed for the search command.
+# bat is optional but improves the show and logs commands.
+brew install ffmpeg ripgrep bat
 
 # Ensure you are in the source directory (where .python-version is)
 # and install recent Python if needed:

@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Any, Optional
 import logging
-from logging import INFO, WARNING, Formatter
+from logging import ERROR, INFO, WARNING, Formatter
 from rich import reconfigure
 from slugify import slugify
 from strif import new_timestamped_uid, atomic_output_file
@@ -26,7 +26,7 @@ def log_dir() -> Path:
     return _log_root / LOG_DIR_NAME
 
 
-def log_file() -> Path:
+def log_file_path() -> Path:
     return log_dir() / LOG_FILE_NAME
 
 
@@ -94,7 +94,7 @@ def logging_setup():
     os.makedirs(log_objects_dir(), exist_ok=True)
 
     # Verbose logging to file, important logging to console.
-    file_handler = logging.FileHandler(log_file())
+    file_handler = logging.FileHandler(log_file_path())
     file_handler.setLevel(INFO)
     file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
 
@@ -109,11 +109,22 @@ def logging_setup():
     )
     console_handler.setFormatter(Formatter("%(message)s"))
 
+    # Manually adjust logging for a few packages, removing previous verbose default handlers.
     from litellm import _logging  # noqa: F401
+    from weasyprint import LOGGER, PROGRESS_LOGGER  # noqa: F401
 
-    for logger_name in [None, "LiteLLM", "LiteLLM Router", "LiteLLM Proxy"]:
+    log_levels = {
+        None: INFO,
+        "LiteLLM": INFO,
+        "LiteLLM Router": INFO,
+        "LiteLLM Proxy": INFO,
+        "weasyprint": ERROR,
+        "weasyprint.progress": ERROR,
+    }
+
+    for logger_name, level in log_levels.items():
         logger = logging.getLogger(logger_name)
-        logger.setLevel(INFO)
+        logger.setLevel(level)
         logger.propagate = True
         # Remove any existing handlers.
         for handler in logger.handlers[:]:
@@ -175,7 +186,7 @@ def reset_log_root(log_root: Path):
     global _log_root
     if log_root != _log_root:
         log = get_logger(__name__)
-        log.info("Resetting log root: %s", log_file().absolute())
+        log.info("Resetting log root: %s", log_file_path().absolute())
 
         _log_root = log_root
         logging_setup()

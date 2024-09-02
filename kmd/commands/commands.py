@@ -1,7 +1,6 @@
 import os
 from os.path import getmtime, basename, getsize, join
 import re
-import subprocess
 from typing import List, Optional, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
@@ -26,9 +25,12 @@ from kmd.text_ui.command_output import (
     output_status,
 )
 from kmd.shell_tools.native_tools import (
+    CmdlineTool,
     edit_files,
     show_file_platform_specific,
+    tail_file,
     terminal_show_image_graceful,
+    tool_check,
 )
 from kmd.config.text_styles import (
     COLOR_EMPH,
@@ -47,7 +49,7 @@ from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.locators import StorePath
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.lang_tools.inflection import plural
-from kmd.config.logger import get_logger, log_file
+from kmd.config.logger import get_logger, log_file_path
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
 from kmd.util.type_utils import not_none
@@ -88,7 +90,7 @@ def logs() -> None:
     """
     Page through the logs for the current workspace.
     """
-    subprocess.run(["less", "+G", log_file()])
+    tail_file(log_file_path())
 
 
 @kmd_command
@@ -582,6 +584,7 @@ def search(query_str: str, *paths: str, sort: str = "path") -> None:
     Search for a string in files at the given paths and return their store paths.
     Useful to find all docs or resources matching a string or regex.
     """
+    tool_check().require(CmdlineTool.ripgrep)
     from ripgrepy import Ripgrepy, RipGrepNotFound
 
     strip_prefix = None

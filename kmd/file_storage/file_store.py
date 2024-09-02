@@ -30,7 +30,7 @@ from kmd.util.log_calls import format_duration
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import Url, is_url
-from kmd.config.logger import get_logger, log_file
+from kmd.config.logger import get_logger, log_file_path
 
 log = get_logger(__name__)
 
@@ -430,7 +430,7 @@ class FileStore:
             path.abspath(self.base_dir),
             len(self.uniquifier),
         )
-        log.message("Logging to: %s", log_file().absolute())
+        log.message("Logging to: %s", log_file_path().absolute())
         log.info("Media cache: %s", get_settings().media_cache_dir)
         log.info("Web cache: %s", get_settings().web_cache_dir)
 

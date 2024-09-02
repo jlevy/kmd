@@ -2,23 +2,73 @@
 Platform-specific tools and utilities.
 """
 
+from dataclasses import dataclass
+from enum import Enum
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import shlex
 from typing import Tuple
 import mimetypes
 import webbrowser
-from cachetools import cached
+from cachetools import TTLCache, cached
 from xonsh.platform import ON_WINDOWS, ON_DARWIN, ON_LINUX
 from kmd.config.logger import get_logger
 from kmd.config.settings import get_settings
 from kmd.file_storage.filenames import ext_is_text, parse_filename
+from kmd.model.errors_model import SetupError
 from kmd.text_ui.command_output import output
-from kmd.config.text_styles import COLOR_ERROR, COLOR_HINT
+from kmd.config.text_styles import BAT_THEME, COLOR_ERROR, COLOR_HINT
 from kmd.util.url import is_url
 
 log = get_logger(__name__)
+
+
+class CmdlineTool(Enum):
+    """
+    External tools that we like to use.
+    """
+
+    less = "less"
+    tail = "tail"
+    pygmentize = "pygmentize"
+    ripgrep = "rg"
+    bat = "bat"
+    ffmpeg = "ffmpeg"
+
+
+@dataclass(frozen=True)
+class CmdlineTools:
+    tools: dict[CmdlineTool, str]
+
+    def has(self, *tools: CmdlineTool) -> bool:
+        return all(self.tools[tool] is not None for tool in tools)
+
+    def require(self, *tools: CmdlineTool):
+        for tool in tools:
+            if not self.has(tool):
+                raise SetupError(f"`{tool.value}` ({tool.name}) needed but not found in path")
+
+    def warn_if_missing(self, *tools: CmdlineTool):
+        for tool in tools:
+            if not self.has(tool):
+                log.warning(
+                    "`%s` (%s) not found in path; it is recommended to install it for better functionality.",
+                    tool.value,
+                    tool.name,
+                )
+
+
+_tools_cache = TTLCache(maxsize=1, ttl=5.0)
+
+
+@cached(_tools_cache)
+def tool_check() -> CmdlineTools:
+    tools = {}
+    for tool in CmdlineTool:
+        tools[tool] = shutil.which(tool.value)
+    return CmdlineTools(tools)
 
 
 def file_info(
@@ -47,7 +97,7 @@ def native_open(filename: str | Path):
     elif ON_LINUX:
         subprocess.run(["xdg-open", filename])
     elif ON_WINDOWS:
-        subprocess.run(["start", filename], shell=True)
+        subprocess.run(["start", shlex.quote(filename)], shell=True)
     else:
         raise NotImplementedError("Unsupported platform")
 
@@ -156,7 +206,7 @@ def show_file_platform_specific(file_or_url: str | Path):
         elif mime_type and mime_type.startswith("image"):
             try:
                 terminal_show_image(file)
-            except EnvironmentError:
+            except SetupError:
                 native_open(file)
         else:
             native_open(file)
@@ -166,16 +216,41 @@ def show_file_platform_specific(file_or_url: str | Path):
         raise FileNotFoundError(f"File does not exist: {file_or_url}")
 
 
-def view_file(filename: str, use_less: bool = True):
+def tail_file(filename: str | Path):
+    """
+    Tail a log file. With colorization using bat if available, otherwise using less.
+    """
+    filename = str(filename)
+    quoted_filename = shlex.quote(filename)
+
+    # Use bat if available.
+    tool_check().require(CmdlineTool.less)
+    tool_check().warn_if_missing(CmdlineTool.bat, CmdlineTool.tail)
+    if tool_check().has(CmdlineTool.bat, CmdlineTool.tail, CmdlineTool.less):
+        # Note bat doesn't have efficient seek functionality like `less +G` so we use less and bat.
+        command = f"tail -10000 {quoted_filename} | bat --color=always --paging=never --style=plain --theme={BAT_THEME} -l log | less -R +G"
+    else:
+        command = f"less +G {quoted_filename}"
+
+    log.message("Tailing file: `%s`", command)
+    subprocess.run(command, shell=True, check=True)
+
+
+def view_file(filename: str | Path, use_less: bool = True):
     """
     Displays a file in the console with pagination and syntax highlighting.
     """
+
     # TODO: Update this to handle YAML frontmatter more nicely.
+    filename = str(filename)
+    quoted_filename = shlex.quote(filename)
+
+    tool_check().require(CmdlineTool.pygmentize)
     try:
         if use_less:
-            subprocess.run(f"pygmentize -g {filename} | less -R", shell=True, check=True)
+            subprocess.run(f"pygmentize -g {quoted_filename} | less -R", shell=True, check=True)
         else:
-            subprocess.run(f"pygmentize -g {filename}", shell=True, check=True)
+            subprocess.run(f"pygmentize -g {quoted_filename}", shell=True, check=True)
     except subprocess.CalledProcessError as e:
         output(f"Error displaying file: {e}", color=COLOR_ERROR)
 

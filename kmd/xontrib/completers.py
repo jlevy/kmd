@@ -1,4 +1,3 @@
-import re
 from typing import Iterable, List, Tuple
 from xonsh.completers.tools import contextual_completer, CompletionContext, CompleterResult
 from xonsh.completers.completer import RichCompletion

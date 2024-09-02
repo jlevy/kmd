@@ -12,6 +12,7 @@ CONSOLE_WRAP_WIDTH = 80
 SPINNER = "dots12"
 """Progress spinner. For a list, use `python -m rich.spinner`."""
 
+BAT_THEME = "Coldark-Dark"
 
 ## Text styles
 
