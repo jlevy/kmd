@@ -23,7 +23,7 @@ from kmd.file_storage.store_filenames import (
     parse_check_filename,
 )
 from kmd.file_storage.persisted_yaml import PersistedYaml
-from kmd.model.errors_model import InvalidFilename, InvalidState
+from kmd.model.errors_model import InvalidFilename, InvalidState, SkippableError
 from kmd.model.locators import StorePath
 from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.canon_url import canonicalize_url
@@ -108,15 +108,21 @@ class FileStore:
             return
         self.uniquifier.add(name, join_filename(item_type.name, file_ext.name))
 
-        item = self.load(store_path)
-        item_id = item.item_id()
         dup_path = None
-        if item_id:
-            old_path = self.id_map.get(item_id)
-            if old_path:
-                dup_path = old_path
-                log.info("Duplicate items (%s):\n%s", item_id, format_lines([old_path, store_path]))
-            self.id_map[item_id] = store_path
+
+        try:
+            item = self.load(store_path)
+            item_id = item.item_id()
+            if item_id:
+                old_path = self.id_map.get(item_id)
+                if old_path:
+                    dup_path = old_path
+                    log.info(
+                        "Duplicate items (%s):\n%s", item_id, format_lines([old_path, store_path])
+                    )
+                self.id_map[item_id] = store_path
+        except SkippableError as e:
+            log.warning("Could not read file, skipping: %s", e)
 
         return dup_path
 

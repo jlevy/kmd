@@ -39,7 +39,6 @@ def write_item(item: Item, full_path: Path):
 
 
 def read_item(full_path: Path, base_dir: Optional[Path]) -> Item:
-    # This is a known text format or a YAML file, so we can read the whole thing.
     store_path = str(full_path.relative_to(base_dir)) if base_dir else None
     body, metadata = fmf_read(full_path)
     if not metadata:
