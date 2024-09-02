@@ -6,7 +6,8 @@ from kmd.model.actions_model import (
     ActionInput,
     ActionResult,
 )
-from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import Item, ItemType
 
 
 @kmd_action()

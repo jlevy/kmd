@@ -1,6 +1,7 @@
 from typing import List
 from kmd.model.canon_concept import canonicalize_concept
-from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import Item, ItemType
 from kmd.text_formatting.markdown_util import extract_bullet_points
 
 

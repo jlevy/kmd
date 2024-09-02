@@ -12,7 +12,8 @@ from kmd.model.actions_model import (
     LLMTemplate,
     TitleTemplate,
 )
-from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import Item, ItemType
 from kmd.model.llm_actions_model import LLMAction
 from kmd.util.lazyobject import lazyobject
 

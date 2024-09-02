@@ -42,7 +42,7 @@ from kmd.config.text_styles import (
     PROMPT_ASSIST,
     SPINNER,
 )
-from kmd.file_storage.file_store import skippable_file
+from kmd.model.file_formats_model import skippable_filename
 from kmd.file_storage.workspaces import canon_workspace_name, current_workspace
 from kmd.model.params_model import USER_SETTABLE_PARAMS
 from kmd.model.errors_model import InvalidInput, InvalidState
@@ -532,7 +532,7 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
 
     for path in paths_to_show:
         # If we're explicitly looking in a hidden directory, show hidden files.
-        show_hidden = path is not None and skippable_file(path)
+        show_hidden = path is not None and skippable_filename(path)
 
         for store_dirname, filenames in ws.walk_by_folder(
             StorePath(path) if path else None, show_hidden

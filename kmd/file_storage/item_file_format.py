@@ -2,7 +2,8 @@ from pathlib import Path
 from typing import Optional
 from kmd.file_storage.yaml_util import custom_key_sort
 from kmd.model.errors_model import FileFormatError
-from kmd.model.items_model import ITEM_FIELDS, Format, Item
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import ITEM_FIELDS, Item
 from kmd.file_storage.frontmatter_format import FmFormat, fmf_read, fmf_write
 from kmd.model.operations_model import OPERATION_FIELDS
 from kmd.text_formatting.doc_formatting import normalize_formatting

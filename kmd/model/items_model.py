@@ -9,6 +9,7 @@ from enum import Enum
 from typing import Any, List, Optional, Type, TypeVar, Dict
 from slugify import slugify
 from kmd.config.logger import get_logger
+from kmd.model.file_formats_model import FileExt, Format
 from kmd.model.media_model import MediaMetadata
 from kmd.model.operations_model import Operation, OperationSummary, Source
 from kmd.util.time_util import iso_format_z
@@ -56,79 +57,6 @@ class State(Enum):
     draft = "draft"
     reviewed = "reviewed"
     transient = "transient"
-
-
-class Format(Enum):
-    """
-    Format of the data in this item. This is the body data format (or "url" for a URL resource).
-    """
-
-    url = "url"
-    html = "html"
-    markdown = "markdown"  # Should be simple and clean Markdown that we can use with LLMs.
-    md_html = "md_html"  # Markdown with HTML. Helps to know this to avoid using with LLMs and auto-formatting.
-    plaintext = "plaintext"
-    pdf = "pdf"
-    yaml = "yaml"
-    python = "python"
-
-    def is_text(self) -> bool:
-        return self not in [Format.pdf]
-
-    @classmethod
-    def guess_by_file_ext(cls, file_ext: "FileExt") -> Optional["Format"]:
-        """
-        Guess the format for a given file extension. Doesn't work for .yml since that could be
-        various formats. This doesn't need to be perfect, mainly used when importing files.
-        """
-        ext_to_format = {
-            FileExt.html.value: Format.html,
-            FileExt.md.value: Format.markdown,
-            FileExt.txt.value: Format.plaintext,
-            FileExt.pdf.value: Format.pdf,
-            FileExt.py.value: Format.python,
-        }
-        return ext_to_format.get(file_ext.value, None)
-
-    def __str__(self):
-        return self.name
-
-
-class FileExt(Enum):
-    """
-    File type extensions for items.
-    """
-
-    pdf = "pdf"
-    txt = "txt"
-    md = "md"
-    yml = "yml"
-    html = "html"
-    py = "py"
-
-    def is_text(self) -> bool:
-        return self in [self.txt, self.md, self.yml, self.html]
-
-    @classmethod
-    def for_format(cls, format: str | Format) -> Optional["FileExt"]:
-        """
-        Infer the file extension for a given format.
-        """
-        format_to_file_ext = {
-            Format.html.value: FileExt.html,
-            Format.url.value: FileExt.yml,
-            Format.markdown.value: FileExt.md,
-            Format.md_html.value: FileExt.md,
-            Format.plaintext.value: FileExt.txt,
-            Format.pdf.value: FileExt.pdf,
-            Format.yaml.value: FileExt.yml,
-            Format.python.value: FileExt.py,
-        }
-
-        return format_to_file_ext.get(str(format), None)
-
-    def __str__(self):
-        return self.name
 
 
 class IdType(Enum):

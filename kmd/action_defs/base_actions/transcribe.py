@@ -4,7 +4,8 @@ from kmd.model.actions_model import (
     CachedDocAction,
 )
 from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import FileExt, Format, Item, ItemType
+from kmd.model.file_formats_model import FileExt, Format
+from kmd.model.items_model import Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import is_url
 

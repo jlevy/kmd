@@ -4,7 +4,8 @@ from kmd.model.actions_model import (
     CachedDocAction,
 )
 from kmd.model.errors_model import ContentError, InvalidInput, UnexpectedError
-from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import is_timestamped_text, is_text_doc
 from kmd.provenance.source_items import find_upstream_item

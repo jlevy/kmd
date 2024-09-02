@@ -3,7 +3,8 @@ from kmd.model.actions_model import (
     CachedDocAction,
 )
 from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import has_html_body, has_text_body
 from kmd.text_formatting.text_formatting import html_to_plaintext

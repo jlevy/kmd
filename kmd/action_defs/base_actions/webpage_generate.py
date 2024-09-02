@@ -1,6 +1,7 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import ONE_ARG, Action, ActionInput, ActionResult
-from kmd.model.items_model import FileExt, Format, Item, ItemType
+from kmd.model.file_formats_model import FileExt, Format
+from kmd.model.items_model import Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import is_config
 from kmd.web_gen.tabbed_webpage import webpage_generate

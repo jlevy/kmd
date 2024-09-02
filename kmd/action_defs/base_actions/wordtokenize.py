@@ -3,7 +3,8 @@ from kmd.model.actions_model import (
     ForEachItemAction,
 )
 from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import has_text_body
 from kmd.text_docs.wordtoks import raw_text_to_wordtoks, visualize_wordtoks

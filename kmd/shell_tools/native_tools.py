@@ -16,8 +16,9 @@ from cachetools import TTLCache, cached
 from xonsh.platform import ON_WINDOWS, ON_DARWIN, ON_LINUX
 from kmd.config.logger import get_logger
 from kmd.config.settings import get_settings
-from kmd.file_storage.filenames import ext_is_text, parse_filename
+from kmd.model.file_formats_model import parse_filename
 from kmd.model.errors_model import SetupError
+from kmd.model.file_formats_model import file_ext_is_text
 from kmd.text_ui.command_output import output
 from kmd.config.text_styles import BAT_THEME, COLOR_ERROR, COLOR_HINT
 from kmd.util.url import is_url
@@ -205,7 +206,7 @@ def view_file_native(file_or_url: str | Path):
         file = file_or_url
         mime_type, file_size, num_lines = file_info(file)
         _dirname, _name, _item_type, ext = parse_filename(file)
-        if ext_is_text(ext) or mime_type and mime_type.startswith("text"):
+        if file_ext_is_text(ext) or mime_type and mime_type.startswith("text"):
             view_file(file, use_less=num_lines > 40 or file_size > 20 * 1024)
         elif mime_type and mime_type.startswith("image"):
             try:

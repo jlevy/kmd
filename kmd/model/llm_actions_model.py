@@ -12,7 +12,8 @@ from kmd.model.actions_model import (
 )
 from kmd.model.errors_model import InvalidInput
 from kmd.model.doc_elements import CHUNK, ORIGINAL, RESULT
-from kmd.model.items_model import UNTITLED, Format, Item
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import UNTITLED, Item
 from kmd.model.language_models import LLM
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import has_div_chunks

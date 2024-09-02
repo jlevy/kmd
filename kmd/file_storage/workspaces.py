@@ -6,7 +6,8 @@ from kmd.media.media_download import reset_media_cache_dir
 from kmd.media.web import reset_web_cache_dir
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidState
-from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import Item, ItemType
 from kmd.file_storage.file_store import CACHE_DIR, FileStore
 from kmd.model.locators import Locator, StorePath
 from kmd.model.params_model import USER_SETTABLE_PARAMS, param_lookup

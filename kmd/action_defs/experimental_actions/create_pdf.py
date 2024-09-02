@@ -4,7 +4,8 @@ from kmd.exec.action_registry import kmd_action
 from kmd.lang_tools.clean_headings import clean_heading
 from kmd.model.actions_model import ONE_ARG, Action, ActionInput, ActionResult
 from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import FileExt, Format, ItemType
+from kmd.model.file_formats_model import FileExt, Format
+from kmd.model.items_model import ItemType
 from kmd.pdf.pdf_output import html_to_pdf
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import has_text_body

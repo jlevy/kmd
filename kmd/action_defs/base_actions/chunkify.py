@@ -4,7 +4,8 @@ from kmd.model.actions_model import (
     CachedDocAction,
 )
 from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import Item, ItemType
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import has_div_chunks, is_text_doc
 from kmd.text_chunks.div_elements import chunk_text_as_divs

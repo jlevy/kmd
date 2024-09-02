@@ -7,21 +7,25 @@ from os import path
 from strif import copyfile_atomic
 from kmd.config.settings import get_settings
 from kmd.file_storage.item_file_format import read_item, write_item
+from kmd.model.file_formats_model import (
+    FileExt,
+    Format,
+    format_from_ext,
+    parse_filename,
+    skippable_filename,
+)
 from kmd.model.params_model import ParamValues
 from kmd.query.vector_index import WsVectorIndex
 from kmd.config.text_styles import EMOJI_SUCCESS
-from kmd.file_storage.filenames import (
+from kmd.file_storage.store_filenames import (
     item_type_folder_for,
-    format_from_ext,
     join_filename,
     parse_check_filename,
-    parse_filename,
-    skippable_file,
 )
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.model.errors_model import InvalidFilename, InvalidState
 from kmd.model.locators import StorePath
-from kmd.model.items_model import FileExt, Format, Item, ItemId, ItemType
+from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.canon_url import canonicalize_url
 from kmd.text_formatting.text_formatting import format_lines
 from kmd.util.file_utils import move_file
@@ -79,9 +83,9 @@ class FileStore:
     def _id_index_init(self):
         num_dups = 0
         for root, dirnames, filenames in os.walk(self.base_dir):
-            dirnames[:] = [d for d in dirnames if not skippable_file(d)]
+            dirnames[:] = [d for d in dirnames if not skippable_filename(d)]
             for filename in filenames:
-                if not skippable_file(filename):
+                if not skippable_filename(filename):
                     store_path = StorePath(path.relpath(join(root, filename), self.base_dir))
                     dup_path = self._id_index_item(store_path)
                     if dup_path:
@@ -462,13 +466,13 @@ class FileStore:
 
             store_dirname = relpath(dirname, self.base_dir)
 
-            if not show_hidden and skippable_file(store_dirname):
+            if not show_hidden and skippable_filename(store_dirname):
                 continue
 
             filtered_filenames = []
             for filename in filenames:
                 store_filename = relpath(filename, self.base_dir)
-                if not show_hidden and skippable_file(store_filename):
+                if not show_hidden and skippable_filename(store_filename):
                     continue
                 filtered_filenames.append(filename)
 

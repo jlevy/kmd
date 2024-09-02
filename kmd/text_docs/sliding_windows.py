@@ -7,7 +7,7 @@ from typing import Generator, Optional
 from pprint import pprint
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError
-from kmd.model.items_model import Format
+from kmd.model.file_formats_model import Format
 from kmd.text_formatting.doc_formatting import normalize_formatting
 from kmd.text_docs.text_doc import (
     SentIndex,

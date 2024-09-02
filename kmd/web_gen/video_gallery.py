@@ -5,7 +5,8 @@ from kmd.file_storage.yaml_util import to_yaml_string
 from kmd.lang_tools.clean_headings import clean_heading, summary_heading
 from kmd.media.media_services import get_media_id
 from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import Format, Item, ItemType
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import Item, ItemType
 from kmd.preconditions.precondition_defs import is_youtube_video
 from kmd.provenance.source_items import find_upstream_item
 from kmd.util.type_utils import as_dataclass
