@@ -7,7 +7,7 @@ from kmd.config.logger import get_logger
 from kmd.file_storage.workspaces import current_workspace, current_workspace_tmp_dir
 from kmd.model.graph_model import GraphData, Node, Link
 from kmd.model.items_model import Item, ItemRelations, ItemType
-from kmd.shell_tools.native_tools import show_file_platform_specific
+from kmd.shell_tools.native_tools import view_file_native
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
 
@@ -109,7 +109,7 @@ def assemble_workspace_graph() -> GraphData:
 
 def open_graph_view(graph: GraphData):
     html_path = generate_graph_view_html(graph)
-    show_file_platform_specific(html_path)
+    view_file_native(html_path)
 
 
 ## Tests

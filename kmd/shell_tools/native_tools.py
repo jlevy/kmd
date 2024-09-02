@@ -136,15 +136,15 @@ def _terminal_supports_osc8() -> bool:
 
 def _terminal_show_image_sixel(image_path: str | Path, width: int = 800, height: int = 480) -> None:
     if shutil.which("magick") is None:
-        raise EnvironmentError("ImageMagick `magick` not found in path; check it is installed?")
+        raise SetupError("ImageMagick `magick` not found in path; check it is installed?")
     if not _terminal_supports_sixel():
-        raise EnvironmentError("Terminal does not support Sixel graphics ({os.environ.get('TERM'})")
+        raise SetupError("Terminal does not support Sixel graphics ({os.environ.get('TERM'})")
 
     try:
         cmd = ["magick", str(image_path), "-geometry", f"{width}x{height}", "sixel:-"]
         subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError as e:
-        raise EnvironmentError(f"Failed to display image: {e}")
+        raise SetupError(f"Failed to display image: {e}")
 
 
 def _terminal_show_image_kitty(filename: str | Path):
@@ -152,7 +152,7 @@ def _terminal_show_image_kitty(filename: str | Path):
     try:
         subprocess.run(["kitty", "+kitten", "icat", filename])
     except subprocess.CalledProcessError as e:
-        raise EnvironmentError(f"Failed to display image with kitty: {e}")
+        raise SetupError(f"Failed to display image with kitty: {e}")
 
 
 def terminal_show_image(filename: str | Path):
@@ -164,13 +164,13 @@ def terminal_show_image(filename: str | Path):
     elif _terminal_supports_sixel():
         _terminal_show_image_sixel(filename)
     else:
-        raise EnvironmentError("Image display in terminal not supported")
+        raise SetupError("Image display in terminal not supported")
 
 
 def terminal_show_image_graceful(filename: str | Path):
     try:
         terminal_show_image(filename)
-    except EnvironmentError:
+    except SetupError:
         output("[Image: {filename}]", color=COLOR_HINT)
 
 
@@ -190,7 +190,11 @@ def terminal_link(url: str, text: str, id: str = "") -> str:
         return text
 
 
-def show_file_platform_specific(file_or_url: str | Path):
+def view_file_native(file_or_url: str | Path):
+    """
+    Open a file or URL in the user's preferred native application, falling back
+    to pagination in console. For images, first tries terminal-based image display.
+    """
     file_or_url = str(file_or_url)
     if is_url(file_or_url) or file_or_url.endswith(".html"):
         if not is_url(file_or_url):
@@ -240,17 +244,22 @@ def view_file(filename: str | Path, use_less: bool = True):
     """
     Displays a file in the console with pagination and syntax highlighting.
     """
-
-    # TODO: Update this to handle YAML frontmatter more nicely.
     filename = str(filename)
     quoted_filename = shlex.quote(filename)
 
-    tool_check().require(CmdlineTool.pygmentize)
+    # TODO: Visualize YAML frontmatter with different syntax/style than Markdown content.
+
+    if tool_check().has(CmdlineTool.bat):
+        command = f"bat --color=always --style=plain --theme={BAT_THEME} {quoted_filename}"
+    else:
+        tool_check().require(CmdlineTool.pygmentize)
+        command = f"pygmentize -g {quoted_filename}"
+
+    if use_less:
+        command = f"{command} | less -R"
+
     try:
-        if use_less:
-            subprocess.run(f"pygmentize -g {quoted_filename} | less -R", shell=True, check=True)
-        else:
-            subprocess.run(f"pygmentize -g {quoted_filename}", shell=True, check=True)
+        subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         output(f"Error displaying file: {e}", color=COLOR_ERROR)
 

@@ -27,7 +27,7 @@ from kmd.text_ui.command_output import (
 from kmd.shell_tools.native_tools import (
     CmdlineTool,
     edit_files,
-    show_file_platform_specific,
+    view_file_native,
     tail_file,
     terminal_show_image_graceful,
     tool_check,
@@ -236,7 +236,7 @@ def show(path: Optional[str] = None) -> None:
             terminal_show_image_graceful(local_path)
         except Exception as e:
             log.error("Error fetching thumbnail image: %s", e)
-    show_file_platform_specific(store_path)
+    view_file_native(store_path)
 
 
 @kmd_command
