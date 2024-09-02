@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Self
+from kmd.model.errors_model import InvalidInput
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.url import Url, is_url
 
@@ -12,7 +13,7 @@ class StorePath(str):
 
     def __new__(cls, path: str | Path) -> Self:
         if not path or str(path).startswith("/") or Path(path).is_absolute():
-            raise ValueError(f"StorePath must be a relative path: {fmt_path(path)}")
+            raise InvalidInput(f"StorePath must be a relative path: {fmt_path(path)}")
 
         return super().__new__(cls, str(path))
 

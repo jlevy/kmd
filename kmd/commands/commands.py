@@ -211,7 +211,7 @@ def unselect(*paths: str) -> None:
 
 def _assemble_paths(*paths: Optional[str]) -> List[StorePath]:
     """
-    Assemble store paths from the given paths, or the current selection if
+    Assemble store paths from the current workspace, or the current selection if
     no paths are given.
     """
     ws = current_workspace()
@@ -226,21 +226,29 @@ def _assemble_paths(*paths: Optional[str]) -> List[StorePath]:
 @kmd_command
 def show(path: Optional[str] = None) -> None:
     """
-    Show the contents of a file if one is given, or the first file if multiple files are selected.
+    Show the contents of a file if one is given, or the first file if multiple files
+    are selected.
     """
-    store_paths = _assemble_paths(path)
-    store_path = store_paths[0]
+    try:
+        store_paths = _assemble_paths(path)
+        store_path = store_paths[0]
 
-    # Optionally, if we can inline display the image (like in kitty) above the text representation, do that.
-    ws = current_workspace()
-    item = ws.load(store_path)
-    if item.thumbnail_url:
-        try:
-            local_path = fetch_and_cache(item.thumbnail_url)
-            terminal_show_image_graceful(local_path)
-        except Exception as e:
-            log.error("Error fetching thumbnail image: %s", e)
-    view_file_native(store_path)
+        # Optionally, if we can inline display the image (like in kitty) above the text representation, do that.
+        ws = current_workspace()
+        item = ws.load(store_path)
+        if item.thumbnail_url:
+            try:
+                local_path = fetch_and_cache(item.thumbnail_url)
+                terminal_show_image_graceful(local_path)
+            except Exception as e:
+                log.error("Error fetching thumbnail image: %s", e)
+        view_file_native(store_path)
+    except (InvalidInput, InvalidState):
+        if path:
+            # If path is absolute or we couldbn't get a selection, just show the file.
+            view_file_native(path)
+        else:
+            raise InvalidInput("No selection")
 
 
 @kmd_command
