@@ -552,7 +552,7 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
             # Show tally for this directory.
             nfiles = len(filenames)
             if nfiles > 0:
-                output(f"\n{store_dirname} - {nfiles} files", color=COLOR_EMPH)
+                output(f"\n{fmt_path(store_dirname)} - {nfiles} files", color=COLOR_EMPH)
 
             for filename in filenames:
                 full_path = join(ws.base_dir, store_dirname, filename)

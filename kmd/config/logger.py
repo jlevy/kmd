@@ -16,7 +16,7 @@ from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, RICH_STYLES, KmdHigh
 from kmd.model.errors_model import SelfExplanatoryError
 from kmd.text_formatting.text_formatting import fmt_path
 
-LOG_DIR_NAME = ".logs"
+LOG_DIR_NAME = ".kmd/logs"
 LOG_FILE_NAME = "kmd.log"
 LOG_OBJECTS_NAME = "objects"
 

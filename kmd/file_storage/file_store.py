@@ -39,11 +39,12 @@ from kmd.config.logger import get_logger, log_file_path
 log = get_logger(__name__)
 
 
-ARCHIVE_DIR = ".archive"
-CACHE_DIR = ".cache"
-SETTINGS_DIR = ".settings"
-INDEX_DIR = ".index"
-TMP_DIR = ".tmp"
+ARCHIVE_DIR = ".kmd/archive"
+SETTINGS_DIR = ".kmd/settings"
+
+INDEX_DIR = ".kmd/index"
+CACHE_DIR = ".kmd/cache"
+TMP_DIR = ".kmd/tmp"
 
 
 class FileStore:
@@ -63,10 +64,15 @@ class FileStore:
 
         self._id_index_init()
 
+        # These are directly used by the FileStore.
         self.archive_dir = self.base_dir / ARCHIVE_DIR
         os.makedirs(self.archive_dir, exist_ok=True)
         self.settings_dir = self.base_dir / SETTINGS_DIR
         os.makedirs(self.settings_dir, exist_ok=True)
+
+        # These are not used for file storage directly but are co-located in the workspace directory.
+        self.cache_dir = self.base_dir / CACHE_DIR
+        os.makedirs(self.cache_dir, exist_ok=True)
         self.tmp_dir = self.base_dir / TMP_DIR
         os.makedirs(self.tmp_dir, exist_ok=True)
 
