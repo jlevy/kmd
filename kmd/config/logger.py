@@ -1,3 +1,4 @@
+import threading
 import kmd.config.suppress_warnings  # noqa: F401
 import os
 from pathlib import Path
@@ -21,6 +22,8 @@ LOG_FILE_NAME = "kmd.log"
 LOG_OBJECTS_NAME = "objects"
 
 _log_root = Path(".")
+
+_log_lock = threading.Lock()
 
 
 def log_dir() -> Path:
@@ -184,10 +187,12 @@ def get_logger(name: str):
 
 
 def reset_log_root(log_root: Path):
-    global _log_root
-    if log_root != _log_root:
-        log = get_logger(__name__)
-        log.info("Resetting log root: %s", fmt_path(log_file_path().absolute()))
+    global _log_lock
+    with _log_lock:
+        global _log_root
+        if log_root != _log_root:
+            log = get_logger(__name__)
+            log.info("Resetting log root: %s", fmt_path(log_file_path().absolute()))
 
-        _log_root = log_root
-        logging_setup()
+            _log_root = log_root
+            logging_setup()

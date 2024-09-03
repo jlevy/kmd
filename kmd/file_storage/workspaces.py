@@ -92,8 +92,11 @@ def current_workspace_name() -> Optional[str]:
 
 # Cache the file store per directory, since it takes a little while to load.
 @cached({})
-def _new_file_store(base_dir: Path) -> FileStore:
+def _get_file_store(base_dir: Path) -> FileStore:
     return FileStore(base_dir)
+
+
+_last_workspace_dir = None
 
 
 def current_workspace() -> FileStore:
@@ -105,7 +108,14 @@ def current_workspace() -> FileStore:
     reset_log_root(workspace_dir)
     reset_media_cache_dir(workspace_dir / CACHE_DIR / "media")
     reset_web_cache_dir(workspace_dir / CACHE_DIR / "web")
-    return _new_file_store(workspace_dir)
+    ws = _get_file_store(workspace_dir)
+
+    global _last_workspace_dir
+    if _last_workspace_dir != workspace_dir:
+        ws.log_store_info()
+        _last_workspace_dir = workspace_dir
+
+    return ws
 
 
 def current_workspace_tmp_dir() -> Path:

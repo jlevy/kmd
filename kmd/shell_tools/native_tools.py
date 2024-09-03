@@ -15,7 +15,7 @@ import webbrowser
 from cachetools import TTLCache, cached
 from xonsh.platform import ON_WINDOWS, ON_DARWIN, ON_LINUX
 from kmd.config.logger import get_logger
-from kmd.config.settings import get_settings
+from kmd.config.settings import global_settings
 from kmd.model.file_formats_model import parse_filename
 from kmd.model.errors_model import SetupError
 from kmd.model.file_formats_model import file_ext_is_text
@@ -270,5 +270,5 @@ def edit_files(*filenames: str | Path):
     """
     Edit a file using the user's preferred editor.
     """
-    editor = os.getenv("EDITOR", get_settings().default_editor)
+    editor = os.getenv("EDITOR", global_settings().default_editor)
     subprocess.run([editor] + list(filenames))

@@ -34,6 +34,7 @@ from kmd.shell_tools.native_tools import (
 from kmd.config.text_styles import (
     COLOR_EMPH,
     COLOR_HEADING,
+    COLOR_HINT,
     COLOR_LOGO,
     EMOJI_TRUE,
     EMOJI_WARN,
@@ -72,6 +73,7 @@ def welcome() -> None:
 
     output()
     output(LOGO, color=COLOR_LOGO)
+    output("v%s" % get_version(), color=COLOR_HINT)
     output()
     output("Welcome to kmd.\n", color=COLOR_HEADING)
     output()
@@ -141,10 +143,6 @@ def reload_workspace() -> None:
     Reload the current workspace. Helpful for debugging to reset in-memory state.
     """
     current_workspace().reload()
-
-    output()
-    current_workspace().log_store_info()
-    output()
 
 
 def print_selection(selection: List[StorePath]) -> None:

@@ -1,5 +1,7 @@
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+import threading
 from typing import Optional
 from cachetools import cached
 from kmd.model.language_models import LLM, EmbeddingModel
@@ -65,5 +67,20 @@ _settings = Settings(
 )
 
 
-def get_settings() -> Settings:
+def global_settings() -> Settings:
+    """
+    Read access to global settings.
+    """
     return _settings
+
+
+_settings_lock = threading.Lock()
+
+
+@contextmanager
+def update_global_settings():
+    """
+    Context manager for thread-safe updates to global settings.
+    """
+    with _settings_lock:
+        yield _settings

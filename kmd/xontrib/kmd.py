@@ -32,6 +32,7 @@ from kmd.commands import commands
 from kmd.commands.commands import welcome
 from kmd.model.errors_model import InvalidState
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
+from kmd.version import get_version
 
 
 setup()  # Call to config logging before anything else.
@@ -148,7 +149,7 @@ def _initialize():
 def _post_initialize():
     if _is_interactive:
         try:
-            current_workspace().log_store_info()  # Validates and logs info for user.
+            current_workspace()  # Validates and logs info for user.
         except InvalidState:
             output(
                 f"{EMOJI_WARN} The current directory is not a workspace. "
@@ -182,3 +183,5 @@ _initialize()
 _post_initialize()
 
 _shell_setup()
+
+log.info("kmd %s loaded", get_version())

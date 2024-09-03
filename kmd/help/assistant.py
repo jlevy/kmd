@@ -3,7 +3,7 @@ from typing import Callable
 from cachetools import cached
 from kmd.config.logger import get_logger
 from kmd.llms.llm_completion import llm_completion
-from kmd.config.settings import get_settings
+from kmd.config.settings import global_settings
 from kmd.file_storage.workspaces import current_workspace_name, get_param_value
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.errors_model import KmdRuntimeError
@@ -110,6 +110,6 @@ def assistance(input: str, fast: bool = False) -> str:
             system_message=system_message,
             template=template,
             input=input,
-            save_objects=get_settings().debug_assistant,
+            save_objects=global_settings().debug_assistant,
         )
     )

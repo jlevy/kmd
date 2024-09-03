@@ -5,7 +5,7 @@ from typing import Generator, List, Optional, Tuple, Dict
 from os.path import join, relpath, commonpath
 from os import path
 from strif import copyfile_atomic
-from kmd.config.settings import get_settings
+from kmd.config.settings import global_settings
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.model.file_formats_model import (
     FileExt,
@@ -453,8 +453,8 @@ class FileStore:
             len(self.uniquifier),
         )
         log.message("Logging to: %s", fmt_path(log_file_path().absolute()))
-        log.info("Media cache: %s", get_settings().media_cache_dir)
-        log.info("Web cache: %s", get_settings().web_cache_dir)
+        log.info("Media cache: %s", global_settings().media_cache_dir)
+        log.info("Web cache: %s", global_settings().web_cache_dir)
 
         log.info("File store startup took %s.", format_duration(self.end_time - self.start_time))
         # TODO: Log more info like number of items by type.

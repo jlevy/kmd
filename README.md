@@ -11,7 +11,15 @@ You get a full environment with all actions, completions, and other commands.
 
 ## Python Setup
 
-Ensure you have a modern Python 3.12+ and Poetry (this part assumes MacOS):
+Ensure you have these set up:
+
+- Python 3.12+
+- Poetry
+- `ffmpeg`, `ripgrep`, `bat`
+
+I recommend using pyenv to update Python if needed.
+Here is the cheat sheet for doing this MacOS.
+For Linux and Windows, see the pyenv and poetry instructions.
 
 ```shell
 # Install pyenv and pipx if needed:
@@ -32,10 +40,6 @@ pyenv install
 pipx install poetry
 poetry self update  
 poetry config virtualenvs.in-project true
-
-# Optional for devs: Poetry plugins to help with dev builds and updates:
-poetry self add "poetry-dynamic-versioning[plugin]"
-poetry self add poetry-plugin-up
 ```
 
 ## Building
@@ -195,6 +199,10 @@ Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
 ## Development Tasks
 
 ```
+# Developers should install poetry plugins to help with dev builds and updates:
+poetry self add "poetry-dynamic-versioning[plugin]"
+poetry self add poetry-plugin-up
+
 # Build wheel:
 poetry build
 
