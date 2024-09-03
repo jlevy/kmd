@@ -20,7 +20,7 @@ from kmd.model.file_formats_model import parse_filename
 from kmd.model.errors_model import SetupError
 from kmd.model.file_formats_model import file_ext_is_text
 from kmd.text_formatting.text_formatting import fmt_path
-from kmd.text_ui.command_output import output
+from kmd.text_ui.command_output import Wrap, output
 from kmd.config.text_styles import BAT_THEME, COLOR_ERROR, COLOR_HINT
 from kmd.util.url import is_url
 
@@ -238,7 +238,7 @@ def tail_file(filename: str | Path):
     else:
         command = f"less +G {quoted_filename}"
 
-    output("Tailing file: `%s`", command)
+    output("Tailing file: `%s`", command, text_wrap=Wrap.NONE)
     subprocess.run(command, shell=True, check=True)
 
 

@@ -40,6 +40,21 @@ def friendly_str(arg: Any) -> str:
 DEFAULT_TRUNCATE = 100
 
 
+def balance_quotes(s: str) -> str:
+    """
+    Ensure even number of unescaped quotes in a string.
+    """
+    single_quotes = len(re.findall(r"(?<!\\)'", s))
+    double_quotes = len(re.findall(r'(?<!\\)"', s))
+
+    if single_quotes % 2 != 0:
+        s += "'"
+    if double_quotes % 2 != 0:
+        s += '"'
+
+    return s
+
+
 def abbreviate_arg(
     value: Any,
     repr_func: Callable = friendly_str,
@@ -50,14 +65,17 @@ def abbreviate_arg(
     """
     truncate_length = truncate_length or 0
     if isinstance(value, str) and truncate_length:
-        result = repr_func(abbreviate_str(single_line(value), truncate_length, indicator="…"))
+        abbreviated = abbreviate_str(single_line(value), truncate_length - 2, indicator="…")
+        result = repr_func(abbreviated)
+
         if len(result) >= truncate_length:
             result += f" ({len(value)} chars)"
-        return result
     elif truncate_length:
-        return abbreviate_str(repr_func(value), truncate_length, indicator="…")
+        result = abbreviate_str(repr_func(value), truncate_length - 2, indicator="…")
     else:
-        return single_line(repr_func(value))
+        result = single_line(repr_func(value))
+
+    return balance_quotes(result)
 
 
 def format_duration(seconds: float) -> str:

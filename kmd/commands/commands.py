@@ -132,6 +132,7 @@ def workspace(workspace_name: Optional[str] = None) -> None:
         output_status(f"Changed to workspace: {ws_name} ({ws_path})")
 
     current_workspace().log_store_info()
+    output()
 
 
 @kmd_command
