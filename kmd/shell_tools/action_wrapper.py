@@ -1,10 +1,10 @@
+from kmd.commands.command_results import CommandResult
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_console, get_logger
 from kmd.config.text_styles import (
     COLOR_ERROR,
     SPINNER,
 )
 from kmd.exec.action_exec import run_action
-from kmd.commands import commands
 from kmd.file_storage.workspaces import current_workspace
 from kmd.help.command_help import output_command_help
 from kmd.model.actions_model import Action
@@ -20,8 +20,10 @@ log = get_logger(__name__)
 class ShellCallableAction:
     def __init__(self, action: Action):
         self.action = action
+        self.__name__ = action.name
+        self.__doc__ = action.description
 
-    def __call__(self, args):
+    def __call__(self, args) -> CommandResult:
         shell_args = parse_shell_args(args)
 
         if shell_args.show_help:
@@ -34,7 +36,7 @@ class ShellCallableAction:
                 precondition=self.action.precondition,
             )
 
-            return
+            return CommandResult()
 
         # Handle --rerun option at action invocation time.
         rerun = bool(shell_args.kw_args.get("rerun", False))
@@ -52,15 +54,15 @@ class ShellCallableAction:
             output()
             log.error(f"[{COLOR_ERROR}]Action error:[/{COLOR_ERROR}] %s", summarize_traceback(e))
             log.info("Action error details: %s", e, exc_info=True)
-            return
+            return CommandResult(exception=e)
         finally:
             log_tallies(if_slower_than=10.0)
 
-        # Show the current selection.
-        selection = current_workspace().get_selection()
-        commands.print_selection(selection)
-        if selection:
-            commands.applicable_actions(brief=True)
+        return CommandResult(
+            selection=current_workspace().get_selection(),
+            show_selection=True,
+            show_applicable_actions=True,
+        )
 
     def __repr__(self):
         return f"CallableAction({str(self.action)})"

@@ -38,6 +38,8 @@ COLOR_HEADING = "bold bright_green"
 
 COLOR_EMPH = "bright_green"
 
+COLOR_EMPH_ALT = "bright_green"
+
 COLOR_OUTPUT = "yellow"
 
 COLOR_PROMPT = "yellow"
@@ -97,6 +99,8 @@ SYMBOL_SENT = "S"
 PROMPT_MAIN = "❯"
 
 PROMPT_ASSIST = "(help) ❯"
+
+EMOJI_HINT = "👉"
 
 EMOJI_ACTION = "⛭"
 
@@ -171,10 +175,10 @@ class KmdHighlighter(RegexHighlighter):
 
 
 RICH_STYLES = {
-    "markdown.h1": "bold green",
-    "markdown.h2": "bold green",
-    "markdown.h3": "bold green",
-    "markdown.h4": "bold blue",
+    "markdown.h1": Style(color=COLOR_EMPH, bold=True),
+    "markdown.h2": Style(color=COLOR_EMPH, bold=True),
+    "markdown.h3": Style(color=COLOR_EMPH, bold=True, italic=True),
+    "markdown.h4": Style(color=COLOR_EMPH_ALT, bold=True, italic=True),
     "kmd.ellipsis": Style(color=COLOR_HINT),
     "kmd.indent": Style(color=COLOR_KEY, dim=True),
     "kmd.error": Style(color=COLOR_ERROR, bold=True),

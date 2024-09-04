@@ -16,6 +16,7 @@ from typing import Tuple, Type
 from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, RICH_STYLES, KmdHighlighter
 from kmd.model.errors_model import SelfExplanatoryError
 from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.stack_traces import current_stack_traces
 
 LOG_DIR_NAME = ".kmd/logs"
 LOG_FILE_NAME = "kmd.log"
@@ -177,6 +178,9 @@ class CustomLogger:
                     f.write(str(obj))
 
         self.message("%s %s saved: %s", EMOJI_SAVED, description, path)
+
+    def dump_stack(self, all_threads: bool = True):
+        self.logger.info("Stack trace dump:\n%s", current_stack_traces(all_threads))
 
     def __getattr__(self, attr):
         return getattr(self.logger, attr)

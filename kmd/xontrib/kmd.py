@@ -12,8 +12,11 @@ import os
 import runpy
 import threading
 import time
+from types import NoneType
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 from xonsh.completers.completer import add_one_completer
 from kmd.commands.command_registry import all_commands, kmd_command
+from kmd.commands.command_results import print_command_result_info, var_hints
 from kmd.config.setup import setup
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import (
@@ -29,7 +32,7 @@ from kmd.text_ui.command_output import output
 from kmd.file_storage.workspaces import current_workspace
 from kmd.action_defs import reload_all_actions
 from kmd.commands import commands
-from kmd.commands.commands import welcome
+from kmd.commands.commands import CommandResult, welcome
 from kmd.model.errors_model import InvalidState
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 from kmd.version import get_version
@@ -40,7 +43,26 @@ setup()  # Call to config logging before anything else.
 log = get_logger(__name__)
 
 
-_is_interactive = __xonsh__.env["XONSH_INTERACTIVE"]  # type: ignore  # noqa: F821
+# Make type checker happy with xonsh globals:
+
+
+def _get_env(name: str) -> Any:
+    return __xonsh__.env[name]  # type: ignore  # noqa: F821
+
+
+def _set_env(name: str, value: Any) -> None:
+    __xonsh__.env[name] = value  # type: ignore  # noqa: F821
+
+
+def _set_alias(name: str, value: str | Callable) -> None:
+    aliases[name] = value  # type: ignore  # noqa: F821
+
+
+def _update_aliases(new_aliases: Dict[str, str | Callable]) -> None:
+    aliases.update(new_aliases)  # type: ignore  # noqa: F821
+
+
+_is_interactive = _get_env("XONSH_INTERACTIVE")
 
 
 # We add action loading here direcctly in the xontrib so we can update the aliases.
@@ -66,7 +88,36 @@ def load(*paths: str) -> None:
     # TODO: Track and expose to the user which extensions are loaded.
 
 
+R = TypeVar("R")
+
+
+def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], NoneType]:
+
+    def command(*args) -> None:
+        retval = func(*args)
+
+        res: CommandResult
+        if isinstance(retval, CommandResult):
+            res = retval
+        else:
+            res = CommandResult(retval)
+
+        _set_env("result", res.result)
+        _set_env("selection", res.selection)
+
+        print_command_result_info(res)
+
+        return None
+
+    command.__name__ = func.__name__
+    command.__doc__ = func.__doc__
+    return command
+
+
 def _load_xonsh_commands():
+    """
+    Load all kmd commands as xonsh commands.
+    """
     kmd_commands = {}
 
     # kmd command aliases in xonsh.
@@ -77,35 +128,38 @@ def _load_xonsh_commands():
     kmd_commands["?"] = "assist"
 
     # TODO: Figure out how to get this to work:
-    # aliases["py_help"] = help
-    # aliases["help"] = commands.kmd_help
+    # _set_alias("py_help", help)
+    # _set_alias("help", commands.kmd_help)
 
     # TODO: Doesn't seem to reload modified Python?
     # def reload() -> None:
     #     xontribs.xontribs_reload(["kmd"], verbose=True)
     #
-    # aliases["reload"] = reload  # type: ignore
+    # _set_alias("reload", reload)
 
     global _commands
     _commands = all_commands()
 
     for func in _commands.values():
-        kmd_commands[func.__name__] = wrap_with_exception_printing(wrap_for_shell_args(func))
+        kmd_commands[func.__name__] = _wrap_handle_results(
+            wrap_with_exception_printing(wrap_for_shell_args(func))
+        )
 
-    aliases.update(kmd_commands)  # type: ignore  # noqa: F821
+    _update_aliases(kmd_commands)
 
 
 def _load_xonsh_actions():
+    """
+    Load all kmd actions as xonsh commands.
+    """
     kmd_actions = {}
-
-    # Load all actions as xonsh commands.
     global _actions
     _actions = reload_all_actions()
 
     for action in _actions.values():
-        kmd_actions[action.name] = ShellCallableAction(action)
+        kmd_actions[action.name] = _wrap_handle_results(ShellCallableAction(action))
 
-    aliases.update(kmd_actions)  # type: ignore  # noqa: F821
+    _update_aliases(kmd_actions)
 
 
 def _load_completers():
@@ -169,19 +223,20 @@ def _kmd_xonsh_prompt():
 
 
 def _shell_setup():
+    _set_env("PROMPT", _kmd_xonsh_prompt)
 
-    __xonsh__.env["PROMPT"] = _kmd_xonsh_prompt  # type: ignore  # noqa: F821
+
+def _main():
+    if _is_interactive:
+        welcome()
+
+    _initialize()
+
+    _post_initialize()
+
+    _shell_setup()
+
+    log.info("kmd %s loaded", get_version())
 
 
-# Startup:
-
-if _is_interactive:
-    welcome()
-
-_initialize()
-
-_post_initialize()
-
-_shell_setup()
-
-log.info("kmd %s loaded", get_version())
+_main()

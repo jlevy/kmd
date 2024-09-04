@@ -13,6 +13,7 @@ fi
 
 PYTHON_SITE_PACKAGES=$(python -c 'import site; print(site.USER_SITE)')
 
+echo
 echo "This will build and install $APP_NAME and its dependencies to the current Python environment:"
 echo "$PYTHON_SITE_PACKAGES"
 echo

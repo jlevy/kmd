@@ -1,10 +1,12 @@
 import os
 from os.path import getmtime, basename, getsize, join
+import sys
 from typing import List, Optional, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
 from kmd.action_defs import load_all_actions
+from kmd.commands.command_results import CommandResult
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.help.assistant import assistance
 from kmd.help.help_page import output_help_page
@@ -145,35 +147,20 @@ def reload_workspace() -> None:
     current_workspace().reload()
 
 
-def print_selection(selection: List[StorePath]) -> None:
-    """
-    Print the current selection.
-    """
-    if not selection:
-        output_status("No selection.")
-    else:
-        output_status(
-            "Selected %s %s:\n%s",
-            len(selection),
-            plural("item", len(selection)),
-            fmt_lines(selection),
-        )
-
-
 @kmd_command
-def select(*paths: str, stdin=None) -> None:
+def select(*paths: str, stdin: bool = False) -> CommandResult:
     """
     Get or show the current selection.
     """
     ws = current_workspace()
 
-    # TODO: Get stdin to work for commands like select.
+    # TODO: It would be nice to be able to read stdin from a pipe but this isn't working rn.
     # Globally we have THREAD_SUBPROCS=False to avoid hard-to-interrupt subprocesses.
     # But xonsh seems to hang with stdin unless we modify the spec to be threadable?
     # https://xon.sh/tutorial.html#callable-aliases
     # https://github.com/xonsh/xonsh/blob/main/xonsh/aliases.py#L1070
-    # if stdin:
-    #     paths = stdin.read().splitlines()
+    if stdin:
+        paths = tuple(sys.stdin.read().splitlines())
 
     if paths:
         store_paths = [StorePath(path) for path in paths]
@@ -182,7 +169,7 @@ def select(*paths: str, stdin=None) -> None:
     else:
         selection = ws.get_selection()
 
-    print_selection(selection)
+    return CommandResult(selection=selection, show_selection=True)
 
 
 @kmd_command
@@ -404,7 +391,7 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
     if brief:
         action_names = [action.name for action in applicable_actions]
         output_status("Applicable actions:")
-        output(", ".join(f"`{name}`" for name in action_names))
+        output(", ".join(f"`{name}`" for name in action_names), extra_indent="    ")
         output()
     else:
         output_status("Applicable actions for items:\n %s", fmt_lines(store_paths))
@@ -591,7 +578,7 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
 
 
 @kmd_command
-def search(query_str: str, *paths: str, sort: str = "path") -> None:
+def search(query_str: str, *paths: str, sort: str = "path") -> CommandResult:
     """
     Search for a string in files at the given paths and return their store paths.
     Useful to find all docs or resources matching a string or regex.
@@ -605,13 +592,13 @@ def search(query_str: str, *paths: str, sort: str = "path") -> None:
         strip_prefix = "./"
     try:
         rg = Ripgrepy(query_str, *paths)
-        results = rg.files_with_matches().sort(sort).run().as_string
-        if strip_prefix:
-            results = "\n".join(
-                line.lstrip(strip_prefix) if line.startswith(strip_prefix) else line
-                for line in results.splitlines()
-            )
-        output("%s", results)
+        rg_output = rg.files_with_matches().sort(sort).run().as_string
+        results: List[str] = [
+            line.lstrip(strip_prefix) if strip_prefix and line.startswith(strip_prefix) else line
+            for line in rg_output.splitlines()
+        ]
+
+        return CommandResult(results, show_result=True)
     except RipGrepNotFound:
         raise InvalidState("`rg` command not found. Install ripgrep to use the search command.")
 
