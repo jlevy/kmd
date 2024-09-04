@@ -61,7 +61,7 @@ class ShellCallableAction:
         return CommandResult(
             selection=current_workspace().get_selection(),
             show_selection=True,
-            show_applicable_actions=True,
+            suggest_actions=True,
         )
 
     def __repr__(self):

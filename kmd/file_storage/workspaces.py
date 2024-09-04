@@ -3,6 +3,7 @@ import re
 import tempfile
 from typing import Optional, Tuple
 from cachetools import cached
+from kmd.config.settings import DOT_DIR
 from kmd.media.media_download import reset_media_cache_dir
 from kmd.media.web import reset_web_cache_dir
 from kmd.model.canon_url import canonicalize_url
@@ -12,6 +13,7 @@ from kmd.model.items_model import Item, ItemType
 from kmd.file_storage.file_store import CACHE_DIR, FileStore
 from kmd.model.locators import Locator, StorePath
 from kmd.model.params_model import USER_SETTABLE_PARAMS, param_lookup
+from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.url import Url, is_url
 from kmd.config.logger import get_logger, reset_log_root
 
@@ -29,12 +31,17 @@ def check_strict_workspace_name(ws_name: str):
         )
 
 
+def is_workspace_dir(path: Path) -> bool:
+    return (path.is_dir() and str(path).endswith(KB_SUFFIX)) or (path / DOT_DIR).is_dir()
+
+
 def resolve_workspace_name(name: str | Path) -> Tuple[str, Path]:
     """
     Parse and resolve the given workspace path or name and return a tuple containing
     the workspace name and directory path.
 
-    "example" -> "example", Path("example.kb")
+    "example" -> "example", Path("example.kb")  [if example does not exist]
+    "example" -> "example", Path("example")  [if example already exists]
     "example.kb" -> "example", Path("example.kb")
     "/path/to/example" -> "example", Path("/path/to/example.kb")
     "." -> "current_dir", Path("/path/to/current_dir")
@@ -62,32 +69,24 @@ def resolve_workspace_name(name: str | Path) -> Tuple[str, Path]:
     return ws_name, ws_path
 
 
-def current_workspace_dir() -> Path:
+def find_workspace_dir(path: Path = Path(".")) -> Optional[Path]:
     """
     Get the current workspace directory.
     """
-    cwd = Path(".").absolute()
-    path = cwd
+    path = path.absolute()
     while path != Path("/"):
-        if str(path).endswith(KB_SUFFIX):
+        if is_workspace_dir(path):
             return path
         path = path.parent
 
-    raise InvalidState(
-        f"No workspace found in `{cwd}`.\nA workspace directory should end in .kb; create one with the `workspace` command."
-    )
+    return None
 
 
 def current_workspace_name() -> Optional[str]:
     """
     Get the name of the current workspace (name.kb) or None if not in a .kb directory.
     """
-    workspace_name = None
-    try:
-        workspace_name = current_workspace_dir().name
-    except InvalidState:
-        pass
-    return workspace_name
+    return (dir := find_workspace_dir()) and dir.name
 
 
 # Cache the file store per directory, since it takes a little while to load.
@@ -104,7 +103,12 @@ def current_workspace() -> FileStore:
     Get the current workspace. Also updates logging and cache directories to be
     within that workspace, if it has changed.
     """
-    workspace_dir = current_workspace_dir()
+    workspace_dir = find_workspace_dir(Path("."))
+    if not workspace_dir:
+        raise InvalidState(
+            f"No workspace found in `{fmt_path(Path(".").absolute())}`.\nCreate one with the `workspace` command."
+        )
+
     reset_log_root(workspace_dir)
     reset_media_cache_dir(workspace_dir / CACHE_DIR / "media")
     reset_web_cache_dir(workspace_dir / CACHE_DIR / "web")

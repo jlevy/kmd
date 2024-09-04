@@ -5,7 +5,7 @@ from typing import Generator, List, Optional, Tuple, Dict
 from os.path import join, relpath, commonpath
 from os import path
 from strif import copyfile_atomic
-from kmd.config.settings import global_settings
+from kmd.config.settings import DOT_DIR, global_settings
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.model.file_formats_model import (
     FileExt,
@@ -39,12 +39,12 @@ from kmd.config.logger import get_logger, log_file_path
 log = get_logger(__name__)
 
 
-ARCHIVE_DIR = ".kmd/archive"
-SETTINGS_DIR = ".kmd/settings"
+ARCHIVE_DIR = f"{DOT_DIR}/archive"
+SETTINGS_DIR = f"{DOT_DIR}/settings"
 
-INDEX_DIR = ".kmd/index"
-CACHE_DIR = ".kmd/cache"
-TMP_DIR = ".kmd/tmp"
+INDEX_DIR = f"{DOT_DIR}/index"
+CACHE_DIR = f"{DOT_DIR}/cache"
+TMP_DIR = f"{DOT_DIR}/tmp"
 
 
 class FileStore:

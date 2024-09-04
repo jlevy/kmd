@@ -21,7 +21,8 @@ from kmd.config.text_styles import (
     COLOR_HELP,
     COLOR_HINT,
     COLOR_KEY,
-    COLOR_OUTPUT,
+    COLOR_RESULT,
+    COLOR_STATUS,
     COLOR_RESPONSE,
     CONSOLE_WRAP_WIDTH,
     EMOJI_ASSISTANT,
@@ -202,25 +203,37 @@ def output_separator():
     rprint(HRULE)
 
 
-def output_status(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+def output_status(
+    message: str,
+    *args,
+    text_wrap: Wrap = Wrap.NONE,
+    extra_indent: str = "",
+    extra_newlines: bool = True,
+):
     output(
         message,
         *args,
         text_wrap=text_wrap,
-        color=COLOR_OUTPUT,
+        color=COLOR_STATUS,
         extra_indent=extra_indent,
-        extra_newlines=True,
+        extra_newlines=extra_newlines,
     )
 
 
-def output_result(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+def output_result(
+    message: str,
+    *args,
+    text_wrap: Wrap = Wrap.NONE,
+    extra_indent: str = "",
+    extra_newlines: bool = False,
+):
     output(
         message,
         *args,
         text_wrap=text_wrap,
-        color=COLOR_OUTPUT,
+        color=COLOR_RESULT,
         extra_indent=extra_indent,
-        extra_newlines=False,
+        extra_newlines=extra_newlines,
     )
 
 

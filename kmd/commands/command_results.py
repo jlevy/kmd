@@ -20,7 +20,7 @@ class CommandResult:
     selection: Optional[List[StorePath]] = None
     show_result: bool = False
     show_selection: bool = False
-    show_applicable_actions: bool = False
+    suggest_actions: bool = False
     exception: Optional[Exception] = None
 
 
@@ -30,7 +30,7 @@ def type_str(value: Optional[Any]) -> str:
     elif isinstance(value, str):
         return f"{len(value)} chars"
     elif isinstance(value, list):
-        return f"{len(value)} {plural("item", len(value))}"
+        return f"{len(value)} {plural('item', len(value))}"
     elif isinstance(value, dict):
         return f"dict size {len(value)}"
     else:
@@ -42,12 +42,13 @@ def print_selection(selection: List[StorePath]) -> None:
     Print the current selection.
     """
     if not selection:
-        output_status("No selection.")
+        output_status("No selection.", extra_newlines=False)
     else:
         output_status(
             "Selected %s:\n%s",
             type_str(selection),
             fmt_lines(selection),
+            extra_newlines=False,
         )
 
 
@@ -65,47 +66,25 @@ def print_result(value: Optional[Any]) -> None:
             output_result(str(value))
 
 
-def var_hints(res: CommandResult) -> str:
-    if res.result and res.selection:
-        hint_str = f"{EMOJI_HINT} saved as $result ({type_str(res.result)}) and $selection ({type_str(res.selection)})"
-    elif res.result:
-        hint_str = f"{EMOJI_HINT} saved as $result ({type_str(res.result)})"
-    elif res.selection:
-        hint_str = f"{EMOJI_HINT} saved as $selection ({type_str(res.selection)})"
-    else:
-        hint_str = ""
-
-    return hint_str
-
-
 def print_command_result_info(res: CommandResult) -> None:
     if res.exception:
         raise res.exception
 
-    trail_newline = False
-
     if res.result and res.show_result:
+        output()
         print_result(res.result)
+        output()
+        output(f"({type_str(res.result)} saved as $result)", color=COLOR_HINT)
 
     if res.selection and res.show_selection:
+        output()
         print_selection(res.selection)
-        trail_newline = True
+        output()
+        output("(saved as $selection)", color=COLOR_HINT)
 
-    if res.show_applicable_actions:
+    if res.suggest_actions:
         from kmd.commands import commands
 
-        applicable_actions = commands.applicable_actions(brief=True)
-        if applicable_actions:
-            output_result(applicable_actions)
-            trail_newline = True
-
-    var_hint_str = var_hints(res)
-    if var_hint_str:
-        if not trail_newline:
-            output()
-
-        output(var_hint_str, color=COLOR_HINT)
-
-    output()
-
-
+        commands.suggest_actions()
+    else:
+        output()

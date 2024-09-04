@@ -38,6 +38,7 @@ from kmd.config.text_styles import (
     COLOR_HEADING,
     COLOR_HINT,
     COLOR_LOGO,
+    COLOR_STATUS,
     EMOJI_TRUE,
     EMOJI_WARN,
     LOGO,
@@ -391,7 +392,9 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
     if brief:
         action_names = [action.name for action in applicable_actions]
         output_status("Applicable actions:")
-        output(", ".join(f"`{name}`" for name in action_names), extra_indent="    ")
+        output(
+            ", ".join(f"`{name}`" for name in action_names), extra_indent="    ", color=COLOR_STATUS
+        )
         output()
     else:
         output_status("Applicable actions for items:\n %s", fmt_lines(store_paths))

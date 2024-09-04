@@ -50,7 +50,7 @@ def as_dataclass(dict_data: Dict[str, Any], dataclass_type: Type[T]) -> T:
     with the dataclass's constructor.
     """
 
-    field_types = {f.name: f.type for f in fields(dataclass_type)} # type: ignore
+    field_types = {f.name: f.type for f in fields(dataclass_type)}  # type: ignore
     dataclass_fields = {}
 
     for k, v in dict_data.items():

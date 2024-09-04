@@ -16,7 +16,7 @@ from kmd.shell_tools.function_inspect import get_params
 from kmd.text_formatting.text_formatting import single_line
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.errors_model import InvalidState
-from kmd.xontrib.kmd import _commands, _actions
+from kmd.xontrib.xonsh_customization import _commands, _actions
 
 MAX_COMPLETIONS = 500
 
