@@ -39,8 +39,15 @@ class TextNode:
         return self.original_text[self.content_start : self.content_end]
 
     @cached_property
-    def text_doc(self) -> TextDoc:
-        return TextDoc.from_text(self.contents)
+    def _text_doc_fast(self) -> TextDoc:
+        return TextDoc.from_text(self.contents, fast=True)
+
+    @cached_property
+    def _text_doc_slow(self) -> TextDoc:
+        return TextDoc.from_text(self.contents, fast=False)
+
+    def text_doc(self, fast: bool = False) -> TextDoc:
+        return self._text_doc_fast if fast else self._text_doc_slow
 
     def slice_children(self, start: int, end: int) -> "TextNode":
         if not self.children:
@@ -94,18 +101,21 @@ class TextNode:
         sorted_tally = dict(sorted(tally.items()))
         return sorted_tally
 
-    def structure_summary_str(self) -> str:
+    def structure_summary_str(self) -> Optional[str]:
         structure_summary = self.structure_summary()
         if not structure_summary:
-            return "No recognized HTML structure tags"
+            return None
         else:
-            return "HTML structure tag counts:\n" + fmt_lines(
+            return "HTML structure:\n" + fmt_lines(
                 [f"{count:6d}  {path}" for path, count in self.structure_summary().items()],
                 prefix="",
             )
 
-    def size_summary(self) -> str:
-        return f"{self.structure_summary_str()}\n{self.text_doc.size_summary()}"
+    def size_summary(self, fast: bool) -> str:
+        summary = self.text_doc(fast).size_summary()
+        if structure_summary_str := self.structure_summary_str():
+            summary += "\n" + structure_summary_str
+        return summary
 
     def is_whitespace(self) -> bool:
         return not self.children and self.contents.strip() == ""

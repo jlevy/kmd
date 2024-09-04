@@ -10,6 +10,7 @@ from textwrap import dedent
 from typing import Callable, Dict, Generator, Iterable, List, Optional, Tuple
 import regex
 from kmd.config.logger import get_logger
+from kmd.lang_tools.sentence_split_regex import split_sentences_fast
 from kmd.text_docs.sizes import TextUnit, size, size_in_bytes
 from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
 from kmd.model.errors_model import UnexpectedError
@@ -76,9 +77,9 @@ class Paragraph:
 
     @classmethod
     @tally_calls(level="warning", min_total_runtime=5)
-    def from_text(cls, text: str, char_offset: int = -1) -> "Paragraph":
+    def from_text(cls, text: str, char_offset: int = -1, fast: bool = False) -> "Paragraph":
         # TODO: Lazily compute sentences for better performance.
-        sent_values = split_sentences_spacy(text)  # Somewhat slow.
+        sent_values = split_sentences_fast(text) if fast else split_sentences_spacy(text)
         sent_offset = 0
         sentences = []
         for sent_str in sent_values:
@@ -136,14 +137,14 @@ class TextDoc:
 
     @classmethod
     @tally_calls(level="warning", min_total_runtime=5)
-    def from_text(cls, text: str) -> "TextDoc":
+    def from_text(cls, text: str, fast: bool = False) -> "TextDoc":
         text = text.strip()
         paragraphs = []
         char_offset = 0
         for para in text.split(PARA_BR_STR):
             stripped_para = para.strip()
             if stripped_para:
-                paragraphs.append(Paragraph.from_text(stripped_para, char_offset))
+                paragraphs.append(Paragraph.from_text(stripped_para, char_offset, fast=fast))
                 char_offset += len(para) + len(PARA_BR_STR)
         return cls(paragraphs=paragraphs)
 

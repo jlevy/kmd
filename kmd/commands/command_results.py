@@ -67,11 +67,11 @@ def print_result(value: Optional[Any]) -> None:
 
 def var_hints(res: CommandResult) -> str:
     if res.result and res.selection:
-        hint_str = f"{EMOJI_HINT} $result ({type_str(res.result)}) and $selection ({type_str(res.selection)}) are set"
+        hint_str = f"{EMOJI_HINT} saved as $result ({type_str(res.result)}) and $selection ({type_str(res.selection)})"
     elif res.result:
-        hint_str = f"{EMOJI_HINT} $result ({type_str(res.result)}) is set"
+        hint_str = f"{EMOJI_HINT} saved as $result ({type_str(res.result)})"
     elif res.selection:
-        hint_str = f"{EMOJI_HINT} $selection ({type_str(res.selection)}) is set"
+        hint_str = f"{EMOJI_HINT} saved as $selection ({type_str(res.selection)})"
     else:
         hint_str = ""
 
@@ -86,7 +86,6 @@ def print_command_result_info(res: CommandResult) -> None:
 
     if res.result and res.show_result:
         print_result(res.result)
-        trail_newline = True
 
     if res.selection and res.show_selection:
         print_selection(res.selection)

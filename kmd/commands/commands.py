@@ -338,7 +338,7 @@ def unarchive(*paths: str) -> None:
 
 
 @kmd_command
-def size_summary(*paths: str) -> None:
+def size_summary(*paths: str, slow: bool = False) -> None:
     """
     Show a summary of the size and HTML structure of the items at the given paths.
     """
@@ -351,7 +351,7 @@ def size_summary(*paths: str) -> None:
 
         if item.body:
             parsed_body = parse_divs(item.body)
-            output(f"{parsed_body.size_summary()}", text_wrap=Wrap.INDENT_ONLY)
+            output(f"{parsed_body.size_summary(fast=not slow)}", text_wrap=Wrap.INDENT_ONLY)
         else:
             output("No text body", text_wrap=Wrap.INDENT_ONLY)
         output()
@@ -578,7 +578,9 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
 
 
 @kmd_command
-def search(query_str: str, *paths: str, sort: str = "path") -> CommandResult:
+def search(
+    query_str: str, *paths: str, sort: str = "path", ignore_case: bool = False
+) -> CommandResult:
     """
     Search for a string in files at the given paths and return their store paths.
     Useful to find all docs or resources matching a string or regex.
@@ -592,7 +594,10 @@ def search(query_str: str, *paths: str, sort: str = "path") -> CommandResult:
         strip_prefix = "./"
     try:
         rg = Ripgrepy(query_str, *paths)
-        rg_output = rg.files_with_matches().sort(sort).run().as_string
+        rg = rg.files_with_matches().sort(sort)
+        if ignore_case:
+            rg = rg.ignore_case()
+        rg_output = rg.run().as_string
         results: List[str] = [
             line.lstrip(strip_prefix) if strip_prefix and line.startswith(strip_prefix) else line
             for line in rg_output.splitlines()

@@ -13,10 +13,10 @@ import runpy
 import threading
 import time
 from types import NoneType
-from typing import Any, Callable, Dict, List, Optional, TypeVar
+from typing import Any, Callable, Dict, List, TypeVar
 from xonsh.completers.completer import add_one_completer
 from kmd.commands.command_registry import all_commands, kmd_command
-from kmd.commands.command_results import print_command_result_info, var_hints
+from kmd.commands.command_results import print_command_result_info
 from kmd.config.setup import setup
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import (
