@@ -63,7 +63,7 @@ def chunk_text_as_divs(text: str, min_size: int, unit: TextUnit, class_name: str
         parsed = parse_divs(text)
         chunks = chunk_children(parsed, min_size, unit)
         chunk_strs = [chunk.reassemble() for chunk in chunks]
-        size_summary = parsed.size_summary()
+        size_summary = parsed.size_summary(fast=True)
     else:
         log.message("Chunking paragraphs using newlines.")
         doc = TextDoc.from_text(text)

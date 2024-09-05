@@ -65,6 +65,7 @@ from kmd.config.logger import get_logger, log_file_path
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
 from kmd.util.type_utils import not_none
+from kmd.util.url import Url
 from kmd.version import get_version
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 
@@ -215,18 +216,27 @@ def unselect(*paths: str) -> None:
         )
 
 
-def _assemble_paths(*paths: Optional[str]) -> Sequence[StorePath | Path]:
+def _resolve_path_arg(path_str: str) -> Path | StorePath:
+    path = Path(path_str)
+    if path.is_absolute() or path.exists():
+        return path
+    else:
+        return StorePath(path_str)
+
+
+def _assemble_paths(*paths: Optional[str]) -> List[StorePath | Path]:
     """
     Assemble store paths from the current workspace, or the current selection if
     no paths are given.
     """
-    out_paths = [Path(path) for path in paths if path]
+
+    out_paths = [_resolve_path_arg(path) for path in paths if path]
     if not out_paths:
         ws = current_workspace()
         out_paths = ws.get_selection()
         if not out_paths:
             raise InvalidInput("No selection")
-    return out_paths
+    return cast(List[StorePath | Path], out_paths)
 
 
 # TODO: Get more commands to work on files outside the workspace by importing them first.
@@ -254,6 +264,7 @@ def show(path: Optional[str] = None) -> None:
         if isinstance(input_path, StorePath):
             # Optionally, if we can inline display the image (like in kitty) above the text representation, do that.
             ws = current_workspace()
+
             item = ws.load(input_path)
             if item.thumbnail_url:
                 try:
@@ -261,7 +272,10 @@ def show(path: Optional[str] = None) -> None:
                     terminal_show_image_graceful(local_path)
                 except Exception as e:
                     log.error("Error fetching thumbnail image: %s", e)
-        view_file_native(input_path)
+
+            view_file_native(ws.base_dir / input_path)
+        else:
+            view_file_native(input_path)
     except (InvalidInput, InvalidState):
         if path:
             # If path is absolute or we couldbn't get a selection, just show the file.

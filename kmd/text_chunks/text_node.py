@@ -61,7 +61,7 @@ class TextNode:
         if self.children:
             return sum(child.size(unit) for child in self.children)
         else:
-            return self.text_doc.size(unit)
+            return self.text_doc(fast=True).size(unit)
 
     def structure_summary(self) -> dict[str, int]:
         """
