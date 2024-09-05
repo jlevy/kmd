@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from copy import copy
 from dataclasses import dataclass, fields
 from enum import Enum
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Sequence, cast
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_logger
 from kmd.config.text_styles import EMOJI_ACTION
 from kmd.lang_tools.inflection import plural
@@ -10,7 +10,7 @@ from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.model.language_models import LLM
 from kmd.model.llm_message_model import LLMMessage, LLMTemplate
-from kmd.model.locators import StorePath
+from kmd.model.arguments_model import InputArg, StorePath
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.preconditions_model import Precondition
@@ -139,16 +139,17 @@ class Action(ABC):
         # Class is frozen but we do want to update the description.
         object.__setattr__(self, "description", fill_text(self.description))
 
-    def validate_args(self, args: List[str]) -> None:
-        if len(args) != 0 and self.expected_args == NO_ARGS:
+    def validate_args(self, args: Sequence[InputArg]) -> None:
+        nargs = len(args)
+        if nargs != 0 and self.expected_args == NO_ARGS:
             raise InvalidInput(f"Action `{self.name}` does not expect any arguments")
-        if len(args) != 1 and self.expected_args == ONE_ARG:
+        if nargs != 1 and self.expected_args == ONE_ARG:
             raise InvalidInput(f"Action `{self.name}` expects exactly one argument")
-        if self.expected_args.max_args is not None and len(args) > self.expected_args.max_args:
+        if self.expected_args.max_args is not None and nargs > self.expected_args.max_args:
             raise InvalidInput(
                 f"Action `{self.name}` expects at most {self.expected_args.max_args} arguments"
             )
-        if self.expected_args.min_args is not None and len(args) < self.expected_args.min_args:
+        if self.expected_args.min_args is not None and nargs < self.expected_args.min_args:
             raise InvalidInput(
                 f"Action `{self.name}` expects at least {self.expected_args.min_args} arguments"
             )

@@ -4,11 +4,12 @@ from cachetools import cached
 from kmd.config.logger import get_logger
 from kmd.llms.llm_completion import llm_completion
 from kmd.config.settings import global_settings
-from kmd.file_storage.workspaces import current_workspace_name, get_param_value
+from kmd.file_storage.workspaces import current_workspace_info, get_param_value
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.errors_model import KmdRuntimeError
 from kmd.model.language_models import LLM
 from kmd.text_formatting.markdown_normalization import wrap_markdown
+from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
 from kmd.docs import api_docs, assistant_instructions
 from kmd.util.type_utils import not_none
@@ -44,13 +45,13 @@ def _insert_output(func: Callable, name: str) -> str:
 def assistant_current_state() -> str:
     from kmd.commands.commands import select, applicable_actions  # Avoid circular imports.
 
-    ws_name = current_workspace_name()
-    if ws_name:
+    path, is_sandbox = current_workspace_info()
+    if path and not is_sandbox:
         current_state_message = LLMMessage(
             f"""
             CURRENT STATE
 
-            Current workspace is: {ws_name}
+            Based on the current directory, the current workspace is: {path.name} at {fmt_path(path)}
 
             The user's current selection is below:
 
@@ -63,11 +64,16 @@ def assistant_current_state() -> str:
             """
         )
     else:
+        if is_sandbox:
+            about_ws = "You are currently using the global sandbox workspace."
+        else:
+            about_ws = "The current directory is not a workspace."
         current_state_message = LLMMessage(
-            """
+            f"""
             CURRENT STATE
 
-            The current directory is not a workspace. Create or switch to a workspace with the `workspace` command.
+            {about_ws}
+            Create or switch to a workspace with the `workspace` command.
             For example:
 
             - `workspace my_new_workspace`.

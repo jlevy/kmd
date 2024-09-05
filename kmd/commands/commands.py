@@ -1,12 +1,15 @@
 import os
-from os.path import getmtime, basename, getsize, join
+from os.path import getmtime, basename, getsize
+from pathlib import Path
 import sys
-from typing import List, Optional, cast
+from typing import List, Optional, Sequence, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
 from kmd.action_defs import load_all_actions
 from kmd.commands.command_results import CommandResult
+from kmd.file_storage.file_listings import walk_by_folder
+from kmd.file_storage.file_store import initialize_store_dirs
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.help.assistant import assistance
 from kmd.help.help_page import output_help_page
@@ -45,15 +48,17 @@ from kmd.config.text_styles import (
     PROMPT_ASSIST,
     SPINNER,
 )
-from kmd.model.file_formats_model import skippable_filename
+from kmd.model.file_formats_model import is_ignored
 from kmd.file_storage.workspaces import (
     check_strict_workspace_name,
+    current_workspace_info,
+    is_workspace_dir,
     resolve_workspace_name,
     current_workspace,
 )
 from kmd.model.params_model import USER_SETTABLE_PARAMS
 from kmd.model.errors_model import InvalidInput, InvalidState
-from kmd.model.locators import StorePath
+from kmd.model.arguments_model import StorePath
 from kmd.text_formatting.text_formatting import fmt_path, fmt_lines
 from kmd.lang_tools.inflection import plural
 from kmd.config.logger import get_logger, log_file_path
@@ -120,6 +125,21 @@ def assist(input: Optional[str] = None) -> None:
 
 
 @kmd_command
+def init(path: Optional[str] = None) -> None:
+    """
+    Initialize a new workspace at the given path.
+    """
+    dir = Path(path) if path else Path(".")
+    if is_workspace_dir(dir):
+        raise InvalidInput("Workspace already exists: %s", dir)
+    if not dir.exists():
+        dir.mkdir()
+    initialize_store_dirs(dir)
+
+    current_workspace(log_on_change=False).log_store_info()
+
+
+@kmd_command
 def workspace(workspace_name: Optional[str] = None) -> None:
     """
     Show info on the current workspace (if no arg given), or switch to a new workspace,
@@ -136,8 +156,7 @@ def workspace(workspace_name: Optional[str] = None) -> None:
         os.chdir(ws_path)
         output_status(f"Changed to workspace: {ws_name} ({ws_path})")
 
-    current_workspace().log_store_info()
-    output()
+    current_workspace(log_on_change=False).log_store_info()
 
 
 @kmd_command
@@ -196,18 +215,30 @@ def unselect(*paths: str) -> None:
         )
 
 
-def _assemble_paths(*paths: Optional[str]) -> List[StorePath]:
+def _assemble_paths(*paths: Optional[str]) -> Sequence[StorePath | Path]:
     """
     Assemble store paths from the current workspace, or the current selection if
     no paths are given.
     """
-    ws = current_workspace()
-    store_paths = [StorePath(path) for path in paths if path]
-    if not store_paths:
-        store_paths = ws.get_selection()
-        if not store_paths:
+    out_paths = [Path(path) for path in paths if path]
+    if not out_paths:
+        ws = current_workspace()
+        out_paths = ws.get_selection()
+        if not out_paths:
             raise InvalidInput("No selection")
-    return store_paths
+    return out_paths
+
+
+# TODO: Get more commands to work on files outside the workspace by importing them first.
+def _check_store_paths(paths: Sequence[StorePath | Path]) -> List[StorePath]:
+    """
+    Check that all paths are store paths.
+    """
+    ws = current_workspace()
+    for path in paths:
+        if not ws.exists(StorePath(path)):
+            raise InvalidInput(f"Store path not found: {path}")
+    return [StorePath(str(path)) for path in paths]
 
 
 @kmd_command
@@ -217,19 +248,20 @@ def show(path: Optional[str] = None) -> None:
     are selected.
     """
     try:
-        store_paths = _assemble_paths(path)
-        store_path = store_paths[0]
+        input_paths = _assemble_paths(path)
+        input_path = input_paths[0]
 
-        # Optionally, if we can inline display the image (like in kitty) above the text representation, do that.
-        ws = current_workspace()
-        item = ws.load(store_path)
-        if item.thumbnail_url:
-            try:
-                local_path = fetch_and_cache(item.thumbnail_url)
-                terminal_show_image_graceful(local_path)
-            except Exception as e:
-                log.error("Error fetching thumbnail image: %s", e)
-        view_file_native(store_path)
+        if isinstance(input_path, StorePath):
+            # Optionally, if we can inline display the image (like in kitty) above the text representation, do that.
+            ws = current_workspace()
+            item = ws.load(input_path)
+            if item.thumbnail_url:
+                try:
+                    local_path = fetch_and_cache(item.thumbnail_url)
+                    terminal_show_image_graceful(local_path)
+                except Exception as e:
+                    log.error("Error fetching thumbnail image: %s", e)
+        view_file_native(input_path)
     except (InvalidInput, InvalidState):
         if path:
             # If path is absolute or we couldbn't get a selection, just show the file.
@@ -244,11 +276,11 @@ def edit(path: Optional[str] = None, all: bool = False) -> None:
     Edit the contents of a file using the user's default editor (or defaulting to nano).
     If multiple files are selected, edit the first one.
     """
-    store_paths = _assemble_paths(path)
+    input_paths = _assemble_paths(path)
     if not all:
-        store_paths = [store_paths[0]]
+        input_paths = [input_paths[0]]
 
-    edit_files(*store_paths)
+    edit_files(*input_paths)
 
 
 @kmd_command
@@ -317,7 +349,7 @@ def archive(*paths: str) -> None:
     """
     Archive the items at the given path, or the current selection.
     """
-    store_paths = _assemble_paths(*paths)
+    store_paths = _check_store_paths(_assemble_paths(*paths))
     ws = current_workspace()
     for store_path in store_paths:
         ws.archive(store_path)
@@ -343,7 +375,7 @@ def size_summary(*paths: str, slow: bool = False) -> None:
     """
     Show a summary of the size and HTML structure of the items at the given paths.
     """
-    store_paths = _assemble_paths(*paths)
+    store_paths = _check_store_paths(_assemble_paths(*paths))
     ws = current_workspace()
     output()
     for store_path in store_paths:
@@ -372,7 +404,7 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
     Show the actions that are applicable to the current selection.
     This is a great command to use at any point to see what actions are available!
     """
-    store_paths = _assemble_paths(*paths)
+    store_paths = _check_store_paths(_assemble_paths(*paths))
     ws = current_workspace()
 
     actions = load_all_actions(base_only=False).values()
@@ -442,7 +474,7 @@ def index(*paths: str) -> None:
     """
     Index the items at the given path, or the current selection.
     """
-    store_paths = _assemble_paths(*paths)
+    store_paths = _check_store_paths(_assemble_paths(*paths))
     ws = current_workspace()
 
     ws.vector_index.index_items([ws.load(store_path) for store_path in store_paths])
@@ -455,7 +487,7 @@ def unindex(*paths: str) -> None:
     """
     Unarchive the items at the given paths.
     """
-    store_paths = _assemble_paths(*paths)
+    store_paths = _check_store_paths(_assemble_paths(*paths))
     ws = current_workspace()
     ws.vector_index.unindex_items([ws.load(store_path) for store_path in store_paths])
 
@@ -517,15 +549,23 @@ def query(query_str: str) -> None:
 
 
 @kmd_command
-def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool] = False) -> None:
+def files(
+    *paths: str,
+    all: bool = False,
+    summary: Optional[bool] = False,
+    iso_time: Optional[bool] = False,
+) -> None:
     """
-    List files or folders in a workspace. Shows the full current workspace if no path is provided.
+    List files or folders in the current directory. Shows the full current workspace if
+    no path is provided.
     """
-    ws = current_workspace()
     if len(paths) == 0:
-        paths_to_show = (None,)
+        paths_to_show = (Path("."),)
     else:
-        paths_to_show = paths
+        paths_to_show = [Path(path) for path in paths]
+
+    base_dir, is_sandbox = current_workspace_info()
+    relative_to = base_dir if base_dir and not is_sandbox else Path(".")
 
     total_folders, total_files = 0, 0
 
@@ -533,18 +573,16 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
 
     for path in paths_to_show:
         # If we're explicitly looking in a hidden directory, show hidden files.
-        show_hidden = path is not None and skippable_filename(path)
+        show_hidden = all or (path is not None and is_ignored(path))
 
-        for store_dirname, filenames in ws.walk_by_folder(
-            StorePath(path) if path else None, show_hidden
-        ):
+        for dirname, filenames in walk_by_folder(path, relative_to, show_hidden):
             # Show tally for this directory.
             nfiles = len(filenames)
             if nfiles > 0:
-                output(f"\n{fmt_path(store_dirname)} - {nfiles} files", color=COLOR_EMPH)
+                output(f"\n{fmt_path(dirname)} - {nfiles} files", color=COLOR_EMPH)
 
             for filename in filenames:
-                full_path = join(ws.base_dir, store_dirname, filename)
+                full_path = os.path.join(dirname, filename)
 
                 # Now show all the files in that directory.
                 if not summary:
@@ -557,7 +595,7 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
                             datetime.fromtimestamp(getmtime(full_path)).isoformat().split(".", 1)[0]
                         )
 
-                    parent_dir = basename(store_dirname)
+                    parent_dir = basename(dirname)
                     display_name = f"{parent_dir}/{filename}" if parent_dir != "." else filename
                     display_name = fmt_path(display_name)
 
@@ -576,8 +614,6 @@ def files(*paths: str, summary: Optional[bool] = False, iso_time: Optional[bool]
             total_files += nfiles
 
         output(f"\n{total_files} items total in {total_files} folders", color=COLOR_EMPH)
-
-    output()
 
 
 @kmd_command
@@ -626,7 +662,7 @@ def canonicalize(*paths: str) -> None:
     to our conventions.
     """
     ws = current_workspace()
-    store_paths = _assemble_paths(*paths)
+    store_paths = _check_store_paths(_assemble_paths(*paths))
 
     canon_paths = []
     for store_path in store_paths:

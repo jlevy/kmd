@@ -11,7 +11,7 @@ APP_NAME = "kmd"
 
 DOT_DIR = ".kmd"
 
-# SANDBOX_KB_PATH = "~/.local/kmd/sandbox.kb"
+SANDBOX_KB_PATH = "~/.local/kmd/sandbox.kb"
 
 GLOBAL_CACHE_NAME = "kmd_cache"
 
@@ -36,6 +36,9 @@ class Settings:
 
     default_editor: str
     """The default editor to use for editing files."""
+
+    use_sandbox: bool
+    """If not in a workspace, use the sandbox workspace."""
 
 
 def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
@@ -68,6 +71,7 @@ _settings = Settings(
     web_cache_dir=_cache_dir("web"),
     debug_assistant=False,
     default_editor="nano",
+    use_sandbox=True,
 )
 
 

@@ -235,7 +235,7 @@ def test_structure_summary_str_1():
 
     expected_summary = dedent(
         """
-        HTML structure tag counts:
+        HTML structure:
             3  div.chunk
         """
     ).strip()
@@ -254,7 +254,7 @@ def test_structure_summary_str_2():
 
     expected_summary = dedent(
         """
-        HTML structure tag counts:
+        HTML structure:
             1  div.outer
             1  div.outer > div.inner
             1  div.outer > div.inner > div

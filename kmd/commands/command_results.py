@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Any, List, Optional
 from kmd.config.logger import get_console
-from kmd.config.text_styles import COLOR_HINT, EMOJI_HINT
+from kmd.config.text_styles import COLOR_HINT
 from kmd.lang_tools.inflection import plural
-from kmd.model.locators import StorePath
+from kmd.model.arguments_model import StorePath
 from kmd.text_formatting.text_formatting import fmt_lines
 from kmd.text_ui.command_output import output, output_result, output_status
 

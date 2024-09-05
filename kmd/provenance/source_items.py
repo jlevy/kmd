@@ -2,7 +2,7 @@ from kmd.file_storage.workspaces import current_workspace
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item
 from kmd.config.logger import get_logger
-from kmd.model.locators import StorePath
+from kmd.model.arguments_model import StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.type_utils import not_none

@@ -11,7 +11,7 @@ from kmd.model.actions_model import (
     PathOpType,
 )
 from kmd.config.logger import get_logger
-from kmd.model.locators import StorePath
+from kmd.model.arguments_model import StorePath
 from kmd.preconditions.precondition_defs import is_concept, is_text_doc
 from kmd.text_formatting.markdown_util import as_bullet_points
 from kmd.text_ui.command_output import output, output_heading

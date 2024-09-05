@@ -14,14 +14,13 @@ from kmd.action_defs import reload_all_actions
 from kmd.commands.command_registry import kmd_command
 from kmd.text_ui.command_output import output
 from kmd.text_formatting.text_formatting import fmt_path
-from kmd.xontrib.xonsh_customization import (
-    _load_xonsh_actions,
-    _set_alias,
-    _customize_xonsh,
-)
+from kmd.xontrib.xonsh_customization import _load_xonsh_actions, set_alias, customize_xonsh
+
+# FIXME: Only use absolute imports here.
 
 
-# We add action loading here direcctly in the xontrib so we can update the aliases.
+# We add action loading here directly in the xontrib so we expose `load` and
+# can update the aliases.
 @kmd_command
 def load(*paths: str) -> None:
     """
@@ -42,6 +41,6 @@ def load(*paths: str) -> None:
     # TODO: Track and expose to the user which extensions are loaded.
 
 
-_set_alias("load", load)
+set_alias("load", load)
 
-_customize_xonsh()
+customize_xonsh()

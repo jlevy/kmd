@@ -5,18 +5,20 @@ from typing import Generator, List, Optional, Tuple, Dict
 from os.path import join, relpath, commonpath
 from os import path
 from strif import copyfile_atomic
-from kmd.config.settings import DOT_DIR, global_settings
+from kmd.config.settings import global_settings
+from kmd.file_storage.file_listings import walk_by_folder
 from kmd.file_storage.item_file_format import read_item, write_item
+from kmd.file_storage.metadata_dirs import ARCHIVE_DIR, initialize_store_dirs
 from kmd.model.file_formats_model import (
     FileExt,
     Format,
     format_from_ext,
     parse_filename,
-    skippable_filename,
+    is_ignored,
 )
 from kmd.model.params_model import ParamValues
 from kmd.query.vector_index import WsVectorIndex
-from kmd.config.text_styles import EMOJI_SUCCESS
+from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
 from kmd.file_storage.store_filenames import (
     item_type_folder_for,
     join_filename,
@@ -24,27 +26,20 @@ from kmd.file_storage.store_filenames import (
 )
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.model.errors_model import InvalidFilename, InvalidState, SkippableError
-from kmd.model.locators import StorePath
+from kmd.model.arguments_model import StorePath
 from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.canon_url import canonicalize_url
 from kmd.text_formatting.text_formatting import fmt_path, fmt_lines
+from kmd.text_ui.command_output import output
 from kmd.util.file_utils import move_file
 from kmd.util.hash_utils import hash_file
-from kmd.util.log_calls import format_duration
+from kmd.util.log_calls import format_duration, log_calls
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import Url, is_url
 from kmd.config.logger import get_logger, log_file_path
 
 log = get_logger(__name__)
-
-
-ARCHIVE_DIR = f"{DOT_DIR}/archive"
-SETTINGS_DIR = f"{DOT_DIR}/settings"
-
-INDEX_DIR = f"{DOT_DIR}/index"
-CACHE_DIR = f"{DOT_DIR}/cache"
-TMP_DIR = f"{DOT_DIR}/tmp"
 
 
 class FileStore:
@@ -54,9 +49,10 @@ class FileStore:
 
     # TODO: Consider using a pluggable filesystem (fsspec AbstractFileSystem).
 
-    def __init__(self, base_dir: Path):
+    def __init__(self, base_dir: Path, is_sandbox: bool):
         self.start_time = time.time()
         self.base_dir = base_dir
+        self.is_sandbox = is_sandbox
 
         # TODO: Move this to its own IdentifierIndex class, and make it exactly mirror disk state.
         self.uniquifier = Uniquifier()
@@ -64,19 +60,15 @@ class FileStore:
 
         self._id_index_init()
 
-        # These are directly used by the FileStore.
-        self.archive_dir = self.base_dir / ARCHIVE_DIR
-        os.makedirs(self.archive_dir, exist_ok=True)
-        self.settings_dir = self.base_dir / SETTINGS_DIR
-        os.makedirs(self.settings_dir, exist_ok=True)
+        (
+            self.archive_dir,
+            self.settings_dir,
+            self.cache_dir,
+            self.index_dir,
+            self.tmp_dir,
+            self.metadata,
+        ) = initialize_store_dirs(self.base_dir)
 
-        # These are not used for file storage directly but are co-located in the workspace directory.
-        self.cache_dir = self.base_dir / CACHE_DIR
-        os.makedirs(self.cache_dir, exist_ok=True)
-        self.tmp_dir = self.base_dir / TMP_DIR
-        os.makedirs(self.tmp_dir, exist_ok=True)
-
-        self.index_dir = self.base_dir / INDEX_DIR
         self.vector_index = WsVectorIndex(self.index_dir)
 
         # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
@@ -89,9 +81,9 @@ class FileStore:
     def _id_index_init(self):
         num_dups = 0
         for root, dirnames, filenames in os.walk(self.base_dir):
-            dirnames[:] = [d for d in dirnames if not skippable_filename(d)]
+            dirnames[:] = [d for d in dirnames if not is_ignored(d)]
             for filename in filenames:
-                if not skippable_filename(filename):
+                if not is_ignored(filename):
                     store_path = StorePath(path.relpath(join(root, filename), self.base_dir))
                     dup_path = self._id_index_item(store_path)
                     if dup_path:
@@ -171,7 +163,7 @@ class FileStore:
         return StorePath(folder_path / join_filename(slug, suffix))
 
     def reload(self):
-        self.__init__(self.base_dir)
+        self.__init__(self.base_dir, self.is_sandbox)
 
     def exists(self, store_path: StorePath) -> bool:
         return (self.base_dir / store_path).exists()
@@ -326,34 +318,53 @@ class FileStore:
         """
         return hash_file(self.base_dir / store_path, algorithm="sha1")
 
-    def add_resource(self, file_path_or_url: str) -> StorePath:
+    def add_resource(self, path_or_url: str | Path) -> StorePath:
         """
-        Add a resource from a file or URL.
+        Add a resource from a file or URL. If it's string or Path path, copy it into
+        the store. If it's already there, hjust return the
         """
-        if is_url(file_path_or_url):
-            orig_url = Url(file_path_or_url)
+        if isinstance(path_or_url, str) and is_url(path_or_url):
+            orig_url = Url(path_or_url)
             url = canonicalize_url(orig_url)
             if url != orig_url:
                 log.message("Canonicalized URL: %s -> %s", orig_url, url)
             item = Item(ItemType.resource, url=url, format=Format.url)
-            # TODO: Also fetch the title and description as a follow-on action.
-            return self.save(item)
+            # TODO: Also fetch the title and description as a follow-on action?
+            store_path = self.save(item)
         else:
-            file_path = file_path_or_url
+            path = Path(path_or_url)
+            path_str = str(path_or_url)
+
+            # If it's already in the store, do nothing.
+            if not path.is_absolute() and (self.base_dir / path).exists():
+                return StorePath(path_str)
+
+            # A rarer case, but if it happens to be an absolute path that's still
+            # within the store, return the store path.
+            if path.is_relative_to(self.base_dir):
+                store_path = StorePath(path.relative_to(self.base_dir))
+                if self.exists(store_path):
+                    return store_path
+
+            if not path.exists():
+                raise FileNotFoundError(f"File not found: {fmt_path(path_str)}")
+
+            # It's a string or Path presumably outside the store, so copy it in.
             try:
-                _dirname, name, _item_type, ext_str = parse_filename(file_path)
+                _dirname, name, _item_type, ext_str = parse_filename(path_str)
                 file_ext = FileExt(ext_str)
             except ValueError:
                 raise InvalidFilename(
-                    f"Unknown extension for file: {file_path} (known types are {', '.join(FileExt.__members__.keys())})"
+                    f"Unknown extension for file: {path_str} (known types are {', '.join(FileExt.__members__.keys())})"
                 )
             format = Format.guess_by_file_ext(file_ext)
             if not format:
                 raise InvalidFilename(
-                    f"Unknown format for file (check the file ext?): {fmt_path(file_path)}"
+                    f"Unknown format for file (check the file ext?): {fmt_path(path_str)}"
                 )
 
-            with open(file_path, "r") as file:
+            # TODO: Handle binary files and larger files more sensibly.
+            with open(path_str, "r") as file:
                 body = file.read()
 
             new_item = Item(
@@ -363,8 +374,9 @@ class FileStore:
                 format=format,
                 body=body,
             )
-            saved_store_path = self.save(new_item)
-            return saved_store_path
+            store_path = self.save(new_item)
+
+        return store_path
 
     def _remove_references(self, store_paths: List[StorePath]):
         self.selection.remove_values(store_paths)
@@ -456,46 +468,15 @@ class FileStore:
         log.info("Media cache: %s", global_settings().media_cache_dir)
         log.info("Web cache: %s", global_settings().web_cache_dir)
 
+        if self.is_sandbox:
+            output()
+            output(
+                f"{EMOJI_WARN} Note you are using the default sandbox workspace."
+                " Create or switch to a workspace with the `workspace` command."
+            )
+
         log.info("File store startup took %s.", format_duration(self.end_time - self.start_time))
         # TODO: Log more info like number of items by type.
-
-    def walk_by_folder(
-        self, store_path: Optional[StorePath] = None, show_hidden: bool = False
-    ) -> Generator[Tuple[StorePath, List[str]], None, None]:
-        """
-        Yields all files in each folder as `(store_dirname, filenames)` for each directory in the store.
-        """
-
-        path = self.base_dir / store_path if store_path else self.base_dir
-
-        if not path.exists():
-            raise FileNotFoundError(f"Directory not found: {fmt_path(path)}")
-
-        # Special case of a single file.
-        if path.is_file():
-            yield StorePath(relpath(path.parent, self.base_dir)), [path.name]
-            return
-
-        # Walk the directory.
-        for dirname, dirnames, filenames in os.walk(path):
-            # TODO: Support other sorting options.
-            dirnames.sort()
-            filenames.sort()
-
-            store_dirname = relpath(dirname, self.base_dir)
-
-            if not show_hidden and skippable_filename(store_dirname):
-                continue
-
-            filtered_filenames = []
-            for filename in filenames:
-                store_filename = relpath(filename, self.base_dir)
-                if not show_hidden and skippable_filename(store_filename):
-                    continue
-                filtered_filenames.append(filename)
-
-            if len(filtered_filenames) > 0:
-                yield StorePath(store_dirname), filtered_filenames
 
     def walk_items(
         self, store_path: Optional[StorePath] = None, show_hidden: bool = False
@@ -503,7 +484,10 @@ class FileStore:
         """
         Yields StorePaths of items in a folder or the entire store.
         """
-        for store_dirname, filenames in self.walk_by_folder(store_path, show_hidden):
+        start_path = self.base_dir / store_path if store_path else self.base_dir
+        for store_dirname, filenames in walk_by_folder(
+            start_path, relative_to=self.base_dir, show_hidden=show_hidden
+        ):
             for filename in filenames:
                 yield StorePath(join(store_dirname, filename))
 

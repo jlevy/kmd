@@ -1,17 +1,17 @@
 from dataclasses import replace
 import time
-from typing import List, Optional, cast
+from typing import List, Optional, Tuple, cast
 from kmd.action_defs import look_up_action
 from kmd.exec.system_actions import FETCH_PAGE_METADATA_NAME, fetch_page_metadata
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
-from kmd.file_storage.workspaces import current_workspace, ensure_saved
+from kmd.file_storage.workspaces import current_workspace, import_and_load
 from kmd.lang_tools.inflection import plural
 from kmd.model.actions_model import NO_ARGS, Action, ActionResult, ForEachItemAction, PathOpType
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
-from kmd.model.locators import Locator, StorePath, is_store_path
+from kmd.model.arguments_model import InputArg, StorePath, is_store_path
 from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.util.type_utils import not_none
 from kmd.config.logger import get_logger
@@ -19,15 +19,15 @@ from kmd.config.logger import get_logger
 log = get_logger(__name__)
 
 
-def collect_args(*args: str) -> List[Locator]:
+def collect_args(*args: str) -> Tuple[List[InputArg], bool]:
     if not args:
         try:
             selection_args = current_workspace().get_selection()
-            return cast(List[Locator], selection_args)
+            return cast(List[InputArg], selection_args), True
         except InvalidState:
-            return []
+            return [], False
     else:
-        return cast(List[Locator], list(args))
+        return list(args), False
 
 
 def fetch_url_items(item: Item) -> Item:
@@ -75,11 +75,11 @@ def run_action(
         action = action.update_with_params(ws_params)
 
     # Collect args from the provided args or otherwise the current selection.
-    args = collect_args(*provided_args)
+    args, from_selection = collect_args(*provided_args)
 
     # As a special case for convenience, if the action expects no args, ignore any pre-selected inputs.
-    if action.expected_args == NO_ARGS:
-        args = []
+    if action.expected_args == NO_ARGS and from_selection:
+        args.clear()
 
     if args:
         source_str = "provided args" if provided_args else "selection"
@@ -90,19 +90,20 @@ def run_action(
     # Ensure we have the right number of args.
     action.validate_args(args)
 
-    # Now we have the operation we will perform.
+    # Ensure input items are already saved in the workspace and load the corresponding items.
+    # This also imports any URLs.
+    input_items = [import_and_load(arg) for arg in args]
+
+    # Now make a note of the the operation we will perform.
     # If the inputs are paths, record the input paths with hashes.
     # TODO: Also save the parameters/options that were used.
-    inputs = [Input(StorePath(arg), ws.hash(StorePath(arg))) for arg in args if is_store_path(arg)]
+    store_paths = [StorePath(not_none(item.store_path)) for item in input_items if item.store_path]
+    inputs = [Input(store_path, ws.hash(store_path)) for store_path in store_paths]
     operation = Operation(action_name, inputs, action.param_summary())
     log.message("%s Action: `%s`", EMOJI_CALL_BEGIN, operation.command_line(with_options=False))
     if len(action.param_summary()) > 0:
         log.message("%s", action.param_summary_str())
     log.info("Operation is: %s", operation)
-
-    # Ensure input items are already saved in the workspace and load the corresponding items.
-    # This also imports any URLs.
-    input_items = [ensure_saved(arg) for arg in args]
 
     # Validate the precondition.
     action.validate_precondition(input_items)

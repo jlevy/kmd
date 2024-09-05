@@ -7,7 +7,7 @@ import os
 from typing import Any, Callable, List, Optional, TextIO
 from ruamel.yaml import YAML
 from strif import atomic_output_file
-from kmd.model.locators import StorePath
+from kmd.model.arguments_model import StorePath
 
 KeySort = Callable[[str], tuple]
 

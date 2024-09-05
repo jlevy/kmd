@@ -1,15 +1,23 @@
 # kmd
 
-A command line for knowledge exploration.
+**A command-line power tool for knowledge tasks.**
+
+“*Simple should be simple. Complex should be possible.*” —Alan Kay
+
 
 ## Running the kmd Shell
 
-Although you can run it as a library or for single commands, the best way to use kmd
-is as its own shell, which a shell environment based on [xonsh](https://xon.sh/).
+The best way to use kmd is as its own shell, which a shell environment based
+on [xonsh](https://xon.sh/). If you've used a bash or Python shell before,
+xonsh is very intuitive. If you don't want to use xonsh, you can still use it
+from other shells or as a Python library.
 
-You get a full environment with all actions, completions, and other commands.
+Within the kmd shell you get a full environment with all actions and commands.
+You also get intelligent auto-complete and a built-in assistant to help you
+perform tasks.
 
-## Python Setup
+
+## Python and Shell Setup
 
 Ensure you have these set up:
 
@@ -18,7 +26,8 @@ Ensure you have these set up:
 - `ffmpeg`, `ripgrep`, `bat`
 
 I recommend using pyenv to update Python if needed.
-Here is the cheat sheet for doing this MacOS.
+
+Here is the cheat sheet for these installations on MacOS.
 For Linux and Windows, see the pyenv and poetry instructions.
 
 ```shell
@@ -44,23 +53,28 @@ poetry config virtualenvs.in-project true
 
 ## Building
 
-There aren't pre-built releases yet. Check out the code and install the package dependencies:
+1. [Fork](https://github.com/jlevy/kmd/fork) this repo (having your own fork
+will make it easier to contribute actions, add models, etc.).
 
-```shell
-poetry install
-```
+2. [Check out](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the code.
+
+3. Install the package dependencies:
+
+   ```shell
+   poetry install
+   ```
 
 ## API Key Setup
 
 You will need API keys for all services you wish to use.
-Configuring at least OpenAI, Deepgram, Anthropic, and Groq (for Llama 3) is recommended.
+Configuring OpenAI, Anthropic, Groq (for Llama 3), and Deepgram is recommended.
 
 These keys should go in the `.env` file in your current directory.
 
 ```shell
 # Set up API secrets:
 cp .env.template .env 
-vi .env # Edit the file to add all desired API keys
+# Now edit the .env file to add all desired API keys
 ```
 
 ## Running
@@ -84,11 +98,13 @@ This does a pip install of the wheel so you can run it as `kmd`.
 ## Using kmd
 
 Tab completion is your friend! Just press tab to get lists of commands and guidance on
-help from the LLM-based assistant. Type `?` or use `kmd_help` within the shell for full
-documentation.
+help from the LLM-based assistant.
 
-Get started with some brief examples. Try these commands one at a time to see how it
-works:
+Type `?` or use `kmd_help` within the shell for full documentation.
+
+## Examples
+
+A few commands you can try one at a time to see how kmd works:
 
 ```shell
 # Set up a workspace to test things out:
@@ -162,10 +178,15 @@ Hyper-K is a plugin I've written that makes using a tool like kmd much easier
 in small ways, especially by letting you click commands and file paths with
 the mouse to type them, and by easily viewing thumbnail images.
 
+### Choosing an Editor
+
+Most any editor will work. Kmd respsects the `EDITOR` environment variable if you
+use the `edit` command.
+
 ### MacOS
 
-In general, it's convenient to make sure your preferred editor is set up for
-.yml and .md files.
+Kmd calls `open` to open some files, so in general, it's convenient to make sure
+your preferred editor is set up for .yml and .md files. 
 
 For convenience, a reminder on how to do this:
 
@@ -173,6 +194,15 @@ For convenience, a reminder on how to do this:
   - Select the editor, such as Cursor or VSCode or Obsidian, and click the "Change All…"
     button to have it apply to all files with that extension.
   - Repeat with each file type.
+
+### Cursor and VSCode
+
+[Cursor](https://www.cursor.com/) and [VSCode](https://code.visualstudio.com/) work fine
+out of the box to edit workspace files in Markdown, HTML, and YAML in kmd workspaces.
+
+### Zed
+
+[Zed](https://zed.dev/) is another, newer editor that works great out of the box.
 
 ### Obsidian
 
@@ -195,7 +225,6 @@ Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
 
   - Now titles are easy to read for all kmd notes.
 
-
 ## Development Tasks
 
 ```
@@ -211,8 +240,8 @@ pytest
 # Just one file, with outputs:
 pytest -s kmd/text_docs/text_doc.py
 
-# Fix formatting/linkting issues:
-ruff check --fix
+# Before committing, be sure to check formatting/linting issues:
+poetry run lint
 
 # Upgrade packages:
 poetry up

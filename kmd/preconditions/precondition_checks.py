@@ -2,7 +2,7 @@ from typing import Iterable, List
 from kmd.file_storage.file_store import FileStore
 from kmd.model.actions_model import Action
 from kmd.model.errors_model import SkippableError
-from kmd.model.locators import StorePath
+from kmd.model.arguments_model import StorePath
 from kmd.model.items_model import Item
 from kmd.model.preconditions_model import Precondition
 from kmd.config.logger import get_logger

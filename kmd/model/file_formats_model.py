@@ -1,5 +1,7 @@
 from enum import Enum
 from os import path
+import os
+from pathlib import Path
 import re
 from typing import Optional, Tuple
 from kmd.model.errors_model import InvalidFilename
@@ -33,9 +35,10 @@ class Format(Enum):
         various formats. This doesn't need to be perfect, mainly used when importing files.
         """
         ext_to_format = {
-            FileExt.html.value: Format.html,
-            FileExt.md.value: Format.markdown,
             FileExt.txt.value: Format.plaintext,
+            FileExt.md.value: Format.markdown,
+            FileExt.json.value: Format.json,
+            FileExt.html.value: Format.html,
             FileExt.pdf.value: Format.pdf,
             FileExt.py.value: Format.python,
         }
@@ -50,12 +53,12 @@ class FileExt(Enum):
     Canonical file type extensions for items.
     """
 
-    pdf = "pdf"
     txt = "txt"
     md = "md"
     yml = "yml"
     json = "json"
     html = "html"
+    pdf = "pdf"
     py = "py"
 
     def is_text(self) -> bool:
@@ -152,18 +155,20 @@ def format_from_ext(file_ext: FileExt) -> Optional[Format]:
     return file_ext_to_format[file_ext]
 
 
+_hidden_file_pattern = re.compile(r"\.[^.]+")
 _partial_file_pattern = re.compile(r".*\.partial\.[a-z0-9]+$")
 
 
-def skippable_filename(filename: str) -> bool:
+def is_ignored(path: str | Path) -> bool:
     """
-    Check if a file should be skipped when processing a directory.
+    Whether a file or path should be skipped when processing a directory.
     This skips .., .archive, .settings, __pycache__, .partial.xxx, etc.
     """
-    return len(filename) > 1 and (
-        filename.startswith(".")
-        or filename.startswith("__")
-        or bool(_partial_file_pattern.match(filename))
+    name = os.path.basename(path)
+    return (
+        bool(_hidden_file_pattern.match(name))
+        or name.startswith("__")
+        or bool(_partial_file_pattern.match(name))
     )
 
 

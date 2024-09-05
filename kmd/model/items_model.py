@@ -17,7 +17,7 @@ from kmd.file_storage.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import FileFormatError
-from kmd.model.locators import Locator
+from kmd.model.arguments_model import Locator
 from kmd.text_formatting.markdown_util import markdown_to_html
 from kmd.text_formatting.text_formatting import (
     abbreviate_on_words,
@@ -480,11 +480,16 @@ class Item:
     def derived_copy(self, **kwargs) -> "Item":
         """
         Same as `new_copy_with()`, but also updates `derived_from` relation.
+        Defaults to `ItemType.doc` if not specified.
         """
         if not self.store_path:
             raise ValueError(f"Cannot derive from an item that has not been saved: {self}")
 
-        new_item = self.new_copy_with(update_timestamp=True, **kwargs)
+        updates = kwargs.copy()
+        if "type" not in updates:
+            updates["type"] = ItemType.doc
+
+        new_item = self.new_copy_with(update_timestamp=True, **updates)
         new_item.update_relations(derived_from=[self.store_path])
 
         return new_item

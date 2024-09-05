@@ -75,7 +75,7 @@ format-jinja = """
 
 [tool.poetry.scripts]
 kmd = "kmd.main:main"
-xonsh_install_kmd = "xonsh_install_kmd:install"
+lint = "lint:main"
 
 [tool.black]
 line-length = 100

@@ -8,7 +8,7 @@ from kmd.file_storage.yaml_util import read_yaml_file, to_yaml_string, write_yam
 from kmd.lang_tools.clean_headings import clean_heading, summary_heading
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
-from kmd.model.locators import StorePath
+from kmd.model.arguments_model import StorePath
 from kmd.util.type_utils import as_dataclass, not_none
 from kmd.web_gen.template_render import render_web_template
 
