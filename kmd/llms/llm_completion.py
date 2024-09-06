@@ -4,6 +4,7 @@ from slugify import slugify
 from strif import abbreviate_str
 import litellm
 from kmd.config.logger import get_logger
+from kmd.config.text_styles import HRULE_SHORT
 from kmd.llms.llm_checks import is_no_results
 from kmd.model.actions_model import LLMMessage, LLMTemplate
 from kmd.model.errors_model import ApiResultError
@@ -81,13 +82,14 @@ def llm_completion(
         log.save_object(
             "LLM response",
             f"llm.{model_slug}",
-            "\n\n---\n\n".join(
+            "\n\n".join(
                 [
-                    f"System message:\n{str(system_message)}",
-                    f"User message:\n{user_message}",
-                    f"Response:\n{text_output}",
+                    f"{HRULE_SHORT} System message {HRULE_SHORT}\n\n{str(system_message)}",
+                    f"{HRULE_SHORT} User message {HRULE_SHORT}\n\n{user_message}",
+                    f"{HRULE_SHORT} Response {HRULE_SHORT}\n\n{text_output}",
                 ]
             ),
+            level="message",
         )
 
     return text_output

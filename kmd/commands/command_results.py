@@ -81,10 +81,9 @@ def print_command_result_info(res: CommandResult) -> None:
         print_selection(res.selection)
         output()
         output("(saved as $selection)", color=COLOR_HINT)
+        output()
 
     if res.suggest_actions:
         from kmd.commands import commands
 
         commands.suggest_actions()
-    else:
-        output()

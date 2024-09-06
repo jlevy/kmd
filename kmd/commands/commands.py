@@ -6,6 +6,7 @@ from typing import List, Optional, Sequence, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
+from rich.text import Text
 from strif import copyfile_atomic
 from kmd.action_defs import load_all_actions
 from kmd.commands.command_results import CommandResult
@@ -46,6 +47,7 @@ from kmd.config.text_styles import (
     COLOR_STATUS,
     EMOJI_TRUE,
     EMOJI_WARN,
+    HRULE,
     LOGO,
     PROMPT_ASSIST,
     SPINNER,
@@ -82,12 +84,16 @@ def welcome() -> None:
     from kmd.docs.topics.welcome import __doc__ as welcome_doc
 
     output()
-    output(LOGO, color=COLOR_LOGO)
-    output("v%s" % get_version(), color=COLOR_HINT)
+    output(HRULE, color=COLOR_HINT)
+    version = "v%s" % get_version()
+    padding = " " * (len(HRULE) - len(LOGO) - len(version))
+    output(Text(LOGO, style=COLOR_LOGO) + Text(padding + version, style=COLOR_HINT))
+    output(HRULE, color=COLOR_HINT)
     output()
     output("Welcome to kmd.\n", color=COLOR_HEADING)
     output()
     output(not_none(welcome_doc), text_wrap=Wrap.WRAP_FULL)
+    output(HRULE, color=COLOR_HINT)
 
 
 @kmd_command

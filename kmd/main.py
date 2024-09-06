@@ -271,12 +271,25 @@ def run_shell(single_command: Optional[str] = None):
 
 def parse_args():
     import argparse
+    from kmd.commands.commands import kmd_help
+    from io import StringIO
+    from contextlib import redirect_stdout
+
+    class CustomHelpFormatter(argparse.HelpFormatter):
+        def format_help(self):
+            output = StringIO()
+            with redirect_stdout(output):
+                kmd_help()
+            return output.getvalue()
 
     parser = argparse.ArgumentParser(
-        description="Launch the kmd shell. If a single command is provided, it will run and exit."
+        description="Launch the kmd shell. If a single command is provided, it will run and exit.",
+        formatter_class=CustomHelpFormatter,
+        add_help=False,  # Disable the default help option
     )
     parser.add_argument("command", nargs="*", help="Command to run in the shell.")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    parser.add_argument("--help", action="help", help="Show help page.")
     return parser.parse_args()
 
 

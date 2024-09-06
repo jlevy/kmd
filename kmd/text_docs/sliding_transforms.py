@@ -96,27 +96,23 @@ def filtered_transform(
 
             log.save_object(
                 "Input doc normalized",
-                "transform_and_check_diff",
+                "filtered_transform",
                 normalize_markdown(input_doc.reassemble()),
             )
-            log.save_object(
-                "Transformed doc raw",
-                "transform_and_check_diff",
-                transformed_doc.reassemble(),
-            )
+            log.save_object("Output doc raw", "filtered_transform", transformed_doc.reassemble())
             # log.save_object(
-            #     "Transformed doc normalized",
-            #     "transform_and_check_diff",
+            #     "Output doc normalized",
+            #     "filtered_transform",
             #     normalize_markdown(transformed_doc.reassemble()),
             # )
             if diff:
-                log.save_object("Transform diff", "transform_and_check_diff", diff)
+                log.save_object("Transform diff", "filtered_transform", diff)
             # if accepted_diff:
-            #     log.save_object("Accepted diff", "transform_and_check_diff", accepted_diff)
+            #     log.save_object("Accepted diff", "filtered_transform", accepted_diff)
             if rejected_diff:
-                log.save_object("Rejected diff", "transform_and_check_diff", rejected_diff)
+                log.save_object("Rejected diff", "filtered_transform", rejected_diff)
 
-            log.save_object("Final doc", "transform_and_check_diff", final_doc.reassemble())
+            log.save_object("Final doc", "filtered_transform", final_doc.reassemble())
 
             return final_doc
 

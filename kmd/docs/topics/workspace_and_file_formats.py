@@ -19,7 +19,7 @@ File formats and conventions:
   The file suffix indicates the item type (note, resource, etc.) and format
   (.md, .yml, etc.).
 
-- Many items have metadata atached, giving an item type (see `ItemType` in the
+- Many items have metadata attached, giving an item type (see `ItemType` in the
   kmd item model), a format (see `Format`), a title, and other optinal fields
   like a URL (if the item is or is derived from an online URL) and a
   description.
@@ -32,7 +32,6 @@ File formats and conventions:
   HTML. A common use case is to add `<span>` or `<div>` tags to wrap sections of
   the document with semantic meaning. Any HTML can be used but some conventions
   are helpful:
-
 
   - Timestamps from a transcription: `<span data-timestamp="12.34">Some
     trancribed text.</span>`

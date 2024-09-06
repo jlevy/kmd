@@ -87,6 +87,8 @@ NBSP = "\u00a0"
 
 HRULE = ("⋯ " * (CONSOLE_WRAP_WIDTH // 2)).strip()
 
+HRULE_SHORT = ("⋯ " * 20).strip()
+
 ## Symbols
 
 SYMBOL_SEP = "⎪"

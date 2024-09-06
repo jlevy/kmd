@@ -76,6 +76,7 @@ format-jinja = """
 [tool.poetry.scripts]
 kmd = "kmd.main:main"
 lint = "lint:main"
+test = "pytest:main"
 
 [tool.black]
 line-length = 100

@@ -1,7 +1,7 @@
 from kmd.config.settings import DEFAULT_FAST_MODEL
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import LLMMessage, LLMTemplate
-from kmd.text_docs.window_settings import WINDOW_1_PARA
+from kmd.text_docs.window_settings import WINDOW_4_PARA
 from kmd.model.llm_actions_model import CachedLLMAction
 from kmd.exec.action_registry import kmd_action
 
@@ -24,7 +24,7 @@ class Proofread(CachedLLMAction):
             ),
             template=LLMTemplate(
                 """
-                You are a careful and precise editor. Proofread the following text according to these rules:
+                Proofread the following text according to these rules:
 
                 - Correct only typos or spelling, grammar, capitalization, or punctuation mistakes.
 
@@ -53,5 +53,5 @@ class Proofread(CachedLLMAction):
                 Corrected text:
                 """
             ),
-            windowing=WINDOW_1_PARA,
+            windowing=WINDOW_4_PARA,
         )

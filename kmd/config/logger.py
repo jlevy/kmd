@@ -2,7 +2,7 @@ import threading
 import kmd.config.suppress_warnings  # noqa: F401
 import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 import logging
 from logging import ERROR, INFO, WARNING, Formatter
 from rich import reconfigure
@@ -144,6 +144,9 @@ def prefix_with_warn_emoji(line: str, emoji: str = EMOJI_WARN):
     return line
 
 
+LogLevel = Literal["debug", "info", "message", "warning", "error"]
+
+
 class CustomLogger:
     """
     Custom logger to be clearer about user messages and allow saving objects.
@@ -151,6 +154,12 @@ class CustomLogger:
 
     def __init__(self, name: str):
         self.logger = logging.getLogger(name)
+
+    def debug(self, *args, **kwargs):
+        self.logger.debug(*args, **kwargs)
+
+    def info(self, *args, **kwargs):
+        self.logger.info(*args, **kwargs)
 
     def message(self, *args, **kwargs):
         self.logger.warning(*args, **kwargs)
@@ -165,7 +174,16 @@ class CustomLogger:
             args = (prefix_with_warn_emoji(args[0]),) + args[1:]
         self.logger.error(*args, **kwargs)
 
-    def save_object(self, description: str, prefix_slug: Optional[str], obj: Any):
+    def log(self, level: LogLevel, *args, **kwargs):
+        getattr(self, level)(*args, **kwargs)
+
+    # Fallback for other attributes/methods.
+    def __getattr__(self, attr):
+        return getattr(self.logger, attr)
+
+    def save_object(
+        self, description: str, prefix_slug: Optional[str], obj: Any, level: LogLevel = "info"
+    ):
         prefix = prefix_slug + "." if prefix_slug else ""
         filename = f"{prefix}{slugify(description, separator='_')}.{new_timestamped_uid()}.txt"
         path = log_objects_dir() / filename
@@ -177,13 +195,10 @@ class CustomLogger:
                 with open(tmp_filename, "w") as f:
                     f.write(str(obj))
 
-        self.message("%s %s saved: %s", EMOJI_SAVED, description, path)
+        self.log(level, "%s %s saved: %s", EMOJI_SAVED, description, path)
 
     def dump_stack(self, all_threads: bool = True):
         self.logger.info("Stack trace dump:\n%s", current_stack_traces(all_threads))
-
-    def __getattr__(self, attr):
-        return getattr(self.logger, attr)
 
 
 def get_logger(name: str):

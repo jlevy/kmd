@@ -1,6 +1,6 @@
 import regex
 from textwrap import dedent
-from typing import List
+from typing import Any, List
 import marko
 from marko.inline import Link
 from marko.block import ListItem, Heading, HTMLBlock
@@ -71,12 +71,21 @@ def extract_links(file_path: str, include_internal=False) -> List[str]:
         return _tree_links(document, include_internal)
 
 
-def _tree_bullet_points(element):
-    bullet_points = []
+def _extract_text(element: Any) -> str:
+    if isinstance(element, str):
+        return element
+    elif hasattr(element, "children"):
+        return "".join(_extract_text(child) for child in element.children)
+    else:
+        return ""
+
+
+def _tree_bullet_points(element: marko.block.Document) -> List[str]:
+    bullet_points: List[str] = []
 
     def _find_bullet_points(element):
         if isinstance(element, ListItem):
-            bullet_points.append(element.children[0].children[0].children.strip())  # type: ignore
+            bullet_points.append(_extract_text(element).strip())
         elif hasattr(element, "children"):
             for child in element.children:
                 _find_bullet_points(child)
@@ -99,12 +108,6 @@ def _type_from_heading(heading: Heading) -> str:
         return f"h{heading.level}"
     else:
         raise ValueError(f"Unsupported heading: {heading}: level {heading.level}")
-
-
-def _extract_text(element):
-    if isinstance(element, str):
-        return element
-    return "".join(_extract_text(child) for child in element.children)
 
 
 ## Tests

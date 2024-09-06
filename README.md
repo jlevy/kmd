@@ -240,9 +240,10 @@ poetry self add poetry-plugin-up
 poetry build
 
 # Run pytests:
-pytest
-# Just one file, with outputs:
-pytest -s kmd/text_docs/text_doc.py
+poetry run test
+# Or within the poetry shell:
+pytest   # all tests
+pytest -s kmd/text_docs/text_doc.py  # one test, with outputs
 
 # Before committing, be sure to check formatting/linting issues:
 poetry run lint
