@@ -3,9 +3,10 @@ Frontmatter format: Read and write files with YAML frontmatter, to support conve
 metadata on text files in a way that is compatible with browsers, editors, and Markdown
 parsers.
 
-Frontmatter can be either enclosed in `---` delimiters, as with Jekyll, or between
-`<!---` and `--->` delimiters for convenience in text or HTML files. These markers must
-be alone on their own lines.
+This is common with Jekyll-style Markdown files but also works with other formats.
+Frontmatter can be enclosed either in `---` delimiters, as is typical with Markdown,
+or between `<!---` and `--->` delimiters for convenience in text or HTML files.
+These markers must be alone on their own lines.
 """
 
 from enum import Enum

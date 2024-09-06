@@ -4,7 +4,7 @@ from typing import List, Optional
 from kmd.config import colors
 from kmd.config.logger import get_logger
 from kmd.file_storage.workspaces import current_workspace
-from kmd.file_storage.yaml_util import read_yaml_file, to_yaml_string, write_yaml_file
+from kmd.file_formats.yaml_util import read_yaml_file, to_yaml_string, write_yaml_file
 from kmd.lang_tools.clean_headings import clean_heading, summary_heading
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType

@@ -13,7 +13,7 @@ from kmd.model.file_formats_model import FileExt, Format
 from kmd.model.media_model import MediaMetadata
 from kmd.model.operations_model import Operation, OperationSummary, Source
 from kmd.util.time_util import iso_format_z
-from kmd.file_storage.yaml_util import from_yaml_string
+from kmd.file_formats.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import FileFormatError

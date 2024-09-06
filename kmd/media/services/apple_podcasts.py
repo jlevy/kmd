@@ -2,7 +2,7 @@ from typing import Optional, List, Dict, Any, Tuple
 from urllib.parse import urlparse, parse_qs
 from datetime import date
 from yt_dlp.utils import DownloadError
-from kmd.file_storage.yaml_util import to_yaml_string
+from kmd.file_formats.yaml_util import to_yaml_string
 from kmd.media.yt_dlp_utils import ydl_download_audio, ydl_extract_info
 from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ApiResultError
