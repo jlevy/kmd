@@ -1,10 +1,11 @@
 from pathlib import Path
 from dataclasses import fields
-from typing import List, Tuple
+from typing import Callable, List, Optional, Tuple
 from kmd.concepts.embeddings import Embeddings
 from kmd.concepts.text_similarity import find_related_pairs, relate_texts_by_embedding
 from kmd.config.logger import get_logger
 from kmd.file_storage.workspaces import current_workspace, current_workspace_tmp_dir
+from kmd.model.errors_model import InvalidInput
 from kmd.model.graph_model import GraphData, Node, Link
 from kmd.model.items_model import Item, ItemRelations, ItemType
 from kmd.shell_tools.native_tools import view_file_native
@@ -83,7 +84,12 @@ def related_concepts_as_links(concept_texts: List[Tuple[str, str]]) -> List[Link
     return links
 
 
-def assemble_workspace_graph() -> GraphData:
+ItemFilter = Callable[[Item], bool]
+
+
+def assemble_workspace_graph(
+    item_filter: Optional[ItemFilter] = None,
+) -> GraphData:
     """
     Get the graph for the entire current workspace.
     """
@@ -95,6 +101,8 @@ def assemble_workspace_graph() -> GraphData:
     for store_path in ws.walk_items():
         try:
             item = ws.load(store_path)
+            if item_filter and not item_filter(item):
+                continue
             node, links = item_as_node_links(item)
             graph_data.merge([node], links)
             if item.type == ItemType.concept:
@@ -105,7 +113,11 @@ def assemble_workspace_graph() -> GraphData:
     links = related_concepts_as_links(concept_texts)
     graph_data.merge([], links)
 
-    return graph_data.prune()
+    graph_data_pruned = graph_data.prune()
+    if len(graph_data_pruned.nodes) == 0:
+        raise InvalidInput("No nodes in graph matching filter")
+
+    return graph_data_pruned
 
 
 def open_graph_view(graph: GraphData):

@@ -19,6 +19,7 @@ from kmd.help.help_page import output_help_page
 from kmd.commands.command_registry import kmd_command
 from kmd.file_formats.yaml_util import to_yaml_string
 from kmd.media.web import fetch_and_cache
+from kmd.model.items_model import ItemType
 from kmd.preconditions import ALL_PRECONDITIONS
 from kmd.preconditions.precondition_checks import actions_matching_paths
 from kmd.text_chunks.parse_divs import parse_divs
@@ -702,11 +703,21 @@ def search(
 
 
 @kmd_command
-def graph_view() -> None:
+def graph_view(
+    docs_only: bool = False, concepts_only: bool = False, resources_only: bool = False
+) -> None:
     """
     Open a graph view of the current workspace.
     """
-    open_graph_view(assemble_workspace_graph())
+    if docs_only:
+        item_filter = lambda item: item.type == ItemType.doc
+    elif concepts_only:
+        item_filter = lambda item: item.type == ItemType.concept
+    elif resources_only:
+        item_filter = lambda item: item.type == ItemType.resource
+    else:
+        item_filter = None
+    open_graph_view(assemble_workspace_graph(item_filter))
 
 
 @kmd_command
