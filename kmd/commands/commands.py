@@ -9,7 +9,7 @@ from rich import get_console
 from strif import copyfile_atomic
 from kmd.action_defs import load_all_actions
 from kmd.commands.command_results import CommandResult
-from kmd.file_formats.frontmatter_format import fmf_strip_frontmatter
+from kmd.file_formats.frontmatter_format import fmf_read, fmf_strip_frontmatter
 from kmd.file_storage.file_listings import walk_by_folder
 from kmd.file_storage.file_store import initialize_store_dirs
 from kmd.form_input.prompt_input import prompt_simple_string
@@ -302,7 +302,7 @@ def edit(path: Optional[str] = None, all: bool = False) -> None:
 def save(path: Optional[str] = None) -> None:
     """
     Save the current selection to the given directory (which must exist), or to the
-    current directory if no target given.
+    current directory if no target given. Output will have YAML frontmatter.
     """
     ws = current_workspace()
     store_paths = ws.get_selection()
@@ -327,6 +327,24 @@ def strip_frontmatter(*paths: str) -> None:
     for path in paths:
         log.message("Stripping frontmatter from: %s", path)
         fmf_strip_frontmatter(path)
+
+
+@kmd_command
+def size_summary(*paths: str, slow: bool = False) -> None:
+    """
+    Show a summary of the size and HTML structure of the items at the given paths.
+    """
+    input_paths = _assemble_paths(*paths)
+    output()
+    for input_path in input_paths:
+        output(f"{input_path}:", color=COLOR_EMPH)
+        body, _frontmatter = fmf_read(input_path)
+        if body:
+            parsed_body = parse_divs(body)
+            output(parsed_body.size_summary(fast=not slow), text_wrap=Wrap.INDENT_ONLY)
+        else:
+            output("No text body", text_wrap=Wrap.INDENT_ONLY)
+        output()
 
 
 @kmd_command
@@ -414,26 +432,6 @@ def unarchive(*paths: str) -> None:
     for path in paths:
         store_path = ws.unarchive(StorePath(path))
         output_status(f"Unarchived: {store_path}")
-
-
-@kmd_command
-def size_summary(*paths: str, slow: bool = False) -> None:
-    """
-    Show a summary of the size and HTML structure of the items at the given paths.
-    """
-    store_paths = _check_store_paths(_assemble_paths(*paths))
-    ws = current_workspace()
-    output()
-    for store_path in store_paths:
-        item = ws.load(store_path)
-        output(f"{store_path}:", color=COLOR_EMPH)
-
-        if item.body:
-            parsed_body = parse_divs(item.body)
-            output(f"{parsed_body.size_summary(fast=not slow)}", text_wrap=Wrap.INDENT_ONLY)
-        else:
-            output("No text body", text_wrap=Wrap.INDENT_ONLY)
-        output()
 
 
 @kmd_command

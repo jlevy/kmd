@@ -321,7 +321,14 @@ class TextDoc:
         raise ValueError(f"Unsupported unit for TextDoc: {unit}")
 
     def size_summary(self) -> str:
-        return f"{self.size(TextUnit.bytes)} bytes ({self.size(TextUnit.paragraphs)} paragraphs, {self.size(TextUnit.sentences)} sentences, {self.size(TextUnit.words)} words, {self.size(TextUnit.wordtoks)} wordtoks)"
+        return (
+            f"{self.size(TextUnit.bytes)} bytes ("
+            f"{self.size(TextUnit.paragraphs)} paragraphs, "
+            f"{self.size(TextUnit.sentences)} sentences, "
+            f"{self.size(TextUnit.words)} words, "
+            f"{self.size(TextUnit.wordtoks)} wordtoks, "
+            f"{self.size(TextUnit.tiktokens)} tiktokens)"
+        )
 
     def as_wordtok_to_sent(self, bof_eof=False) -> Generator[Tuple[str, SentIndex], None, None]:
         if bof_eof:
