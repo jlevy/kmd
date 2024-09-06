@@ -11,7 +11,7 @@ from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
-from kmd.model.arguments_model import InputArg, StorePath, is_store_path
+from kmd.model.arguments_model import InputArg, StorePath
 from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.util.type_utils import not_none
 from kmd.config.logger import get_logger

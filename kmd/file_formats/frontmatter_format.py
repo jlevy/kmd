@@ -24,6 +24,7 @@ from kmd.file_formats.yaml_util import (
 )
 from kmd.model.errors_model import FileFormatError
 from kmd.text_formatting.text_formatting import fmt_path
+import shutil
 
 
 class FmFormat(Enum):
@@ -85,10 +86,10 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
     return content, metadata
 
 
-def fmf_read_metadata(file_path: Path | str) -> Tuple[Optional[str], int]:
+def fmf_read_frontmatter(file_path: Path | str) -> Tuple[Optional[str], int]:
     """
     Reads the metadata frontmatter from the file and returns the metadata string and
-    the seek offset of the beginning of the content.
+    the seek offset of the beginning of the content. Does not read content.
     """
     metadata_lines = []
     in_metadata = False
@@ -140,9 +141,9 @@ def fmf_read_metadata(file_path: Path | str) -> Tuple[Optional[str], int]:
 
 def fmf_read_raw(file_path: Path | str) -> Tuple[str, Optional[str]]:
     """
-    Reads the raw content and metadata from the file.
+    Reads the full content and raw (unparsed) metadata from the file, both as strings.
     """
-    metadata_str, offset = fmf_read_metadata(file_path)
+    metadata_str, offset = fmf_read_frontmatter(file_path)
 
     with open(file_path, "r") as f:
         f.seek(offset)
@@ -151,10 +152,31 @@ def fmf_read_raw(file_path: Path | str) -> Tuple[str, Optional[str]]:
     return content, metadata_str
 
 
+def fmf_strip_frontmatter(file_path: Path | str) -> None:
+    """
+    Strips the metadata frontmatter from the file. Does not read the content
+    so works quickly.
+    """
+    _, offset = fmf_read_frontmatter(file_path)
+    if offset > 0:
+        temp_file_path = f"{file_path}.stripped.tmp"
+        try:
+            with open(file_path, "r") as original_file, open(temp_file_path, "w") as temp_file:
+                original_file.seek(offset)
+                shutil.copyfileobj(original_file, temp_file)
+            os.replace(temp_file_path, file_path)
+        except Exception as e:
+            try:
+                os.remove(temp_file_path)
+            except FileNotFoundError:
+                pass
+            raise e
+
+
 ## Tests
 
 
-def test_fmf():
+def test_fmf_basic():
     os.makedirs("tmp", exist_ok=True)
 
     # Test with Markdown.
@@ -234,22 +256,6 @@ def test_fmf():
     assert read_content_code.strip() == content_code
     assert read_metadata_code == metadata_code
 
-    # Test offset.
-    file_path_md = "tmp/test_offset.md"
-    content_md = "Hello, World!"
-    metadata_md = {"title": "Test Title", "author": "Test Author"}
-    fmf_write(file_path_md, content_md, metadata_md)
-    result, offset = fmf_read_metadata(file_path_md)
-    assert result == """author: Test Author\ntitle: Test Title\n"""
-    assert offset == len(result) + 2 * (len("---") + 1)
-
-    # Test a zero-length file.
-    zero_length_file = "tmp/empty_file.txt"
-    Path(zero_length_file).touch()
-
-    result, offset = fmf_read_metadata(zero_length_file)
-    assert (result, offset) == (None, 0)
-
 
 def test_fmf_with_custom_key_sort():
     os.makedirs("tmp", exist_ok=True)
@@ -269,3 +275,33 @@ def test_fmf_with_custom_key_sort():
     assert lines[1].strip() == "date: '2022-01-01'"
     assert lines[2].strip() == "title: Test Title"
     assert lines[3].strip() == "author: Test Author"
+
+
+def test_fmf_metadata():
+    os.makedirs("tmp", exist_ok=True)
+
+    # Test offset.
+    file_path_md = "tmp/test_offset.md"
+    content_md = "Hello, World!"
+    metadata_md = {"title": "Test Title", "author": "Test Author"}
+    fmf_write(file_path_md, content_md, metadata_md)
+    result, offset = fmf_read_frontmatter(file_path_md)
+    assert result == """author: Test Author\ntitle: Test Title\n"""
+    assert offset == len(result) + 2 * (len("---") + 1)
+
+    # Test a zero-length file.
+    zero_length_file = "tmp/empty_file.txt"
+    Path(zero_length_file).touch()
+
+    result, offset = fmf_read_frontmatter(zero_length_file)
+    assert (result, offset) == (None, 0)
+
+    # Test stripping metadata from Markdown.
+    file_path_md = "tmp/test_strip_metadata.md"
+    content_md = "Hello, World!"
+    metadata_md = {"title": "Test Title", "author": "Test Author"}
+    fmf_write(file_path_md, content_md, metadata_md)
+    fmf_strip_frontmatter(file_path_md)
+    with open(file_path_md, "r") as f:
+        stripped_content = f.read()
+    assert stripped_content.strip() == content_md

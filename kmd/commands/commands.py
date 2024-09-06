@@ -6,15 +6,17 @@ from typing import List, Optional, Sequence, cast
 from datetime import datetime
 from humanize import naturaltime, naturalsize
 from rich import get_console
+from strif import copyfile_atomic
 from kmd.action_defs import load_all_actions
 from kmd.commands.command_results import CommandResult
+from kmd.file_formats.frontmatter_format import fmf_strip_frontmatter
 from kmd.file_storage.file_listings import walk_by_folder
 from kmd.file_storage.file_store import initialize_store_dirs
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.help.assistant import assistance
 from kmd.help.help_page import output_help_page
 from kmd.commands.command_registry import kmd_command
-from kmd.file_storage.yaml_util import to_yaml_string
+from kmd.file_formats.yaml_util import to_yaml_string
 from kmd.media.web import fetch_and_cache
 from kmd.preconditions import ALL_PRECONDITIONS
 from kmd.preconditions.precondition_checks import actions_matching_paths
@@ -65,7 +67,6 @@ from kmd.config.logger import get_logger, log_file_path
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
 from kmd.util.type_utils import not_none
-from kmd.util.url import Url
 from kmd.version import get_version
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 
@@ -295,6 +296,37 @@ def edit(path: Optional[str] = None, all: bool = False) -> None:
         input_paths = [input_paths[0]]
 
     edit_files(*input_paths)
+
+
+@kmd_command
+def save(path: Optional[str] = None) -> None:
+    """
+    Save the current selection to the given directory (which must exist), or to the
+    current directory if no target given.
+    """
+    ws = current_workspace()
+    store_paths = ws.get_selection()
+    target_dir = Path(path) if path else Path(".")
+
+    if not target_dir.exists():
+        raise InvalidInput(f"Target directory does not exist: {target_dir}")
+
+    for store_path in store_paths:
+        target_path = target_dir / basename(store_path)
+        log.message("Saving: %s -> %s", store_path, target_path)
+        copyfile_atomic(ws.base_dir / store_path, target_path)
+
+
+@kmd_command
+def strip_frontmatter(*paths: str) -> None:
+    """
+    Strip the frontmatter from the given files.
+    """
+    if not paths:
+        raise InvalidInput("Provide one or more paths")
+    for path in paths:
+        log.message("Stripping frontmatter from: %s", path)
+        fmf_strip_frontmatter(path)
 
 
 @kmd_command
@@ -600,10 +632,14 @@ def files(
 
                 # Now show all the files in that directory.
                 if not summary:
-                    file_size = naturalsize(getsize(full_path))
+                    file_size = naturalsize(getsize(full_path)).replace("Bytes", "B")
 
                     if not iso_time:
-                        file_mod_time = naturaltime(datetime.fromtimestamp(getmtime(full_path)))
+                        file_mod_time = (
+                            naturaltime(datetime.fromtimestamp(getmtime(full_path)))
+                            .replace("second", "sec")
+                            .replace("minute", "min")
+                        )
                     else:
                         file_mod_time = (
                             datetime.fromtimestamp(getmtime(full_path)).isoformat().split(".", 1)[0]
@@ -613,9 +649,9 @@ def files(
                     display_name = f"{parent_dir}/{filename}" if parent_dir != "." else filename
                     display_name = fmt_path(display_name)
 
-                    # TODO: Show actual lines and words of body text as well as size with wc. Indicate if body is empty.
+                    # TODO: Option to show size summary. Indicate if body is empty.
                     output(
-                        "  %-10s %-14s  %s",
+                        "  %8s  %12s  %s",
                         file_size,
                         file_mod_time,
                         display_name,

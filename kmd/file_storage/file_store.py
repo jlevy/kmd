@@ -33,7 +33,7 @@ from kmd.text_formatting.text_formatting import fmt_path, fmt_lines
 from kmd.text_ui.command_output import output
 from kmd.util.file_utils import move_file
 from kmd.util.hash_utils import hash_file
-from kmd.util.log_calls import format_duration, log_calls
+from kmd.util.log_calls import format_duration
 from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import Url, is_url
