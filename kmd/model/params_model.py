@@ -103,6 +103,12 @@ COMMON_ACTION_PARAMS = {
         [chunk_unit.value for chunk_unit in TextUnit],
         default_value=None,
     ),
+    "sentence_splitter": Param(
+        "sentence_splitter",
+        "The sentence splitter to use for splitting text into sentences.",
+        ["spacy", "regex"],
+        default_value="spacy",
+    ),
 }
 
 # Parameters that are available when an action is invoked.

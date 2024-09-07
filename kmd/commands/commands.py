@@ -721,11 +721,13 @@ def graph_view(
 
 
 @kmd_command
-def canonicalize(*paths: str) -> None:
+def normalize(*paths: str) -> None:
     """
-    Canonicalize the given items, reformatting files' YAML and text or Markdown according
+    Normalize the given items, reformatting files' YAML and text or Markdown according
     to our conventions.
     """
+    # TODO: Make a version of this that works outside the workspace on Markdown files,
+    # (or another verion just called `format` that does this).
     ws = current_workspace()
     store_paths = _check_store_paths(_assemble_paths(*paths))
 
@@ -734,7 +736,7 @@ def canonicalize(*paths: str) -> None:
         log.message("Canonicalizing: %s", fmt_path(store_path))
         for item_store_path in ws.walk_items(store_path):
             try:
-                ws.canonicalize(item_store_path)
+                ws.normalize(item_store_path)
             except InvalidInput as e:
                 log.warning(
                     "%s Could not canonicalize %s: %s", EMOJI_WARN, fmt_path(item_store_path), e

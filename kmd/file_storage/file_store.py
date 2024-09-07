@@ -491,15 +491,14 @@ class FileStore:
             for filename in filenames:
                 yield StorePath(join(store_dirname, filename))
 
-    def canonicalize(self, store_path: StorePath) -> StorePath:
+    def normalize(self, store_path: StorePath) -> StorePath:
         """
-        Canonicalize an item to make sure its filename and contents are in current format.
+        Normalize an item or all items in a folder to make sure contents are in current
+        format.
         """
-        log.info("Canonicalizing item: %s", fmt_path(store_path))
+        log.info("Normalizing item: %s", fmt_path(store_path))
 
         item = self.load(store_path)
-        self.archive(store_path)
         new_store_path = self.save(item)
 
-        # TODO: Handle checking if filename should change (may want this if we alter the slugify rules, etc.)
         return new_store_path

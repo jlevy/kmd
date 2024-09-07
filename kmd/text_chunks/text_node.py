@@ -2,6 +2,8 @@ from copy import copy
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import List, Optional
+from kmd.lang_tools.sentence_split_regex import split_sentences_regex
+from kmd.lang_tools.sentence_split_spacy import split_sentences_spacy
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_formatting.html_in_md import div_wrapper
@@ -40,11 +42,11 @@ class TextNode:
 
     @cached_property
     def _text_doc_fast(self) -> TextDoc:
-        return TextDoc.from_text(self.contents, fast=True)
+        return TextDoc.from_text(self.contents, sentence_splitter=split_sentences_regex)
 
     @cached_property
     def _text_doc_slow(self) -> TextDoc:
-        return TextDoc.from_text(self.contents, fast=False)
+        return TextDoc.from_text(self.contents, sentence_splitter=split_sentences_spacy)
 
     def text_doc(self, fast: bool = False) -> TextDoc:
         return self._text_doc_fast if fast else self._text_doc_slow

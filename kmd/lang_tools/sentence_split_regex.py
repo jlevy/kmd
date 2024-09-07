@@ -26,7 +26,7 @@ def heuristic_end_of_sentence(word: str) -> bool:
     return bool(SENTENCE_RE.search(word))
 
 
-def split_sentences_fast(
+def split_sentences_regex(
     text: str,
     heuristic: Callable[[str], bool] = heuristic_end_of_sentence,
     min_length: int = SENTENCE_MIN_LENGTH,

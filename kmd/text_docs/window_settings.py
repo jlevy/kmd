@@ -61,3 +61,13 @@ WINDOW_16_PARA = WindowSettings(
     TextUnit.paragraphs, size=16, shift=16, min_overlap=0, separator=WINDOW_BR_SEP
 )
 """Process 16 paragraphs at a time."""
+
+WINDOW_32_PARA = WindowSettings(
+    TextUnit.paragraphs, size=32, shift=32, min_overlap=0, separator=WINDOW_BR_SEP
+)
+"""Process 32 paragraphs at a time."""
+
+WINDOW_64_PARA = WindowSettings(
+    TextUnit.paragraphs, size=64, shift=64, min_overlap=0, separator=WINDOW_BR_SEP
+)
+"""Process 64 paragraphs at a time."""

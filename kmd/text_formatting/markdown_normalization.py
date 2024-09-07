@@ -10,7 +10,7 @@ from marko.parser import Parser
 from marko.source import Source
 from marko.block import HTMLBlock
 from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
-from kmd.lang_tools.sentence_split_regex import split_sentences_fast
+from kmd.lang_tools.sentence_split_regex import split_sentences_regex
 
 
 def _normalize_html_comments(text: str, break_str: str = "\n\n") -> str:
@@ -264,7 +264,7 @@ def wrap_lines_and_break_sentences(
     text: str,
     initial_indent: str,
     subsequent_indent: str,
-    split_sentences: Callable[[str], List[str]] = split_sentences_fast,
+    split_sentences: Callable[[str], List[str]] = split_sentences_regex,
     width: int = DEFAULT_WRAP_WIDTH,
 ) -> str:
     """

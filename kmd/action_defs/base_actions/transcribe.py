@@ -30,7 +30,7 @@ class Transcribe(CachedDocAction):
             type=ItemType.doc,
             body=transcription,
             format=Format.html,  # Important to note this since we put in timestamp spans.
-            file_ext=FileExt.md,
+            file_ext=FileExt.html,
         )
 
         return result_item

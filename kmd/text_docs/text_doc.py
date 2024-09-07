@@ -10,11 +10,10 @@ from textwrap import dedent
 from typing import Callable, Dict, Generator, Iterable, List, Optional, Tuple
 import regex
 from kmd.config.logger import get_logger
-from kmd.lang_tools.sentence_split_regex import split_sentences_fast
+from kmd.lang_tools.sentence_split import Splitter, split_sentences
 from kmd.text_docs.sizes import TextUnit, size, size_in_bytes
 from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
 from kmd.model.errors_model import UnexpectedError
-from kmd.lang_tools.sentence_split_spacy import split_sentences_spacy
 from kmd.text_docs.tiktoken_utils import tiktoken_len
 from kmd.text_docs.wordtoks import (
     BOF_TOK,
@@ -77,9 +76,11 @@ class Paragraph:
 
     @classmethod
     @tally_calls(level="warning", min_total_runtime=5)
-    def from_text(cls, text: str, char_offset: int = -1, fast: bool = False) -> "Paragraph":
+    def from_text(
+        cls, text: str, char_offset: int = -1, sentence_splitter: Optional[Splitter] = None
+    ) -> "Paragraph":
         # TODO: Lazily compute sentences for better performance.
-        sent_values = split_sentences_fast(text) if fast else split_sentences_spacy(text)
+        sent_values = split_sentences(text, sentence_splitter)
         sent_offset = 0
         sentences = []
         for sent_str in sent_values:
@@ -137,14 +138,16 @@ class TextDoc:
 
     @classmethod
     @tally_calls(level="warning", min_total_runtime=5)
-    def from_text(cls, text: str, fast: bool = False) -> "TextDoc":
+    def from_text(cls, text: str, sentence_splitter: Optional[Splitter] = None) -> "TextDoc":
         text = text.strip()
         paragraphs = []
         char_offset = 0
         for para in text.split(PARA_BR_STR):
             stripped_para = para.strip()
             if stripped_para:
-                paragraphs.append(Paragraph.from_text(stripped_para, char_offset, fast=fast))
+                paragraphs.append(
+                    Paragraph.from_text(stripped_para, char_offset, sentence_splitter)
+                )
                 char_offset += len(para) + len(PARA_BR_STR)
         return cls(paragraphs=paragraphs)
 

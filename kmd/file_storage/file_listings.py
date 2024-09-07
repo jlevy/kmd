@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from os.path import relpath
+from os.path import relpath, abspath
 from typing import Generator, List, Tuple
 from kmd.config.logger import get_logger
 from kmd.model.file_formats_model import (
@@ -34,7 +34,8 @@ def walk_by_folder(
 
     # Special case of a single file.
     if start_path.is_file():
-        yield str(start_path.parent), [start_path.name]
+        rel_dirname = relpath(start_path.parent, relative_to) if relative_to else start_path.parent
+        yield rel_dirname, [start_path.name]
         return
 
     # Walk the directory.
@@ -52,5 +53,5 @@ def walk_by_folder(
             filtered_filenames = [f for f in filenames if not is_ignored(f)]
 
         if filtered_filenames:
-            rel_dirname = relpath(dirname, relative_to) if relative_to else dirname
+            rel_dirname = relpath(abspath(dirname), relative_to) if relative_to else dirname
             yield rel_dirname, filtered_filenames
