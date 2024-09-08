@@ -22,6 +22,7 @@ from kmd.text_formatting.text_formatting import fmt_lines
 from kmd.text_docs.wordtoks import (
     join_wordtoks,
 )
+from kmd.util.task_stack import task_stack
 
 log = get_logger(__name__)
 
@@ -159,6 +160,8 @@ def sliding_wordtok_window_transform(
     nwindows = ceil(nwordtoks / settings.shift)
     sep_wordtoks = [settings.separator] if settings.separator else []
 
+    task_stack().push("window_transform", nwindows, "window")
+
     log.message(
         "Sliding word transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
         nwordtoks,
@@ -213,6 +216,8 @@ def sliding_wordtok_window_transform(
 
             output_wordtoks = output_wordtoks[:offset] + sep_wordtoks + new_wordtoks
 
+        task_stack().next_part()
+
     log.message(
         "Sliding word transform: Done, output total %s wordtoks",
         len(output_wordtoks),
@@ -221,6 +226,9 @@ def sliding_wordtok_window_transform(
     # An alternate approach would be to accumulate the document sentences instead of wordtoks to
     # avoid re-parsing, but this probably a little simpler.
     output_doc = TextDoc.from_text(join_wordtoks(output_wordtoks))
+
+    task_stack().pop()
+
     return output_doc
 
 

@@ -4,7 +4,7 @@ from xonsh.completers.completer import RichCompletion
 from kmd.config.text_styles import (
     COLOR_ACTION_TEXT,
     COLOR_COMMAND_TEXT,
-    EMOJI_ACTION,
+    EMOJI_TASK,
 )
 from kmd.docs.faq_headings import faq_headings
 from kmd.model.params_model import Param
@@ -56,7 +56,7 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
         action_completions = [
             RichCompletion(
                 name,
-                display=f"{name} {EMOJI_ACTION}",
+                display=f"{name} {EMOJI_TASK}",
                 description=single_line(_actions[name].description or "xxx"),
                 style=COLOR_ACTION_TEXT,
                 append_space=True,

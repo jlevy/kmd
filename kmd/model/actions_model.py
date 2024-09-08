@@ -4,7 +4,6 @@ from dataclasses import dataclass, fields
 from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, cast
 from kmd.config.logger import NONFATAL_EXCEPTIONS, get_logger
-from kmd.config.text_styles import EMOJI_ACTION
 from kmd.lang_tools.inflection import plural
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
@@ -22,6 +21,7 @@ from kmd.text_ui.command_output import fill_text
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_utils import format_key_value
 from kmd.util.string_template import StringTemplate
+from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import instantiate_as_type
 
 
@@ -287,14 +287,16 @@ class ForEachItemAction(Action):
     expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
 
     def run(self, items: ActionInput) -> ActionResult:
-        result_items = []
-        errors = []
+
+        task_stack().push(self.name, total_parts=len(items), unit="item")
+
+        result_items: List[Item] = []
+        errors: List[Exception] = []
         multiple_inputs = len(items) > 1
 
         for i, item in enumerate(items):
             log.message(
-                "%s Action `%s`: Item %d of %d:\n%s",
-                EMOJI_ACTION,
+                "Action `%s`: Item %d of %d:\n%s",
                 self.name,
                 i + 1,
                 len(items),
@@ -303,8 +305,11 @@ class ForEachItemAction(Action):
             try:
                 result_item = self.run_item(item)
                 result_items.append(result_item)
+                had_error = False
             except NONFATAL_EXCEPTIONS as e:
                 errors.append(e)
+                had_error = True
+
                 if multiple_inputs:
                     log.error(
                         "Error processing item; continuing with others: %s: %s",
@@ -314,6 +319,8 @@ class ForEachItemAction(Action):
                 else:
                     # If there's only one input, fail fast.
                     raise e
+            finally:
+                task_stack().next_part(last_had_error=had_error)
 
         if errors:
             log.error(
@@ -321,6 +328,9 @@ class ForEachItemAction(Action):
                 len(errors),
                 plural("error", len(errors)),
             )
+
+        task_stack().pop()
+
         return ActionResult(result_items)
 
     @abstractmethod

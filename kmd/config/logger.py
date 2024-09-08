@@ -17,6 +17,7 @@ from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, RICH_STYLES, KmdHigh
 from kmd.model.errors_model import SelfExplanatoryError
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.stack_traces import current_stack_traces
+from kmd.util.task_stack import task_stack_prefix_str
 
 LOG_DIR_NAME = ".kmd/logs"
 LOG_FILE_NAME = "kmd.log"
@@ -138,10 +139,19 @@ def logging_setup():
         logger.addHandler(file_handler)
 
 
-def prefix_with_warn_emoji(line: str, emoji: str = EMOJI_WARN):
-    if emoji not in line:
-        return f"{emoji} {line}"
-    return line
+def prefix(line, emoji: str = ""):
+    prefix = task_stack_prefix_str()
+    if prefix:
+        prefix += " "
+    if emoji:
+        prefix = f"{emoji} {prefix}"
+    return f"{prefix}{line}"
+
+
+def prefix_args(args, emoji: str = ""):
+    if len(args) > 0:
+        args = (prefix(args[0], emoji),) + args[1:]
+    return args
 
 
 LogLevel = Literal["debug", "info", "message", "warning", "error"]
@@ -156,23 +166,19 @@ class CustomLogger:
         self.logger = logging.getLogger(name)
 
     def debug(self, *args, **kwargs):
-        self.logger.debug(*args, **kwargs)
+        self.logger.debug(*prefix_args(args), **kwargs)
 
     def info(self, *args, **kwargs):
-        self.logger.info(*args, **kwargs)
+        self.logger.info(*prefix_args(args), **kwargs)
 
     def message(self, *args, **kwargs):
-        self.logger.warning(*args, **kwargs)
+        self.logger.warning(*prefix_args(args), **kwargs)
 
     def warning(self, *args, **kwargs):
-        if len(args) > 0:
-            args = (prefix_with_warn_emoji(args[0]),) + args[1:]
-        self.logger.warning(*args, **kwargs)
+        self.logger.warning(*prefix_args(args, EMOJI_WARN), **kwargs)
 
     def error(self, *args, **kwargs):
-        if len(args) > 0:
-            args = (prefix_with_warn_emoji(args[0]),) + args[1:]
-        self.logger.error(*args, **kwargs)
+        self.logger.error(*prefix_args(args, EMOJI_WARN), **kwargs)
 
     def log(self, level: LogLevel, *args, **kwargs):
         getattr(self, level)(*args, **kwargs)

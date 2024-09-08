@@ -1,7 +1,6 @@
 from typing import List, Optional
 from kmd.action_defs import look_up_action
 from kmd.exec.action_exec import run_action
-from kmd.config.text_styles import EMOJI_ACTION
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.config.logger import get_logger
@@ -11,7 +10,7 @@ from kmd.model.arguments_model import StorePath
 from kmd.model.operations_model import Operation
 from kmd.model.preconditions_model import Precondition
 from kmd.exec.combiners import Combiner, combine_as_paragraphs
-from kmd.text_ui.command_output import output_separator
+from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
@@ -46,9 +45,11 @@ class SequenceAction(Action):
         self.action_names = action_names
 
     def run(self, items: ActionInput) -> ActionResult:
+        task_stack().push(self.name, total_parts=len(self.action_names), unit="part")
+
         look_up_actions(self.action_names)  # Validate action names.
 
-        log.message("%s Begin action sequence `%s`", EMOJI_ACTION, self.name)
+        log.message("Begin action sequence `%s`", self.name)
 
         original_input_paths = [not_none(item.store_path) for item in items]
         transient_outputs: List[Item] = []
@@ -58,10 +59,10 @@ class SequenceAction(Action):
                 if not item.store_path:
                     raise InvalidInput("Item must have a store path: %s", item)
 
-            output_separator()
+            task_stack().next_part()
+
             log.message(
-                "%s Action sequence `%s`: Part %s of %s: `%s`",
-                EMOJI_ACTION,
+                "Action sequence `%s`: Part %s of %s: `%s`",
                 self.name,
                 i + 1,
                 len(self.action_names),
@@ -94,7 +95,7 @@ class SequenceAction(Action):
             assert item.store_path
             ws.archive(StorePath(item.store_path))
 
-        output_separator()
+        task_stack().pop()
 
         return ActionResult(items)
 
@@ -139,6 +140,8 @@ class ComboAction(Action):
         self.combiner = combiner
 
     def run(self, items: ActionInput) -> ActionResult:
+        task_stack().push(self.name, total_parts=len(self.action_names), unit="part")
+
         look_up_actions(self.action_names)  # Validate action names.
 
         for item in items:
@@ -150,10 +153,10 @@ class ComboAction(Action):
         results: List[ActionResult] = []
 
         for i, action_name in enumerate(self.action_names):
-            output_separator()
+            task_stack().next_part()
+
             log.message(
-                "%s Action combo `%s`: Part %s of %s: %s",
-                EMOJI_ACTION,
+                "Action combo `%s`: Part %s of %s: %s",
                 self.name,
                 i + 1,
                 len(self.action_names),
@@ -166,7 +169,7 @@ class ComboAction(Action):
 
         combined_result = self.combiner(self, items, results)
 
-        output_separator()
+        task_stack().pop()
 
         log.message(
             "Combined output of %s actions on %s inputs: %s",

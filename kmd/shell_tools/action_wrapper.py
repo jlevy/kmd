@@ -11,7 +11,7 @@ from kmd.model.actions_model import Action
 from kmd.model.params_model import RUNTIME_ACTION_PARAMS
 from kmd.shell_tools.exception_printing import summarize_traceback
 from kmd.shell_tools.option_parsing import parse_shell_args
-from kmd.text_ui.command_output import output
+from kmd.text_ui.command_output import output, output_separator
 from kmd.util.log_calls import log_tallies
 
 log = get_logger(__name__)
@@ -57,6 +57,7 @@ class ShellCallableAction:
             return CommandResult(exception=e)
         finally:
             log_tallies(if_slower_than=10.0)
+            output_separator()
 
         return CommandResult(
             selection=current_workspace().get_selection(),

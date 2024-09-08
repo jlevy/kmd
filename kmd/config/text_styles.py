@@ -68,7 +68,7 @@ COLOR_WARN = "bright_red"
 
 COLOR_ERROR = "bright_red"
 
-COLOR_ACTION = "magenta"
+COLOR_TASK = "magenta"
 
 COLOR_SAVED = "blue"
 
@@ -106,7 +106,7 @@ PROMPT_ASSIST = "(help) ❯"
 
 EMOJI_HINT = "👉"
 
-EMOJI_ACTION = "⛭"
+EMOJI_TASK = "⛭"
 
 EMOJI_WARN = "△"
 
@@ -125,6 +125,8 @@ EMOJI_ASSISTANT = "🤖"
 EMOJI_TRUE = "✓"
 
 EMOJI_FALSE = "✗"
+
+EMOJI_TASK_SEP = "›"
 
 
 ## Rich setup
@@ -161,8 +163,11 @@ class KmdHighlighter(RegexHighlighter):
             r"(?<![\\\w])(?P<str>b?'''.*?(?<!\\)'''|b?'.*?(?<!\\)'|b?\"\"\".*?(?<!\\)\"\"\"|b?\".*?(?<!\\)\")",
             r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
             r"(?P<code_span>`[^`]+`)",
+            # Task stack in logs:
+            f"(?P<task_stack>{EMOJI_TASK}.*:)",
+            f"(?P<task_stack_prefix>{EMOJI_TASK_SEP})",
             # Emoji colors:
-            f"(?P<action>{EMOJI_ACTION})",
+            f"(?P<task>{EMOJI_TASK})",
             f"(?P<success>{EMOJI_SUCCESS})",
             f"(?P<timing>{EMOJI_TIMING})",
             f"(?P<warn>{EMOJI_WARN})",
@@ -202,7 +207,7 @@ RICH_STYLES = {
     "kmd.attrib_value": Style(color=COLOR_VALUE, italic=False),
     # "kmd.number": Style(color=COLOR_KEY, italic=False),
     "kmd.duration": Style(color=COLOR_KEY, italic=False),
-    "kmd.part_count": Style(color=COLOR_ACTION, italic=False),
+    "kmd.part_count": Style(color=COLOR_KEY, italic=True),
     "kmd.time_ago": Style(color=COLOR_KEY, italic=False),
     "kmd.file_size": Style(color=COLOR_VALUE, italic=False),
     "kmd.code_span": Style(color=COLOR_VALUE, italic=False),
@@ -215,8 +220,10 @@ RICH_STYLES = {
     "kmd.call": Style(italic=True),
     "kmd.path": Style(color=COLOR_PATH),
     "kmd.filename": Style(color=COLOR_VALUE),
+    "kmd.task_stack": Style(color=COLOR_TASK, italic=True),
+    "kmd.task_stack_prefix": Style(color=COLOR_HINT, italic=True),
     # Emoji colors:
-    "kmd.action": Style(color=COLOR_ACTION, bold=True),
+    "kmd.task": Style(color=COLOR_TASK, bold=True),
     "kmd.success": Style(color=COLOR_SUCCESSS, bold=True),
     "kmd.timing": Style(color=COLOR_TIMING, bold=True),
     "kmd.warn": Style(color=COLOR_VALUE, bold=True),
