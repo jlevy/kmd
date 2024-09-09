@@ -164,7 +164,7 @@ class KmdHighlighter(RegexHighlighter):
             r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
             r"(?P<code_span>`[^`]+`)",
             # Task stack in logs:
-            f"(?P<task_stack>{EMOJI_TASK_SEP}* *{EMOJI_TASK}.*:)",
+            f"(?P<task_stack>{EMOJI_TASK}.*$)",
             f"(?P<task_stack_prefix>{EMOJI_TASK_SEP})",
             # Emoji colors:
             f"(?P<task>{EMOJI_TASK})",
@@ -207,7 +207,7 @@ RICH_STYLES = {
     "kmd.attrib_value": Style(color=COLOR_VALUE, italic=False),
     # "kmd.number": Style(color=COLOR_KEY, italic=False),
     "kmd.duration": Style(color=COLOR_KEY, italic=False),
-    "kmd.part_count": Style(color=COLOR_KEY, italic=True),
+    "kmd.part_count": Style(color=COLOR_KEY, italic=False),
     "kmd.time_ago": Style(color=COLOR_KEY, italic=False),
     "kmd.file_size": Style(color=COLOR_VALUE, italic=False),
     "kmd.code_span": Style(color=COLOR_VALUE, italic=False),

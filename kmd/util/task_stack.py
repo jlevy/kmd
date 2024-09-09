@@ -43,7 +43,7 @@ def log_task_stack(task_str: str):
 
     log = get_logger(__name__)
     output()
-    log.message("%s %s:", EMOJI_TASK, task_str)
+    log.message("%s %s", EMOJI_TASK, task_str)
 
 
 class TaskStack:

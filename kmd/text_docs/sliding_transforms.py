@@ -173,7 +173,7 @@ def sliding_wordtok_window_transform(
     output_wordtoks = []
     for i, window in enumerate(windows):
         log.message(
-            "Sliding word transform: Window %s of %s (%s wordtoks, %s bytes), at %s wordtoks so far",
+            "Sliding word transform window %s of %s (%s wordtoks, %s bytes), at %s wordtoks so far",
             i + 1,
             nwindows,
             window.size(TextUnit.wordtoks),
