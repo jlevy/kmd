@@ -87,6 +87,9 @@ def get_console():
 #         super().emit(record)
 #         self.flush()
 
+global _file_handler
+global _console_handler
+
 
 def logging_setup():
     """
@@ -100,11 +103,13 @@ def logging_setup():
     os.makedirs(log_objects_dir(), exist_ok=True)
 
     # Verbose logging to file, important logging to console.
-    file_handler = logging.FileHandler(log_file_path())
-    file_handler.setLevel(INFO)
-    file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
+    global _file_handler
+    _file_handler = logging.FileHandler(log_file_path())
+    _file_handler.setLevel(INFO)
+    _file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
 
-    console_handler = RichHandler(
+    global _console_handler
+    _console_handler = RichHandler(
         console=_console,
         level=WARNING,
         show_time=False,
@@ -113,7 +118,7 @@ def logging_setup():
         highlighter=KmdHighlighter(),
         markup=True,
     )
-    console_handler.setFormatter(Formatter("%(message)s"))
+    _console_handler.setFormatter(Formatter("%(message)s"))
 
     # Manually adjust logging for a few packages, removing previous verbose default handlers.
     from litellm import _logging  # noqa: F401
@@ -135,8 +140,8 @@ def logging_setup():
         # Remove any existing handlers.
         for handler in logger.handlers[:]:
             logger.removeHandler(handler)
-        logger.addHandler(console_handler)
-        logger.addHandler(file_handler)
+        logger.addHandler(_console_handler)
+        logger.addHandler(_file_handler)
 
 
 def prefix(line, emoji: str = ""):
@@ -144,7 +149,7 @@ def prefix(line, emoji: str = ""):
     if prefix:
         prefix += " "
     if emoji:
-        prefix = f"{emoji} {prefix}"
+        prefix = f"{prefix}{emoji} "
     return f"{prefix}{line}"
 
 
@@ -209,6 +214,10 @@ class CustomLogger:
 
 def get_logger(name: str):
     return CustomLogger(name)
+
+
+def get_log_file_stream():
+    return _file_handler.stream
 
 
 def reset_log_root(log_root: Path):

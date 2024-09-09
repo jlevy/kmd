@@ -3,6 +3,7 @@ from kmd.model.media_model import MediaMetadata, MediaService
 from kmd.model.errors_model import InvalidInput
 from kmd.util.log_calls import log_calls
 from kmd.util.url import Url
+from kmd.media.services.local_file_media import LocalFileMedia
 from kmd.media.services.youtube import YouTube
 from kmd.media.services.vimeo import Vimeo
 from kmd.media.services.apple_podcasts import ApplePodcasts
@@ -12,11 +13,12 @@ log = get_logger(__name__)
 
 
 # List of available media services.
+local_file_media = LocalFileMedia()
 youtube = YouTube()
 vimeo = Vimeo()
 apple_podcasts = ApplePodcasts()
 
-media_services: List[MediaService] = [youtube, vimeo, apple_podcasts]
+media_services: List[MediaService] = [local_file_media, youtube, vimeo, apple_podcasts]
 
 
 def canonicalize_media_url(url: Url) -> Optional[Url]:

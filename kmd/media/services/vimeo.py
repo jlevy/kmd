@@ -1,3 +1,4 @@
+from pathlib import Path
 import re
 from typing import List, Optional, Dict, Any, Tuple
 from urllib.parse import urlparse
@@ -60,7 +61,7 @@ class Vimeo(MediaService):
             return Url(f"{canon_url}#t={timestamp}")
         return canon_url  # For channels, just return the canonical URL
 
-    def download_audio(self, url: Url, target_dir: Optional[str] = None) -> str:
+    def download_audio(self, url: Url, target_dir: Path) -> Path:
         url = not_none(self.canonicalize(url), "Not a recognized Vimeo URL")
         return ydl_download_audio(url, target_dir)
 

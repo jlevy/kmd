@@ -53,10 +53,13 @@ class BackfillSourceTimestamps(CachedDocAction):
         source_url = source_item.url
         if not item.body:
             raise InvalidInput(f"Item must have a body: {item}")
-        if not source_url:
-            raise InvalidInput(f"Source item must have a URL: {source_item}")
+
         if not source_item.body:
             raise InvalidInput(f"Source item must have a body: {source_item}")
+        if not source_url:
+            log.warning(
+                "Source item has no URL, so will not create timestamp hotlinks: %s", source_item
+            )
 
         log.message(
             "Pulling timestamps from source item: %s", fmt_path(not_none(source_item.store_path))

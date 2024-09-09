@@ -9,7 +9,6 @@ from os import path
 import time
 from enum import Enum
 import requests
-import strif
 from strif import clean_alphanum_hash
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.download_url import download_url, user_agent_headers
@@ -48,22 +47,21 @@ class DirStore:
     def __init__(self, root: Path, hash_func: Optional[Callable[[str], str]] = None) -> None:
         self.root: Path = root
         self.hash_func: Callable[[str], str] = hash_func or default_hash_func
-        strif.make_all_dirs(root)
+        os.makedirs(self.root, exist_ok=True)
 
     def path_for(
         self, key: str, folder: Optional[str] = None, suffix: Optional[str] = None
     ) -> Path:
-        """A unique file path with the given key.
-
-        It's up to the client how to use it.
         """
-        full_path = self.hash_func(key)
+        A unique file path with the given key. It's up to the client how to use it.
+        """
+        path_str = self.hash_func(key)
         if suffix:
-            full_path += suffix
+            path_str += suffix
         if folder:
-            full_path = path.join(folder, full_path)
-        full_path = self.root / full_path
+            path_str = path.join(folder, path_str)
 
+        full_path = self.root / path_str
         return full_path
 
     def find(

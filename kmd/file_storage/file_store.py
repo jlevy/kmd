@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import time
 from typing import Generator, List, Optional, Tuple, Dict
-from os.path import join, relpath, commonpath
+from os.path import join, relpath, commonpath, basename
 from os import path
 from strif import copyfile_atomic
 from kmd.config.settings import global_settings
@@ -12,20 +12,26 @@ from kmd.file_storage.metadata_dirs import ARCHIVE_DIR, initialize_store_dirs
 from kmd.model.file_formats_model import (
     FileExt,
     Format,
-    format_from_ext,
-    parse_filename,
+    parse_file_format,
     is_ignored,
 )
 from kmd.model.params_model import ParamValues
 from kmd.query.vector_index import WsVectorIndex
 from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
 from kmd.file_storage.store_filenames import (
-    item_type_folder_for,
+    folder_for_type,
     join_filename,
-    parse_check_filename,
+    parse_filename_and_type,
 )
 from kmd.file_storage.persisted_yaml import PersistedYaml
-from kmd.model.errors_model import InvalidFilename, InvalidState, SkippableError
+from kmd.model.errors_model import (
+    FileExists,
+    FileNotFound,
+    InvalidFilename,
+    InvalidState,
+    SkippableError,
+    UnexpectedError,
+)
 from kmd.model.arguments_model import StorePath
 from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.canon_url import canonicalize_url
@@ -100,7 +106,7 @@ class FileStore:
         Update metadata index with a new item.
         """
         try:
-            name, item_type, file_ext = parse_check_filename(store_path)
+            name, item_type, file_ext = parse_filename_and_type(store_path)
         except InvalidFilename:
             log.debug("Skipping file with invalid name: %s", fmt_path(store_path))
             return
@@ -157,7 +163,7 @@ class FileStore:
         return new_unique_filename, old_filename
 
     def _default_path_for(self, item: Item) -> StorePath:
-        folder_path = item_type_folder_for(item)
+        folder_path = folder_for_type(item.type)
         slug = item.title_slug()
         suffix = item.get_full_suffix()
         return StorePath(folder_path / join_filename(slug, suffix))
@@ -167,6 +173,12 @@ class FileStore:
 
     def exists(self, store_path: StorePath) -> bool:
         return (self.base_dir / store_path).exists()
+
+    def resolve_path(self, item: Item) -> Path:
+        if not item.store_path:
+            log.error("Item has no store path: %s", item)
+            raise UnexpectedError("Cannot resolve item without store path")
+        return self.base_dir / item.store_path
 
     def find_by_id(self, item: Item) -> Optional[StorePath]:
         """
@@ -221,7 +233,7 @@ class FileStore:
             return store_path, None
         else:
             # We need to generate a new filename.
-            folder_path = item_type_folder_for(item)
+            folder_path = folder_for_type(item.type)
             filename, old_filename = self._new_filename_for(item)
             store_path = folder_path / filename
 
@@ -297,13 +309,13 @@ class FileStore:
         """
         Load item at the given path.
         """
-        _name, item_type, file_ext = parse_check_filename(store_path)
+        _name, item_type, file_ext = parse_filename_and_type(store_path)
         if FileExt.is_text(file_ext):
             # This is a known text format or a YAML file, so we can read the whole thing.
             return read_item(self.base_dir / store_path, self.base_dir)
         else:
-            # This is a PDF or other binary file, so we just return the metadata.
-            format = format_from_ext(file_ext)
+            # This is an exsting file (such as media or docs) so we just return the metadata.
+            format = Format.guess_by_file_ext(file_ext)
             return Item(
                 type=item_type,
                 external_path=str(self.base_dir / store_path),
@@ -347,34 +359,30 @@ class FileStore:
                     return store_path
 
             if not path.exists():
-                raise FileNotFoundError(f"File not found: {fmt_path(path_str)}")
+                raise FileNotFound(f"File not found: {fmt_path(path_str)}")
 
             # It's a string or Path presumably outside the store, so copy it in.
-            try:
-                _dirname, name, _item_type, ext_str = parse_filename(path_str)
-                file_ext = FileExt(ext_str)
-            except ValueError:
-                raise InvalidFilename(
-                    f"Unknown extension for file: {path_str} (known types are {', '.join(FileExt.__members__.keys())})"
-                )
-            format = Format.guess_by_file_ext(file_ext)
-            if not format:
-                raise InvalidFilename(
-                    f"Unknown format for file (check the file ext?): {fmt_path(path_str)}"
-                )
+            name, format, file_ext = parse_file_format(path)
+            if format.is_text():
+                # Text files we copy into canonical store format.
+                with open(path_str, "r") as file:
+                    body = file.read()
 
-            # TODO: Handle binary files and larger files more sensibly.
-            with open(path_str, "r") as file:
-                body = file.read()
-
-            new_item = Item(
-                type=ItemType.resource,
-                title=name,
-                file_ext=file_ext,
-                format=format,
-                body=body,
-            )
-            store_path = self.save(new_item)
+                new_item = Item(
+                    type=ItemType.resource,
+                    title=name,
+                    file_ext=file_ext,
+                    format=format,
+                    body=body,
+                )
+                store_path = self.save(new_item)
+            else:
+                # Binary files we just copy over as-is, preserving the name.
+                # We know the extension is recoginized.
+                store_path = StorePath(folder_for_type(ItemType.resource) / basename(path_str))
+                if self.exists(store_path):
+                    raise FileExists(f"Resource already in store: {fmt_path(store_path)}")
+                copyfile_atomic(path_str, self.base_dir / store_path, make_parents=True)
 
         return store_path
 
@@ -424,7 +432,7 @@ class FileStore:
     def set_selection(self, selection: List[StorePath]):
         for store_path in selection:
             if not (self.base_dir / store_path).exists():
-                raise FileNotFoundError(f"Selection not found: {fmt_path(store_path)}")
+                raise FileNotFound(f"Selection not found: {fmt_path(store_path)}")
 
         self.selection.set(selection)
 

@@ -31,6 +31,16 @@ def is_url(item: Item) -> bool:
 
 
 @precondition
+def is_audio_resource(item: Item) -> bool:
+    return bool(item.type == ItemType.resource and item.format and item.format.is_audio())
+
+
+@precondition
+def is_video_resource(item: Item) -> bool:
+    return bool(item.type == ItemType.resource and item.format and item.format.is_video())
+
+
+@precondition
 def has_body(item: Item) -> bool:
     return bool(item.body and item.body.strip())
 

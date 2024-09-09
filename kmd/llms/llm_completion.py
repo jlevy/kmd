@@ -25,13 +25,13 @@ def _litellm_completion(model: str, messages: List[Dict[str, str]]) -> str:
     if not result or not isinstance(result, str):
         raise ApiResultError(f"LLM completion failed: {model}: {llm_output}")
     total_input_len = sum(len(m["content"]) for m in messages)
-    log.info(
-        f"Got LLM completion from {model}: input {total_input_len} chars in {len(messages)} messages, result {len(result)} chars"
+    log.message(
+        f"LLM completion from {model}: input {total_input_len} chars in {len(messages)} messages, output {len(result)} chars"
     )
     return result
 
 
-@log_calls(level="message")
+@log_calls(level="info")
 def llm_completion(
     model: LLM,
     system_message: LLMMessage,
@@ -47,7 +47,7 @@ def llm_completion(
     user_message = template.format(body=input)
     model_slug = slugify(model.value, separator="_")
 
-    log.message(
+    log.info(
         "LLM completion from %s on %s+%s chars system+user input…",
         model,
         len(system_message),

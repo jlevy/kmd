@@ -3,6 +3,7 @@ from pathlib import Path
 from os.path import relpath, abspath
 from typing import Generator, List, Tuple
 from kmd.config.logger import get_logger
+from kmd.model.errors_model import FileNotFound
 from kmd.model.file_formats_model import (
     is_ignored,
 )
@@ -25,12 +26,12 @@ def walk_by_folder(
 
     start_path = start_path.resolve()
     if not start_path.exists():
-        raise FileNotFoundError(f"Start path not found: {fmt_path(start_path)}")
+        raise FileNotFound(f"Start path not found: {fmt_path(start_path)}")
 
     if relative_to:
         relative_to = relative_to.resolve()
         if not relative_to.exists():
-            raise FileNotFoundError(f"Directory not found: {fmt_path(relative_to)}")
+            raise FileNotFound(f"Directory not found: {fmt_path(relative_to)}")
 
     # Special case of a single file.
     if start_path.is_file():

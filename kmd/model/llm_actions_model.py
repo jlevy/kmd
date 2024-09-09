@@ -20,6 +20,7 @@ from kmd.preconditions.precondition_defs import has_div_chunks
 from kmd.text_chunks.div_elements import div, div_get_original, div_insert_wrapped
 from kmd.text_chunks.parse_divs import parse_divs_by_class, TextNode
 from kmd.text_formatting.markdown_normalization import normalize_markdown
+from kmd.util.task_stack import task_stack
 
 
 log = get_logger(__name__)
@@ -70,8 +71,15 @@ class ChunkedLLMAction(CachedLLMAction):
             raise InvalidInput(f"LLM actions expect a body: {self.name} on {item}")
 
         output = []
-        for chunk in parse_divs_by_class(item.body, self.chunk_class):
-            output.append(self.process_chunk(chunk))
+        chunks = parse_divs_by_class(item.body, self.chunk_class)
+
+        try:
+            task_stack().push(self.name, len(chunks), "chunk")
+            for chunk in chunks:
+                task_stack().next_part()
+                output.append(self.process_chunk(chunk))
+        finally:
+            task_stack().pop()
 
         result_item = item.derived_copy(body="\n\n".join(output), format=Format.md_html)
 

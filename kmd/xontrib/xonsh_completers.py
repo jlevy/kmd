@@ -13,7 +13,7 @@ from kmd.preconditions.precondition_checks import (
     items_matching_precondition,
 )
 from kmd.shell_tools.function_inspect import get_params
-from kmd.text_formatting.text_formatting import single_line
+from kmd.text_formatting.text_formatting import fmt_path, single_line
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.errors_model import InvalidState
 from kmd.xontrib.xonsh_customization import _commands, _actions
@@ -105,8 +105,8 @@ def item_completer(context: CompletionContext) -> CompleterResult:
                 if len(matching_items) < MAX_COMPLETIONS:
                     return {
                         RichCompletion(
-                            str(item.store_path),
-                            display=f"{item.store_path} ({action.precondition.name}) ",
+                            fmt_path(item.store_path),
+                            display=f"{fmt_path(item.store_path)} ({action.precondition.name}) ",
                             description=item.title or "",
                             append_space=True,
                         )

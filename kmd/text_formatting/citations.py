@@ -31,9 +31,16 @@ def format_citation(citation: str, safe: bool = False) -> str:
     return html_span(f"{CITE_LEFT_BR}{citation}{CITE_RIGHT_BR}", CITATION, safe=safe)
 
 
-def format_timestamp_citation(base_url: Url, timestamp: float) -> str:
-    timestamp_url = timestamp_media_url(base_url, timestamp)
+def add_citation_to_sentence(old_sent: str, source_url: Url | None, timestamp: float) -> str:
+    return add_citation_to_text(old_sent, format_timestamp_citation(source_url, timestamp))
+
+
+def format_timestamp_citation(base_url: Url | None, timestamp: float) -> str:
     formatted_timestamp = format_timestamp(timestamp)
-    link = html_a(formatted_timestamp, timestamp_url)
-    citation = format_citation(link, safe=True)
+    if base_url:
+        timestamp_url = timestamp_media_url(base_url, timestamp)
+        link = html_a(formatted_timestamp, timestamp_url)
+        citation = format_citation(link, safe=True)
+    else:
+        citation = format_citation(f"{formatted_timestamp}")
     return citation

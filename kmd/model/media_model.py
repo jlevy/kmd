@@ -8,12 +8,23 @@ from kmd.util.url import Url
 
 
 class MediaUrlType(Enum):
-    episode = "episode"
-    podcast = "podcast"
+    """
+    Kinds of media URLs and local files.
+    """
 
+    audio = "audio"
+    """URL or local path for an audio file."""
     video = "video"
+    """URL or local path for a video."""
+
+    episode = "episode"
+    """URL for a podcast episode."""
+    podcast = "podcast"
+    """URL for a podcast channel."""
     channel = "channel"
+    """URL for a channel."""
     playlist = "playlist"
+    """URL for a playlist."""
 
 
 @dataclass
@@ -91,7 +102,7 @@ class MediaService(ABC):
         pass
 
     @abstractmethod
-    def download_audio(self, url: Url) -> Path:
+    def download_audio(self, url: Url, target_dir: Path) -> Path:
         """Download media from URL and extract audio to mp3."""
         pass
 

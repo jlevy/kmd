@@ -1,5 +1,6 @@
 from datetime import date
 import os
+from pathlib import Path
 import tempfile
 from typing import Any, Dict
 import yt_dlp
@@ -38,7 +39,7 @@ def ydl_extract_info(url: Url) -> Dict[str, Any]:
         return result
 
 
-def ydl_download_audio(url: Url, target_dir: str | None = None) -> str:
+def ydl_download_audio(url: Url, target_dir: Path | None = None) -> Path:
     """
     Download and convert to mp3 using yt_dlp, which is generally the best library for this.
     """
@@ -65,4 +66,4 @@ def ydl_download_audio(url: Url, target_dir: str | None = None) -> str:
 
     # yt_dlp returns the .webm file, so this is the converted .mp3.
     mp3_path = os.path.splitext(audio_file_path)[0] + ".mp3"
-    return mp3_path
+    return Path(mp3_path)

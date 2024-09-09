@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
 from urllib.parse import urlparse, parse_qs
 from datetime import date
@@ -70,7 +71,7 @@ class ApplePodcasts(MediaService):
         # Apple Podcasts doesn't support timestamp links. We'll return the original URL.
         return url
 
-    def download_audio(self, url: Url, target_dir: Optional[str] = None) -> str:
+    def download_audio(self, url: Url, target_dir: Path) -> Path:
         url = not_none(self.canonicalize(url), "Not a recognized Apple Podcasts URL")
         return ydl_download_audio(url, target_dir)
 

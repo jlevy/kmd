@@ -35,6 +35,18 @@ class InvalidInput(SelfExplanatoryError):
     pass
 
 
+class FileExists(InvalidInput, FileExistsError):
+    """Raised when a file already exists."""
+
+    pass
+
+
+class FileNotFound(InvalidInput, FileNotFoundError):
+    """Raised when a file is not found."""
+
+    pass
+
+
 class InvalidCommand(InvalidInput):
     """Raised when a command is not valid."""
 

@@ -164,7 +164,7 @@ class KmdHighlighter(RegexHighlighter):
             r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
             r"(?P<code_span>`[^`]+`)",
             # Task stack in logs:
-            f"(?P<task_stack>{EMOJI_TASK}.*:)",
+            f"(?P<task_stack>{EMOJI_TASK_SEP}* *{EMOJI_TASK}.*:)",
             f"(?P<task_stack_prefix>{EMOJI_TASK_SEP})",
             # Emoji colors:
             f"(?P<task>{EMOJI_TASK})",

@@ -19,7 +19,7 @@ class Precondition:
     def check(self, item: Item) -> None:
         if not self(item):
             raise PreconditionFailure(
-                f"Precondition not satisfied: {self} is false for {item.path_or_title()}"
+                f"Precondition not satisfied: {self} is false for {item.fmt_path_or_title()}"
             )
 
     def __call__(self, item: Item) -> bool:

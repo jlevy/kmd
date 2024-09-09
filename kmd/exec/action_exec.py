@@ -104,6 +104,7 @@ def run_action(
     if len(action.param_summary()) > 0:
         log.message("%s", action.param_summary_str())
     log.info("Operation is: %s", operation)
+    log.info("Input items are:\n%s", fmt_lines(input_items))
 
     # Validate the precondition.
     action.validate_precondition(input_items)

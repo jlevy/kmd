@@ -302,6 +302,7 @@ class ForEachItemAction(Action):
                 len(items),
                 fmt_lines([item]),
             )
+            had_error = False
             try:
                 result_item = self.run_item(item)
                 result_items.append(result_item)

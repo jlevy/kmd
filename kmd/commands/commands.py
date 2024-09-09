@@ -10,6 +10,7 @@ from rich.text import Text
 from strif import copyfile_atomic
 from kmd.action_defs import load_all_actions
 from kmd.commands.command_results import CommandResult
+from kmd.config.settings import global_settings
 from kmd.file_formats.frontmatter_format import fmf_read, fmf_strip_frontmatter
 from kmd.file_storage.file_listings import walk_by_folder
 from kmd.file_storage.file_store import initialize_store_dirs
@@ -113,6 +114,35 @@ def logs() -> None:
     Page through the logs for the current workspace.
     """
     tail_file(log_file_path())
+
+
+@kmd_command
+def clear_logs() -> None:
+    """
+    Clear the logs for the current workspace.
+    """
+    log_path = log_file_path()
+    if log_path.exists():
+        with open(log_path, "w"):
+            pass
+    output("Logs cleared: %s", fmt_path(log_path))
+
+
+@kmd_command
+def cache_list(media: bool = False, web: bool = False) -> None:
+    """
+    List the contents of the media and/or web caches. By default lists both media and web caches.
+    """
+    if not media and not web:
+        media = True
+        web = True
+
+    if media:
+        files(global_settings().media_cache_dir)
+        output()
+    if web:
+        files(global_settings().web_cache_dir)
+        output()
 
 
 @kmd_command

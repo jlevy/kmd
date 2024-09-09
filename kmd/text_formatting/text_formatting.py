@@ -57,7 +57,7 @@ def split_paragraphs(text: str) -> List[str]:
     return [p.strip() for p in regex.split(r"\n{2,}", text)]
 
 
-def clean_title(text: str) -> str:
+def clean_up_title(text: str) -> str:
     """
     Clean up arbitrary text to make it suitable for a title. Convert all whitespace to spaces.
     Only allows the most common punctuation, letters, and numbers, but not Markdown, code
@@ -162,12 +162,12 @@ def test_html_to_plaintext():
 
 
 def test_clean_title():
-    assert clean_title("Hello, World!") == "Hello, World!"
-    assert clean_title("Hej, Världen!") == "Hej, Världen!"
-    assert clean_title("你好 世界") == "你好 世界"
-    assert clean_title("こんにちは、世界") == "こんにちは 世界"
-    assert clean_title(" *Hello,*  \n\tWorld!  --123@:': ") == "Hello, World! --123@:':"
-    assert clean_title("<script foo='blah'><p>") == "script foo 'blah' p"
+    assert clean_up_title("Hello, World!") == "Hello, World!"
+    assert clean_up_title("Hej, Världen!") == "Hej, Världen!"
+    assert clean_up_title("你好 世界") == "你好 世界"
+    assert clean_up_title("こんにちは、世界") == "こんにちは 世界"
+    assert clean_up_title(" *Hello,*  \n\tWorld!  --123@:': ") == "Hello, World! --123@:':"
+    assert clean_up_title("<script foo='blah'><p>") == "script foo 'blah' p"
 
 
 def test_abbreviate_on_words():

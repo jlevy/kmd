@@ -22,7 +22,7 @@ from kmd.text_formatting.markdown_util import markdown_to_html
 from kmd.text_formatting.text_formatting import (
     abbreviate_on_words,
     abbreviate_phrase_in_middle,
-    clean_title,
+    clean_up_title,
     fmt_path,
     html_to_plaintext,
     plaintext_to_html,
@@ -328,11 +328,11 @@ class Item:
 
         return item_dict
 
-    def path_or_title(self) -> str:
+    def fmt_path_or_title(self) -> str:
         """
-        Get the path or fall back to the title of the item.
+        Formatted path or title, for error messages etc.
         """
-        return self.store_path or self.abbrev_title()
+        return fmt_path(self.store_path) if self.store_path else repr(self.abbrev_title())
 
     def abbrev_title(self, max_len: int = 100) -> str:
         """
@@ -356,7 +356,7 @@ class Item:
             suffix = f" ({last_op})"
 
         shorter_len = min(max_len, max(max_len - len(suffix), 20))
-        clean_text = clean_title(
+        clean_text = clean_up_title(
             abbreviate_phrase_in_middle(html_to_plaintext(title_raw_text), shorter_len)
         )
 
@@ -488,6 +488,11 @@ class Item:
         updates = kwargs.copy()
         if "type" not in updates:
             updates["type"] = ItemType.doc
+        # External resource paths only make sense for resources, so clear them out if new item
+        # is not a resource.
+        new_type = updates.get("type") or self.type
+        if "external_path" not in updates and new_type != ItemType.resource:
+            updates["external_path"] = None
 
         new_item = self.new_copy_with(update_timestamp=True, **updates)
         new_item.update_relations(derived_from=[self.store_path])

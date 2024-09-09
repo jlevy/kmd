@@ -10,6 +10,7 @@ from kmd.model.llm_actions_model import CachedLLMAction
 from kmd.text_chunks.div_elements import div
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_docs.text_doc import Paragraph, TextDoc
+from kmd.util.task_stack import task_stack
 
 
 log = get_logger(__name__)
@@ -80,9 +81,16 @@ class CaptionParas(CachedLLMAction):
 
         doc = TextDoc.from_text(item.body)
         output = []
-        for para in doc.paragraphs:
-            if para.size(TextUnit.words) > 0:
-                output.append(self.process_para(para))
+        try:
+            task_stack().push(self.name, doc.size(TextUnit.paragraphs), "para")
+
+            for para in doc.paragraphs:
+                task_stack().next_part()
+
+                if para.size(TextUnit.words) > 0:
+                    output.append(self.process_para(para))
+        finally:
+            task_stack().pop()
 
         final_output = "\n\n".join(output)
 

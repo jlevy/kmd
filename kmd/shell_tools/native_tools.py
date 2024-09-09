@@ -17,7 +17,7 @@ from xonsh.platform import ON_WINDOWS, ON_DARWIN, ON_LINUX
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings
 from kmd.model.file_formats_model import parse_filename
-from kmd.model.errors_model import SetupError
+from kmd.model.errors_model import FileNotFound, SetupError
 from kmd.model.file_formats_model import file_ext_is_text
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import Wrap, output
@@ -219,7 +219,7 @@ def view_file_native(file_or_url: str | Path):
     elif os.path.isdir(file_or_url):
         native_open(file_or_url)
     else:
-        raise FileNotFoundError(f"File does not exist: {fmt_path(file_or_url)}")
+        raise FileNotFound(f"File does not exist: {fmt_path(file_or_url)}")
 
 
 def tail_file(filename: str | Path):

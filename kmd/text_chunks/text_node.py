@@ -113,7 +113,7 @@ class TextNode:
                 prefix="",
             )
 
-    def size_summary(self, fast: bool) -> str:
+    def size_summary(self, fast: bool = True) -> str:
         summary = self.text_doc(fast).size_summary()
         if structure_summary_str := self.structure_summary_str():
             summary += "\n" + structure_summary_str

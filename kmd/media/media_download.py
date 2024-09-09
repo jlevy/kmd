@@ -22,10 +22,12 @@ def reset_media_cache_dir(path: Path):
             log.info("Using media cache: %s", fmt_path(path))
 
 
-def download_and_transcribe(url: Url, no_cache=False, language: Optional[str] = None) -> str:
+def download_and_transcribe(
+    url_or_path: Url | Path, no_cache=False, language: Optional[str] = None
+) -> str:
     """Download and transcribe audio or video, saving in cache. If no_cache is True, force fresh download."""
 
-    return _media_cache.transcribe(url, no_cache=no_cache, language=language)
+    return _media_cache.transcribe(url_or_path, no_cache=no_cache, language=language)
 
 
 def download_audio(url: Url, no_cache=False) -> Path:

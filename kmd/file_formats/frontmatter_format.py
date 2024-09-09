@@ -22,7 +22,7 @@ from kmd.file_formats.yaml_util import (
     to_yaml_string,
     write_yaml,
 )
-from kmd.model.errors_model import FileFormatError
+from kmd.model.errors_model import FileFormatError, FileNotFound
 from kmd.text_formatting.text_formatting import fmt_path
 import shutil
 
@@ -168,7 +168,7 @@ def fmf_strip_frontmatter(file_path: Path | str) -> None:
         except Exception as e:
             try:
                 os.remove(temp_file_path)
-            except FileNotFoundError:
+            except FileNotFound:
                 pass
             raise e
 

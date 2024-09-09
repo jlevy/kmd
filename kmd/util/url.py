@@ -1,4 +1,5 @@
-from typing import NewType
+from pathlib import Path
+from typing import NewType, Optional
 from urllib.parse import urlparse, urlsplit, urlunsplit
 from kmd.config.logger import get_logger
 
@@ -6,6 +7,10 @@ from kmd.config.logger import get_logger
 log = get_logger(__name__)
 
 Url = NewType("Url", str)
+"""
+A minimal URL type that functions like a string but allows for better clarity
+and type checking.
+"""
 
 
 def is_url(text: str, http_only: bool = False) -> bool:
@@ -38,6 +43,18 @@ def normalize_url(url: Url, expect_http=True, remove_fragment=True) -> Url:
     if url != normalized_url:
         log.info("Normalized URL: %s -> %s" % (url, normalized_url))
     return Url(normalized_url)
+
+
+def as_file_url(path: Path) -> Url:
+    return Url(f"file://{path.resolve()}")
+
+
+def parse_file_url(url: Url) -> Optional[Path]:
+    parsed_url = urlparse(url)
+    if parsed_url.scheme == "file":
+        return Path(parsed_url.path)
+    else:
+        return None
 
 
 ## Tests

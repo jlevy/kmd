@@ -1,3 +1,4 @@
+from pathlib import Path
 import re
 from typing import Optional, List, Dict, Any, Tuple
 from urllib.parse import urlparse, parse_qs
@@ -83,7 +84,7 @@ class YouTube(MediaService):
             raise InvalidInput(f"Unrecognized YouTube URL: {url}")
         return Url(canon_url + f"&t={timestamp}s")
 
-    def download_audio(self, url: Url, target_dir: Optional[str] = None) -> str:
+    def download_audio(self, url: Url, target_dir: Path) -> Path:
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
         return ydl_download_audio(url, target_dir)
 
