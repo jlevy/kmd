@@ -1,6 +1,6 @@
 from kmd.config.settings import DEFAULT_FAST_MODEL
 from kmd.config.logger import get_logger
-from kmd.model.actions_model import LLMMessage, LLMTemplate
+from kmd.model.actions_model import Message, MessageTemplate
 from kmd.text_docs.window_settings import WINDOW_4_PARA
 from kmd.model.llm_actions_model import CachedLLMAction
 from kmd.exec.action_registry import kmd_action
@@ -16,13 +16,13 @@ class Proofread(CachedLLMAction):
             name="proofread",
             description="Proofread text, only fixing spelling, punctuation, and grammar.",
             model=DEFAULT_FAST_MODEL,
-            system_message=LLMMessage(
+            system_message=Message(
                 """
                 You are a careful and precise editor.
                 You give exactly the results requested without additional commentary.
                 """
             ),
-            template=LLMTemplate(
+            template=MessageTemplate(
                 """
                 Proofread the following text according to these rules:
 

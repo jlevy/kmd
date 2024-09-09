@@ -8,8 +8,8 @@ from kmd.model.actions_model import (
     ONE_OR_NO_ARGS,
     ActionInput,
     ActionResult,
-    LLMMessage,
-    LLMTemplate,
+    Message,
+    MessageTemplate,
     TitleTemplate,
 )
 from kmd.model.file_formats_model import Format
@@ -19,8 +19,8 @@ from kmd.util.lazyobject import lazyobject
 
 
 @lazyobject
-def assistant_coding_preamble() -> LLMMessage:
-    return LLMMessage(assistant_preamble(False, False))
+def assistant_coding_preamble() -> Message:
+    return Message(assistant_preamble(False, False))
 
 
 @kmd_action()
@@ -31,7 +31,7 @@ class WriteNewAction(LLMAction):
             description="Create a new kmd action in Python, based on a description of the features.",
             system_message=assistant_coding_preamble,  # Give it context on kmd APIs.
             title_template=TitleTemplate("Action: {title}"),
-            template=LLMTemplate(
+            template=MessageTemplate(
                 dedent(
                     """
                     Write a kmd action according to the following description. Guidelines:

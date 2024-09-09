@@ -1,5 +1,5 @@
 from kmd.exec.llm_transforms import llm_transform_item
-from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
+from kmd.model.actions_model import Message, MessageTemplate, TitleTemplate
 from kmd.exec.action_registry import kmd_action
 from kmd.model.items_model import Item
 from kmd.model.llm_actions_model import CachedLLMAction
@@ -18,14 +18,14 @@ class FindConcepts(CachedLLMAction):
         super().__init__(
             name="find_concepts",
             description="Identify the key concepts in a text. Processes each div chunk.",
-            system_message=LLMMessage(
+            system_message=Message(
                 """
                 You are a careful and precise editor.
                 You give exactly the results requested without additional commentary.
                 """
             ),
             title_template=TitleTemplate("Concepts from {title}"),
-            template=LLMTemplate(
+            template=MessageTemplate(
                 """
                 You are collecting concepts for the glossary of a book.
                 

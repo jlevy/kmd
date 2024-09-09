@@ -1,5 +1,5 @@
 from kmd.model.llm_actions_model import CachedLLMAction
-from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
+from kmd.model.actions_model import Message, MessageTemplate, TitleTemplate
 from kmd.exec.action_registry import kmd_action
 
 
@@ -9,14 +9,14 @@ class DescribeBriefly(CachedLLMAction):
         super().__init__(
             name="describe_briefly",
             description="Write a brief description of a text, in at most three sentences.",
-            system_message=LLMMessage(
+            system_message=Message(
                 """
                 You are a careful and precise editor.
                 You give exactly the results requested without additional commentary.
                 """
             ),
             title_template=TitleTemplate("Summary of {title}"),
-            template=LLMTemplate(
+            template=MessageTemplate(
                 """
                 Give a brief description of the entire text below, as a summary of two or three sentences.
                 Write it concisely and clearly, in a form suitable for a short description of a web page

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 from kmd.model.arguments_model import StorePath
+from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.log_calls import quote_if_needed
 from kmd.util.parse_utils import format_key_value, format_shell_str
 
@@ -43,7 +44,7 @@ class Input:
             return cls(path=StorePath(input_str), hash=None)
 
     def path_and_hash(self):
-        return f"{self.path}@{self.hash}"
+        return f"{fmt_path(self.path)}@{self.hash}"
 
     # Inputs are equal if the hashes match (even if the paths have changed).
 

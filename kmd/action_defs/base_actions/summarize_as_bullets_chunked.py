@@ -1,5 +1,5 @@
 from kmd.exec.llm_transforms import llm_transform_str
-from kmd.model.actions_model import LLMMessage, LLMTemplate
+from kmd.model.actions_model import Message, MessageTemplate
 from kmd.model.doc_elements import SUMMARY
 from kmd.exec.action_registry import kmd_action
 from kmd.model.llm_actions_model import ChunkedLLMAction
@@ -14,13 +14,13 @@ class SummarizeAsBulletsChunked(ChunkedLLMAction):
         super().__init__(
             name="summarize_as_bullets_chunked",
             description="Summarize text as bullet points. Processes each div chunk.",
-            system_message=LLMMessage(
+            system_message=Message(
                 """
                 You are a careful and precise editor.
                 You give exactly the results requested without additional commentary.
                 """
             ),
-            template=LLMTemplate(
+            template=MessageTemplate(
                 """
                 Summarize the following text as a list of concise bullet points:
 

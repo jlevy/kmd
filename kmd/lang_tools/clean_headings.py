@@ -1,7 +1,7 @@
 from typing import List
 from kmd.config.settings import DEFAULT_FAST_MODEL
 from kmd.llms.llm_completion import llm_completion
-from kmd.model.actions_model import LLMMessage, LLMTemplate
+from kmd.model.actions_model import Message, MessageTemplate
 from kmd.text_formatting.markdown_util import as_bullet_points
 
 # TODO: Enforce that the edits below doesn't contain anything extraneous.
@@ -13,12 +13,12 @@ def clean_heading(heading: str) -> str:
     """
     return llm_completion(
         DEFAULT_FAST_MODEL,
-        system_message=LLMMessage(
+        system_message=Message(
             """
             You are a careful and precise editor. You follow directions exactly and do not embellish or offer any other commentary.
             """
         ),
-        template=LLMTemplate(
+        template=MessageTemplate(
             """
             Edit the following heading to be suitable for a title of a web page or section in a document.
             Follow Chicago Manual of Style capitalizaiton rules. Remove any ellipses, bracketed words or
@@ -40,12 +40,12 @@ def clean_heading(heading: str) -> str:
 def summary_heading(values: List[str]) -> str:
     return llm_completion(
         DEFAULT_FAST_MODEL,
-        system_message=LLMMessage(
+        system_message=Message(
             """
             You are a careful and precise editor. You follow directions exactly and do not embellish or offer any other commentary.
             """
         ),
-        template=LLMTemplate(
+        template=MessageTemplate(
             """
             Summarize the following list of headings into a single heading that captures the essence of the list.
             Follow Chicago Manual of Style capitalization rules. Remove any ellipses, bracketed words or

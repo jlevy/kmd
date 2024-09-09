@@ -1,4 +1,4 @@
-from kmd.model.actions_model import LLMMessage, LLMTemplate, TitleTemplate
+from kmd.model.actions_model import Message, MessageTemplate, TitleTemplate
 from kmd.text_docs.window_settings import WINDOW_16_PARA
 from kmd.model.llm_actions_model import CachedLLMAction
 from kmd.exec.action_registry import kmd_action
@@ -10,14 +10,14 @@ class SummarizeAsBullets(CachedLLMAction):
         super().__init__(
             name="summarize_as_bullets",
             description="Summarize text as bullet points.",
-            system_message=LLMMessage(
+            system_message=Message(
                 """
                 You are a careful and precise editor.
                 You give exactly the results requested without additional commentary.
                 """
             ),
             title_template=TitleTemplate("Summary of {title}"),
-            template=LLMTemplate(
+            template=MessageTemplate(
                 """
                 Summarize the following text as a list of concise bullet points:
 

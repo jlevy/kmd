@@ -5,7 +5,7 @@ from kmd.config.logger import get_logger
 from kmd.llms.llm_completion import llm_completion
 from kmd.config.settings import global_settings
 from kmd.file_storage.workspaces import current_workspace_info, get_param_value
-from kmd.model.actions_model import LLMMessage, LLMTemplate
+from kmd.model.actions_model import Message, MessageTemplate
 from kmd.model.errors_model import KmdRuntimeError
 from kmd.model.language_models import LLM
 from kmd.text_formatting.markdown_normalization import wrap_markdown
@@ -47,7 +47,7 @@ def assistant_current_state() -> str:
 
     path, is_sandbox = current_workspace_info()
     if path and not is_sandbox:
-        current_state_message = LLMMessage(
+        current_state_message = Message(
             f"""
             CURRENT STATE
 
@@ -68,7 +68,7 @@ def assistant_current_state() -> str:
             about_ws = "You are currently using the global sandbox workspace."
         else:
             about_ws = "The current directory is not a workspace."
-        current_state_message = LLMMessage(
+        current_state_message = Message(
             f"""
             CURRENT STATE
 
@@ -90,7 +90,7 @@ def assistance(input: str, fast: bool = False) -> str:
 
     output(f"Getting assistance (model {model})…")
 
-    system_message = LLMMessage(
+    system_message = Message(
         f"""
         {assistant_preamble(skip_api=fast)}
 
@@ -99,7 +99,7 @@ def assistance(input: str, fast: bool = False) -> str:
         # TODO: Include selection history, command history, any other info about the workspace.
     )
 
-    template = LLMTemplate(
+    template = MessageTemplate(
         """
         Here is the user's request:
         

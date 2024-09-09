@@ -7,7 +7,7 @@ from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.model.language_models import LLM
 from kmd.model.actions_model import TransformAction
-from kmd.model.llm_message_model import LLMMessage, LLMTemplate
+from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_docs.text_diffs import DiffFilterType, DiffFilter
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.sliding_transforms import (
@@ -20,8 +20,8 @@ log = get_logger(__name__)
 
 def windowed_llm_transform(
     model: LLM,
-    system_message: LLMMessage,
-    template: LLMTemplate,
+    system_message: Message,
+    template: MessageTemplate,
     input: str,
     windowing: Optional[WindowSettings],
     diff_filter: DiffFilter,

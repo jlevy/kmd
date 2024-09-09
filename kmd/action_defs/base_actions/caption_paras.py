@@ -1,6 +1,6 @@
 from kmd.config.logger import get_logger
 from kmd.exec.llm_transforms import llm_transform_str
-from kmd.model.actions_model import LLMMessage, LLMTemplate
+from kmd.model.actions_model import Message, MessageTemplate
 from kmd.model.errors_model import InvalidInput
 from kmd.model.doc_elements import ANNOTATED_PARA, PARA_CAPTION, PARA
 from kmd.exec.action_registry import kmd_action
@@ -22,13 +22,13 @@ class CaptionParas(CachedLLMAction):
         super().__init__(
             name="caption_paras",
             description="Caption each paragraph in the text with a very short summary.",
-            system_message=LLMMessage(
+            system_message=Message(
                 """
                 You are a careful and precise editor.
                 You give exactly the results requested without additional commentary.
                 """
             ),
-            template=LLMTemplate(
+            template=MessageTemplate(
                 """
                 You are a careful and precise editor. You are asked to describe what is said in the following
                 one or two paragraphs, as a sort of summary or caption for the content. Rules:

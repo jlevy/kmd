@@ -1,5 +1,5 @@
 from kmd.config.logger import get_logger
-from kmd.model.actions_model import LLMMessage, LLMTemplate
+from kmd.model.actions_model import Message, MessageTemplate
 from kmd.config.settings import DEFAULT_FAST_MODEL
 from kmd.text_docs.text_diffs import DiffFilterType
 from kmd.text_docs.window_settings import WINDOW_2K_WORDTOKS
@@ -17,13 +17,13 @@ class BreakIntoParagraphs(CachedLLMAction):
             name="break_into_paragraphs",
             description="Reformat text as paragraphs.",
             model=DEFAULT_FAST_MODEL,
-            system_message=LLMMessage(
+            system_message=Message(
                 """
                 You are a careful and precise editor.
                 You give exactly the results requested without additional commentary.
                 """
             ),
-            template=LLMTemplate(
+            template=MessageTemplate(
                 """
                 Format this text according to these rules:
 

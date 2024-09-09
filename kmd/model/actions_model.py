@@ -8,7 +8,7 @@ from kmd.lang_tools.inflection import plural
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.model.language_models import LLM
-from kmd.model.llm_message_model import LLMMessage, LLMTemplate
+from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.arguments_model import InputArg, StorePath
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
@@ -116,8 +116,8 @@ class Action(ABC):
     chunk_size: Optional[int] = None
     chunk_unit: Optional[TextUnit] = None
     title_template: Optional[TitleTemplate] = None
-    template: Optional[LLMTemplate] = None
-    system_message: Optional[LLMMessage] = None
+    template: Optional[MessageTemplate] = None
+    system_message: Optional[Message] = None
 
     _NON_PARAM_FIELDS = [
         "name",

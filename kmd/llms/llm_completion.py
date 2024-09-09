@@ -6,7 +6,7 @@ import litellm
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import HRULE_SHORT
 from kmd.llms.llm_checks import is_no_results
-from kmd.model.actions_model import LLMMessage, LLMTemplate
+from kmd.model.actions_model import Message, MessageTemplate
 from kmd.model.errors_model import ApiResultError
 from kmd.model.language_models import LLM
 from kmd.text_formatting.text_formatting import fmt_lines
@@ -34,8 +34,8 @@ def _litellm_completion(model: str, messages: List[Dict[str, str]]) -> str:
 @log_calls(level="info")
 def llm_completion(
     model: LLM,
-    system_message: LLMMessage,
-    template: LLMTemplate,
+    system_message: Message,
+    template: MessageTemplate,
     input: str,
     save_objects: bool = True,
     check_no_results: bool = True,
