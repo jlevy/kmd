@@ -1,6 +1,6 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.preconditions.precondition_defs import is_url
-from kmd.model.compound_actions_model import CachedDocSequence
+from kmd.model import CachedDocSequence
 
 
 @kmd_action(for_each_item=True)
@@ -11,9 +11,8 @@ class TranscribeAnnotateSummarize(CachedDocSequence):
             action_names=[
                 "transcribe_format",
                 "caption_paras",
-                "chunkify",
-                "summarize_as_bullets_chunked",
                 "add_concepts",
+                "add_summary_bullets",
                 "add_description",
             ],
             description="A fancy action to transcribe a video, format the transcript into paragraphs, backfill timestamps, and add a summary and description.",

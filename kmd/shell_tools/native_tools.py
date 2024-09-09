@@ -15,10 +15,7 @@ import webbrowser
 from cachetools import TTLCache, cached
 from xonsh.platform import ON_WINDOWS, ON_DARWIN, ON_LINUX
 from kmd.config.logger import get_logger
-from kmd.config.settings import global_settings
-from kmd.model.file_formats_model import parse_filename
 from kmd.model.errors_model import FileNotFound, SetupError
-from kmd.model.file_formats_model import file_ext_is_text
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import Wrap, output
 from kmd.config.text_styles import BAT_THEME, COLOR_ERROR, COLOR_HINT
@@ -197,6 +194,8 @@ def view_file_native(file_or_url: str | Path):
     Open a file or URL in the user's preferred native application, falling back
     to pagination in console. For images, first tries terminal-based image display.
     """
+    from kmd.model.file_formats_model import parse_filename, file_ext_is_text
+
     file_or_url = str(file_or_url)
     if is_url(file_or_url) or file_or_url.endswith(".html"):
         if not is_url(file_or_url):
@@ -270,5 +269,7 @@ def edit_files(*filenames: str | Path):
     """
     Edit a file using the user's preferred editor.
     """
+    from kmd.config.settings import global_settings
+
     editor = os.getenv("EDITOR", global_settings().default_editor)
     subprocess.run([editor] + list(filenames))

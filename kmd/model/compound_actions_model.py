@@ -1,9 +1,6 @@
 from typing import List, Optional
-from kmd.action_defs import look_up_action
-from kmd.exec.action_exec import run_action
-from kmd.file_storage.workspaces import current_workspace
-from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.config.logger import get_logger
+from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item, ItemType, State
 from kmd.model.arguments_model import StorePath
@@ -13,10 +10,13 @@ from kmd.exec.combiners import Combiner, combine_as_paragraphs
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none
 
+
 log = get_logger(__name__)
 
 
 def look_up_actions(action_names: List[str]) -> List[Action]:
+    from kmd.action_defs import look_up_action
+
     return [look_up_action(action_name) for action_name in action_names]
 
 
@@ -45,6 +45,9 @@ class SequenceAction(Action):
         self.action_names = action_names
 
     def run(self, items: ActionInput) -> ActionResult:
+        from kmd.exec.action_exec import run_action
+        from kmd.file_storage.workspaces import current_workspace
+
         task_stack().push(self.name, total_parts=len(self.action_names), unit="part")
 
         look_up_actions(self.action_names)  # Validate action names.
@@ -140,6 +143,8 @@ class ComboAction(Action):
         self.combiner = combiner
 
     def run(self, items: ActionInput) -> ActionResult:
+        from kmd.exec.action_exec import run_action
+
         task_stack().push(self.name, total_parts=len(self.action_names), unit="part")
 
         look_up_actions(self.action_names)  # Validate action names.

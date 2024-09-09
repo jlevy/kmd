@@ -6,7 +6,7 @@ import pandas as pd
 from litellm import embedding
 from strif import abbreviate_list
 from kmd.config.logger import get_logger
-from kmd.config.settings import DEFAULT_EMBEDDING_MODEL
+from kmd.model.model_settings import DEFAULT_EMBEDDING_MODEL
 
 log = get_logger(__name__)
 

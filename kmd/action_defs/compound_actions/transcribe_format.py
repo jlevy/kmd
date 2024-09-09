@@ -1,6 +1,6 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.preconditions.precondition_defs import is_url
-from kmd.model.compound_actions_model import CachedDocSequence
+from kmd.model import CachedDocSequence
 
 
 @kmd_action(for_each_item=True)

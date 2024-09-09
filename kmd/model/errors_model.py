@@ -1,3 +1,6 @@
+from typing import Tuple, Type
+
+
 class KmdRuntimeError(ValueError):
     """Base class for kmd runtime errors."""
 
@@ -94,3 +97,34 @@ class InvalidFilename(ContentError):
     """Raised when a filename is invalid."""
 
     pass
+
+
+def _nonfatal_exceptions() -> Tuple[Type[Exception], ...]:
+    from xonsh.tools import XonshError
+
+    exceptions = [
+        SelfExplanatoryError,
+        FileNotFoundError,
+        IOError,
+        XonshError,
+    ]
+
+    try:
+        import litellm
+
+        exceptions.append(litellm.exceptions.APIError)
+    except ImportError:
+        pass
+
+    try:
+        import yt_dlp
+
+        exceptions.append(yt_dlp.utils.DownloadError)
+    except ImportError:
+        pass
+
+    return tuple(exceptions)
+
+
+NONFATAL_EXCEPTIONS = _nonfatal_exceptions()
+"""Exceptions that are not fatal and usually don't merit a full stack trace."""

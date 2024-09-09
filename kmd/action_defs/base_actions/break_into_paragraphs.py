@@ -1,9 +1,8 @@
 from kmd.config.logger import get_logger
-from kmd.model.actions_model import Message, MessageTemplate
-from kmd.config.settings import DEFAULT_FAST_MODEL
+from kmd.model import Message, MessageTemplate, CachedLLMAction
+from kmd.model.model_settings import DEFAULT_FAST_LLM
 from kmd.text_docs.text_diffs import DiffFilterType
 from kmd.text_docs.window_settings import WINDOW_2K_WORDTOKS
-from kmd.model.llm_actions_model import CachedLLMAction
 from kmd.exec.action_registry import kmd_action
 
 
@@ -16,7 +15,7 @@ class BreakIntoParagraphs(CachedLLMAction):
         super().__init__(
             name="break_into_paragraphs",
             description="Reformat text as paragraphs.",
-            model=DEFAULT_FAST_MODEL,
+            model=DEFAULT_FAST_LLM,
             system_message=Message(
                 """
                 You are a careful and precise editor.

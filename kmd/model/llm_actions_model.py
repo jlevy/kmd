@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
 from kmd.config.logger import get_logger
-from kmd.config.settings import DEFAULT_CAREFUL_MODEL
-from kmd.exec.llm_transforms import llm_transform_item, llm_transform_str
 from kmd.model.actions_model import (
     ActionInput,
     ActionResult,
@@ -15,6 +13,7 @@ from kmd.model.doc_elements import CHUNK, ORIGINAL, RESULT
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import UNTITLED, Item
 from kmd.model.language_models import LLM
+from kmd.model.model_settings import DEFAULT_CAREFUL_LLM
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import has_div_chunks
 from kmd.text_chunks.div_elements import div, div_get_original, div_insert_wrapped
@@ -32,7 +31,7 @@ class LLMAction(TransformAction, ForEachItemAction):
     Base LLM action that processes each item and is cached.
     """
 
-    model: Optional[LLM] = DEFAULT_CAREFUL_MODEL
+    model: Optional[LLM] = DEFAULT_CAREFUL_LLM
 
     def run(self, items: ActionInput) -> ActionResult:
         return super(ForEachItemAction, self).run(items)
@@ -41,6 +40,8 @@ class LLMAction(TransformAction, ForEachItemAction):
         """
         Override to customize item handling.
         """
+        from kmd.exec.llm_transforms import llm_transform_item
+
         item = llm_transform_item(self, item)
         if item.body:
             item.body = normalize_markdown(item.body)
@@ -94,6 +95,8 @@ class ChunkedLLMAction(CachedLLMAction):
         """
         Override to customize chunk handling.
         """
+        from kmd.exec.llm_transforms import llm_transform_str
+
         transform_input = div_get_original(chunk, child_name=ORIGINAL)
         llm_response = llm_transform_str(self, transform_input)
         new_div = div(RESULT, llm_response)

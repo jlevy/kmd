@@ -4,17 +4,16 @@ import re
 import tempfile
 from typing import Optional, Tuple
 from cachetools import cached
-from kmd.config.settings import SANDBOX_KB_PATH, global_settings
-from kmd.file_storage.metadata_dirs import CACHE_DIR, METADATA_FILE
-from kmd.media.media_download import reset_media_cache_dir
-from kmd.media.web import reset_web_cache_dir
-from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
-from kmd.file_storage.file_store import FileStore
 from kmd.model.arguments_model import InputArg, StorePath
 from kmd.model.params_model import USER_SETTABLE_PARAMS, param_lookup
+from kmd.media.media_download import reset_media_cache_dir
+from kmd.model.canon_url import canonicalize_url
+from kmd.media.web import reset_web_cache_dir
+from kmd.file_storage.metadata_dirs import CACHE_DIR, METADATA_FILE
+from kmd.file_storage.file_store import FileStore
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.url import Url, is_url
 from kmd.config.logger import get_logger, reset_log_root
@@ -86,6 +85,8 @@ def find_workspace_dir(path: Path = Path(".")) -> Optional[Path]:
 
 @cached({})
 def sandbox_dir() -> Path:
+    from kmd.config.settings import SANDBOX_KB_PATH
+
     kb_path = Path(SANDBOX_KB_PATH).expanduser().resolve()
     if not kb_path.exists():
         os.makedirs(kb_path, exist_ok=True)
@@ -98,6 +99,8 @@ def current_workspace_info() -> Tuple[Optional[Path], bool]:
     Get the name of the current workspace (name.kb) or sandbox, or None if not in a workspace
     and sandbox is not being used.
     """
+    from kmd.config.settings import global_settings
+
     dir = find_workspace_dir()
     is_sandbox = False
     if global_settings().use_sandbox:

@@ -20,7 +20,7 @@ from kmd.help.help_page import output_help_page
 from kmd.commands.command_registry import kmd_command
 from kmd.file_formats.yaml_util import to_yaml_string
 from kmd.media.web import fetch_and_cache
-from kmd.model.items_model import ItemType
+from kmd.model import ItemType
 from kmd.preconditions import ALL_PRECONDITIONS
 from kmd.preconditions.precondition_checks import actions_matching_paths
 from kmd.text_chunks.parse_divs import parse_divs
@@ -54,7 +54,7 @@ from kmd.config.text_styles import (
     PROMPT_ASSIST,
     SPINNER,
 )
-from kmd.model.file_formats_model import is_ignored
+from kmd.model import is_ignored
 from kmd.file_storage.workspaces import (
     check_strict_workspace_name,
     current_workspace_info,
@@ -62,9 +62,9 @@ from kmd.file_storage.workspaces import (
     resolve_workspace_name,
     current_workspace,
 )
-from kmd.model.params_model import USER_SETTABLE_PARAMS
-from kmd.model.errors_model import InvalidInput, InvalidState
-from kmd.model.arguments_model import StorePath
+from kmd.model import USER_SETTABLE_PARAMS
+from kmd.model import InvalidInput, InvalidState
+from kmd.model import StorePath
 from kmd.text_formatting.text_formatting import fmt_path, fmt_lines
 from kmd.lang_tools.inflection import plural
 from kmd.config.logger import get_logger, log_file_path

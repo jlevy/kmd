@@ -1,10 +1,10 @@
 from kmd.exec.action_registry import kmd_action
-from kmd.model.actions_model import (
+from kmd.model import (
     ForEachItemAction,
 )
-from kmd.model.errors_model import InvalidInput
-from kmd.model.file_formats_model import Format
-from kmd.model.items_model import Item, ItemType
+from kmd.model import InvalidInput
+from kmd.model import Format
+from kmd.model import Item, ItemType
 from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_formatting.html_in_md import html_span

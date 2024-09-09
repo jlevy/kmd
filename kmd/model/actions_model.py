@@ -3,9 +3,9 @@ from copy import copy
 from dataclasses import dataclass, fields
 from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, cast
-from kmd.config.logger import NONFATAL_EXCEPTIONS, get_logger
+from kmd.config.logger import get_logger
 from kmd.lang_tools.inflection import plural
-from kmd.model.errors_model import InvalidInput
+from kmd.model.errors_model import NONFATAL_EXCEPTIONS, InvalidInput
 from kmd.model.items_model import UNTITLED, Item, ItemType
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate

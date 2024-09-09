@@ -1,13 +1,13 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.form_input.prompt_input import prompt_simple_string
-from kmd.model.actions_model import (
+from kmd.model import (
     NO_ARGS,
     Action,
     ActionInput,
     ActionResult,
 )
-from kmd.model.file_formats_model import Format
-from kmd.model.items_model import Item, ItemType
+from kmd.model import Format
+from kmd.model import Item, ItemType
 
 
 @kmd_action()

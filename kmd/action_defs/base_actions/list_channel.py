@@ -1,12 +1,12 @@
 from kmd.media.media_services import canonicalize_media_url, list_channel_items
 from kmd.exec.action_registry import kmd_action
-from kmd.model.actions_model import (
+from kmd.model import (
     Action,
     ActionInput,
     ActionResult,
+    InvalidInput,
+    Item,
 )
-from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import Item
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import is_url
 

@@ -1,8 +1,7 @@
-from kmd.config.settings import DEFAULT_FAST_MODEL
 from kmd.config.logger import get_logger
-from kmd.model.actions_model import Message, MessageTemplate
+from kmd.model import Message, MessageTemplate, CachedLLMAction
+from kmd.model.model_settings import DEFAULT_FAST_LLM
 from kmd.text_docs.window_settings import WINDOW_4_PARA
-from kmd.model.llm_actions_model import CachedLLMAction
 from kmd.exec.action_registry import kmd_action
 
 
@@ -15,7 +14,7 @@ class Proofread(CachedLLMAction):
         super().__init__(
             name="proofread",
             description="Proofread text, only fixing spelling, punctuation, and grammar.",
-            model=DEFAULT_FAST_MODEL,
+            model=DEFAULT_FAST_LLM,
             system_message=Message(
                 """
                 You are a careful and precise editor.

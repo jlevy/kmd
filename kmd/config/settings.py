@@ -4,7 +4,6 @@ from pathlib import Path
 import threading
 from typing import Optional
 from cachetools import cached
-from kmd.model.language_models import LLM, EmbeddingModel
 
 
 APP_NAME = "kmd"
@@ -14,13 +13,6 @@ DOT_DIR = ".kmd"
 SANDBOX_KB_PATH = "~/.local/kmd/sandbox.kb"
 
 GLOBAL_CACHE_NAME = "kmd_cache"
-
-# These are the default models for various actions.
-# The user may override them with parameters.
-DEFAULT_CAREFUL_MODEL = LLM.gpt_4o
-DEFAULT_FAST_MODEL = LLM.gpt_4o_mini
-
-DEFAULT_EMBEDDING_MODEL = EmbeddingModel.text_embedding_3_large
 
 
 @dataclass

@@ -4,9 +4,9 @@ from kmd.action_defs.compound_actions import import_compound_actions
 from kmd.action_defs.experimental_actions import import_experimental_actions
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import Action
+from kmd.model.errors_model import InvalidInput
 from kmd.exec.action_registry import instantiate_actions
 from kmd.action_defs.base_actions import import_base_actions
-from kmd.model.errors_model import InvalidInput
 
 log = get_logger(__name__)
 

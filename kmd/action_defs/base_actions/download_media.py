@@ -1,10 +1,6 @@
 from kmd.media.media_download import download_audio
 from kmd.exec.action_registry import kmd_action
-from kmd.model.actions_model import (
-    ForEachItemAction,
-)
-from kmd.model.errors_model import InvalidInput
-from kmd.model.items_model import Item
+from kmd.model import ForEachItemAction, InvalidInput, Item
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import is_url
 

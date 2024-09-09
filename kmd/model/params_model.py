@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Any, Type, List
 from kmd.config.logger import get_logger
-from kmd.config.settings import DEFAULT_CAREFUL_MODEL, DEFAULT_FAST_MODEL
+from kmd.model.model_settings import DEFAULT_CAREFUL_LLM, DEFAULT_FAST_LLM
 from kmd.model.constants import LANGUAGE_LIST
 from kmd.model.language_models import LLM_LIST
 from kmd.text_docs.sizes import TextUnit
@@ -67,13 +67,13 @@ GLOBAL_PARAMS = {
         "assistant_model",
         "The name of the LLM used by the kmd assistant for regular (complex) requests.",
         LLM_LIST,
-        default_value=DEFAULT_CAREFUL_MODEL.value,
+        default_value=DEFAULT_CAREFUL_LLM.value,
     ),
     "assistant_model_fast": Param(
         "assistant_model_fast",
         "The name of the LLM used by the kmd assistant for fast responses.",
         LLM_LIST,
-        default_value=DEFAULT_FAST_MODEL.value,
+        default_value=DEFAULT_FAST_LLM.value,
     ),
 }
 

@@ -6,7 +6,7 @@ import litellm
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import HRULE_SHORT
 from kmd.llms.llm_checks import is_no_results
-from kmd.model.actions_model import Message, MessageTemplate
+from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.errors_model import ApiResultError
 from kmd.model.language_models import LLM
 from kmd.text_formatting.text_formatting import fmt_lines

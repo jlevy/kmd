@@ -1,12 +1,8 @@
+from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.file_storage.workspaces import current_workspace
 from kmd.media.media_download import download_and_transcribe
-from kmd.model.actions_model import (
-    CachedDocAction,
-)
-from kmd.model.file_formats_model import FileExt, Format
-from kmd.model.items_model import Item, ItemType
-from kmd.config.logger import get_logger
+from kmd.model import CachedDocAction, FileExt, Format, Item, ItemType
 from kmd.preconditions.precondition_defs import is_audio_resource, is_url, is_video_resource
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.util.url import as_file_url

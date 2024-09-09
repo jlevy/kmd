@@ -11,10 +11,7 @@ from strif import new_timestamped_uid, atomic_output_file
 from rich.logging import RichHandler
 from rich.theme import Theme
 from rich.console import Console
-from xonsh.tools import XonshError
-from typing import Tuple, Type
 from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, RICH_STYLES, KmdHighlighter
-from kmd.model.errors_model import SelfExplanatoryError
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.stack_traces import current_stack_traces
 from kmd.util.task_stack import task_stack_prefix_str
@@ -38,35 +35,6 @@ def log_file_path() -> Path:
 
 def log_objects_dir() -> Path:
     return log_dir() / LOG_OBJECTS_NAME
-
-
-def _nonfatal_exceptions() -> Tuple[Type[Exception], ...]:
-    exceptions = [
-        SelfExplanatoryError,
-        FileNotFoundError,
-        IOError,
-        XonshError,
-    ]
-
-    try:
-        import litellm
-
-        exceptions.append(litellm.exceptions.APIError)
-    except ImportError:
-        pass
-
-    try:
-        import yt_dlp
-
-        exceptions.append(yt_dlp.utils.DownloadError)
-    except ImportError:
-        pass
-
-    return tuple(exceptions)
-
-
-NONFATAL_EXCEPTIONS = _nonfatal_exceptions()
-"""Exceptions that are not fatal and usually don't merit a full stack trace."""
 
 
 # Rich console theme setup.

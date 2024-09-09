@@ -1,9 +1,5 @@
 from kmd.exec.action_registry import kmd_action
-from kmd.model.actions_model import (
-    ANY_ARGS,
-    ForEachItemAction,
-)
-from kmd.model.items_model import Item
+from kmd.model import ANY_ARGS, ForEachItemAction, Item
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)

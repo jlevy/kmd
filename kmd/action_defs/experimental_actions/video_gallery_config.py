@@ -1,5 +1,5 @@
 from kmd.exec.action_registry import kmd_action
-from kmd.model.actions_model import Action, ActionInput, ActionResult
+from kmd.model import Action, ActionInput, ActionResult
 from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import has_text_body
 from kmd.web_gen.video_gallery import video_gallery_config

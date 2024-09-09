@@ -1,5 +1,4 @@
-from kmd.model.llm_actions_model import CachedLLMAction
-from kmd.model.actions_model import Message, MessageTemplate, TitleTemplate
+from kmd.model import CachedLLMAction, Message, MessageTemplate, TitleTemplate
 from kmd.exec.action_registry import kmd_action
 
 

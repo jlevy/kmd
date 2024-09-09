@@ -4,7 +4,7 @@ from kmd.exec.llm_transforms import llm_transform_item
 from kmd.help.assistant import assistant_preamble
 from kmd.file_storage.workspaces import current_workspace
 from kmd.form_input.prompt_input import prompt_simple_string
-from kmd.model.actions_model import (
+from kmd.model import (
     ONE_OR_NO_ARGS,
     ActionInput,
     ActionResult,
@@ -12,9 +12,9 @@ from kmd.model.actions_model import (
     MessageTemplate,
     TitleTemplate,
 )
-from kmd.model.file_formats_model import Format
-from kmd.model.items_model import Item, ItemType
-from kmd.model.llm_actions_model import LLMAction
+from kmd.model import Format
+from kmd.model import Item, ItemType
+from kmd.model import LLMAction
 from kmd.util.lazyobject import lazyobject
 
 
@@ -52,11 +52,11 @@ class WriteNewAction(LLMAction):
                     strips HTML tags:
 
                         from kmd.exec.action_registry import kmd_action
-                        from kmd.model.actions_model import (
+                        from kmd.model import (
                             CachedItemAction,
                         )
-                        from kmd.model.errors_model import InvalidInput
-                        from kmd.model.items_model import Format, Item, ItemType
+                        from kmd.model import InvalidInput
+                        from kmd.model import Format, Item, ItemType
                         from kmd.config.logger import get_logger
                         from kmd.preconditions.precondition_defs import has_html_body, has_text_body
                         from kmd.text_formatting.text_formatting import html_to_plaintext
