@@ -1,46 +1,20 @@
 import os
-from os.path import getmtime, basename, getsize
-from pathlib import Path
 import sys
-from typing import List, Optional, Sequence, cast
 from datetime import datetime
-from humanize import naturaltime, naturalsize
+from os.path import basename, getmtime, getsize
+from pathlib import Path
+from typing import cast, List, Optional, Sequence
+
+from humanize import naturalsize, naturaltime
 from rich import get_console
 from rich.text import Text
 from strif import copyfile_atomic
+
 from kmd.action_defs import load_all_actions
-from kmd.commands.command_results import CommandResult
-from kmd.config.settings import global_settings
-from kmd.file_formats.frontmatter_format import fmf_read, fmf_strip_frontmatter
-from kmd.file_storage.file_listings import walk_by_folder
-from kmd.file_storage.file_store import initialize_store_dirs
-from kmd.form_input.prompt_input import prompt_simple_string
-from kmd.help.assistant import assistance
-from kmd.help.help_page import output_help_page
 from kmd.commands.command_registry import kmd_command
-from kmd.file_formats.yaml_util import to_yaml_string
-from kmd.media.web import fetch_and_cache
-from kmd.model import ItemType
-from kmd.preconditions import ALL_PRECONDITIONS
-from kmd.preconditions.precondition_checks import actions_matching_paths
-from kmd.text_chunks.parse_divs import parse_divs
-from kmd.text_ui.command_output import (
-    Wrap,
-    format_name_and_description,
-    output,
-    output_assistance,
-    output_heading,
-    output_response,
-    output_status,
-)
-from kmd.shell_tools.native_tools import (
-    CmdlineTool,
-    edit_files,
-    view_file_native,
-    tail_file,
-    terminal_show_image_graceful,
-    tool_check,
-)
+from kmd.commands.command_results import CommandResult
+from kmd.config.logger import get_logger, log_file_path
+from kmd.config.settings import global_settings
 from kmd.config.text_styles import (
     COLOR_EMPH,
     COLOR_HEADING,
@@ -54,20 +28,51 @@ from kmd.config.text_styles import (
     PROMPT_ASSIST,
     SPINNER,
 )
-from kmd.model import is_ignored
+from kmd.file_formats.frontmatter_format import fmf_read, fmf_strip_frontmatter
+from kmd.file_formats.yaml_util import to_yaml_string
+from kmd.file_storage.file_listings import walk_by_folder
+from kmd.file_storage.file_store import initialize_store_dirs
 from kmd.file_storage.workspaces import (
     check_strict_workspace_name,
+    current_workspace,
     current_workspace_info,
     is_workspace_dir,
     resolve_workspace_name,
-    current_workspace,
 )
-from kmd.model import USER_SETTABLE_PARAMS
-from kmd.model import InvalidInput, InvalidState
-from kmd.model import StorePath
-from kmd.text_formatting.text_formatting import fmt_path, fmt_lines
+from kmd.form_input.prompt_input import prompt_simple_string
+from kmd.help.assistant import assistance
+from kmd.help.help_page import output_help_page
 from kmd.lang_tools.inflection import plural
-from kmd.config.logger import get_logger, log_file_path
+from kmd.media.web import fetch_and_cache
+from kmd.model import (
+    InvalidInput,
+    InvalidState,
+    is_ignored,
+    ItemType,
+    StorePath,
+    USER_SETTABLE_PARAMS,
+)
+from kmd.preconditions import ALL_PRECONDITIONS
+from kmd.preconditions.precondition_checks import actions_matching_paths
+from kmd.shell_tools.native_tools import (
+    CmdlineTool,
+    edit_files,
+    tail_file,
+    terminal_show_image_graceful,
+    tool_check,
+    view_file_native,
+)
+from kmd.text_chunks.parse_divs import parse_divs
+from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
+from kmd.text_ui.command_output import (
+    format_name_and_description,
+    output,
+    output_assistance,
+    output_heading,
+    output_response,
+    output_status,
+    Wrap,
+)
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
 from kmd.util.type_utils import not_none
@@ -710,7 +715,7 @@ def search(
     Useful to find all docs or resources matching a string or regex.
     """
     tool_check().require(CmdlineTool.ripgrep)
-    from ripgrepy import Ripgrepy, RipGrepNotFound
+    from ripgrepy import RipGrepNotFound, Ripgrepy
 
     strip_prefix = None
     if not paths:

@@ -1,17 +1,17 @@
 from kmd.config.logger import get_logger
+from kmd.exec.action_registry import kmd_action
 from kmd.exec.llm_transforms import llm_transform_str
 from kmd.model import (
+    ANNOTATED_PARA,
+    CachedLLMAction,
+    Format,
+    InvalidInput,
+    Item,
     Message,
     MessageTemplate,
-    InvalidInput,
-    ANNOTATED_PARA,
-    PARA_CAPTION,
     PARA,
-    Format,
-    Item,
-    CachedLLMAction,
+    PARA_CAPTION,
 )
-from kmd.exec.action_registry import kmd_action
 from kmd.text_chunks.div_elements import div
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_docs.text_doc import Paragraph, TextDoc

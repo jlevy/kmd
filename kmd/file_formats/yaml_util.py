@@ -2,11 +2,13 @@
 YAML file storage.
 """
 
-from io import StringIO
 import os
+from io import StringIO
 from typing import Any, Callable, List, Optional, TextIO
+
 from ruamel.yaml import YAML
 from strif import atomic_output_file
+
 from kmd.model.arguments_model import StorePath
 
 KeySort = Callable[[str], tuple]

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Iterable
+
 from kmd.config.logger import get_logger
 from kmd.model.items_model import Item
 from kmd.query.index_utils import drop_non_atomic, flatten_dict, tiktoken_tokenizer
@@ -28,14 +29,13 @@ class WsVectorIndex:
 
         import chromadb
         from chromadb.config import Settings
+        from llama_index.core import get_response_synthesizer, VectorStoreIndex
         from llama_index.core.node_parser import SentenceSplitter
-        from llama_index.vector_stores.chroma import ChromaVectorStore
-        from llama_index.core.storage import StorageContext
-        from llama_index.core import VectorStoreIndex
-        from llama_index.core.retrievers import VectorIndexRetriever
-        from llama_index.core.query_engine import RetrieverQueryEngine
         from llama_index.core.postprocessor import SimilarityPostprocessor
-        from llama_index.core import get_response_synthesizer
+        from llama_index.core.query_engine import RetrieverQueryEngine
+        from llama_index.core.retrievers import VectorIndexRetriever
+        from llama_index.core.storage import StorageContext
+        from llama_index.vector_stores.chroma import ChromaVectorStore
 
         # DB setup:
         os.makedirs(self.index_dir, exist_ok=True)

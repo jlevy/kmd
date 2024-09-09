@@ -3,9 +3,9 @@ from kmd.concepts.concept_formats import (
     concepts_from_markdown,
     normalize_concepts,
 )
-from kmd.exec.action_registry import kmd_action
-from kmd.model import ONE_OR_MORE_ARGS, Action, ActionInput, ActionResult, InvalidInput
 from kmd.config.logger import get_logger
+from kmd.exec.action_registry import kmd_action
+from kmd.model import Action, ActionInput, ActionResult, InvalidInput, ONE_OR_MORE_ARGS
 from kmd.preconditions.precondition_defs import is_markdown_list
 
 log = get_logger(__name__)

@@ -1,7 +1,7 @@
-from importlib import metadata
-from pathlib import Path
 import subprocess
 import tomllib
+from importlib import metadata
+from pathlib import Path
 
 
 def get_pyproject_version() -> str:

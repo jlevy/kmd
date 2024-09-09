@@ -1,21 +1,22 @@
-from pathlib import Path
 import re
-from typing import Optional, List, Dict, Any, Tuple
-from urllib.parse import urlparse, parse_qs
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import parse_qs, urlparse
+
+from kmd.config.logger import get_logger
+from kmd.config.text_styles import EMOJI_WARN
 from kmd.file_formats.yaml_util import to_yaml_string
 from kmd.media.yt_dlp_utils import parse_date, ydl_download_audio, ydl_extract_info
-from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.errors_model import ApiResultError, InvalidInput
-from kmd.util.type_utils import not_none
-from kmd.util.url import Url
 from kmd.model.media_model import (
-    SERVICE_YOUTUBE,
     HeatmapValue,
     MediaMetadata,
     MediaService,
     MediaUrlType,
+    SERVICE_YOUTUBE,
 )
-from kmd.config.logger import get_logger
+from kmd.util.type_utils import not_none
+from kmd.util.url import Url
 
 log = get_logger(__name__)
 

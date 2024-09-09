@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, List, Optional
+
 from kmd.config.logger import get_console
 from kmd.config.text_styles import COLOR_HINT
 from kmd.lang_tools.inflection import plural

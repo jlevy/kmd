@@ -1,6 +1,6 @@
-from kmd.model import Message, MessageTemplate, TitleTemplate, CachedLLMAction
-from kmd.text_docs.window_settings import WINDOW_16_PARA
 from kmd.exec.action_registry import kmd_action
+from kmd.model import CachedLLMAction, Message, MessageTemplate, TitleTemplate
+from kmd.text_docs.window_settings import WINDOW_16_PARA
 
 
 @kmd_action()

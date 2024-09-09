@@ -8,12 +8,14 @@ from dataclasses import dataclass
 from pprint import pprint
 from textwrap import dedent
 from typing import Callable, Dict, Generator, Iterable, List, Optional, Tuple
+
 import regex
+
 from kmd.config.logger import get_logger
-from kmd.lang_tools.sentence_split import Splitter, split_sentences
-from kmd.text_docs.sizes import TextUnit, size, size_in_bytes
 from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
+from kmd.lang_tools.sentence_split import split_sentences, Splitter
 from kmd.model.errors_model import UnexpectedError
+from kmd.text_docs.sizes import size, size_in_bytes, TextUnit
 from kmd.text_docs.tiktoken_utils import tiktoken_len
 from kmd.text_docs.wordtoks import (
     BOF_TOK,
@@ -21,11 +23,11 @@ from kmd.text_docs.wordtoks import (
     is_break_or_space,
     is_tag,
     join_wordtoks,
+    PARA_BR_STR,
+    PARA_BR_TOK,
     raw_text_to_wordtoks,
     SENT_BR_STR,
     SENT_BR_TOK,
-    PARA_BR_STR,
-    PARA_BR_TOK,
     wordtok_len,
 )
 from kmd.util.log_calls import tally_calls

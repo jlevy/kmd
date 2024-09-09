@@ -1,17 +1,19 @@
 from textwrap import dedent
 from typing import Callable
+
 from cachetools import cached
+
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings
+from kmd.docs import api_docs, assistant_instructions
 from kmd.file_storage.workspaces import current_workspace_info, get_param_value
-from kmd.model.messages_model import Message, MessageTemplate
+from kmd.llms.llm_completion import llm_completion
 from kmd.model.errors_model import KmdRuntimeError
 from kmd.model.language_models import LLM
-from kmd.llms.llm_completion import llm_completion
+from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
-from kmd.docs import api_docs, assistant_instructions
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
@@ -43,7 +45,7 @@ def _insert_output(func: Callable, name: str) -> str:
 
 
 def assistant_current_state() -> str:
-    from kmd.commands.commands import select, applicable_actions  # Avoid circular imports.
+    from kmd.commands.commands import applicable_actions, select  # Avoid circular imports.
 
     path, is_sandbox = current_workspace_info()
     if path and not is_sandbox:

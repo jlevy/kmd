@@ -1,9 +1,11 @@
-import regex
 from textwrap import dedent
 from typing import Any, List
+
 import marko
+import regex
+from marko.block import Heading, HTMLBlock, ListItem
 from marko.inline import Link
-from marko.block import ListItem, Heading, HTMLBlock
+
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)

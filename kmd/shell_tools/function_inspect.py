@@ -1,17 +1,7 @@
 import inspect
-from inspect import Parameter
-from typing import (
-    Callable,
-    Any,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    get_origin,
-    get_args,
-    Union,
-)
 from dataclasses import dataclass
+from inspect import Parameter
+from typing import Any, Callable, get_args, get_origin, List, Optional, Tuple, Type, Union
 
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param
 

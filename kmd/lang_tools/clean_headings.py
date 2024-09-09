@@ -1,4 +1,5 @@
 from typing import List
+
 from kmd.llms.llm_completion import llm_completion
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.model_settings import DEFAULT_FAST_LLM

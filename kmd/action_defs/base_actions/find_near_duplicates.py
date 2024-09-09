@@ -1,17 +1,17 @@
 from kmd.concepts.embeddings import Embeddings
 from kmd.concepts.text_similarity import find_related_pairs, relate_texts_by_embedding
+from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.lang_tools.inflection import lemmatized_equal
 from kmd.model import (
-    TWO_OR_MORE_ARGS,
     Action,
     ActionInput,
     ActionResult,
     PathOp,
     PathOpType,
     StorePath,
+    TWO_OR_MORE_ARGS,
 )
-from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import is_concept, is_text_doc
 from kmd.text_formatting.markdown_util import as_bullet_points
 from kmd.text_ui.command_output import output, output_heading

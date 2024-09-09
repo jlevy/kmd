@@ -1,12 +1,13 @@
 from typing import List, Optional
+
 from kmd.config.logger import get_logger
+from kmd.exec.combiners import combine_as_paragraphs, Combiner
 from kmd.model.actions_model import Action, ActionInput, ActionResult
+from kmd.model.arguments_model import StorePath
 from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item, ItemType, State
-from kmd.model.arguments_model import StorePath
 from kmd.model.operations_model import Operation
 from kmd.model.preconditions_model import Precondition
-from kmd.exec.combiners import Combiner, combine_as_paragraphs
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none
 

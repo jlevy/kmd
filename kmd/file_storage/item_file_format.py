@@ -1,13 +1,14 @@
 from pathlib import Path
 from typing import Optional
+
+from kmd.config.logger import get_logger
+from kmd.file_formats.frontmatter_format import fmf_read, fmf_write, FmFormat
 from kmd.file_formats.yaml_util import custom_key_sort
 from kmd.model.errors_model import FileFormatError
 from kmd.model.file_formats_model import Format
-from kmd.model.items_model import ITEM_FIELDS, Item
-from kmd.file_formats.frontmatter_format import FmFormat, fmf_read, fmf_write
+from kmd.model.items_model import Item, ITEM_FIELDS
 from kmd.model.operations_model import OPERATION_FIELDS
 from kmd.text_formatting.doc_formatting import normalize_formatting
-from kmd.config.logger import get_logger
 from kmd.text_formatting.text_formatting import fmt_path
 
 log = get_logger(__name__)

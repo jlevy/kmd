@@ -1,11 +1,13 @@
 from os.path import getsize
 from pathlib import Path
 from typing import List, NamedTuple, Optional, Tuple
+
+from deepgram import ClientOptionsFromEnv, DeepgramClient, FileSource, PrerecordedOptions
 from httpx import Timeout
 from openai import OpenAI
-from deepgram import DeepgramClient, PrerecordedOptions, FileSource, ClientOptionsFromEnv
 from pydub import AudioSegment
 from strif import atomic_output_file
+
 from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError

@@ -1,5 +1,6 @@
 import re
 from typing import List
+
 from kmd.docs.topics.faq import __doc__ as faq_doc
 
 

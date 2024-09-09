@@ -9,6 +9,7 @@ def _run(cmd: list[str]):
 
 
 def main():
+    _run(["usort", "format", "kmd", "tests"])
     _run(["ruff", "check", "--fix", "kmd", "tests"])
     _run(["black", "kmd", "tests"])
 

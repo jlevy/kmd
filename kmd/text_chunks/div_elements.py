@@ -1,9 +1,10 @@
 from textwrap import dedent
 from typing import List
+
 from kmd.config.logger import get_logger
 from kmd.model.doc_elements import CHUNK, ORIGINAL
 from kmd.text_chunks.chunk_utils import chunk_children, chunk_paras
-from kmd.text_chunks.parse_divs import TextNode, parse_divs, parse_divs_single
+from kmd.text_chunks.parse_divs import parse_divs, parse_divs_single, TextNode
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_docs.wordtoks import first_wordtok_is_div
 from kmd.text_formatting.html_in_md import div_wrapper, html_join_blocks

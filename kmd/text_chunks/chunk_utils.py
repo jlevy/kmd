@@ -1,4 +1,5 @@
 from typing import Callable, Generator, TypeVar
+
 from kmd.text_chunks.text_node import TextNode
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 

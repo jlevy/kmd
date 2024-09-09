@@ -1,7 +1,8 @@
 import ast
-from enum import Enum
 import shlex
+from enum import Enum
 from typing import Any, Optional, Tuple, Type, TypeVar
+
 from kmd.util.type_utils import instantiate_as_type
 
 

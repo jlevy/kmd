@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any
+
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)

@@ -1,4 +1,5 @@
 from textwrap import indent
+
 from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.model import (
@@ -10,13 +11,13 @@ from kmd.model import (
     ItemType,
     UnexpectedError,
 )
-from kmd.preconditions.precondition_defs import is_timestamped_text, is_text_doc
+from kmd.preconditions.precondition_defs import is_text_doc, is_timestamped_text
 from kmd.provenance.source_items import find_upstream_item
 from kmd.provenance.timestamps import TimestampExtractor
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.token_mapping import TokenMapping
-from kmd.text_docs.wordtoks import BOF_TOK, EOF_TOK, PARA_BR_TOK, SENT_BR_TOK, search_tokens
+from kmd.text_docs.wordtoks import BOF_TOK, EOF_TOK, PARA_BR_TOK, search_tokens, SENT_BR_TOK
 from kmd.text_formatting.citations import add_citation_to_text, format_timestamp_citation
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.type_utils import not_none

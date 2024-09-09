@@ -2,22 +2,23 @@
 The data model for Items and their file formats.
 """
 
-from dataclasses import asdict, dataclass, field, fields, replace
 import dataclasses
+from dataclasses import asdict, dataclass, field, fields, replace
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional, Type, TypeVar, Dict
+from typing import Any, Dict, List, Optional, Type, TypeVar
+
 from slugify import slugify
+
 from kmd.config.logger import get_logger
-from kmd.model.file_formats_model import FileExt, Format
-from kmd.model.media_model import MediaMetadata
-from kmd.model.operations_model import Operation, OperationSummary, Source
-from kmd.util.time_util import iso_format_z
 from kmd.file_formats.yaml_util import from_yaml_string
+from kmd.model.arguments_model import Locator
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import FileFormatError
-from kmd.model.arguments_model import Locator
+from kmd.model.file_formats_model import FileExt, Format
+from kmd.model.media_model import MediaMetadata
+from kmd.model.operations_model import Operation, OperationSummary, Source
 from kmd.text_formatting.markdown_util import markdown_to_html
 from kmd.text_formatting.text_formatting import (
     abbreviate_on_words,
@@ -28,6 +29,7 @@ from kmd.text_formatting.text_formatting import (
     plaintext_to_html,
 )
 from kmd.util.obj_utils import abbreviate_obj
+from kmd.util.time_util import iso_format_z
 from kmd.util.url import Url
 
 

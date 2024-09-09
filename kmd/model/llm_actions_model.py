@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
+
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import (
     ActionInput,
@@ -8,10 +9,10 @@ from kmd.model.actions_model import (
     ForEachItemAction,
     TransformAction,
 )
-from kmd.model.errors_model import InvalidInput
 from kmd.model.doc_elements import CHUNK, ORIGINAL, RESULT
+from kmd.model.errors_model import InvalidInput
 from kmd.model.file_formats_model import Format
-from kmd.model.items_model import UNTITLED, Item
+from kmd.model.items_model import Item, UNTITLED
 from kmd.model.language_models import LLM
 from kmd.model.model_settings import DEFAULT_CAREFUL_LLM
 from kmd.model.preconditions_model import Precondition

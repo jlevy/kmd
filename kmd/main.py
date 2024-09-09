@@ -2,28 +2,28 @@
 Launch xonsh with kmd extensions and customizations.
 """
 
-import kmd.config.lazy_imports  # noqa: F401
-from kmd.config.lazy_imports import import_start_time
-import re
 import os
-import time
+import re
 import shlex
+import time
 from os.path import expanduser
 from typing import List, Optional
+
 import xonsh.main
-from xonsh.main import events
-from xonsh.shell import Shell
-from xonsh.main import premain, postmain
+from pygments.token import Token
 from xonsh.built_ins import XSH
 from xonsh.execer import Execer
+from xonsh.main import events, postmain, premain
+from xonsh.shell import Shell
 from xonsh.xontribs import xontribs_load
-from pygments.token import Token
+
+from kmd.config.lazy_imports import import_start_time
 from kmd.config.logger import get_console, get_logger
 from kmd.config.settings import APP_NAME
 from kmd.config.setup import setup
-from kmd.text_ui.command_output import output, output_assistance
-from kmd.help.assistant import assistance
 from kmd.config.text_styles import INPUT_COLOR, SPINNER
+from kmd.help.assistant import assistance
+from kmd.text_ui.command_output import output, output_assistance
 from kmd.version import get_version
 
 
@@ -271,9 +271,10 @@ def run_shell(single_command: Optional[str] = None):
 
 def parse_args():
     import argparse
-    from kmd.commands.commands import kmd_help
-    from io import StringIO
     from contextlib import redirect_stdout
+    from io import StringIO
+
+    from kmd.commands.commands import kmd_help
 
     class CustomHelpFormatter(argparse.HelpFormatter):
         def format_help(self):

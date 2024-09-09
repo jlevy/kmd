@@ -32,7 +32,7 @@
 # https://github.com/xonsh/lazyasd/blob/main/lazyasd-py3.py
 # Updated by github.com/jlevy for kmd.
 
-from typing import Any, Callable, Dict, Generic, Iterator, TypeVar, Mapping, cast
+from typing import Any, Callable, cast, Dict, Generic, Iterator, Mapping, TypeVar
 
 T = TypeVar("T")
 

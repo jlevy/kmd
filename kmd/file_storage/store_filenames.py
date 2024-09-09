@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import Tuple
+
+from kmd.config.logger import get_logger
+from kmd.lang_tools.inflection import plural
 from kmd.model.errors_model import InvalidFilename
 from kmd.model.file_formats_model import FileExt, parse_filename
 from kmd.model.items_model import ItemType
-from kmd.lang_tools.inflection import plural
-from kmd.config.logger import get_logger
 from kmd.text_formatting.text_formatting import fmt_path
 
 log = get_logger(__name__)

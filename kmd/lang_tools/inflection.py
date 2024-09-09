@@ -1,7 +1,9 @@
 from typing import List, Optional
+
 from inflect import engine
-from kmd.util.lazyobject import lazyobject
+
 from kmd.lang_tools.spacy_loader import nlp
+from kmd.util.lazyobject import lazyobject
 from kmd.util.log_calls import tally_calls
 
 

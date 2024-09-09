@@ -1,5 +1,4 @@
-from typing import List, Set, Tuple
-from typing import NamedTuple
+from typing import List, NamedTuple, Set, Tuple
 
 
 class Key(NamedTuple):

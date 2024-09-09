@@ -1,17 +1,19 @@
-import threading
-import kmd.config.suppress_warnings  # noqa: F401
+import logging
 import os
+import threading
+from logging import ERROR, Formatter, INFO, WARNING
 from pathlib import Path
 from typing import Any, Literal, Optional
-import logging
-from logging import ERROR, INFO, WARNING, Formatter
+
 from rich import reconfigure
-from slugify import slugify
-from strif import new_timestamped_uid, atomic_output_file
+from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
-from rich.console import Console
-from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, RICH_STYLES, KmdHighlighter
+from slugify import slugify
+from strif import atomic_output_file, new_timestamped_uid
+
+import kmd.config.suppress_warnings  # noqa: F401
+from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, KmdHighlighter, RICH_STYLES
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.stack_traces import current_stack_traces
 from kmd.util.task_stack import task_stack_prefix_str

@@ -1,7 +1,8 @@
 from typing import List
+
 from kmd.config.logger import get_logger
-from kmd.util.log_calls import tally_calls
 from kmd.lang_tools.spacy_loader import nlp
+from kmd.util.log_calls import tally_calls
 
 log = get_logger(__name__)
 

@@ -4,8 +4,10 @@ word tokens ("wordtoks").
 """
 
 from textwrap import dedent
-from typing import List, Callable, Union
+from typing import Callable, List, Union
+
 import regex
+
 from kmd.config.text_styles import SYMBOL_SEP
 
 # Note these parse as tokens and like HTML tags, so they can safely be mixed into inputs if desired.

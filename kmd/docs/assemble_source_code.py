@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import List
+
 from kmd.text_formatting.text_formatting import fmt_path
 
 

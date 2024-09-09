@@ -1,19 +1,17 @@
 from typing import Optional
+
 from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.llms.llm_completion import llm_completion
+from kmd.model.actions_model import TransformAction
 from kmd.model.errors_model import InvalidInput
 from kmd.model.file_formats_model import Format
-from kmd.model.items_model import UNTITLED, Item
+from kmd.model.items_model import Item, UNTITLED
 from kmd.model.language_models import LLM
-from kmd.model.actions_model import TransformAction
 from kmd.model.messages_model import Message, MessageTemplate
-from kmd.text_docs.text_diffs import DiffFilterType, DiffFilter
+from kmd.text_docs.sliding_transforms import filtered_transform, WindowSettings
+from kmd.text_docs.text_diffs import DiffFilter, DiffFilterType
 from kmd.text_docs.text_doc import TextDoc
-from kmd.text_docs.sliding_transforms import (
-    WindowSettings,
-    filtered_transform,
-)
 
 log = get_logger(__name__)
 

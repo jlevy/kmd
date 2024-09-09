@@ -1,10 +1,12 @@
 import contextlib
 from pathlib import Path
-from typing import Optional, Dict, Any
-from requests import Session
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
+
 import requests
+from requests import Session
 from strif import atomic_output_file, copyfile_atomic
+
 from kmd.config.logger import get_logger
 from kmd.util.url import Url
 

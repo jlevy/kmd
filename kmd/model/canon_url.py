@@ -1,6 +1,7 @@
 from typing import Optional
+
 from kmd.media.media_services import canonicalize_media_url, thumbnail_media_url
-from kmd.util.url import Url, normalize_url
+from kmd.util.url import normalize_url, Url
 
 
 def canonicalize_url(url: Url) -> Url:

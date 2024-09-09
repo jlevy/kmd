@@ -2,14 +2,15 @@ from abc import ABC, abstractmethod
 from copy import copy
 from dataclasses import dataclass, fields
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, cast
+from typing import Any, cast, Dict, List, Optional, Sequence
+
 from kmd.config.logger import get_logger
 from kmd.lang_tools.inflection import plural
-from kmd.model.errors_model import NONFATAL_EXCEPTIONS, InvalidInput
-from kmd.model.items_model import UNTITLED, Item, ItemType
+from kmd.model.arguments_model import InputArg, StorePath
+from kmd.model.errors_model import InvalidInput, NONFATAL_EXCEPTIONS
+from kmd.model.items_model import Item, ItemType, UNTITLED
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
-from kmd.model.arguments_model import InputArg, StorePath
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.preconditions_model import Precondition

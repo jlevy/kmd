@@ -1,20 +1,22 @@
 import enum
-from pathlib import Path
 import re
-from typing import Optional
 from dataclasses import dataclass
-import requests
+from pathlib import Path
+from typing import Optional
+
 import justext
+import requests
+
+from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings, update_global_settings
 from kmd.media.media_services import canonicalize_media_url
 from kmd.model.canon_url import thumbnail_url
 from kmd.model.errors_model import WebFetchError
 from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.log_calls import log_calls
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
-from kmd.config.logger import get_logger
 from kmd.util.web_cache import WebCache
-from kmd.util.log_calls import log_calls
 
 log = get_logger(__name__)
 
@@ -156,20 +158,20 @@ def _extract_page_data_from_html(url: Url, raw_html: bytes) -> PageData:
 
 
 from justext.core import (
-    LENGTH_LOW_DEFAULT,
-    LENGTH_HIGH_DEFAULT,
-    STOPWORDS_LOW_DEFAULT,
-    STOPWORDS_HIGH_DEFAULT,
-    MAX_LINK_DENSITY_DEFAULT,
-    MAX_HEADING_DISTANCE_DEFAULT,
-    NO_HEADINGS_DEFAULT,
-    DEFAULT_ENCODING,
-    DEFAULT_ENC_ERRORS,
-    preprocessor,
-    html_to_dom,
-    ParagraphMaker,
     classify_paragraphs,
+    DEFAULT_ENC_ERRORS,
+    DEFAULT_ENCODING,
+    html_to_dom,
+    LENGTH_HIGH_DEFAULT,
+    LENGTH_LOW_DEFAULT,
+    MAX_HEADING_DISTANCE_DEFAULT,
+    MAX_LINK_DENSITY_DEFAULT,
+    NO_HEADINGS_DEFAULT,
+    ParagraphMaker,
+    preprocessor,
     revise_paragraph_classification,
+    STOPWORDS_HIGH_DEFAULT,
+    STOPWORDS_LOW_DEFAULT,
 )
 
 

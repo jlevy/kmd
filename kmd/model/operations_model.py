@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
+
 from kmd.model.arguments_model import StorePath
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.log_calls import quote_if_needed

@@ -1,8 +1,7 @@
-from kmd.model import ComboAction
 from kmd.exec.action_registry import kmd_action
-from kmd.model import DESCRIPTION
-from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.exec.combiners import combine_as_div_group
+from kmd.model import ComboAction, DESCRIPTION
+from kmd.preconditions.precondition_defs import is_text_doc
 
 
 @kmd_action(for_each_item=True)

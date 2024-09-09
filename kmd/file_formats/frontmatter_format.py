@@ -9,22 +9,24 @@ or between `<!---` and `--->` delimiters for convenience in text or HTML files.
 These markers must be alone on their own lines.
 """
 
-from enum import Enum
 import os
+import shutil
+from enum import Enum
 from pathlib import Path
-from typing import Tuple, Optional, Dict
+from typing import Dict, Optional, Tuple
+
 from ruamel.yaml.error import YAMLError
 from strif import atomic_output_file
+
 from kmd.file_formats.yaml_util import (
-    KeySort,
     custom_key_sort,
     from_yaml_string,
+    KeySort,
     to_yaml_string,
     write_yaml,
 )
 from kmd.model.errors_model import FileFormatError, FileNotFound
 from kmd.text_formatting.text_formatting import fmt_path
-import shutil
 
 
 class FmFormat(Enum):

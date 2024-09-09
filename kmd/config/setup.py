@@ -1,7 +1,9 @@
 import os
 from typing import Any
+
 from cachetools import cached
 from dotenv import find_dotenv, load_dotenv
+
 from kmd.config.logger import logging_setup
 from kmd.util.stack_traces import add_stacktrace_handler
 

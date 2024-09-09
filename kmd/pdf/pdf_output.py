@@ -1,7 +1,9 @@
 from datetime import datetime
-import weasyprint
 from typing import Optional
+
+import weasyprint
 from strif import atomic_output_file
+
 from kmd.config import colors
 from kmd.config.settings import APP_NAME
 from kmd.web_gen.template_render import render_web_template

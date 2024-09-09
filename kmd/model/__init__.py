@@ -4,111 +4,112 @@ The core classes for modeling kmd's framework.
 We include essential logic here but try to keep logic and dependencies minimal.
 """
 
+from kmd.model.actions_model import (
+    Action,
+    ActionInput,
+    ActionResult,
+    ANY_ARGS,
+    CachedDocAction,
+    ExpectedArgs,
+    ForEachItemAction,
+    NO_ARGS,
+    ONE_ARG,
+    ONE_OR_MORE_ARGS,
+    ONE_OR_NO_ARGS,
+    PathOp,
+    PathOpType,
+    TitleTemplate,
+    TransformAction,
+    TWO_ARGS,
+    TWO_OR_MORE_ARGS,
+)
+from kmd.model.arguments_model import InputArg, is_store_path, Locator, StorePath
+from kmd.model.canon_url import canonicalize_url, thumbnail_url
+from kmd.model.compound_actions_model import (
+    CachedDocCombo,
+    CachedDocSequence,
+    combine_as_paragraphs,
+    Combiner,
+    ComboAction,
+    look_up_actions,
+    SequenceAction,
+)
+from kmd.model.doc_elements import (
+    ANNOTATED_PARA,
+    CHUNK,
+    CITATION,
+    CONCEPTS,
+    DATA_TIMESTAMP,
+    DESCRIPTION,
+    FULL_TEXT,
+    GROUP,
+    ORIGINAL,
+    PARA,
+    PARA_CAPTION,
+    RESULT,
+    SPEAKER_LABEL,
+    SUMMARY,
+)
+
 # flake8: noqa: F401
 
 from kmd.model.errors_model import (
-    KmdRuntimeError,
-    UnexpectedError,
     ApiResultError,
-    WebFetchError,
-    SkippableError,
-    SelfExplanatoryError,
-    FileFormatError,
     ContentError,
-    InvalidInput,
-    InvalidState,
-    InvalidFilename,
     FileExists,
+    FileFormatError,
     FileNotFound,
     InvalidCommand,
+    InvalidFilename,
+    InvalidInput,
+    InvalidState,
+    KmdRuntimeError,
+    SelfExplanatoryError,
+    SkippableError,
+    UnexpectedError,
+    WebFetchError,
 )
-from kmd.model.arguments_model import StorePath, Locator, InputArg, is_store_path
-from kmd.model.doc_elements import (
-    ORIGINAL,
-    RESULT,
-    GROUP,
-    CHUNK,
-    FULL_TEXT,
-    DESCRIPTION,
-    SUMMARY,
-    SPEAKER_LABEL,
-    CITATION,
-    ANNOTATED_PARA,
-    PARA,
-    PARA_CAPTION,
-    CONCEPTS,
-    DATA_TIMESTAMP,
-)
-from kmd.model.canon_url import canonicalize_url, thumbnail_url
-from kmd.model.language_models import LLM, LLM_LIST, EmbeddingModel
 
 from kmd.model.file_formats_model import (
-    Format,
-    FileExt,
-    file_ext_is_text,
     canonicalize_file_ext,
-    parse_filename,
-    parse_file_format,
+    file_ext_is_text,
+    FileExt,
+    Format,
     is_ignored,
+    parse_file_format,
+    parse_filename,
 )
-from kmd.model.messages_model import Message, MessageTemplate
-from kmd.model.media_model import (
-    MediaUrlType,
-    HeatmapValue,
-    MediaMetadata,
-    SERVICE_YOUTUBE,
-    SERVICE_VIMEO,
-    SERVICE_APPLE_PODCASTS,
-    MediaService,
-)
+from kmd.model.graph_model import GraphData, Link, Node
 from kmd.model.items_model import (
-    ItemType,
-    State,
     IdType,
+    Item,
     ItemId,
     ItemRelations,
-    UNTITLED,
+    ItemType,
     SLUG_MAX_LEN,
-    Item,
+    State,
+    UNTITLED,
 )
-from kmd.model.preconditions_model import Precondition, precondition
+from kmd.model.language_models import EmbeddingModel, LLM, LLM_LIST
+from kmd.model.llm_actions_model import CachedLLMAction, ChunkedLLMAction, LLMAction
+from kmd.model.media_model import (
+    HeatmapValue,
+    MediaMetadata,
+    MediaService,
+    MediaUrlType,
+    SERVICE_APPLE_PODCASTS,
+    SERVICE_VIMEO,
+    SERVICE_YOUTUBE,
+)
+from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.params_model import (
-    Param,
-    GLOBAL_PARAMS,
+    ALL_COMMON_PARAMS,
     COMMON_ACTION_PARAMS,
+    GLOBAL_PARAMS,
+    Param,
+    param_lookup,
+    ParamValues,
     RUNTIME_ACTION_PARAMS,
     USER_SETTABLE_PARAMS,
-    ALL_COMMON_PARAMS,
-    ParamValues,
-    param_lookup,
 )
-from kmd.model.actions_model import (
-    ExpectedArgs,
-    ANY_ARGS,
-    NO_ARGS,
-    ONE_OR_NO_ARGS,
-    ONE_OR_MORE_ARGS,
-    ONE_ARG,
-    TWO_OR_MORE_ARGS,
-    TWO_ARGS,
-    TitleTemplate,
-    ActionInput,
-    PathOpType,
-    PathOp,
-    ActionResult,
-    Action,
-    ForEachItemAction,
-    CachedDocAction,
-    TransformAction,
-)
-from kmd.model.llm_actions_model import LLMAction, CachedLLMAction, ChunkedLLMAction
-from kmd.model.compound_actions_model import (
-    look_up_actions,
-    SequenceAction,
-    ComboAction,
-    CachedDocCombo,
-    CachedDocSequence,
-    Combiner,
-    combine_as_paragraphs,
-)
-from kmd.model.graph_model import Node, Link, GraphData
+from kmd.model.preconditions_model import Precondition, precondition

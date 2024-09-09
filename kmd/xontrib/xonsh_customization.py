@@ -2,24 +2,22 @@ import threading
 import time
 from types import NoneType
 from typing import Any, Callable, Dict, List, TypeVar
+
 from xonsh.completers.completer import add_one_completer
-from kmd.commands.command_registry import all_commands
-from kmd.commands.command_results import print_command_result_info
-from kmd.config.setup import setup
-from kmd.config.logger import get_logger
-from kmd.config.text_styles import (
-    PROMPT_COLOR_NORMAL,
-    PROMPT_COLOR_WARN,
-    PROMPT_MAIN,
-)
-from kmd.shell_tools.action_wrapper import ShellCallableAction
-from kmd.shell_tools.function_wrapper import wrap_for_shell_args
-from kmd.text_ui.command_output import output
-from kmd.file_storage.workspaces import current_workspace
+
 from kmd.action_defs import reload_all_actions
 from kmd.commands import commands
+from kmd.commands.command_registry import all_commands
+from kmd.commands.command_results import print_command_result_info
 from kmd.commands.commands import CommandResult, welcome
+from kmd.config.logger import get_logger
+from kmd.config.setup import setup
+from kmd.config.text_styles import PROMPT_COLOR_NORMAL, PROMPT_COLOR_WARN, PROMPT_MAIN
+from kmd.file_storage.workspaces import current_workspace
+from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
+from kmd.shell_tools.function_wrapper import wrap_for_shell_args
+from kmd.text_ui.command_output import output
 from kmd.version import get_version
 
 
@@ -126,8 +124,8 @@ def _load_xonsh_actions():
 def _load_completers():
     from kmd.xontrib.xonsh_completers import (
         command_or_action_completer,
-        item_completer,
         help_question_completer,
+        item_completer,
         options_completer,
     )
 

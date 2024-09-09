@@ -1,8 +1,8 @@
 from kmd.config.logger import get_logger
-from kmd.model import Message, MessageTemplate, CachedLLMAction
+from kmd.exec.action_registry import kmd_action
+from kmd.model import CachedLLMAction, Message, MessageTemplate
 from kmd.model.model_settings import DEFAULT_FAST_LLM
 from kmd.text_docs.window_settings import WINDOW_4_PARA
-from kmd.exec.action_registry import kmd_action
 
 
 log = get_logger(__name__)

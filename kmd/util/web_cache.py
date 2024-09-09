@@ -2,18 +2,20 @@
 Storage and caching of downloaded and processed web pages.
 """
 
-from pathlib import Path
-from typing import Callable, Optional, List, Dict
 import os
-from os import path
 import time
 from enum import Enum
+from os import path
+from pathlib import Path
+from typing import Callable, Dict, List, Optional
+
 import requests
 from strif import clean_alphanum_hash
+
+from kmd.config.logger import get_logger
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.download_url import download_url, user_agent_headers
-from kmd.util.url import Url, normalize_url
-from kmd.config.logger import get_logger
+from kmd.util.url import normalize_url, Url
 
 log = get_logger(__name__)
 

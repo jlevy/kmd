@@ -1,20 +1,22 @@
 from textwrap import dedent
+
 from kmd.exec.action_registry import kmd_action
 from kmd.exec.llm_transforms import llm_transform_item
-from kmd.help.assistant import assistant_preamble
 from kmd.file_storage.workspaces import current_workspace
 from kmd.form_input.prompt_input import prompt_simple_string
+from kmd.help.assistant import assistant_preamble
 from kmd.model import (
-    ONE_OR_NO_ARGS,
     ActionInput,
     ActionResult,
+    Format,
+    Item,
+    ItemType,
+    LLMAction,
     Message,
     MessageTemplate,
+    ONE_OR_NO_ARGS,
     TitleTemplate,
 )
-from kmd.model import Format
-from kmd.model import Item, ItemType
-from kmd.model import LLMAction
 from kmd.util.lazyobject import lazyobject
 
 

@@ -1,7 +1,9 @@
 from typing import List, Tuple
-from litellm import embedding
+
 import pandas as pd
+from litellm import embedding
 from scipy import spatial
+
 from kmd.concepts.embeddings import Embeddings
 from kmd.config.logger import get_logger
 from kmd.lang_tools.inflection import sort_by_length

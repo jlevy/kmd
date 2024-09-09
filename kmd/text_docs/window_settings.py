@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from kmd.text_docs.sizes import TextUnit
 
 WINDOW_BR = "<!--window-br-->"

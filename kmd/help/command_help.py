@@ -1,8 +1,9 @@
 from typing import List, Optional
+
 from kmd.model.params_model import Param
 from kmd.model.preconditions_model import Precondition
 from kmd.text_formatting.text_formatting import DEFAULT_INDENT
-from kmd.text_ui.command_output import Wrap, format_name_and_description, output, output_help
+from kmd.text_ui.command_output import format_name_and_description, output, output_help, Wrap
 
 
 def output_command_help(

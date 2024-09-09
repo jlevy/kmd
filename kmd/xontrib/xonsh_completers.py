@@ -1,22 +1,18 @@
 from typing import Iterable, List, Tuple
-from xonsh.completers.tools import contextual_completer, CompletionContext, CompleterResult
+
 from xonsh.completers.completer import RichCompletion
-from kmd.config.text_styles import (
-    COLOR_ACTION_TEXT,
-    COLOR_COMMAND_TEXT,
-    EMOJI_TASK,
-)
+from xonsh.completers.tools import CompleterResult, CompletionContext, contextual_completer
+
+from kmd.config.text_styles import COLOR_ACTION_TEXT, COLOR_COMMAND_TEXT, EMOJI_TASK
 from kmd.docs.faq_headings import faq_headings
-from kmd.model.params_model import Param
-from kmd.model.preconditions_model import Precondition
-from kmd.preconditions.precondition_checks import (
-    items_matching_precondition,
-)
-from kmd.shell_tools.function_inspect import get_params
-from kmd.text_formatting.text_formatting import fmt_path, single_line
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.errors_model import InvalidState
-from kmd.xontrib.xonsh_customization import _commands, _actions
+from kmd.model.params_model import Param
+from kmd.model.preconditions_model import Precondition
+from kmd.preconditions.precondition_checks import items_matching_precondition
+from kmd.shell_tools.function_inspect import get_params
+from kmd.text_formatting.text_formatting import fmt_path, single_line
+from kmd.xontrib.xonsh_customization import _actions, _commands
 
 MAX_COMPLETIONS = 500
 

@@ -1,8 +1,8 @@
+from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.media import web
 from kmd.media.media_services import get_media_metadata
-from kmd.model import ForEachItemAction, InvalidInput, WebFetchError, Item
-from kmd.config.logger import get_logger
+from kmd.model import ForEachItemAction, InvalidInput, Item, WebFetchError
 from kmd.preconditions.precondition_defs import is_url
 
 log = get_logger(__name__)

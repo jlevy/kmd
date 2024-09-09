@@ -4,9 +4,10 @@ ourselves to keep the HTML very minimal, control whitespace, and to avoid any
 confusions of using full HTML escaping (like unnecessary &quot;s etc.)
 """
 
-from typing import Callable, Optional, Dict
-from kmd.model.doc_elements import DATA_SPEAKER_ID, DATA_TIMESTAMP, SPEAKER_LABEL
 import re
+from typing import Callable, Dict, Optional
+
+from kmd.model.doc_elements import DATA_SPEAKER_ID, DATA_TIMESTAMP, SPEAKER_LABEL
 
 
 def escape_md_html(s: str, safe: bool = False) -> str:

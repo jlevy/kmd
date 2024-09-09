@@ -2,32 +2,34 @@
 Output methods. These are for user interaction, not logging.
 """
 
-from io import StringIO
-import threading
 import sys
+import textwrap
+import threading
 from contextlib import contextmanager
 from enum import Enum
-import textwrap
+from io import StringIO
 from textwrap import dedent, indent
 from typing import Any, Callable, Optional
+
 import rich
-from rich.text import Text
 from rich.markdown import Markdown
+from rich.text import Text
+
 from kmd.config.logger import get_console
-from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_lines_to_width
 from kmd.config.text_styles import (
     COLOR_ASSISTANCE,
     COLOR_HEADING,
     COLOR_HELP,
     COLOR_HINT,
     COLOR_KEY,
+    COLOR_RESPONSE,
     COLOR_RESULT,
     COLOR_STATUS,
-    COLOR_RESPONSE,
     CONSOLE_WRAP_WIDTH,
     EMOJI_ASSISTANT,
     HRULE,
 )
+from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_lines_to_width
 from kmd.text_formatting.text_formatting import DEFAULT_INDENT, split_paragraphs
 
 console = get_console()

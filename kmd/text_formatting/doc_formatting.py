@@ -1,5 +1,6 @@
 import textwrap
 from typing import Optional
+
 from kmd.model.file_formats_model import Format
 from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH, normalize_markdown
 

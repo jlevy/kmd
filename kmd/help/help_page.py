@@ -1,4 +1,5 @@
 from kmd.commands.command_registry import all_commands
+from kmd.config.logger import get_console, get_logger
 from kmd.docs.topics import about_kmd, faq, workspace_and_file_formats
 from kmd.text_ui.command_output import (
     format_name_and_description,
@@ -6,7 +7,6 @@ from kmd.text_ui.command_output import (
     output_heading,
     output_markdown,
 )
-from kmd.config.logger import get_console, get_logger
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)

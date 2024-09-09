@@ -2,6 +2,7 @@ from copy import copy
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import List, Optional
+
 from kmd.lang_tools.sentence_split_regex import split_sentences_regex
 from kmd.lang_tools.sentence_split_spacy import split_sentences_spacy
 from kmd.text_docs.sizes import TextUnit

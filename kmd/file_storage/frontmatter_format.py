@@ -8,16 +8,18 @@ Frontmatter can be either enclosed in `---` delimiters, as with Jekyll, or betwe
 be alone on their own lines.
 """
 
-from enum import Enum
 import os
+from enum import Enum
 from pathlib import Path
-from typing import Tuple, Optional, Dict
+from typing import Dict, Optional, Tuple
+
 from ruamel.yaml.error import YAMLError
 from strif import atomic_output_file
+
 from kmd.file_formats.yaml_util import (
-    KeySort,
     custom_key_sort,
     from_yaml_string,
+    KeySort,
     to_yaml_string,
     write_yaml,
 )

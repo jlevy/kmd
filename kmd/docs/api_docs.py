@@ -1,4 +1,4 @@
-from kmd.docs.assemble_source_code import model_src, base_action_defs_src, text_tool_src
+from kmd.docs.assemble_source_code import base_action_defs_src, model_src, text_tool_src
 
 __doc__: str = f"""
 KMD ITEM AND ACTION MODEL

@@ -1,6 +1,8 @@
 from dataclasses import asdict, dataclass, field
 from typing import Dict, Iterable, Optional, Set
+
 from strif import abbreviate_list
+
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)

@@ -1,4 +1,5 @@
 from typing import Callable, List, Optional
+
 from kmd.lang_tools.sentence_split_regex import split_sentences_regex
 from kmd.lang_tools.sentence_split_spacy import split_sentences_spacy
 from kmd.util.type_utils import not_none

@@ -1,15 +1,15 @@
+from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.model import (
-    ONE_OR_MORE_ARGS,
     Action,
     ActionInput,
     ActionResult,
-    TitleTemplate,
-    UNTITLED,
     Item,
     ItemType,
+    ONE_OR_MORE_ARGS,
+    TitleTemplate,
+    UNTITLED,
 )
-from kmd.config.logger import get_logger
 from kmd.preconditions.precondition_defs import has_text_body
 from kmd.util.type_utils import not_none
 

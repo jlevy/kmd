@@ -1,4 +1,5 @@
 from typing import List
+
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType

@@ -1,13 +1,14 @@
 from typing import List, Optional
-from kmd.model.media_model import MediaMetadata, MediaService
+
+from kmd.config.logger import get_logger
+from kmd.media.services.apple_podcasts import ApplePodcasts
+from kmd.media.services.local_file_media import LocalFileMedia
+from kmd.media.services.vimeo import Vimeo
+from kmd.media.services.youtube import YouTube
 from kmd.model.errors_model import InvalidInput
+from kmd.model.media_model import MediaMetadata, MediaService
 from kmd.util.log_calls import log_calls
 from kmd.util.url import Url
-from kmd.media.services.local_file_media import LocalFileMedia
-from kmd.media.services.youtube import YouTube
-from kmd.media.services.vimeo import Vimeo
-from kmd.media.services.apple_podcasts import ApplePodcasts
-from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
 

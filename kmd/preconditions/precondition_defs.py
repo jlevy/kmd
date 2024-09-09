@@ -1,11 +1,12 @@
 import re
+
+from kmd.media.media_services import get_media_id, youtube
 from kmd.model.doc_elements import ANNOTATED_PARA, CHUNK
+from kmd.model.errors_model import PreconditionFailure
 from kmd.model.file_formats_model import Format
+from kmd.model.items_model import Item, ItemType
 from kmd.model.preconditions_model import precondition
 from kmd.provenance.timestamps import TimestampExtractor
-from kmd.media.media_services import get_media_id, youtube
-from kmd.model.errors_model import PreconditionFailure
-from kmd.model.items_model import Item, ItemType
 from kmd.text_docs.wordtoks import first_wordtok_is_div
 from kmd.text_formatting.markdown_util import extract_bullet_points
 

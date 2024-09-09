@@ -1,7 +1,7 @@
+from dataclasses import fields, is_dataclass
 from enum import Enum
 from types import NoneType
-from typing import Any, Dict, Optional, Type, TypeVar, Union, get_args, get_origin
-from dataclasses import is_dataclass, fields
+from typing import Any, Dict, get_args, get_origin, Optional, Type, TypeVar, Union
 
 T = TypeVar("T")
 

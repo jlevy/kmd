@@ -1,10 +1,12 @@
-from dataclasses import dataclass
 import functools
-import time
 import re
+import time
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional
+
 import regex
 from strif import abbreviate_str
+
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 

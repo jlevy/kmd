@@ -1,7 +1,7 @@
 from kmd.concepts.concept_formats import concepts_from_markdown
-from kmd.exec.action_registry import kmd_action
-from kmd.model import CachedDocAction, InvalidInput, Format, Item, ItemType
 from kmd.config.logger import get_logger
+from kmd.exec.action_registry import kmd_action
+from kmd.model import CachedDocAction, Format, InvalidInput, Item, ItemType
 from kmd.preconditions.precondition_defs import is_markdown_list
 from kmd.text_formatting.markdown_util import as_bullet_points
 

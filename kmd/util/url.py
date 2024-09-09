@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import NewType, Optional
 from urllib.parse import urlparse, urlsplit, urlunsplit
+
 from kmd.config.logger import get_logger
 
 

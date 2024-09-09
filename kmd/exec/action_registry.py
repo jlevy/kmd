@@ -1,17 +1,18 @@
 import inspect
-from typing import List, Type, Tuple, Callable, Dict
+from typing import Callable, Dict, List, Tuple, Type
+
+from kmd.config.logger import get_logger
+from kmd.config.text_styles import EMOJI_WARN
 from kmd.model.actions_model import (
-    ANY_ARGS,
-    ONE_ARG,
     Action,
     ActionInput,
     ActionResult,
+    ANY_ARGS,
     ForEachItemAction,
+    ONE_ARG,
 )
-from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError
 from kmd.model.items_model import Item
-from kmd.config.text_styles import EMOJI_WARN
 
 log = get_logger(__name__)
 

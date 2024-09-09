@@ -2,19 +2,15 @@
 Sliding windows of text on a text doc.
 """
 
+from pprint import pprint
 from textwrap import dedent
 from typing import Generator, Optional
-from pprint import pprint
+
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError
 from kmd.model.file_formats_model import Format
+from kmd.text_docs.text_doc import SentIndex, size, TextDoc, TextUnit
 from kmd.text_formatting.doc_formatting import normalize_formatting
-from kmd.text_docs.text_doc import (
-    SentIndex,
-    TextDoc,
-    TextUnit,
-    size,
-)
 
 
 log = get_logger(__name__)

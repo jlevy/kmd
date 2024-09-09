@@ -1,7 +1,8 @@
-from cachetools import cached
 import spacy
-from spacy.language import Language
+from cachetools import cached
 from spacy.cli.download import download
+from spacy.language import Language
+
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)

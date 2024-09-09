@@ -1,6 +1,7 @@
-from dataclasses import dataclass
 import threading
+from dataclasses import dataclass
 from typing import List
+
 from kmd.config.text_styles import EMOJI_TASK, EMOJI_TASK_SEP
 
 

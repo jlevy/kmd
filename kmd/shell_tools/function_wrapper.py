@@ -1,19 +1,9 @@
-from typing import (
-    Callable,
-    Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    TypeVar,
-)
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar
+
 from kmd.config.logger import get_logger
 from kmd.help.command_help import output_command_help
 from kmd.model.errors_model import InvalidCommand
-from kmd.shell_tools.function_inspect import (
-    FuncParam,
-    collect_param_info,
-)
+from kmd.shell_tools.function_inspect import collect_param_info, FuncParam
 from kmd.shell_tools.option_parsing import parse_shell_args
 
 log = get_logger(__name__)

@@ -1,5 +1,6 @@
 from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
+
 from kmd.config.text_styles import COLOR_PROMPT, PROMPT_MAIN
 
 # TODO: Harmonize prompt_toolkit colors with rich text colors.

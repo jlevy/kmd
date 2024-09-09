@@ -1,14 +1,13 @@
 from functools import cached_property
 from textwrap import dedent
 from typing import List
+
 import regex
+
 from kmd.config.logger import get_logger
 from kmd.model.errors_model import ContentError, PreconditionFailure
 from kmd.provenance.extractors import Extractor
-from kmd.text_docs.wordtoks import (
-    raw_text_to_wordtoks,
-    search_tokens,
-)
+from kmd.text_docs.wordtoks import raw_text_to_wordtoks, search_tokens
 
 log = get_logger(__name__)
 

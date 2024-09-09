@@ -1,9 +1,6 @@
 from dataclasses import dataclass
-from typing import (
-    Dict,
-    List,
-    Optional,
-)
+from typing import Dict, List, Optional
+
 from kmd.util.parse_utils import parse_key_value
 
 

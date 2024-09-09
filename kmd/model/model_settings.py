@@ -1,4 +1,4 @@
-from kmd.model.language_models import LLM, EmbeddingModel
+from kmd.model.language_models import EmbeddingModel, LLM
 
 # These are the default models for various actions.
 # The user may override them with parameters.

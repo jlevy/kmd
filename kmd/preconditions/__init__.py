@@ -1,6 +1,7 @@
 import inspect
-from kmd.model.preconditions_model import Precondition
+
 import kmd.preconditions.precondition_defs as precondition_defs
+from kmd.model.preconditions_model import Precondition
 
 
 ALL_PRECONDITIONS = [

@@ -1,6 +1,7 @@
 from functools import partial
 from types import NoneType
 from typing import Any, Callable, Dict, List, Sequence
+
 from kmd.config.logger import get_logger
 
 

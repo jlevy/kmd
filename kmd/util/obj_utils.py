@@ -1,8 +1,10 @@
+import operator
 from dataclasses import asdict, is_dataclass
 from enum import Enum
-import operator
 from typing import Any, Callable, Iterable, List, Optional, Set, Tuple
+
 from strif import abbreviate_str
+
 from kmd.util.log_calls import quote_if_needed
 
 

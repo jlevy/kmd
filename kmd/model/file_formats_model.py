@@ -1,8 +1,9 @@
-from enum import Enum
 import os
-from pathlib import Path
 import re
+from enum import Enum
+from pathlib import Path
 from typing import Optional, Tuple
+
 from kmd.model.errors_model import InvalidFilename
 from kmd.text_formatting.text_formatting import fmt_path
 

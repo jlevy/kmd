@@ -1,4 +1,5 @@
 from textwrap import dedent
+
 from kmd.config.logger import get_logger
 from kmd.util.string_template import StringTemplate
 

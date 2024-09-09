@@ -131,7 +131,7 @@ EMOJI_TASK_SEP = "›"
 
 ## Rich setup
 
-from rich.highlighter import RegexHighlighter, _combine_regex
+from rich.highlighter import _combine_regex, RegexHighlighter
 from rich.style import Style
 
 

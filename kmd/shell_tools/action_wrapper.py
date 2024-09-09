@@ -1,9 +1,6 @@
 from kmd.commands.command_results import CommandResult
 from kmd.config.logger import get_console, get_logger
-from kmd.config.text_styles import (
-    COLOR_ERROR,
-    SPINNER,
-)
+from kmd.config.text_styles import COLOR_ERROR, SPINNER
 from kmd.exec.action_exec import run_action
 from kmd.file_storage.workspaces import current_workspace
 from kmd.help.command_help import output_command_help
