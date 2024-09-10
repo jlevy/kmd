@@ -13,7 +13,7 @@ from strif import copyfile_atomic
 from kmd.action_defs import load_all_actions
 from kmd.commands.command_registry import kmd_command
 from kmd.commands.command_results import CommandResult
-from kmd.config.logger import get_logger, log_file_path
+from kmd.config.logger import get_logger, log_file_path, log_objects_dir
 from kmd.config.settings import global_settings
 from kmd.config.text_styles import (
     COLOR_EMPH,
@@ -131,7 +131,12 @@ def clear_logs() -> None:
     if log_path.exists():
         with open(log_path, "w"):
             pass
-    output("Logs cleared: %s", fmt_path(log_path))
+    obj_dir = log_objects_dir()
+    if obj_dir.exists():
+        trash(obj_dir)
+        os.makedirs(obj_dir, exist_ok=True)
+
+    output_status("Logs cleared:\n%s", fmt_lines([fmt_path(log_path)]))
 
 
 @kmd_command

@@ -542,7 +542,8 @@ class Item:
     def add_to_history(self, operation_summary: OperationSummary):
         if not self.history:
             self.history = []
-        self.history.append(operation_summary)
+        if self.history and self.history[-1] != operation_summary:
+            self.history.append(operation_summary)
 
     def __str__(self):
         return abbreviate_obj(

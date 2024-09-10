@@ -34,9 +34,13 @@ def parse_divs(text: str, skip_whitespace: bool = True) -> TextNode:
 
 def parse_divs_single(text: str, skip_whitespace: bool = True) -> TextNode:
     """
-    Parse into a single TextNode.
+    Same as parse_divs but unwraps any singleton child.
     """
-    return parse_divs(text, skip_whitespace=skip_whitespace).children[0]
+    divs = parse_divs(text, skip_whitespace=skip_whitespace)
+    if len(divs.children) == 1:
+        return divs.children[0]
+    else:
+        return divs
 
 
 def _skip_whitespace_nodes(node: TextNode) -> TextNode:
