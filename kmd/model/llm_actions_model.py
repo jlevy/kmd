@@ -75,13 +75,10 @@ class ChunkedLLMAction(CachedLLMAction):
         output = []
         chunks = parse_divs_by_class(item.body, self.chunk_class)
 
-        try:
-            task_stack().push(self.name, len(chunks), "chunk")
+        with task_stack().context(self.name, len(chunks), "chunk") as ts:
             for chunk in chunks:
-                task_stack().next_part()
                 output.append(self.process_chunk(chunk))
-        finally:
-            task_stack().pop()
+                ts.next()
 
         result_item = item.derived_copy(body="\n\n".join(output), format=Format.md_html)
 

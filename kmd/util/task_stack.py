@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import threading
 from dataclasses import dataclass
 from typing import List
@@ -17,13 +18,19 @@ class TaskState:
         self.current_part += 1
 
     def task_str(self):
-        unit_prefix = ""
-        parts_str = ""
-        if self.unit:
-            unit_prefix = f"{self.unit} "
-        if self.total_parts > 1:
-            parts_str = f" ({unit_prefix}{self.current_part}/{self.total_parts})"
-        return f"{self.name}{parts_str}"
+        start_end_str = (
+            "start"
+            if self.current_part == 0
+            else "done" if self.current_part == self.total_parts else None
+        )
+        unit_str = None
+        parts_str = None
+        if self.total_parts > 1 and self.current_part < self.total_parts:
+            unit_str = self.unit or None
+            parts_str = f"{min(self.current_part + 1, self.total_parts)} of {self.total_parts}"
+
+        pieces = [self.name, start_end_str, unit_str, parts_str]
+        return " ".join(filter(bool, pieces))
 
     def err_str(self):
         return f"({self.errors} {'errs' if self.errors > 1 else 'err'})" if self.errors else ""
@@ -38,15 +45,6 @@ class TaskState:
         return f"TaskState({self.full_str()})"
 
 
-def log_task_stack(task_str: str):
-    from kmd.config.logger import get_logger
-    from kmd.text_ui.command_output import output
-
-    log = get_logger(__name__)
-    output()
-    log.message("%s %s", EMOJI_TASK, task_str)
-
-
 class TaskStack:
     """
     A TaskStack is the state, typically stored in a thread-local variable, for a sequence of tasks
@@ -58,20 +56,22 @@ class TaskStack:
 
     def push(self, name: str, total_parts: int = 1, unit: str = ""):
         self.stack.append(TaskState(name, 0, total_parts, unit))
-        if self.current_task.total_parts == 1:
-            log_task_stack(self.full_str())
+        self.log()
 
     def pop(self) -> TaskState:
         if not self.stack:
             raise IndexError("Pop from empty task stack")
         return self.stack.pop()
 
-    def next_part(self, last_had_error: bool = False):
+    def next(self, last_had_error: bool = False):
+        """
+        Call after of each part of a task.
+        """
         self.current_task.next()
         if last_had_error:
             self.current_task.errors += 1
 
-        log_task_stack(self.full_str())
+        self.log()
 
     @property
     def current_task(self) -> TaskState:
@@ -93,6 +93,35 @@ class TaskStack:
 
     def __str__(self):
         return f"TaskStack({self.full_str()})"
+
+    def log(self):
+        self._output()
+        self._log.message("%s %s", EMOJI_TASK, self.full_str())
+
+    @contextmanager
+    def context(self, name: str, total_parts: int = 1, unit: str = ""):
+        self.push(name, total_parts, unit)
+        try:
+            yield self
+        except Exception as e:
+            self._log.error("Exception in task context: %s", e)
+            self.next(last_had_error=True)
+            raise
+        finally:
+            self.pop()
+
+    # Lazy importing to minimize circular imports.
+    @property
+    def _log(self):
+        from kmd.config.logger import get_logger
+
+        return get_logger(__name__)
+
+    @property
+    def _output(self):
+        from kmd.text_ui.command_output import output
+
+        return output
 
 
 _thread_local = threading.local()

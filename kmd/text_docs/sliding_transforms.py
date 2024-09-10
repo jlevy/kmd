@@ -155,63 +155,62 @@ def sliding_wordtok_window_transform(
     nwindows = ceil(nwordtoks / settings.shift)
     sep_wordtoks = [settings.separator] if settings.separator else []
 
-    task_stack().push("window_transform", nwindows, "window")
-
-    log.message(
-        "Sliding word transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
-        nwordtoks,
-        nbytes,
-        nwindows,
-        settings,
-    )
-
-    output_wordtoks = []
-    for i, window in enumerate(windows):
+    with task_stack().context("window_transform", nwindows, "window") as ts:
         log.message(
-            "Sliding word transform window %s of %s (%s wordtoks, %s bytes), at %s wordtoks so far",
-            i + 1,
+            "Sliding word transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
+            nwordtoks,
+            nbytes,
             nwindows,
-            window.size(TextUnit.wordtoks),
-            window.size(TextUnit.bytes),
-            len(output_wordtoks),
+            settings,
         )
 
-        transformed_window = transform_func(window)
-
-        new_wordtoks = transformed_window.as_wordtoks()
-
-        if not output_wordtoks:
-            output_wordtoks = new_wordtoks
-        else:
-            if len(output_wordtoks) < settings.min_overlap:
-                raise ContentError(
-                    "Output wordtoks too short to align with min_overlap %s: %s",
-                    settings.min_overlap,
-                    output_wordtoks,
-                )
-            if len(new_wordtoks) < settings.min_overlap:
-                log.error(
-                    "New wordtoks too short to align with min_overlap %s, skipping: %s",
-                    settings.min_overlap,
-                    new_wordtoks,
-                )
-                continue
-
-            offset, (score, diff) = find_best_alignment(
-                output_wordtoks, new_wordtoks, settings.min_overlap
-            )
-
+        output_wordtoks = []
+        for i, window in enumerate(windows):
             log.message(
-                "Sliding word transform: Best alignment of window %s is at token offset %s (score %s, %s)",
-                i,
-                offset,
-                score,
-                diff.stats(),
+                "Sliding word transform window %s of %s (%s wordtoks, %s bytes), at %s wordtoks so far",
+                i + 1,
+                nwindows,
+                window.size(TextUnit.wordtoks),
+                window.size(TextUnit.bytes),
+                len(output_wordtoks),
             )
 
-            output_wordtoks = output_wordtoks[:offset] + sep_wordtoks + new_wordtoks
+            transformed_window = transform_func(window)
 
-        task_stack().next_part()
+            new_wordtoks = transformed_window.as_wordtoks()
+
+            if not output_wordtoks:
+                output_wordtoks = new_wordtoks
+            else:
+                if len(output_wordtoks) < settings.min_overlap:
+                    raise ContentError(
+                        "Output wordtoks too short to align with min_overlap %s: %s",
+                        settings.min_overlap,
+                        output_wordtoks,
+                    )
+                if len(new_wordtoks) < settings.min_overlap:
+                    log.error(
+                        "New wordtoks too short to align with min_overlap %s, skipping: %s",
+                        settings.min_overlap,
+                        new_wordtoks,
+                    )
+                    continue
+
+                offset, (score, diff) = find_best_alignment(
+                    output_wordtoks, new_wordtoks, settings.min_overlap
+                )
+
+                log.message(
+                    "Sliding word transform: Best alignment of window %s is at token offset %s (score %s, %s)",
+                    i,
+                    offset,
+                    score,
+                    diff.stats(),
+                )
+
+                output_wordtoks = output_wordtoks[:offset] + sep_wordtoks + new_wordtoks
+
+            ts.next()
 
     log.message(
         "Sliding word transform: Done, output total %s wordtoks",
@@ -221,8 +220,6 @@ def sliding_wordtok_window_transform(
     # An alternate approach would be to accumulate the document sentences instead of wordtoks to
     # avoid re-parsing, but this probably a little simpler.
     output_doc = TextDoc.from_text(join_wordtoks(output_wordtoks))
-
-    task_stack().pop()
 
     return output_doc
 

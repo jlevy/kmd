@@ -207,7 +207,7 @@ RICH_STYLES = {
     "kmd.attrib_value": Style(color=COLOR_VALUE, italic=False),
     # "kmd.number": Style(color=COLOR_KEY, italic=False),
     "kmd.duration": Style(color=COLOR_KEY, italic=False),
-    "kmd.part_count": Style(color=COLOR_KEY, italic=False),
+    "kmd.part_count": Style(italic=True),
     "kmd.time_ago": Style(color=COLOR_KEY, italic=False),
     "kmd.file_size": Style(color=COLOR_VALUE, italic=False),
     "kmd.code_span": Style(color=COLOR_VALUE, italic=False),
@@ -221,7 +221,7 @@ RICH_STYLES = {
     "kmd.path": Style(color=COLOR_PATH),
     "kmd.filename": Style(color=COLOR_VALUE),
     "kmd.task_stack": Style(color=COLOR_TASK, italic=True),
-    "kmd.task_stack_prefix": Style(color=COLOR_HINT, italic=True),
+    "kmd.task_stack_prefix": Style(color=COLOR_HINT, italic=False),
     # Emoji colors:
     "kmd.task": Style(color=COLOR_TASK, bold=True),
     "kmd.success": Style(color=COLOR_SUCCESSS, bold=True),

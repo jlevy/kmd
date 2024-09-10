@@ -289,49 +289,47 @@ class ForEachItemAction(Action):
 
     def run(self, items: ActionInput) -> ActionResult:
 
-        task_stack().push(self.name, total_parts=len(items), unit="item")
+        with task_stack().context(self.name, len(items), "item") as ts:
+            result_items: List[Item] = []
+            errors: List[Exception] = []
+            multiple_inputs = len(items) > 1
 
-        result_items: List[Item] = []
-        errors: List[Exception] = []
-        multiple_inputs = len(items) > 1
+            for i, item in enumerate(items):
 
-        for i, item in enumerate(items):
-            log.message(
-                "Action `%s`: Item %d of %d:\n%s",
-                self.name,
-                i + 1,
-                len(items),
-                fmt_lines([item]),
-            )
-            had_error = False
-            try:
-                result_item = self.run_item(item)
-                result_items.append(result_item)
+                log.message(
+                    "Action `%s` item %d of %d:\n%s",
+                    self.name,
+                    i + 1,
+                    len(items),
+                    fmt_lines([item]),
+                )
                 had_error = False
-            except NONFATAL_EXCEPTIONS as e:
-                errors.append(e)
-                had_error = True
+                try:
+                    result_item = self.run_item(item)
+                    result_items.append(result_item)
+                    had_error = False
+                except NONFATAL_EXCEPTIONS as e:
+                    errors.append(e)
+                    had_error = True
 
-                if multiple_inputs:
-                    log.error(
-                        "Error processing item; continuing with others: %s: %s",
-                        e,
-                        item,
-                    )
-                else:
-                    # If there's only one input, fail fast.
-                    raise e
-            finally:
-                task_stack().next_part(last_had_error=had_error)
+                    if multiple_inputs:
+                        log.error(
+                            "Error processing item; continuing with others: %s: %s",
+                            e,
+                            item,
+                        )
+                    else:
+                        # If there's only one input, fail fast.
+                        raise e
+                finally:
+                    ts.next(last_had_error=had_error)
 
-        if errors:
-            log.error(
-                "%s %s occurred while processing items. See above!",
-                len(errors),
-                plural("error", len(errors)),
-            )
-
-        task_stack().pop()
+            if errors:
+                log.error(
+                    "%s %s occurred while processing items. See above!",
+                    len(errors),
+                    plural("error", len(errors)),
+                )
 
         return ActionResult(result_items)
 

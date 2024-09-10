@@ -49,57 +49,56 @@ class SequenceAction(Action):
         from kmd.exec.action_exec import run_action
         from kmd.file_storage.workspaces import current_workspace
 
-        task_stack().push(self.name, total_parts=len(self.action_names), unit="part")
+        with task_stack().context(self.name, total_parts=len(self.action_names), unit="step") as ts:
 
-        look_up_actions(self.action_names)  # Validate action names.
+            look_up_actions(self.action_names)  # Validate action names.
 
-        log.message("Begin action sequence `%s`", self.name)
+            log.message("Begin action sequence `%s`", self.name)
 
-        original_input_paths = [not_none(item.store_path) for item in items]
-        transient_outputs: List[Item] = []
+            original_input_paths = [not_none(item.store_path) for item in items]
+            transient_outputs: List[Item] = []
 
-        for i, action_name in enumerate(self.action_names):
+            for i, action_name in enumerate(self.action_names):
+
+                for item in items:
+                    if not item.store_path:
+                        raise InvalidInput("Item must have a store path: %s", item)
+
+                log.message(
+                    "Action sequence `%s` step %s of %s: `%s`",
+                    self.name,
+                    i + 1,
+                    len(self.action_names),
+                    action_name,
+                )
+
+                item_paths = [not_none(item.store_path) for item in items]
+
+                # Output of this action is transient if it's not the last action.
+                last_action = i == len(self.action_names) - 1
+                output_state = None if last_action else State.transient
+
+                result = run_action(action_name, *item_paths, override_state=output_state)
+
+                # Track transient items and archive them if all actions succeed.
+                for item in result.items:
+                    if item.state == State.transient:
+                        transient_outputs.append(item)
+
+                # Results are the input to the next action in the sequence.
+                items = result.items
+
+                ts.next()
+
+            # The final items should be derived from the original inputs.
             for item in items:
-                if not item.store_path:
-                    raise InvalidInput("Item must have a store path: %s", item)
+                item.update_relations(derived_from=original_input_paths)
 
-            task_stack().next_part()
-
-            log.message(
-                "Action sequence `%s`: Part %s of %s: `%s`",
-                self.name,
-                i + 1,
-                len(self.action_names),
-                action_name,
-            )
-
-            item_paths = [not_none(item.store_path) for item in items]
-
-            # Output of this action is transient if it's not the last action.
-            last_action = i == len(self.action_names) - 1
-            output_state = None if last_action else State.transient
-
-            result = run_action(action_name, *item_paths, override_state=output_state)
-
-            # Track transient items and archive them if all actions succeed.
-            for item in result.items:
-                if item.state == State.transient:
-                    transient_outputs.append(item)
-
-            # Results are the input to the next action in the sequence.
-            items = result.items
-
-        # The final items should be derived from the original inputs.
-        for item in items:
-            item.update_relations(derived_from=original_input_paths)
-
-        log.message("Action sequence `%s` complete. Archiving transient items.", self.name)
-        ws = current_workspace()
-        for item in transient_outputs:
-            assert item.store_path
-            ws.archive(StorePath(item.store_path))
-
-        task_stack().pop()
+            log.message("Action sequence `%s` complete. Archiving transient items.", self.name)
+            ws = current_workspace()
+            for item in transient_outputs:
+                assert item.store_path
+                ws.archive(StorePath(item.store_path))
 
         return ActionResult(items)
 
@@ -146,36 +145,35 @@ class ComboAction(Action):
     def run(self, items: ActionInput) -> ActionResult:
         from kmd.exec.action_exec import run_action
 
-        task_stack().push(self.name, total_parts=len(self.action_names), unit="part")
+        with task_stack().context(self.name, total_parts=len(self.action_names), unit="part") as ts:
 
-        look_up_actions(self.action_names)  # Validate action names.
+            look_up_actions(self.action_names)  # Validate action names.
 
-        for item in items:
-            if not item.store_path:
-                raise InvalidInput("Item must have a store path: %s", item)
+            for item in items:
+                if not item.store_path:
+                    raise InvalidInput("Item must have a store path: %s", item)
 
-        item_paths = [not_none(item.store_path) for item in items]
+            item_paths = [not_none(item.store_path) for item in items]
 
-        results: List[ActionResult] = []
+            results: List[ActionResult] = []
 
-        for i, action_name in enumerate(self.action_names):
-            task_stack().next_part()
+            for i, action_name in enumerate(self.action_names):
 
-            log.message(
-                "Action combo `%s`: Part %s of %s: %s",
-                self.name,
-                i + 1,
-                len(self.action_names),
-                action_name,
-            )
+                log.message(
+                    "Action combo `%s`: Part %s of %s: %s",
+                    self.name,
+                    i + 1,
+                    len(self.action_names),
+                    action_name,
+                )
 
-            result = run_action(action_name, *item_paths, override_state=State.transient)
+                result = run_action(action_name, *item_paths, override_state=State.transient)
 
-            results.append(result)
+                results.append(result)
 
-        combined_result = self.combiner(self, items, results)
+                ts.next()
 
-        task_stack().pop()
+            combined_result = self.combiner(self, items, results)
 
         log.message(
             "Combined output of %s actions on %s inputs: %s",
