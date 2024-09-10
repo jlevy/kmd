@@ -1,4 +1,5 @@
 import inspect
+from dataclasses import dataclass
 from typing import Callable, Dict, List, Tuple, Type
 
 from kmd.config.logger import get_logger
@@ -30,6 +31,7 @@ def each_item_wrapper(action: Action) -> Action:
     Wrap an action that runs on a single item as one that that processes all input items.
     """
 
+    @dataclass(frozen=True)
     class EachItemWrapper(ForEachItemAction, action.__class__):
 
         def __init__(self):
@@ -40,7 +42,11 @@ def each_item_wrapper(action: Action) -> Action:
             }
             action.__class__.__init__(self, **init_args)
             ForEachItemAction.__init__(
-                self, name=action.name, description=action.description, expected_args=ANY_ARGS
+                self,
+                name=action.name,
+                description=action.description,
+                expected_args=ANY_ARGS,
+                precondition=action.precondition,
             )
 
         def run(self, items: ActionInput) -> ActionResult:
@@ -83,7 +89,7 @@ def kmd_action(for_each_item: bool = False) -> Callable[[Type[Action]], Type[Act
 
 
 def instantiate_actions() -> Dict[str, Action]:
-    actions_map = {}
+    actions_map: Dict[str, Action] = {}
     for cls, wrapper in _actions:
         action: Action = wrapper(cls())  # type: ignore
         if action.name in actions_map:

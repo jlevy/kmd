@@ -21,7 +21,7 @@ log = get_logger(__name__)
 
 @cached({})
 def assistant_preamble(skip_api: bool = False, base_only: bool = False) -> str:
-    from kmd.commands.commands import output_help_page  # Avoid circular imports.
+    from kmd.commands.command_defs import output_help_page  # Avoid circular imports.
 
     return dedent(
         f"""
@@ -45,7 +45,7 @@ def _insert_output(func: Callable, name: str) -> str:
 
 
 def assistant_current_state() -> str:
-    from kmd.commands.commands import applicable_actions, select  # Avoid circular imports.
+    from kmd.commands.command_defs import applicable_actions, select  # Avoid circular imports.
 
     path, is_sandbox = current_workspace_info()
     if path and not is_sandbox:

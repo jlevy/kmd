@@ -1,17 +1,18 @@
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict
 
 from kmd.config.logger import get_logger
+from kmd.model.errors_model import InvalidInput
 
 log = get_logger(__name__)
 
 
 CommandFunction = Callable[..., Any]
 
-_commands: List[CommandFunction] = []
+_commands: Dict[str, CommandFunction] = {}
 
 
 def kmd_command(func: CommandFunction) -> CommandFunction:
-    _commands.append(func)
+    _commands[func.__name__] = func
     return func
 
 
@@ -19,4 +20,11 @@ def all_commands() -> Dict[str, CommandFunction]:
     """
     All commands, sorted by name.
     """
-    return {cmd.__name__: cmd for cmd in sorted(_commands, key=lambda cmd: cmd.__name__)}
+    return dict(sorted(_commands.items()))
+
+
+def look_up_command(name: str) -> CommandFunction:
+    cmd = _commands.get(name)
+    if not cmd:
+        raise InvalidInput(f"Command `{name}` not found")
+    return cmd

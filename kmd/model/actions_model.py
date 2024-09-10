@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from copy import copy
 from dataclasses import dataclass, fields
 from enum import Enum
-from typing import Any, cast, Dict, List, Optional, Sequence
+from typing import Any, cast, Dict, List, Optional, Sequence, TYPE_CHECKING
 
 from kmd.config.logger import get_logger
 from kmd.lang_tools.inflection import plural
@@ -25,6 +25,8 @@ from kmd.util.string_template import StringTemplate
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import instantiate_as_type
 
+if TYPE_CHECKING:
+    from kmd.model.output_model import CommandOutput
 
 log = get_logger(__name__)
 
@@ -83,6 +85,9 @@ class ActionResult:
 
     path_ops: Optional[List[PathOp]] = None
     """If specified, operations to perform on specific paths, such as selecting items."""
+
+    command_output: Optional["CommandOutput"] = None
+    """If specified, control the output from the command."""
 
     def __str__(self):
         return abbreviate_obj(self, field_max_len=80)

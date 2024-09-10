@@ -1,28 +1,17 @@
-from dataclasses import dataclass
 from typing import Any, List, Optional
 
-from kmd.config.logger import get_console
+from kmd.config.logger import get_console, get_logger
 from kmd.config.text_styles import COLOR_HINT
+from kmd.exec.command_exec import run_command
 from kmd.lang_tools.inflection import plural
 from kmd.model.arguments_model import StorePath
+from kmd.model.output_model import CommandOutput
 from kmd.text_formatting.text_formatting import fmt_lines
 from kmd.text_ui.command_output import output, output_result, output_status
 
-MAX_INLINE_LENGTH = 128
+log = get_logger(__name__)
 
-
-@dataclass(frozen=True)
-class CommandResult:
-    """
-    Everything needed to display the result of a command.
-    """
-
-    result: Optional[Any] = None
-    selection: Optional[List[StorePath]] = None
-    show_result: bool = False
-    show_selection: bool = False
-    suggest_actions: bool = False
-    exception: Optional[Exception] = None
+MAX_LINES_WITHOUT_PAGING = 128
 
 
 def type_str(value: Optional[Any]) -> str:
@@ -57,7 +46,7 @@ def print_result(value: Optional[Any]) -> None:
     if value:
         if isinstance(value, list) and all(isinstance(item, str) for item in value):
             str_lines = "\n".join(value)
-            if len(value) > MAX_INLINE_LENGTH:
+            if len(value) > MAX_LINES_WITHOUT_PAGING:
                 with get_console().pager():
                     output_result(str_lines)
                 output()
@@ -67,9 +56,14 @@ def print_result(value: Optional[Any]) -> None:
             output_result(str(value))
 
 
-def print_command_result_info(res: CommandResult) -> None:
+def handle_command_output(res: CommandOutput) -> None:
     if res.exception:
         raise res.exception
+
+    if res.display_command:
+        log.message("Displaying result with: %s", res.display_command)
+        command_output = run_command(res.display_command)
+        log.info("Ignoring display command output: %s", command_output)
 
     if res.result and res.show_result:
         output()
@@ -85,6 +79,6 @@ def print_command_result_info(res: CommandResult) -> None:
         output()
 
     if res.suggest_actions:
-        from kmd.commands import commands
+        from kmd.commands import command_defs
 
-        commands.suggest_actions()
+        command_defs.suggest_actions()

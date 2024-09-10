@@ -12,7 +12,6 @@ from strif import copyfile_atomic
 
 from kmd.action_defs import load_all_actions
 from kmd.commands.command_registry import kmd_command
-from kmd.commands.command_results import CommandResult
 from kmd.config.logger import get_logger, log_file_path, log_objects_dir
 from kmd.config.settings import global_settings
 from kmd.config.text_styles import (
@@ -52,6 +51,7 @@ from kmd.model import (
     StorePath,
     USER_SETTABLE_PARAMS,
 )
+from kmd.model.output_model import CommandOutput
 from kmd.preconditions import ALL_PRECONDITIONS
 from kmd.preconditions.precondition_checks import actions_matching_paths
 from kmd.shell_tools.native_tools import (
@@ -218,7 +218,7 @@ def reload_workspace() -> None:
 
 
 @kmd_command
-def select(*paths: str, stdin: bool = False) -> CommandResult:
+def select(*paths: str, stdin: bool = False) -> CommandOutput:
     """
     Get or show the current selection.
     """
@@ -239,7 +239,7 @@ def select(*paths: str, stdin: bool = False) -> CommandResult:
     else:
         selection = ws.get_selection()
 
-    return CommandResult(selection=selection, show_selection=True)
+    return CommandOutput(selection=selection, show_selection=True)
 
 
 @kmd_command
@@ -504,11 +504,11 @@ def trash(*paths: str) -> None:
 
 
 @kmd_command
-def suggest_actions() -> None:
+def suggest_actions(all: bool = False) -> None:
     """
     Suggest actions that can be applied to the current selection.
     """
-    applicable_actions(brief=True)
+    applicable_actions(brief=True, all=all)
 
 
 @kmd_command
@@ -736,7 +736,7 @@ def files(
 @kmd_command
 def search(
     query_str: str, *paths: str, sort: str = "path", ignore_case: bool = False
-) -> CommandResult:
+) -> CommandOutput:
     """
     Search for a string in files at the given paths and return their store paths.
     Useful to find all docs or resources matching a string or regex.
@@ -759,7 +759,7 @@ def search(
             for line in rg_output.splitlines()
         ]
 
-        return CommandResult(results, show_result=True)
+        return CommandOutput(results, show_result=True)
     except RipGrepNotFound:
         raise InvalidState("`rg` command not found. Install ripgrep to use the search command.")
 

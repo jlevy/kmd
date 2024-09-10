@@ -6,14 +6,15 @@ from typing import Any, Callable, Dict, List, TypeVar
 from xonsh.completers.completer import add_one_completer
 
 from kmd.action_defs import reload_all_actions
-from kmd.commands import commands
+from kmd.commands import command_defs
+from kmd.commands.command_defs import welcome
 from kmd.commands.command_registry import all_commands
-from kmd.commands.command_results import print_command_result_info
-from kmd.commands.commands import CommandResult, welcome
+from kmd.commands.command_results import handle_command_output
 from kmd.config.logger import get_logger
 from kmd.config.setup import setup
 from kmd.config.text_styles import PROMPT_COLOR_NORMAL, PROMPT_COLOR_WARN, PROMPT_MAIN
 from kmd.file_storage.workspaces import current_workspace
+from kmd.model.output_model import CommandOutput
 from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
@@ -56,16 +57,16 @@ def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], NoneTy
     def command(*args) -> None:
         retval = func(*args)
 
-        res: CommandResult
-        if isinstance(retval, CommandResult):
+        res: CommandOutput
+        if isinstance(retval, CommandOutput):
             res = retval
         else:
-            res = CommandResult(retval)
+            res = CommandOutput(retval)
 
         set_env("result", res.result)
         set_env("selection", res.selection)
 
-        print_command_result_info(res)
+        handle_command_output(res)
 
         return None
 
@@ -81,7 +82,7 @@ def _load_xonsh_commands():
     kmd_commands = {}
 
     # kmd command aliases in xonsh.
-    kmd_commands["kmd_help"] = commands.kmd_help
+    kmd_commands["kmd_help"] = command_defs.kmd_help
 
     # Override default ? command.
     kmd_commands["?"] = "assist"

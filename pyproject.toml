@@ -97,5 +97,6 @@ testpaths = [
 ]
 norecursedirs = ["kmd/xontrib"]
 filterwarnings = [
-    "ignore::DeprecationWarning"
+    "ignore::DeprecationWarning",
+    "ignore::SyntaxWarning:pydub.utils",
 ]

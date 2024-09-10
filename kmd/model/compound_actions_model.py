@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 from kmd.config.logger import get_logger
@@ -21,10 +22,13 @@ def look_up_actions(action_names: List[str]) -> List[Action]:
     return [look_up_action(action_name) for action_name in action_names]
 
 
+@dataclass(frozen=True)
 class SequenceAction(Action):
     """
     A sequential action that chains the outputs of each action to the inputs of the next.
     """
+
+    action_names: List[str] = field(init=False)
 
     def __init__(
         self,
@@ -43,7 +47,7 @@ class SequenceAction(Action):
 
         super().__init__(name=name, description=seq_description, precondition=precondition)
 
-        self.action_names = action_names
+        object.__setattr__(self, "action_names", action_names)
 
     def run(self, items: ActionInput) -> ActionResult:
         from kmd.exec.action_exec import run_action
@@ -103,10 +107,20 @@ class SequenceAction(Action):
         return ActionResult(items)
 
 
+@dataclass(frozen=True)
 class CachedDocSequence(SequenceAction):
     """
     A sequence with a single doc output that allows rerun checking.
     """
+
+    def __init__(
+        self,
+        name: str,
+        action_names: List[str],
+        description: Optional[str] = None,
+        precondition: Optional[Precondition] = None,
+    ):
+        super().__init__(name, action_names, description, precondition)
 
     # Implementing this makes caching work.
     def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
@@ -115,10 +129,14 @@ class CachedDocSequence(SequenceAction):
         )
 
 
+@dataclass(frozen=True)
 class ComboAction(Action):
     """
     An action that combines the results of other actions.
     """
+
+    action_names: List[str] = field(init=False)
+    combiner: Combiner = field(init=False)
 
     def __init__(
         self,
@@ -139,8 +157,8 @@ class ComboAction(Action):
 
         super().__init__(name=name, description=combo_description, precondition=precondition)
 
-        self.action_names = action_names
-        self.combiner = combiner
+        object.__setattr__(self, "action_names", action_names)
+        object.__setattr__(self, "combiner", combiner)
 
     def run(self, items: ActionInput) -> ActionResult:
         from kmd.exec.action_exec import run_action

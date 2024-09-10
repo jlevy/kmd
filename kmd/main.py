@@ -274,7 +274,7 @@ def parse_args():
     from contextlib import redirect_stdout
     from io import StringIO
 
-    from kmd.commands.commands import kmd_help
+    from kmd.commands.command_defs import kmd_help
 
     class CustomHelpFormatter(argparse.HelpFormatter):
         def format_help(self):
