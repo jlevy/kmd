@@ -5121,6 +5121,22 @@ cryptography = ">=2.0"
 jeepney = ">=0.6"
 
 [[package]]
+name = "send2trash"
+version = "1.8.3"
+description = "Send file to trash natively under Mac OS X, Windows and Linux"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
+files = [
+    {file = "Send2Trash-1.8.3-py3-none-any.whl", hash = "sha256:0c31227e0bd08961c7665474a3d1ef7193929fedda4233843689baa056be46c9"},
+    {file = "Send2Trash-1.8.3.tar.gz", hash = "sha256:b18e7a3966d99871aefeb00cfbcfdced55ce4871194810fc71f4aa484b953abf"},
+]
+
+[package.extras]
+nativelib = ["pyobjc-framework-Cocoa", "pywin32"]
+objc = ["pyobjc-framework-Cocoa"]
+win32 = ["pywin32"]
+
+[[package]]
 name = "setproctitle"
 version = "1.3.3"
 description = "A Python module to customize the process title"
@@ -6864,4 +6880,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "4a3fa49d9e6ecee5f63084c220e5ba6df2a0fdb90e1a0255f654155f9f510518"
+content-hash = "0623629f2c08986289fe2cc1806e6247ccf1ba5ac138b2171ad5fc0db1a64ecd"

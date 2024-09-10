@@ -191,7 +191,7 @@ def terminal_link(url: str, text: str, id: str = "") -> str:
         return text
 
 
-def view_file_native(file_or_url: str | Path):
+def view_file_native(file_or_url: str | Path, use_pager: bool = True):
     """
     Open a file or URL in the user's preferred native application, falling back
     to pagination in console. For images, first tries terminal-based image display.
@@ -199,7 +199,8 @@ def view_file_native(file_or_url: str | Path):
     from kmd.model.file_formats_model import file_ext_is_text, parse_filename
 
     file_or_url = str(file_or_url)
-    if is_url(file_or_url) or file_or_url.endswith(".html"):
+
+    if not use_pager and (is_url(file_or_url) or file_or_url.endswith(".html")):
         if not is_url(file_or_url):
             file_or_url = f"file://{os.path.abspath(file_or_url)}"
         log.message("Opening URL in browser: %s", file_or_url)
@@ -208,7 +209,7 @@ def view_file_native(file_or_url: str | Path):
         file = file_or_url
         mime_type, file_size, num_lines = file_info(file)
         _dirname, _name, _item_type, ext = parse_filename(file)
-        if file_ext_is_text(ext) or mime_type and mime_type.startswith("text"):
+        if use_pager or file_ext_is_text(ext) or (mime_type and mime_type.startswith("text")):
             view_file(file, use_less=num_lines > 40 or file_size > 20 * 1024)
         elif mime_type and mime_type.startswith("image"):
             try:

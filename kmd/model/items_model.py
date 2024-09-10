@@ -545,7 +545,10 @@ class Item:
         self.history.append(operation_summary)
 
     def __str__(self):
-        return abbreviate_obj(self)
+        return abbreviate_obj(
+            self,
+            key_filter={"type", "state", "title", "url", "foramt", "created_at", "body"},
+        )
 
 
 # Some refletion magic so the order of the YAML metadata for an item will match

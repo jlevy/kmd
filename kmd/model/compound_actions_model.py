@@ -65,7 +65,7 @@ class SequenceAction(Action):
                         raise InvalidInput("Item must have a store path: %s", item)
 
                 log.message(
-                    "Action sequence `%s` step %s of %s: `%s`",
+                    "Action sequence `%s` step %s/%s: `%s`",
                     self.name,
                     i + 1,
                     len(self.action_names),
@@ -160,7 +160,7 @@ class ComboAction(Action):
             for i, action_name in enumerate(self.action_names):
 
                 log.message(
-                    "Action combo `%s`: Part %s of %s: %s",
+                    "Action combo `%s` part %s/%s: %s",
                     self.name,
                     i + 1,
                     len(self.action_names),

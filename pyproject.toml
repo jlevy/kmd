@@ -47,6 +47,7 @@ thefuzz = "^0.22.1"
 tiktoken = "^0.7.0"
 scipy = "^1.14.1"
 ripgrepy = "^2.0.0"
+send2trash = "^1.8.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"

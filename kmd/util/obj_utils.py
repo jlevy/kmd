@@ -1,7 +1,7 @@
 import operator
 from dataclasses import asdict, is_dataclass
 from enum import Enum
-from typing import Any, Callable, Iterable, List, Optional, Set, Tuple
+from typing import Any, Callable, Collection, Iterable, List, Optional, Set, Tuple
 
 from strif import abbreviate_str
 
@@ -68,8 +68,14 @@ def is_not_none(value: Any) -> bool:
 def _format_kvs(
     items: Iterable[Tuple[Any, Any]],
     field_max_len: int,
+    key_filter: Optional[Callable[[Any], bool] | Collection[Any]] = None,
     value_filter: Callable[[Any], bool] = is_not_none,
 ) -> str:
+    if key_filter is not None:
+        if callable(key_filter):
+            items = ((k, v) for k, v in items if key_filter(k))
+        else:
+            items = ((k, v) for k, v in items if k in key_filter)
     abbreviated_items = {k: abbreviate_obj(v, field_max_len) for k, v in items if value_filter(v)}
     return ", ".join(f"{k}={v}" for k, v in abbreviated_items.items())
 
@@ -78,6 +84,7 @@ def abbreviate_obj(
     value: Any,
     field_max_len: int = 64,
     list_max_len: int = 32,
+    key_filter: Optional[Callable[[Any], bool] | Collection[Any]] = None,
     value_filter: Callable[[Any], bool] = is_not_none,
     visited: Optional[Set[Any]] = None,
 ) -> str:
@@ -97,7 +104,7 @@ def abbreviate_obj(
         return (
             "["
             + ", ".join(
-                abbreviate_obj(item, field_max_len, list_max_len, value_filter, visited)
+                abbreviate_obj(item, field_max_len, list_max_len, key_filter, value_filter, visited)
                 for item in truncated_list
             )
             + "]"
@@ -106,10 +113,14 @@ def abbreviate_obj(
     if is_dataclass(value) and not isinstance(value, type):
         name = type(value).__name__
         value_dict = asdict(value)
-        return f"{name}(" + _format_kvs(value_dict.items(), field_max_len, value_filter) + ")"
+        return (
+            f"{name}("
+            + _format_kvs(value_dict.items(), field_max_len, key_filter, value_filter)
+            + ")"
+        )
 
     if isinstance(value, dict):
-        return "{" + _format_kvs(value.items(), field_max_len, value_filter) + "}"
+        return "{" + _format_kvs(value.items(), field_max_len, key_filter, value_filter) + "}"
 
     if isinstance(value, Enum):
         return value.name

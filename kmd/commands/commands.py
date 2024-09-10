@@ -124,7 +124,8 @@ def logs() -> None:
 @kmd_command
 def clear_logs() -> None:
     """
-    Clear the logs for the current workspace.
+    Clear the logs for the current workspace. Logs for the current workspace will be lost
+    permanently!
     """
     log_path = log_file_path()
     if log_path.exists():
@@ -295,7 +296,7 @@ def _check_store_paths(paths: Sequence[StorePath | Path]) -> List[StorePath]:
 
 
 @kmd_command
-def show(path: Optional[str] = None) -> None:
+def show(path: Optional[str] = None, pager: bool = False) -> None:
     """
     Show the contents of a file if one is given, or the first file if multiple files
     are selected.
@@ -316,13 +317,13 @@ def show(path: Optional[str] = None) -> None:
                 except Exception as e:
                     log.error("Error fetching thumbnail image: %s", e)
 
-            view_file_native(ws.base_dir / input_path)
+            view_file_native(ws.base_dir / input_path, use_pager=pager)
         else:
-            view_file_native(input_path)
+            view_file_native(input_path, use_pager=pager)
     except (InvalidInput, InvalidState):
         if path:
             # If path is absolute or we couldbn't get a selection, just show the file.
-            view_file_native(path)
+            view_file_native(path, use_pager=pager)
         else:
             raise InvalidInput("No selection")
 
@@ -474,6 +475,27 @@ def unarchive(*paths: str) -> None:
     for path in paths:
         store_path = ws.unarchive(StorePath(path))
         output_status(f"Unarchived: {store_path}")
+
+
+@kmd_command
+def clear_archive() -> None:
+    """
+    Empty the archive to trash.
+    """
+    ws = current_workspace()
+    trash(ws.archive_dir)
+    os.makedirs(ws.archive_dir, exist_ok=True)
+
+
+@kmd_command
+def trash(*paths: str) -> None:
+    """
+    Trash the items at the given paths. Uses OS-native trash or recycle bin on Mac, Windows, or Linux.
+    """
+    from send2trash import send2trash
+
+    send2trash(list(paths))
+    output_status(f"Deleted (check trash or recycling bin to recover):\n{fmt_lines(paths)}")
 
 
 @kmd_command

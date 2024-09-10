@@ -297,7 +297,7 @@ class ForEachItemAction(Action):
             for i, item in enumerate(items):
 
                 log.message(
-                    "Action `%s` item %d of %d:\n%s",
+                    "Action `%s` input item %d/%d:\n%s",
                     self.name,
                     i + 1,
                     len(items),

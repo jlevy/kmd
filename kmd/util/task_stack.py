@@ -1,5 +1,5 @@
-from contextlib import contextmanager
 import threading
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import List
 
@@ -27,9 +27,17 @@ class TaskState:
         parts_str = None
         if self.total_parts > 1 and self.current_part < self.total_parts:
             unit_str = self.unit or None
-            parts_str = f"{min(self.current_part + 1, self.total_parts)} of {self.total_parts}"
+            parts_str = f"{min(self.current_part + 1, self.total_parts)}/{self.total_parts}"
 
-        pieces = [self.name, start_end_str, unit_str, parts_str]
+        parenthetical = None
+        if unit_str or parts_str:
+            parenthetical = (
+                f"({unit_str} {parts_str})"
+                if unit_str and parts_str
+                else f"({unit_str or parts_str})"
+            )
+
+        pieces = [self.name, start_end_str, parenthetical]
         return " ".join(filter(bool, pieces))
 
     def err_str(self):
@@ -49,6 +57,7 @@ class TaskStack:
     """
     A TaskStack is the state, typically stored in a thread-local variable, for a sequence of tasks
     that may be recursive, each with one or more parts. New task states can be pushed and popped.
+    This is useful for logging progress, task depth, etc.
     """
 
     def __init__(self):
