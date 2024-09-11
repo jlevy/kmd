@@ -1,14 +1,16 @@
 from copy import copy
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
 from kmd.lang_tools.sentence_split_regex import split_sentences_regex
 from kmd.lang_tools.sentence_split_spacy import split_sentences_spacy
 from kmd.text_docs.sizes import TextUnit
-from kmd.text_docs.text_doc import TextDoc
 from kmd.text_formatting.html_in_md import div_wrapper
 from kmd.text_formatting.text_formatting import fmt_lines
+
+if TYPE_CHECKING:
+    from kmd.text_docs.text_doc import TextDoc
 
 
 @dataclass
@@ -42,14 +44,18 @@ class TextNode:
         return self.original_text[self.content_start : self.content_end]
 
     @cached_property
-    def _text_doc_fast(self) -> TextDoc:
+    def _text_doc_fast(self) -> "TextDoc":
+        from kmd.text_docs.text_doc import TextDoc
+
         return TextDoc.from_text(self.contents, sentence_splitter=split_sentences_regex)
 
     @cached_property
-    def _text_doc_slow(self) -> TextDoc:
+    def _text_doc_slow(self) -> "TextDoc":
+        from kmd.text_docs.text_doc import TextDoc
+
         return TextDoc.from_text(self.contents, sentence_splitter=split_sentences_spacy)
 
-    def text_doc(self, fast: bool = False) -> TextDoc:
+    def text_doc(self, fast: bool = False) -> "TextDoc":
         return self._text_doc_fast if fast else self._text_doc_slow
 
     def slice_children(self, start: int, end: int) -> "TextNode":
@@ -178,7 +184,7 @@ class TextNode:
         indent = "    " * level
         content_preview = self.contents
         if len(content_preview) > max_len:
-            content_preview = content_preview[:20] + " ... " + content_preview[-20:]
+            content_preview = content_preview[:20] + "…" + content_preview[-20:]
         result = (
             f"{indent}TextNode(tag_name={self.tag_name} class_name={self.class_name} offset={self.offset},"
             f" content_start={self.content_start}, content_end={self.content_end}) "

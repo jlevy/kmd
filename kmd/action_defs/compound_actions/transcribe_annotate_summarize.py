@@ -11,8 +11,8 @@ class TranscribeAnnotateSummarize(CachedDocSequence):
             action_names=[
                 "transcribe_format",
                 "caption_paras",
-                "add_concepts",
                 "add_summary_bullets",
+                "add_concepts",
                 "add_description",
             ],
             description="A fancy action to transcribe a video, format the transcript into paragraphs, backfill timestamps, and add a summary and description.",

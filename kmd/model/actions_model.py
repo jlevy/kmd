@@ -15,8 +15,6 @@ from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_text_doc
-from kmd.text_docs.sliding_transforms import WindowSettings
-from kmd.text_docs.text_diffs import DiffFilterType
 from kmd.text_formatting.text_formatting import fmt_lines
 from kmd.text_ui.command_output import fill_text
 from kmd.util.obj_utils import abbreviate_obj
@@ -27,6 +25,8 @@ from kmd.util.type_utils import instantiate_as_type
 
 if TYPE_CHECKING:
     from kmd.model.output_model import CommandOutput
+    from kmd.text_docs.sliding_transforms import WindowSettings
+    from kmd.text_docs.text_diffs import DiffFilterType
 
 log = get_logger(__name__)
 
@@ -367,8 +367,8 @@ class TransformAction(Action):
     expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
     precondition: Optional[Precondition] = is_text_doc
 
-    windowing: Optional[WindowSettings] = None
-    diff_filter: Optional[DiffFilterType] = None
+    windowing: Optional["WindowSettings"] = None
+    diff_filter: Optional["DiffFilterType"] = None
 
     @abstractmethod
     def run(self, items: ActionInput) -> ActionResult:

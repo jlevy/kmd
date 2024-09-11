@@ -28,8 +28,6 @@ from kmd.model.canon_url import canonicalize_url, thumbnail_url
 from kmd.model.compound_actions_model import (
     CachedDocCombo,
     CachedDocSequence,
-    combine_as_paragraphs,
-    Combiner,
     ComboAction,
     look_up_actions,
     SequenceAction,

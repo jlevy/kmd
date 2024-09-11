@@ -44,15 +44,19 @@ DEFAULT_TRUNCATE = 100
 
 def balance_quotes(s: str) -> str:
     """
-    Ensure even number of unescaped quotes in a string.
+    Ensure balanced single and double quotes in a string, adding any missing quotes.
     """
-    single_quotes = len(re.findall(r"(?<!\\)'", s))
-    double_quotes = len(re.findall(r'(?<!\\)"', s))
+    stack = []
+    for char in s:
+        if char in ("'", '"'):
+            if stack and stack[-1] == char:
+                stack.pop()
+            else:
+                stack.append(char)
 
-    if single_quotes % 2 != 0:
-        s += "'"
-    if double_quotes % 2 != 0:
-        s += '"'
+    if stack:
+        for quote in stack:
+            s += quote
 
     return s
 

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from kmd.config.logger import get_logger
 from kmd.model.actions_model import (
@@ -16,12 +16,10 @@ from kmd.model.items_model import Item, UNTITLED
 from kmd.model.language_models import LLM
 from kmd.model.model_settings import DEFAULT_CAREFUL_LLM
 from kmd.model.preconditions_model import Precondition
-from kmd.preconditions.precondition_defs import has_div_chunks
-from kmd.text_chunks.div_elements import div, div_get_original, div_insert_wrapped
-from kmd.text_chunks.parse_divs import parse_divs_by_class, TextNode
-from kmd.text_formatting.markdown_normalization import normalize_markdown
 from kmd.util.task_stack import task_stack
 
+if TYPE_CHECKING:
+    from kmd.text_chunks.text_node import TextNode
 
 log = get_logger(__name__)
 
@@ -42,6 +40,7 @@ class LLMAction(TransformAction, ForEachItemAction):
         Override to customize item handling.
         """
         from kmd.exec.llm_transforms import llm_transform_item
+        from kmd.text_formatting.markdown_normalization import normalize_markdown
 
         item = llm_transform_item(self, item)
         if item.body:
@@ -65,10 +64,18 @@ class ChunkedLLMAction(CachedLLMAction):
     Base class for LLM actions that operate on chunks that are already marked with divs.
     """
 
-    precondition: Optional[Precondition] = has_div_chunks
+    precondition: Optional[Precondition] = None
     chunk_class: str = CHUNK
 
+    def __post_init__(self):
+        from kmd.preconditions.precondition_defs import has_div_chunks
+
+        if not self.precondition:
+            object.__setattr__(self, "precondition", has_div_chunks)
+
     def run_item(self, item: Item) -> Item:
+        from kmd.text_chunks.parse_divs import parse_divs_by_class
+
         if not item.body:
             raise InvalidInput(f"LLM actions expect a body: {self.name} on {item}")
 
@@ -89,11 +96,12 @@ class ChunkedLLMAction(CachedLLMAction):
 
         return result_item
 
-    def process_chunk(self, chunk: TextNode) -> str:
+    def process_chunk(self, chunk: "TextNode") -> str:
         """
         Override to customize chunk handling.
         """
         from kmd.exec.llm_transforms import llm_transform_str
+        from kmd.text_chunks.div_elements import div, div_get_original, div_insert_wrapped
 
         transform_input = div_get_original(chunk, child_name=ORIGINAL)
         llm_response = llm_transform_str(self, transform_input)

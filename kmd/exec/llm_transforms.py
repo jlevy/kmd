@@ -12,6 +12,7 @@ from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_docs.sliding_transforms import filtered_transform, WindowSettings
 from kmd.text_docs.text_diffs import DiffFilter, DiffFilterType
 from kmd.text_docs.text_doc import TextDoc
+from kmd.text_formatting.markdown_normalization import normalize_markdown
 
 log = get_logger(__name__)
 
@@ -27,12 +28,16 @@ def windowed_llm_transform(
 ) -> TextDoc:
     def doc_transform(input_doc: TextDoc) -> TextDoc:
         return TextDoc.from_text(
-            llm_completion(
-                model,
-                system_message=system_message,
-                template=template,
-                input=input_doc.reassemble(),
-                check_no_results=check_no_results,
+            # XXX We normalize the Markdown before parsing as a text doc in particular because we
+            # want bulleted list items to be separate paragraphs.
+            normalize_markdown(
+                llm_completion(
+                    model,
+                    system_message=system_message,
+                    template=template,
+                    input=input_doc.reassemble(),
+                    check_no_results=check_no_results,
+                )
             )
         )
 

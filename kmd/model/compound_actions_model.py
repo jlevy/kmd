@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
 from kmd.config.logger import get_logger
-from kmd.exec.combiners import combine_as_paragraphs, Combiner
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.model.arguments_model import StorePath
 from kmd.model.errors_model import InvalidInput
@@ -12,6 +11,8 @@ from kmd.model.preconditions_model import Precondition
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none
 
+if TYPE_CHECKING:
+    from kmd.exec.combiners import Combiner
 
 log = get_logger(__name__)
 
@@ -136,16 +137,20 @@ class ComboAction(Action):
     """
 
     action_names: List[str] = field(init=False)
-    combiner: Combiner = field(init=False)
+    combiner: "Combiner" = field(init=False)
 
     def __init__(
         self,
         name: str,
         action_names: List[str],
         description: Optional[str] = None,
-        combiner: Combiner = combine_as_paragraphs,
+        combiner: Optional["Combiner"] = None,
         precondition: Optional[Precondition] = None,
     ):
+        from kmd.exec.combiners import combine_as_paragraphs
+
+        if not combiner:
+            combiner = combine_as_paragraphs
 
         if not action_names or len(action_names) <= 1:
             raise InvalidInput("Action must have at least two sub-actions: %s", action_names)
