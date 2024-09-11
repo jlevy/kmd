@@ -163,7 +163,7 @@ class Action(ABC):
     def validate_precondition(self, items: ActionInput) -> None:
         if self.precondition:
             for item in items:
-                self.precondition.check(item)
+                self.precondition.check(item, self.name)
 
     def param_names(self) -> List[str]:
         return sorted(

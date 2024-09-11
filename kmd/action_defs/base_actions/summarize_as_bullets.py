@@ -1,6 +1,6 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model import CachedLLMAction, Message, MessageTemplate, TitleTemplate
-from kmd.text_docs.window_settings import WINDOW_16_PARA
+from kmd.text_docs.window_settings import WINDOW_128_PARA
 
 
 @kmd_action()
@@ -21,6 +21,10 @@ class SummarizeAsBullets(CachedLLMAction):
                 Summarize the following text as a list of concise bullet points:
 
                 - Each point should be one sentence long.
+
+                - Format your response as a list of bullet points in Markdown format.
+
+                - Do NOT use nested bullet points. Give a single list, not a list of lists.
                 
                 - Include all key numbers or facts, without omitting any claims or important details.
                 
@@ -32,8 +36,6 @@ class SummarizeAsBullets(CachedLLMAction):
 
                 - It is very important you do not add any details that are not directly stated in the original text.
                   Do not change any numbers or alter its meaning in any way.
-
-                - Format your response as a list of bullet points in Markdown format.
 
                 - Do NOT give any additional response at the beginning, such as "Here are the concise bullet points".
                   Simply give the summary.
@@ -47,5 +49,5 @@ class SummarizeAsBullets(CachedLLMAction):
                 Bullet points:
                 """
             ),
-            windowing=WINDOW_16_PARA,
+            windowing=WINDOW_128_PARA,
         )

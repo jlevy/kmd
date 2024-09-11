@@ -548,7 +548,16 @@ class Item:
     def __str__(self):
         return abbreviate_obj(
             self,
-            key_filter={"type", "state", "title", "url", "foramt", "created_at", "body"},
+            key_filter={
+                "type",
+                "state",
+                "title",
+                "url",
+                "foramt",
+                "created_at",
+                "body",
+                "store_path",
+            },
         )
 
 

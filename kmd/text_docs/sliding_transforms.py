@@ -239,34 +239,38 @@ def sliding_para_window_transform(
     windows = sliding_para_window(doc, settings.size, format=Format.markdown)
 
     nwindows = ceil(doc.size(TextUnit.paragraphs) / settings.size)
-    log.message(
-        "Sliding paragraph transform: Begin on doc: %s windows of size %s paragraphs on total %s",
-        nwindows,
-        settings.size,
-        doc.size_summary(),
-    )
 
-    transformed_paras: List[Paragraph] = []
-    for i, window in enumerate(windows):
+    with task_stack().context("sliding_para_window_transform", nwindows, "window") as ts:
         log.message(
-            "Sliding paragraph transform: Window %s/%s input is %s",
-            i,
+            "Sliding paragraph transform: Begin on doc: %s windows of size %s paragraphs on total %s",
             nwindows,
-            window.size_summary(),
+            settings.size,
+            doc.size_summary(),
         )
 
-        new_doc = transform_func(window)
-        if i > 0:
-            try:
-                new_doc.paragraphs[0].sentences[0].text = (
-                    settings.separator + new_doc.paragraphs[0].sentences[0].text
-                )
-            except (KeyError, IndexError):
-                pass
-        transformed_paras.extend(new_doc.paragraphs)
+        transformed_paras: List[Paragraph] = []
+        for i, window in enumerate(windows):
+            log.info(
+                "Sliding paragraph transform: Window %s/%s input is %s",
+                i,
+                nwindows,
+                window.size_summary(),
+            )
 
-    transformed_text = "\n\n".join(para.reassemble() for para in transformed_paras)
-    new_text_doc = TextDoc.from_text(transformed_text)
+            new_doc = transform_func(window)
+            if i > 0:
+                try:
+                    new_doc.paragraphs[0].sentences[0].text = (
+                        settings.separator + new_doc.paragraphs[0].sentences[0].text
+                    )
+                except (KeyError, IndexError):
+                    pass
+            transformed_paras.extend(new_doc.paragraphs)
+
+            ts.next()
+
+        transformed_text = "\n\n".join(para.reassemble() for para in transformed_paras)
+        new_text_doc = TextDoc.from_text(transformed_text)
 
     log.message(
         "Sliding paragraph transform: Done, output total %s",

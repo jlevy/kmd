@@ -17,10 +17,11 @@ class Precondition:
         self.func = func
         self.name: str = name or func.__name__
 
-    def check(self, item: Item) -> None:
+    def check(self, item: Item, info: Optional[str] = None) -> None:
+        info_str = f" for {info}" if info else ""
         if not self(item):
             raise PreconditionFailure(
-                f"Precondition not satisfied: {self} is false for {item.fmt_path_or_title()}"
+                f"Precondition not satisfied{info_str}: {self} is false for {item.fmt_path_or_title()}"
             )
 
     def __call__(self, item: Item) -> bool:

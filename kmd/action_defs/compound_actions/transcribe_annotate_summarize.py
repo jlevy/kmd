@@ -1,6 +1,6 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model import CachedDocSequence
-from kmd.preconditions.precondition_defs import is_url
+from kmd.preconditions.precondition_defs import is_audio_resource, is_url, is_video_resource
 
 
 @kmd_action(for_each_item=True)
@@ -16,5 +16,5 @@ class TranscribeAnnotateSummarize(CachedDocSequence):
                 "add_description",
             ],
             description="A fancy action to transcribe a video, format the transcript into paragraphs, backfill timestamps, and add a summary and description.",
-            precondition=is_url,
+            precondition=is_url | is_audio_resource | is_video_resource,
         )

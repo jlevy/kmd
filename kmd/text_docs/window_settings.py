@@ -72,3 +72,8 @@ WINDOW_64_PARA = WindowSettings(
     TextUnit.paragraphs, size=64, shift=64, min_overlap=0, separator=WINDOW_BR_SEP
 )
 """Process 64 paragraphs at a time."""
+
+WINDOW_128_PARA = WindowSettings(
+    TextUnit.paragraphs, size=128, shift=128, min_overlap=0, separator=WINDOW_BR_SEP
+)
+"""Process 128 paragraphs at a time."""

@@ -57,7 +57,7 @@ def sliding_para_window(
         end_index = min(i + nparas - 1, len(doc.paragraphs) - 1)
         sub_doc = doc.sub_doc(SentIndex(i, 0), SentIndex(end_index, 0))
 
-        # XXX It's important we re-normalize especially because LLMs like itemized lists with just
+        # XXX It's important we re-normalize especially because LLMs can output itemized lists with just
         # one newline, but we want separate paragraphs for each list item.
         formatted_sub_doc = TextDoc.from_text(normalize_formatting(sub_doc.reassemble(), format))
 

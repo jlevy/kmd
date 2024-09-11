@@ -1,6 +1,6 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model import CachedDocSequence
-from kmd.preconditions.precondition_defs import is_url
+from kmd.preconditions.precondition_defs import is_audio_resource, is_url, is_video_resource
 
 
 @kmd_action(for_each_item=True)
@@ -15,5 +15,5 @@ class TranscribeFormat(CachedDocSequence):
                 "backfill_timestamps",
             ],
             description="Transcribe a video, format the transcript into paragraphs, and backfill source timestamps on each paragraph.",
-            precondition=is_url,
+            precondition=is_url | is_audio_resource | is_video_resource,
         )
