@@ -4327,6 +4327,16 @@ files = [
 windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
+name = "pyperclip"
+version = "1.9.0"
+description = "A cross-platform clipboard module for Python. (Only handles plain text for now.)"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pyperclip-1.9.0.tar.gz", hash = "sha256:b7de0142ddc81bfc5c7507eea19da920b92252b548b96186caf94a5e2527d310"},
+]
+
+[[package]]
 name = "pyphen"
 version = "0.16.0"
 description = "Pure Python module to hyphenate text"
@@ -6880,4 +6890,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "0623629f2c08986289fe2cc1806e6247ccf1ba5ac138b2171ad5fc0db1a64ecd"
+content-hash = "4ed232053920ff81e7c696f1f2672e0b2844d3dfeeb279b9954de5f1dd4e3a58"

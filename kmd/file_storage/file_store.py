@@ -14,11 +14,7 @@ from kmd.file_storage.file_listings import walk_by_folder
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import ARCHIVE_DIR, initialize_store_dirs
 from kmd.file_storage.persisted_yaml import PersistedYaml
-from kmd.file_storage.store_filenames import (
-    folder_for_type,
-    join_suffix,
-    parse_filename_and_type,
-)
+from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_filename_and_type
 from kmd.model.arguments_model import StorePath
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import (

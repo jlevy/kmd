@@ -27,7 +27,7 @@ from kmd.config.text_styles import (
     PROMPT_ASSIST,
     SPINNER,
 )
-from kmd.file_formats.frontmatter_format import fmf_read, fmf_strip_frontmatter
+from kmd.file_formats.frontmatter_format import fmf_read, fmf_read_raw, fmf_strip_frontmatter
 from kmd.file_formats.yaml_util import to_yaml_string
 from kmd.file_storage.file_listings import walk_by_folder
 from kmd.file_storage.file_store import initialize_store_dirs
@@ -51,7 +51,7 @@ from kmd.model import (
     StorePath,
     USER_SETTABLE_PARAMS,
 )
-from kmd.model.file_formats_model import join_filename, split_filename
+from kmd.model.file_formats_model import guess_format, join_filename, split_filename
 from kmd.model.output_model import CommandOutput
 from kmd.preconditions import ALL_PRECONDITIONS
 from kmd.preconditions.precondition_checks import actions_matching_paths
@@ -333,6 +333,46 @@ def show(path: Optional[str] = None, pager: bool = False) -> None:
             view_file_native(path, use_pager=pager)
         else:
             raise InvalidInput("No selection")
+
+
+@kmd_command
+def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
+    """
+    Copy the contents of a file (or the first file in the selection) to the OS-native
+    clipboard. If `raw` is true, copy the full exact contents of the file. Otherwise,
+    omits any frontmatter if present.
+    """
+    import pyperclip
+
+    input_paths = _assemble_paths(path)
+    input_path = input_paths[0]
+
+    format = guess_format(input_path)
+    if not format or not format.is_text():
+        raise InvalidInput(f"Cannot copy non-text files to clipboard: {fmt_path(input_path)}")
+
+    if raw:
+        with open(input_path, "r") as f:
+            content = f.read()
+
+        pyperclip.copy(content)
+        output_status(
+            "Copied raw contents of file to clipboard (%s chars):\n%s",
+            len(content),
+            fmt_lines([fmt_path(input_path)]),
+        )
+    else:
+        content, metadata_str = fmf_read_raw(input_path)
+        pyperclip.copy(content)
+        skip_msg = ""
+        if metadata_str:
+            skip_msg = f", skipping {len(metadata_str)} chars of frontmatter"
+        output_status(
+            "Copied contents of file to clipboard (%s chars%s):\n%s",
+            len(content),
+            skip_msg,
+            fmt_lines([fmt_path(input_path)]),
+        )
 
 
 @kmd_command
@@ -827,6 +867,7 @@ def reformat(*paths: str, inplace: bool = False) -> None:
             target_path = join_filename(dirname, new_name, item_type, ext)
 
         normalize_text_file(path, target_path=target_path, inplace=inplace)
+
         if target_path:
             log.message("Formatted: %s -> %s", fmt_path(path), fmt_path(target_path))
         else:
