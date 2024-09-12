@@ -1,8 +1,14 @@
 import textwrap
+from pathlib import Path
 from typing import Optional
 
-from kmd.model.file_formats_model import Format
+from kmd.file_formats.frontmatter_format import fmf_read
+from kmd.file_storage.frontmatter_format import fmf_write
+from kmd.model.errors_model import InvalidInput
+from kmd.model.file_formats_model import Format, guess_format
 from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH, normalize_markdown
+from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.type_utils import not_none
 
 
 def wrap_plaintext(text: str, width=80) -> str:
@@ -31,3 +37,27 @@ def normalize_formatting(text: str, format: Optional[Format], width=DEFAULT_WRAP
         return text
     else:
         return text
+
+
+def normalize_text_file(
+    path: str | Path,
+    target_path: Optional[str | Path] = None,
+    format: Optional[Format] = None,
+    inplace: bool = False,
+) -> None:
+    """
+    Normalize formatting on a text file, handling Markdown, HTML, or text, as well as
+    frontmatter, if present.
+    """
+    if not target_path and not inplace:
+        raise InvalidInput("Must specify target path or run in-place")
+    if inplace and not target_path:
+        target_path = path  # fmf_write is atomic.
+
+    format = format or guess_format(path)
+    if not format or not format.is_text():
+        raise InvalidInput(f"Cannot format non-text files: {fmt_path(path)}")
+
+    content, metadata = fmf_read(path)
+    norm_content = normalize_formatting(content, format=format)
+    fmf_write(not_none(target_path), norm_content, metadata)

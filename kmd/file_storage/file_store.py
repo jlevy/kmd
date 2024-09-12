@@ -14,7 +14,11 @@ from kmd.file_storage.file_listings import walk_by_folder
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import ARCHIVE_DIR, initialize_store_dirs
 from kmd.file_storage.persisted_yaml import PersistedYaml
-from kmd.file_storage.store_filenames import folder_for_type, join_filename, parse_filename_and_type
+from kmd.file_storage.store_filenames import (
+    folder_for_type,
+    join_suffix,
+    parse_filename_and_type,
+)
 from kmd.model.arguments_model import StorePath
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.errors_model import (
@@ -103,7 +107,7 @@ class FileStore:
         except InvalidFilename:
             log.debug("Skipping file with invalid name: %s", fmt_path(store_path))
             return
-        self.uniquifier.add(name, join_filename(item_type.name, file_ext.name))
+        self.uniquifier.add(name, join_suffix(item_type.name, file_ext.name))
 
         dup_path = None
 
@@ -149,9 +153,9 @@ class FileStore:
         unique_slug, old_slugs = self.uniquifier.uniquify_historic(slug, full_suffix)
 
         # Suffix files with both item type and a suitable file extension.
-        new_unique_filename = join_filename(unique_slug, full_suffix)
+        new_unique_filename = join_suffix(unique_slug, full_suffix)
 
-        old_filename = join_filename(old_slugs[0], full_suffix) if old_slugs else None
+        old_filename = join_suffix(old_slugs[0], full_suffix) if old_slugs else None
 
         return new_unique_filename, old_filename
 
@@ -159,7 +163,7 @@ class FileStore:
         folder_path = folder_for_type(item.type)
         slug = item.title_slug()
         suffix = item.get_full_suffix()
-        return StorePath(folder_path / join_filename(slug, suffix))
+        return StorePath(folder_path / join_suffix(slug, suffix))
 
     def reload(self):
         self.__init__(self.base_dir, self.is_sandbox)

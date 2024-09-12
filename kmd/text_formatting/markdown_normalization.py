@@ -295,7 +295,9 @@ def wrap_lines_and_break_sentences(
     return "\n".join(wrapped_lines)
 
 
-def normalize_markdown(markdown_text: str, line_wrapper=wrap_lines_and_break_sentences) -> str:
+def normalize_markdown(
+    markdown_text: str, line_wrapper: LineWrapper = wrap_lines_and_break_sentences
+) -> str:
     """
     Normalize Markdown text. Wraps lines and adds line breaks within paragraphs and on
     best-guess estimations of sentences, to make diffs more readable.

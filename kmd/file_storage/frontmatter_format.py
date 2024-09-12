@@ -27,7 +27,11 @@ from kmd.model.errors_model import FileFormatError
 from kmd.text_formatting.text_formatting import fmt_path
 
 
-class FmFormat(Enum):
+class FmSyntax(Enum):
+    """
+    Markers used for frontmatter.
+    """
+
     yaml = ("---", "---", "")
     html = ("<!---", "--->", "")
     code = ("#---", "#---", "# ")
@@ -49,7 +53,7 @@ def fmf_write(
     file_path: Path | str,
     content: str,
     metadata: Optional[Dict],
-    format: FmFormat = FmFormat.yaml,
+    fm_synta: FmSyntax = FmSyntax.yaml,
     key_sort: Optional[KeySort] = None,
 ) -> None:
     """
@@ -59,12 +63,12 @@ def fmf_write(
     with atomic_output_file(file_path, make_parents=True) as temp_output:
         with open(temp_output, "w") as f:
             if metadata:
-                f.write(format.start)
+                f.write(fm_synta.start)
                 f.write("\n")
                 for line in to_yaml_string(metadata, key_sort=key_sort).splitlines():
-                    f.write(format.prefix + line)
+                    f.write(fm_synta.prefix + line)
                     f.write("\n")
-                f.write(format.end)
+                f.write(fm_synta.end)
                 f.write("\n")
 
             f.write(content)
@@ -94,7 +98,7 @@ def fmf_read_metadata(file_path: Path | str) -> Tuple[Optional[str], int]:
     metadata_lines = []
     in_metadata = False
     prefix = ""
-    end_pattern = FmFormat.yaml.end
+    end_pattern = FmSyntax.yaml.end
 
     with open(file_path, "r") as f:
         try:
@@ -102,17 +106,17 @@ def fmf_read_metadata(file_path: Path | str) -> Tuple[Optional[str], int]:
         except StopIteration:
             return None, 0
 
-        if first_line == FmFormat.yaml.start:
-            prefix = FmFormat.yaml.prefix
+        if first_line == FmSyntax.yaml.start:
+            prefix = FmSyntax.yaml.prefix
             in_metadata = True
-        elif first_line == FmFormat.html.start:
+        elif first_line == FmSyntax.html.start:
             in_metadata = True
-            prefix = FmFormat.html.prefix
-            end_pattern = FmFormat.html.end
-        elif first_line == FmFormat.code.start:
+            prefix = FmSyntax.html.prefix
+            end_pattern = FmSyntax.html.end
+        elif first_line == FmSyntax.code.start:
             in_metadata = True
-            prefix = FmFormat.code.prefix
-            end_pattern = FmFormat.code.end
+            prefix = FmSyntax.code.prefix
+            end_pattern = FmSyntax.code.end
 
         while True:
             line = f.readline()
@@ -165,7 +169,7 @@ def test_fmf():
     fmf_write(file_path_md, content_md, metadata_md)
     with open(file_path_md, "r") as f:
         lines = f.readlines()
-    assert lines[0] == FmFormat.yaml.start + "\n"
+    assert lines[0] == FmSyntax.yaml.start + "\n"
     assert lines[-1].strip() == content_md
     assert "title: Test Title\n" in lines
     assert "author: Test Author\n" in lines
@@ -175,10 +179,10 @@ def test_fmf():
     content_md = "Hello, World!"
     metadata_md = {"title": "Test Title", "author": "Test Author"}
     with open(file_path_md, "w") as f:
-        f.write(FmFormat.yaml.start + "\n")
+        f.write(FmSyntax.yaml.start + "\n")
         f.write("title: Test Title\n")
         f.write("author: Test Author\n")
-        f.write(FmFormat.yaml.end + "\n")
+        f.write(FmSyntax.yaml.end + "\n")
         f.write(content_md)
     read_content_md, read_metadata_md = fmf_read(file_path_md)
     assert read_content_md.strip() == content_md
@@ -188,10 +192,10 @@ def test_fmf():
     file_path_html = "tmp/test_write.html"
     content_html = "<p>Hello, World!</p>"
     metadata_html = {"title": "Test Title", "author": "Test Author"}
-    fmf_write(file_path_html, content_html, metadata_html, format=FmFormat.html)
+    fmf_write(file_path_html, content_html, metadata_html, fm_synta=FmSyntax.html)
     with open(file_path_html, "r") as f:
         lines = f.readlines()
-    assert lines[0] == FmFormat.html.start + "\n"
+    assert lines[0] == FmSyntax.html.start + "\n"
     assert lines[-1].strip() == content_html
     assert "title: Test Title\n" in lines
     assert "author: Test Author\n" in lines
@@ -201,9 +205,9 @@ def test_fmf():
     content_html = "<p>Hello, World!</p>"
     metadata_html = {"title": "Test Title", "author": "Test Author"}
     with open(file_path_html, "w") as f:
-        f.write(FmFormat.html.start + "\n")
+        f.write(FmSyntax.html.start + "\n")
         write_yaml(metadata_html, f)
-        f.write(FmFormat.html.end + "\n")
+        f.write(FmSyntax.html.end + "\n")
         f.write(content_html)
     read_content_html, read_metadata_html = fmf_read(file_path_html)
     assert read_content_html.strip() == content_html
@@ -213,10 +217,10 @@ def test_fmf():
     file_path_code = "tmp/test_write_code.py"
     content_code = "print('Hello, World!')"
     metadata_code = {"title": "Test Title", "author": "Test Author"}
-    fmf_write(file_path_code, content_code, metadata_code, format=FmFormat.code)
+    fmf_write(file_path_code, content_code, metadata_code, fm_synta=FmSyntax.code)
     with open(file_path_code, "r") as f:
         lines = f.readlines()
-    assert lines[0] == FmFormat.code.start + "\n"
+    assert lines[0] == FmSyntax.code.start + "\n"
     assert lines[-1].strip() == content_code
     assert "# title: Test Title\n" in lines
     assert "# author: Test Author\n" in lines
@@ -226,10 +230,10 @@ def test_fmf():
     content_code = "print('Hello, World!')"
     metadata_code = {"title": "Test Title", "author": "Test Author"}
     with open(file_path_code, "w") as f:
-        f.write(FmFormat.code.start + "\n")
+        f.write(FmSyntax.code.start + "\n")
         f.write("# title: Test Title\n")
         f.write("# author: Test Author\n")
-        f.write(FmFormat.code.end + "\n")
+        f.write(FmSyntax.code.end + "\n")
         f.write(content_code)
     read_content_code, read_metadata_code = fmf_read(file_path_code)
     assert read_content_code.strip() == content_code
@@ -264,7 +268,7 @@ def test_fmf_with_custom_key_sort():
     fmf_write(file_path_md, content_md, metadata_md, key_sort=key_sort)
     with open(file_path_md, "r") as f:
         lines = f.readlines()
-    assert lines[0] == FmFormat.yaml.start + "\n"
+    assert lines[0] == FmSyntax.yaml.start + "\n"
     assert lines[-1].strip() == content_md
     # Check that the priority keys come first in the order they are in the list
     assert lines[1].strip() == "date: '2022-01-01'"

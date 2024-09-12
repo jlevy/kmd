@@ -57,7 +57,8 @@ poetry config virtualenvs.in-project true
 1. [Fork](https://github.com/jlevy/kmd/fork) this repo (having your own fork will make it
    easier to contribute actions, add models, etc.).
 
-2. [Check out](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
+2. [Check
+   out](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
    the code.
 
 3. Install the package dependencies:
@@ -166,6 +167,8 @@ kmd transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
 
 ## Tips for Use with Other Tools
 
+While not required, these tools can make using kmd easier or more fun.
+
 ### Choosing a Terminal
 
 You can use any favorite terminal to run kmd, but I recommend trying a try to
@@ -212,9 +215,11 @@ Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
 [Obsidian](https://obsidian.md/). Some notes:
 
 - In Obsidian's preferences, under Editor, turn on "Strict line breaks".
+
 - This makes the line breaks in kmd's normalized Mardown output work well in Obsidian.
 
 - Some kmd files also contain HTML in Markdown.
+
 - This works fine, but note that only the current line's HTML is shown in Obsidian.
 
 - Install the [Front Matter Title
@@ -224,14 +229,23 @@ Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
 
   - Under "Installed Plugins," adjust the settings to enable "Replace shown title in file
     explorer," "Replace shown title in graph," etc.
+
   - You probably want to keep the "Replace titles in header of leaves" off so you can still
     see original filenames if needed.
 
   - Now titles are easy to read for all kmd notes.
 
+### More Command-Line Tools
+
+- [**Ranger**](https://github.com/ranger/ranger) is a powerful terminal-based file manager
+  that works well with kmd generated files.
+
+- [**Vizdata**](https://github.com/saulpw/visidata) is a flexible spreadsheet-like multitool
+  for tabular data.
+
 ## Development Tasks
 
-```
+```shell
 # Developers should install poetry plugins to help with dev builds and updates:
 poetry self add "poetry-dynamic-versioning[plugin]"
 poetry self add poetry-plugin-up

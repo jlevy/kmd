@@ -260,7 +260,7 @@ def view_file_console(filename: str | Path, use_pager: bool = False):
     # TODO: Visualize YAML frontmatter with different syntax/style than Markdown content.
 
     if tool_check().has(CmdlineTool.bat):
-        pager_str = "--pager " if use_pager else ""
+        pager_str = "--pager=always " if use_pager else ""
         command = f"bat {pager_str}--color=always --style={BAT_STYLE} --theme={BAT_THEME} {quoted_filename}"
     else:
         tool_check().require(CmdlineTool.pygmentize)

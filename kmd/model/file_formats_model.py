@@ -2,7 +2,7 @@ import os
 import re
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import cast, List, Optional, Tuple
 
 from kmd.model.errors_model import InvalidFilename
 from kmd.text_formatting.text_formatting import fmt_path
@@ -84,7 +84,6 @@ class Format(Enum):
             FileExt.m4a.value: Format.m4a,
             FileExt.mp4.value: Format.mp4,
         }
-        return ext_to_format.get(file_ext.value, None)
         return ext_to_format.get(file_ext.value, None)
 
     def __str__(self):
@@ -180,6 +179,16 @@ def parse_file_ext(path: str | Path) -> Optional[FileExt]:
     return FileExt.from_str(canonicalize_file_ext(ext))
 
 
+def guess_format(path: str | Path) -> Optional[Format]:
+    """
+    Guess the format of a file from its extension. None if not clear.
+    """
+    _dirname, _name, _item_type, ext = split_filename(path)
+    file_ext = parse_file_ext(ext)
+    format = file_ext and Format.guess_by_file_ext(file_ext)
+    return format
+
+
 def split_filename(path: str | Path, require_type_ext: bool = False) -> Tuple[str, str, str, str]:
     """
     Parse a filename into its path, name, (optional) type, and extension parts:
@@ -206,6 +215,15 @@ def split_filename(path: str | Path, require_type_ext: bool = False) -> Tuple[st
             f"Filename does not match file store convention (name.type.ext): {path_str}"
         )
     return dirname, name, item_type, ext
+
+
+def join_filename(dirname: str | Path, name: str, item_type: Optional[str], ext: str) -> Path:
+    """
+    Join a filename into a single path, with optional type and extension.
+    """
+
+    parts = cast(List[str], filter(bool, [name, item_type, ext]))
+    return Path(dirname) / ".".join(parts)
 
 
 def parse_file_format(path: str | Path) -> Tuple[str, Format, FileExt]:

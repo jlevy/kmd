@@ -27,8 +27,8 @@ def folder_for_type(item_type: ItemType) -> Path:
     return Path(_type_to_folder[item_type.name])
 
 
-def join_filename(base_slug: str, full_suffix: str) -> str:
-    return f"{base_slug}.{full_suffix}"
+def join_suffix(base_slug: str, full_suffix: str) -> str:
+    return f"{base_slug}.{full_suffix.lstrip('.')}"
 
 
 def parse_filename_and_type(filename: str) -> Tuple[str, ItemType, FileExt]:

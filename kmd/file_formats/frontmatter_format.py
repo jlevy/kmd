@@ -13,7 +13,7 @@ import os
 import shutil
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Any, cast, Dict, Optional, Tuple
 
 from ruamel.yaml.error import YAMLError
 from strif import atomic_output_file
@@ -72,7 +72,10 @@ def fmf_write(
             f.write(content)
 
 
-def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
+Metadata = Dict[str, Any]
+
+
+def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Metadata]]:
     """
     Read UTF-8 text content (typically Markdown) from a file with optional YAML metadata
     in Jekyll-style frontmatter format. Auto-detects variant formats for HTML and code
@@ -85,6 +88,9 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Dict]]:
             metadata = from_yaml_string(metadata_str)
         except YAMLError as e:
             raise FileFormatError(f"Error parsing YAML metadata: {fmt_path(file_path)}: {e}")
+        if not isinstance(metadata, dict):
+            raise FileFormatError(f"Invalid metadata type: {type(metadata)}")
+        metadata = cast(Metadata, metadata)
     return content, metadata
 
 

@@ -70,10 +70,10 @@ from kmd.model.errors_model import (
 
 from kmd.model.file_formats_model import (
     canonicalize_file_ext,
-    parse_file_ext,
     FileExt,
     Format,
     is_ignored,
+    parse_file_ext,
     parse_file_format,
     split_filename,
 )

@@ -51,6 +51,7 @@ from kmd.model import (
     StorePath,
     USER_SETTABLE_PARAMS,
 )
+from kmd.model.file_formats_model import join_filename, split_filename
 from kmd.model.output_model import CommandOutput
 from kmd.preconditions import ALL_PRECONDITIONS
 from kmd.preconditions.precondition_checks import actions_matching_paths
@@ -63,6 +64,7 @@ from kmd.shell_tools.native_tools import (
     view_file_native,
 )
 from kmd.text_chunks.parse_divs import parse_divs
+from kmd.text_formatting.doc_formatting import normalize_text_file
 from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.text_ui.command_output import (
     format_name_and_description,
@@ -809,6 +811,26 @@ def normalize(*paths: str) -> None:
         select(*canon_paths)
 
     # TODO: Also consider implementing duplicate elimination here.
+
+
+@kmd_command
+def reformat(*paths: str, inplace: bool = False) -> None:
+    """
+    Format text, Markdown, or HTML according to kmd conventions.
+    Saves files
+    """
+    for path in paths:
+        target_path = None
+        if not inplace:
+            dirname, name, item_type, ext = split_filename(path)
+            new_name = f"{name}_formatted"
+            target_path = join_filename(dirname, new_name, item_type, ext)
+
+        normalize_text_file(path, target_path=target_path, inplace=inplace)
+        if target_path:
+            log.message("Formatted: %s -> %s", fmt_path(path), fmt_path(target_path))
+        else:
+            log.message("Formatted in place: %s", fmt_path(path))
 
 
 @kmd_command
