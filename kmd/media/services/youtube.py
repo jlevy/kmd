@@ -6,10 +6,11 @@ from urllib.parse import parse_qs, urlparse
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_WARN
 from kmd.file_formats.yaml_util import to_yaml_string
-from kmd.media.yt_dlp_utils import parse_date, ydl_download_audio, ydl_extract_info
+from kmd.media.yt_dlp_utils import parse_date, ydl_download_media, ydl_extract_info
 from kmd.model.errors_model import ApiResultError, InvalidInput
 from kmd.model.media_model import (
     HeatmapValue,
+    MediaFormat,
     MediaMetadata,
     MediaService,
     MediaUrlType,
@@ -85,9 +86,9 @@ class YouTube(MediaService):
             raise InvalidInput(f"Unrecognized YouTube URL: {url}")
         return Url(canon_url + f"&t={timestamp}s")
 
-    def download_audio(self, url: Url, target_dir: Path) -> Path:
+    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaFormat, Path]:
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
-        return ydl_download_audio(url, target_dir)
+        return ydl_download_media(url, target_dir, include_video=True)
 
     def _extract_info(self, url: Url) -> Dict[str, Any]:
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")

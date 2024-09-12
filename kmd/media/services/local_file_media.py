@@ -2,7 +2,7 @@ import os
 import shlex
 import subprocess  # Add this import
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
 from strif import copyfile_atomic
@@ -10,12 +10,23 @@ from strif import copyfile_atomic
 from kmd.config.logger import get_log_file_stream, get_logger
 from kmd.model.errors_model import FileNotFound, InvalidInput
 from kmd.model.file_formats_model import FileExt, parse_file_format
-from kmd.model.media_model import MediaMetadata, MediaService, MediaUrlType
+from kmd.model.media_model import MediaFormat, MediaMetadata, MediaService, MediaUrlType
 from kmd.shell_tools.native_tools import CmdlineTool, tool_check
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.url import Url
 
 log = get_logger(__name__)
+
+
+def _run_ffmpeg(cmdline: List[str]) -> None:
+    tool_check().require(CmdlineTool.ffmpeg)
+    log.message("Running: %s", " ".join([shlex.quote(arg) for arg in cmdline]))
+    subprocess.run(
+        cmdline,
+        check=True,
+        stdout=get_log_file_stream(),
+        stderr=get_log_file_stream(),
+    )
 
 
 class LocalFileMedia(MediaService):
@@ -59,15 +70,16 @@ class LocalFileMedia(MediaService):
     def timestamp_url(self, url: Url, timestamp: float) -> Url:
         return url
 
-    def download_audio(self, url: Url, target_dir: Path) -> Path:
+    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaFormat, Path]:
         path = self._parse_file_url(url)
         if not path:
             raise InvalidInput(f"Not a local file URL: {url}")
 
         _name, format, file_ext = parse_file_format(path)
+        os.makedirs(target_dir, exist_ok=True)
+
         if format.is_audio():
             target_path = target_dir / (path.stem + ".mp3")
-            os.makedirs(target_dir, exist_ok=True)
             if file_ext == FileExt.mp3:
                 log.message(
                     "Copying local audio file: %s -> %s", fmt_path(path), fmt_path(target_dir)
@@ -78,19 +90,55 @@ class LocalFileMedia(MediaService):
                 log.message(
                     "Converting local audio file: %s -> %s", fmt_path(path), fmt_path(target_dir)
                 )
-                # Use ffmpeg to convert the audio file to .mp3 format.
-                tool_check().require(CmdlineTool.ffmpeg)
-                cmdline = ["ffmpeg", "-i", str(path), "-f", "mp3", str(target_path)]
-                log.message("Running: %s", " ".join([shlex.quote(arg) for arg in cmdline]))
-                subprocess.run(
-                    cmdline,
-                    check=True,
-                    stdout=get_log_file_stream(),
-                    stderr=get_log_file_stream(),
-                )
-            return target_path
+
+                _run_ffmpeg(["ffmpeg", "-i", str(path), "-f", "mp3", str(target_path)])
+            return {MediaFormat.audio_full: target_path}
         elif format.is_video():
-            raise NotImplementedError()  # FIXME: ffmpeg convert
+            video_target_path = target_dir / (path.stem + ".mp4")
+            audio_target_path = target_dir / (path.stem + ".mp3")
+
+            log.message(
+                "Converting local video file: %s -> %s", fmt_path(path), fmt_path(video_target_path)
+            )
+            _run_ffmpeg(
+                [
+                    "ffmpeg",
+                    "-i",
+                    str(path),
+                    "-c:v",
+                    "libx264",
+                    "-c:a",
+                    "aac",
+                    "-f",
+                    "mp4",
+                    str(video_target_path),
+                ]
+            )
+
+            log.message(
+                "Extracting audio from video file: %s -> %s",
+                fmt_path(path),
+                fmt_path(audio_target_path),
+            )
+            _run_ffmpeg(
+                [
+                    "ffmpeg",
+                    "-i",
+                    str(path),
+                    "-q:a",
+                    "0",
+                    "-map",
+                    "a",
+                    "-f",
+                    "mp3",
+                    str(audio_target_path),
+                ]
+            )
+
+            return {
+                MediaFormat.video_full: video_target_path,
+                MediaFormat.audio_full: audio_target_path,
+            }
         else:
             raise InvalidInput(f"Unsupported file format: {format}")
 

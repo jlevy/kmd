@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from kmd.util.url import Url
 
@@ -26,6 +26,12 @@ class MediaUrlType(Enum):
     """URL for a channel."""
     playlist = "playlist"
     """URL for a playlist."""
+
+
+class MediaFormat(Enum):
+    audio_full = "mp3_audio_full"
+    audio_16k = "mp3_audio_16k"
+    video_full = "mp4_video_full"
 
 
 @dataclass
@@ -103,8 +109,8 @@ class MediaService(ABC):
         pass
 
     @abstractmethod
-    def download_audio(self, url: Url, target_dir: Path) -> Path:
-        """Download media from URL and extract audio to mp3."""
+    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaFormat, Path]:
+        """Download media from URL and extract to audio or video formats."""
         pass
 
     @abstractmethod

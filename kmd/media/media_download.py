@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings, update_global_settings
 from kmd.media.media_cache import MediaCache
+from kmd.model.media_model import MediaFormat
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.url import Url
 
@@ -31,7 +32,7 @@ def download_and_transcribe(
     return _media_cache.transcribe(url_or_path, no_cache=no_cache, language=language)
 
 
-def download_audio(url: Url, no_cache=False) -> Path:
-    """Download audio, possibly of a video, saving in cache. If no_cache is True, force fresh download."""
+def download_media(url: Url, no_cache=False) -> Dict[MediaFormat, Path]:
+    """Download audio and video (if available), saving in cache. If no_cache is True, force fresh download."""
 
     return _media_cache.download(url, no_cache=no_cache)

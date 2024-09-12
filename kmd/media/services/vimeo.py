@@ -4,9 +4,9 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
 from kmd.config.logger import get_logger
-from kmd.media.yt_dlp_utils import parse_date, ydl_download_audio, ydl_extract_info
+from kmd.media.yt_dlp_utils import parse_date, ydl_download_media, ydl_extract_info
 from kmd.model.errors_model import ApiResultError, InvalidInput
-from kmd.model.media_model import MediaMetadata, MediaService, MediaUrlType
+from kmd.model.media_model import MediaFormat, MediaMetadata, MediaService, MediaUrlType
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
 
@@ -62,9 +62,9 @@ class Vimeo(MediaService):
             return Url(f"{canon_url}#t={timestamp}")
         return canon_url  # For channels, just return the canonical URL
 
-    def download_audio(self, url: Url, target_dir: Path) -> Path:
+    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaFormat, Path]:
         url = not_none(self.canonicalize(url), "Not a recognized Vimeo URL")
-        return ydl_download_audio(url, target_dir)
+        return ydl_download_media(url, target_dir, include_video=True)
 
     def list_channel_items(self, url: Url) -> List[MediaMetadata]:
         raise NotImplementedError()

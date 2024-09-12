@@ -1,4 +1,5 @@
-from typing import List, Optional
+from pathlib import Path
+from typing import Dict, List, Optional
 
 from kmd.config.logger import get_logger
 from kmd.media.services.apple_podcasts import ApplePodcasts
@@ -6,7 +7,7 @@ from kmd.media.services.local_file_media import LocalFileMedia
 from kmd.media.services.vimeo import Vimeo
 from kmd.media.services.youtube import YouTube
 from kmd.model.errors_model import InvalidInput
-from kmd.model.media_model import MediaMetadata, MediaService
+from kmd.model.media_model import MediaFormat, MediaMetadata, MediaService
 from kmd.util.log_calls import log_calls
 from kmd.util.url import Url
 
@@ -86,3 +87,11 @@ def list_channel_items(url: Url) -> List[MediaMetadata]:
         if canonical_url:
             return service.list_channel_items(url)
     raise InvalidInput(f"Unrecognized media URL: {url}")
+
+
+def download_media(url: Url, target_dir: Path) -> Dict[MediaFormat, Path]:
+    for service in media_services:
+        canonical_url = service.canonicalize(url)
+        if canonical_url:
+            return service.download_media(url, target_dir)
+    raise ValueError(f"Unrecognized media URL: {url}")

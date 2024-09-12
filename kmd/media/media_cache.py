@@ -1,14 +1,15 @@
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 from strif import atomic_output_file
 
 from kmd.config.logger import get_logger
 from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
-from kmd.media.media_services import canonicalize_media_url, media_services
+from kmd.media.media_services import canonicalize_media_url, download_media
 from kmd.model.errors_model import FileNotFound, InvalidInput, UnexpectedError
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.model.media_model import MediaFormat
+from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.util.url import as_file_url, is_url, Url
 from kmd.util.web_cache import DirStore
 
@@ -20,6 +21,7 @@ transcribe_audio = deepgram_transcribe_audio
 
 # For simplicity we assume all audio is coverted to mp3.
 SUFFIX_MP3 = ".full.mp3"
+SUFFIX_MP4 = ".full.mp4"
 SUFFIX_16KMP3 = ".16k.mp3"
 SUFFIX_TRANSCRIPT = ".transcript.txt"
 
@@ -50,7 +52,7 @@ class MediaCache(DirStore):
                 return f.read()
         return None
 
-    def _do_downsample(self, url: Url) -> Path:
+    def _downsample_audio(self, url: Url) -> Path:
         downsampled_audio_file = self.find(url, suffix=SUFFIX_16KMP3)
         if not downsampled_audio_file:
             full_audio_file = self.find(url, suffix=SUFFIX_MP3)
@@ -66,7 +68,7 @@ class MediaCache(DirStore):
         return downsampled_audio_file
 
     def _do_transcription(self, url: Url, language: Optional[str] = None) -> str:
-        downsampled_audio_file = self._do_downsample(url)
+        downsampled_audio_file = self._downsample_audio(url)
         log.message(
             "Transcribing audio: %s: %s",
             url,
@@ -76,21 +78,40 @@ class MediaCache(DirStore):
         self._write_transcript(url, transcript)
         return transcript
 
-    def download(self, url: Url, no_cache=False) -> Path:
+    def download(self, url: Url, no_cache=False) -> Dict[MediaFormat, Path]:
+        cached_paths: Dict[MediaFormat, Path] = {}
+
         if not no_cache:
             full_audio_file = self.find(url, suffix=SUFFIX_MP3)
+            full_video_file = self.find(url, suffix=SUFFIX_MP4)
             if full_audio_file:
                 log.message("Audio already in cache: %s: %s", url, fmt_path(full_audio_file))
-                return full_audio_file
-        log.message("Downloading audio: %s", url)
-        mp3_path = _download_audio_with_service(url, self.root)
-        full_audio_path = self.path_for(url, suffix=SUFFIX_MP3)
-        os.rename(mp3_path, full_audio_path)
-        self._do_downsample(url)
+                cached_paths[MediaFormat.audio_full] = full_audio_file
+            if full_video_file:
+                log.message("Video already in cache: %s: %s", url, fmt_path(full_video_file))
+                cached_paths[MediaFormat.video_full] = full_video_file
+            if full_audio_file and full_video_file:
+                return cached_paths
 
-        log.message("Downloaded media and saved audio to: %s", fmt_path(full_audio_path))
+        log.message("Downloading media: %s", url)
+        media_paths = download_media(url, self.root)
+        if MediaFormat.audio_full in media_paths:
+            full_audio_path = self.path_for(url, suffix=SUFFIX_MP3)
+            os.rename(media_paths[MediaFormat.audio_full], full_audio_path)
+            cached_paths[MediaFormat.audio_full] = full_audio_path
+        if MediaFormat.video_full in media_paths:
+            video_path = self.path_for(url, suffix=SUFFIX_MP4)
+            os.rename(media_paths[MediaFormat.video_full], video_path)
+            cached_paths[MediaFormat.video_full] = video_path
 
-        return full_audio_path
+        log.message(
+            "Downloaded media and saved to cache:\n%s",
+            fmt_lines([f"{t.name}: {fmt_path(p)}" for (t, p) in cached_paths.items()]),
+        )
+
+        self._downsample_audio(url)
+
+        return cached_paths
 
     def transcribe(
         self, url_or_path: Url | Path, no_cache=False, language: Optional[str] = None
@@ -116,11 +137,3 @@ class MediaCache(DirStore):
         if not transcript:
             raise UnexpectedError("No transcript found for: %s" % url)
         return transcript
-
-
-def _download_audio_with_service(url: Url, target_dir: Path) -> Path:
-    for service in media_services:
-        canonical_url = service.canonicalize(url)
-        if canonical_url:
-            return service.download_audio(url, target_dir)
-    raise ValueError(f"Unrecognized media URL: {url}")

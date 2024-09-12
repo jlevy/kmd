@@ -8,9 +8,15 @@ from yt_dlp.utils import DownloadError
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_WARN
 from kmd.file_formats.yaml_util import to_yaml_string
-from kmd.media.yt_dlp_utils import ydl_download_audio, ydl_extract_info
+from kmd.media.yt_dlp_utils import ydl_download_media, ydl_extract_info
 from kmd.model.errors_model import ApiResultError
-from kmd.model.media_model import MediaMetadata, MediaService, MediaUrlType, SERVICE_APPLE_PODCASTS
+from kmd.model.media_model import (
+    MediaFormat,
+    MediaMetadata,
+    MediaService,
+    MediaUrlType,
+    SERVICE_APPLE_PODCASTS,
+)
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
 
@@ -73,9 +79,9 @@ class ApplePodcasts(MediaService):
         # Apple Podcasts doesn't support timestamp links. We'll return the original URL.
         return url
 
-    def download_audio(self, url: Url, target_dir: Path) -> Path:
+    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaFormat, Path]:
         url = not_none(self.canonicalize(url), "Not a recognized Apple Podcasts URL")
-        return ydl_download_audio(url, target_dir)
+        return ydl_download_media(url, target_dir, include_video=False)
 
     def _extract_info(self, url: Url) -> Dict[str, Any]:
         url = not_none(self.canonicalize(url), "Not a recognized Apple Podcasts URL")

@@ -100,13 +100,14 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
 
         kw_values = _map_keyword(shell_args.kw_args, remaining_kw_params)
 
-        log.info(
-            "Mapping shell args to function params: %s -> %s -> pos_values=%s, kw_values=%s",
-            args,
-            shell_args,
-            pos_values,
-            kw_values,
-        )
+        if args:
+            log.info(
+                "Mapping shell args to function params: %s -> %s -> pos_values=%s, kw_values=%s",
+                args,
+                shell_args,
+                pos_values,
+                kw_values,
+            )
 
         return func(*pos_values, **kw_values)
 
