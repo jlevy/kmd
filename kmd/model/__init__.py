@@ -70,12 +70,12 @@ from kmd.model.errors_model import (
 
 from kmd.model.file_formats_model import (
     canonicalize_file_ext,
-    file_ext_is_text,
+    parse_file_ext,
     FileExt,
     Format,
     is_ignored,
     parse_file_format,
-    parse_filename,
+    split_filename,
 )
 from kmd.model.graph_model import GraphData, Link, Node
 from kmd.model.items_model import (

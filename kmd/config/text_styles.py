@@ -14,6 +14,8 @@ SPINNER = "dots12"
 
 BAT_THEME = "Coldark-Dark"
 
+BAT_STYLE = "header-filename,header-filesize,grid,changes"
+
 ## Text styles
 
 LOGO = "⎪K⎪M⎪D⎪"

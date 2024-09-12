@@ -29,9 +29,9 @@ class MediaUrlType(Enum):
 
 
 class MediaFormat(Enum):
-    audio_full = "mp3_audio_full"
-    audio_16k = "mp3_audio_16k"
-    video_full = "mp4_video_full"
+    audio_full = "audio_full"
+    audio_16k = "audio_16k"
+    video_full = "video_full"
 
 
 @dataclass

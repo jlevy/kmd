@@ -21,13 +21,16 @@ class Format(Enum):
     html = "html"
     """`markdown` should be simple and clean Markdown that we can use with LLMs."""
     yaml = "yaml"
-    json = "json"
     python = "python"
+
+    json = "json"
+    csv = "csv"
     pdf = "pdf"
     docx = "docx"
     mp3 = "mp3"
     m4a = "m4a"
     mp4 = "mp4"
+
     unknown = "unknown"
 
     def is_text(self) -> bool:
@@ -44,6 +47,17 @@ class Format(Enum):
             self.python,
         ]
 
+    def supports_frontmatter(self) -> bool:
+        return self in [
+            self.url,
+            self.plaintext,
+            self.markdown,
+            self.md_html,
+            self.html,
+            self.yaml,
+            self.python,
+        ]
+
     def is_audio(self) -> bool:
         return self in [self.mp3, self.m4a]
 
@@ -57,18 +71,20 @@ class Format(Enum):
         None if format is ambiguous.
         """
         ext_to_format = {
-            FileExt.yml: None,  # We will need to look at a YAML file to determine format.
             FileExt.txt.value: Format.plaintext,
             FileExt.md.value: Format.markdown,
-            FileExt.json.value: Format.json,
             FileExt.html.value: Format.html,
+            FileExt.yml.value: None,  # We will need to look at a YAML file to determine format.
+            FileExt.json.value: Format.json,
+            FileExt.csv.value: Format.csv,
+            FileExt.py.value: Format.python,
             FileExt.pdf.value: Format.pdf,
             FileExt.docx.value: Format.docx,
-            FileExt.py.value: Format.python,
             FileExt.mp3.value: Format.mp3,
             FileExt.m4a.value: Format.m4a,
             FileExt.mp4.value: Format.mp4,
         }
+        return ext_to_format.get(file_ext.value, None)
         return ext_to_format.get(file_ext.value, None)
 
     def __str__(self):
@@ -85,6 +101,7 @@ class FileExt(Enum):
     html = "html"
     yml = "yml"
     json = "json"
+    csv = "csv"
     py = "py"
     pdf = "pdf"
     docx = "docx"
@@ -114,6 +131,8 @@ class FileExt(Enum):
             Format.html.value: FileExt.html,
             Format.plaintext.value: FileExt.txt,
             Format.yaml.value: FileExt.yml,
+            Format.json.value: FileExt.json,
+            Format.csv.value: FileExt.csv,
             Format.python.value: FileExt.py,
             Format.pdf.value: FileExt.pdf,
             Format.docx.value: FileExt.docx,
@@ -139,17 +158,9 @@ class FileExt(Enum):
         return self.name
 
 
-def file_ext_is_text(ext: str) -> bool:
-    """
-    Check if a file extension is a text format.
-    """
-    file_ext = FileExt.from_str(canonicalize_file_ext(ext))
-    return bool(file_ext and file_ext.is_text())
-
-
 def canonicalize_file_ext(ext: str) -> str:
     """
-    Convert a file extension to canonical form (without the dot).
+    Convert a file extension (with or without the dot) to canonical form (without the dot).
     """
     ext_map = {
         "htm": "html",
@@ -159,7 +170,17 @@ def canonicalize_file_ext(ext: str) -> str:
     return ext_map.get(ext, ext) or ext
 
 
-def parse_filename(path: str | Path, expect_type_ext=False) -> Tuple[str, str, str, str]:
+def parse_file_ext(path: str | Path) -> Optional[FileExt]:
+    """
+    Parse a file extension from a path or a raw file extension like "csv" or ".csv".
+    """
+    front, ext = os.path.splitext(path)
+    if not ext:
+        ext = front
+    return FileExt.from_str(canonicalize_file_ext(ext))
+
+
+def split_filename(path: str | Path, require_type_ext: bool = False) -> Tuple[str, str, str, str]:
     """
     Parse a filename into its path, name, (optional) type, and extension parts:
 
@@ -174,10 +195,10 @@ def parse_filename(path: str | Path, expect_type_ext=False) -> Tuple[str, str, s
     parts = os.path.basename(path_str).rsplit(".", 2)
     if len(parts) == 3:
         name, item_type, ext = parts
-    elif len(parts) == 2 and not expect_type_ext:
+    elif len(parts) == 2 and not require_type_ext:
         name, ext = parts
         item_type = ""
-    elif len(parts) == 1 and not expect_type_ext:
+    elif len(parts) == 1 and not require_type_ext:
         name = parts[0]
         item_type = ext = ""
     else:
@@ -194,7 +215,7 @@ def parse_file_format(path: str | Path) -> Tuple[str, Format, FileExt]:
     """
     path_str = str(path)
     try:
-        _dirname, name, _item_type, ext_str = parse_filename(path_str)
+        _dirname, name, _item_type, ext_str = split_filename(path_str)
         file_ext = FileExt(ext_str)
     except ValueError:
         raise InvalidFilename(
@@ -235,21 +256,21 @@ def test_parse_filename():
     import pytest
 
     filename = "foo/bar/test_file.1.type.ext"
-    dirname, name, item_type, ext = parse_filename(filename)
+    dirname, name, item_type, ext = split_filename(filename)
     assert dirname == "foo/bar"
     assert name == "test_file.1"
     assert item_type == "type"
     assert ext == "ext"
 
     filename = "foo/bar/test_file.ext"
-    dirname, name, item_type, ext = parse_filename(filename)
+    dirname, name, item_type, ext = split_filename(filename)
     assert dirname == "foo/bar"
     assert name == "test_file"
     assert item_type == ""
     assert ext == "ext"
 
     filename = "test_file"
-    dirname, name, item_type, ext = parse_filename(filename)
+    dirname, name, item_type, ext = split_filename(filename)
     assert dirname == ""
     assert name == "test_file"
     assert item_type == ""
@@ -257,4 +278,12 @@ def test_parse_filename():
 
     filename = "missing_type.ext"
     with pytest.raises(InvalidFilename):
-        parse_filename(filename, expect_type_ext=True)
+        split_filename(filename, require_type_ext=True)
+
+
+def test_parse_file_ext():
+    assert parse_file_ext("test.md") == FileExt.md
+    assert parse_file_ext("test.resource.md") == FileExt.md
+    assert parse_file_ext(".md") == FileExt.md
+    assert parse_file_ext("md") == FileExt.md
+    assert parse_file_ext("foobar") is None

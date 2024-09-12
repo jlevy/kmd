@@ -4,7 +4,7 @@ from typing import Tuple
 from kmd.config.logger import get_logger
 from kmd.lang_tools.inflection import plural
 from kmd.model.errors_model import InvalidFilename
-from kmd.model.file_formats_model import FileExt, parse_filename
+from kmd.model.file_formats_model import FileExt, split_filename
 from kmd.model.items_model import ItemType
 from kmd.text_formatting.text_formatting import fmt_path
 
@@ -40,10 +40,10 @@ def parse_filename_and_type(filename: str) -> Tuple[str, ItemType, FileExt]:
     # Python files can have only one dot (like file.py) but others should have a type
     # (like file.resource.yml).
     if filename.endswith(".py"):
-        dirname, name, _, ext = parse_filename(filename, expect_type_ext=False)
+        dirname, name, _, ext = split_filename(filename, require_type_ext=False)
         item_type = ItemType.extension.value
     else:
-        dirname, name, item_type, ext = parse_filename(filename, expect_type_ext=False)
+        dirname, name, item_type, ext = split_filename(filename, require_type_ext=False)
 
     try:
         if not item_type:

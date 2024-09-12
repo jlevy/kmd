@@ -17,8 +17,9 @@ from cachetools import cached, TTLCache
 from xonsh.platform import ON_DARWIN, ON_LINUX, ON_WINDOWS
 
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import BAT_THEME, COLOR_ERROR, COLOR_HINT
+from kmd.config.text_styles import BAT_STYLE, BAT_THEME, COLOR_ERROR, COLOR_HINT
 from kmd.model.errors_model import FileNotFound, SetupError
+from kmd.model.file_formats_model import parse_file_ext
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import output, Wrap
 from kmd.util.url import is_url
@@ -107,9 +108,15 @@ def native_open(filename: str | Path):
 def _terminal_supports_sixel() -> bool:
     # This can't be determined easily, so we check for some common terminals.
     term = os.environ.get("TERM", "")
+    term_program = os.environ.get("TERM_PROGRAM", "")
     supported_terms = ["xterm", "xterm-256color", "screen.xterm-256color", "kitty", "iTerm.app"]
 
-    return any(supported_term in term for supported_term in supported_terms)
+    term_supports = any(supported_term in term for supported_term in supported_terms)
+
+    # TODO: Not working currently. Get hyper-k Hyper plugin to fix this?
+    term_program_supports = term_program not in ["Hyper"]
+
+    return term_supports and term_program_supports
 
 
 @cached({})
@@ -196,8 +203,6 @@ def view_file_native(file_or_url: str | Path, use_pager: bool = True):
     Open a file or URL in the user's preferred native application, falling back
     to pagination in console. For images, first tries terminal-based image display.
     """
-    from kmd.model.file_formats_model import file_ext_is_text, parse_filename
-
     file_or_url = str(file_or_url)
 
     if not use_pager and (is_url(file_or_url) or file_or_url.endswith(".html")):
@@ -208,9 +213,10 @@ def view_file_native(file_or_url: str | Path, use_pager: bool = True):
     elif os.path.isfile(file_or_url):
         file = file_or_url
         mime_type, file_size, num_lines = file_info(file)
-        _dirname, _name, _item_type, ext = parse_filename(file)
-        if use_pager or file_ext_is_text(ext) or (mime_type and mime_type.startswith("text")):
-            view_file(file, use_less=num_lines > 40 or file_size > 20 * 1024)
+        ext = parse_file_ext(file)
+        is_text = ext and ext.is_text()
+        if use_pager or is_text or (mime_type and mime_type.startswith("text")):
+            view_file_console(file, use_pager=num_lines > 40 or file_size > 20 * 1024)
         elif mime_type and mime_type.startswith("image"):
             try:
                 terminal_show_image(file)
@@ -244,7 +250,7 @@ def tail_file(filename: str | Path):
     subprocess.run(command, shell=True, check=True)
 
 
-def view_file(filename: str | Path, use_less: bool = True):
+def view_file_console(filename: str | Path, use_pager: bool = False):
     """
     Displays a file in the console with pagination and syntax highlighting.
     """
@@ -254,13 +260,13 @@ def view_file(filename: str | Path, use_less: bool = True):
     # TODO: Visualize YAML frontmatter with different syntax/style than Markdown content.
 
     if tool_check().has(CmdlineTool.bat):
-        command = f"bat --color=always --style=plain --theme={BAT_THEME} {quoted_filename}"
+        pager_str = "--pager " if use_pager else ""
+        command = f"bat {pager_str}--color=always --style={BAT_STYLE} --theme={BAT_THEME} {quoted_filename}"
     else:
         tool_check().require(CmdlineTool.pygmentize)
         command = f"pygmentize -g {quoted_filename}"
-
-    if use_less:
-        command = f"{command} | less -R"
+        if use_pager:
+            command = f"{command} | less -R"
 
     try:
         subprocess.run(command, shell=True, check=True)
