@@ -1,6 +1,6 @@
 from typing import Callable, Optional
 
-from kmd.model.errors_model import PreconditionFailure
+from kmd.errors import PreconditionFailure
 from kmd.model.items_model import Item
 
 

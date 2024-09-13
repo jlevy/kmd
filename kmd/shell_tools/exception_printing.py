@@ -2,7 +2,8 @@ from typing import Callable, List, Optional, TypeVar
 
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import COLOR_ERROR
-from kmd.model.errors_model import NONFATAL_EXCEPTIONS
+
+from kmd.errors import NONFATAL_EXCEPTIONS
 from kmd.text_ui.command_output import output
 
 

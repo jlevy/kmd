@@ -1,7 +1,8 @@
 from typing import Any, Callable, Dict
 
 from kmd.config.logger import get_logger
-from kmd.model.errors_model import InvalidInput
+
+from kmd.errors import InvalidInput
 
 log = get_logger(__name__)
 

@@ -1,7 +1,7 @@
 from enum import Enum
 
 from kmd.config.logger import get_logger
-from kmd.model.errors_model import UnexpectedError
+from kmd.errors import UnexpectedError
 from kmd.text_docs.tiktoken_utils import tiktoken_len
 from kmd.text_docs.wordtoks import raw_text_to_wordtoks
 from kmd.text_formatting.text_formatting import html_to_plaintext

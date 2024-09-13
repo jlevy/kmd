@@ -5,9 +5,9 @@ from enum import Enum
 from typing import Any, cast, Dict, List, Optional, Sequence, TYPE_CHECKING
 
 from kmd.config.logger import get_logger
+from kmd.errors import InvalidInput, NONFATAL_EXCEPTIONS
 from kmd.lang_tools.inflection import plural
 from kmd.model.arguments_model import InputArg, StorePath
-from kmd.model.errors_model import InvalidInput, NONFATAL_EXCEPTIONS
 from kmd.model.items_model import Item, ItemType, UNTITLED
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
@@ -200,7 +200,7 @@ class Action(ABC):
         summary_str = fmt_lines(
             [format_key_value(name, value) for name, value in self.param_summary().items()]
         )
-        return f"Action params:\n{summary_str}"
+        return f"Parameters:\n{summary_str}"
 
     def update_with_params(self, param_values: ParamValues, strict: bool = False) -> "Action":
         """

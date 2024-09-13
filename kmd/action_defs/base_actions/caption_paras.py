@@ -1,11 +1,11 @@
 from kmd.config.logger import get_logger
+from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.exec.llm_transforms import llm_transform_str
 from kmd.model import (
     ANNOTATED_PARA,
     CachedLLMAction,
     Format,
-    InvalidInput,
     Item,
     Message,
     MessageTemplate,

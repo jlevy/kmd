@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import cast, List, Optional, Tuple
 
-from kmd.model.errors_model import InvalidFilename
+from kmd.errors import InvalidFilename
 from kmd.text_formatting.text_formatting import fmt_path
 
 

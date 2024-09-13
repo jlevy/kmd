@@ -13,8 +13,8 @@ import regex
 
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT
+from kmd.errors import UnexpectedError
 from kmd.lang_tools.sentence_split import split_sentences, Splitter
-from kmd.model.errors_model import UnexpectedError
 from kmd.text_docs.sizes import size, size_in_bytes, TextUnit
 from kmd.text_docs.tiktoken_utils import tiktoken_len
 from kmd.text_docs.wordtoks import (

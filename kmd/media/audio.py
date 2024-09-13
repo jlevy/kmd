@@ -10,7 +10,7 @@ from strif import atomic_output_file
 
 from kmd.config import setup
 from kmd.config.logger import get_logger
-from kmd.model.errors_model import ContentError
+from kmd.errors import ContentError
 from kmd.text_formatting.html_in_md import html_speaker_id_span, html_timestamp_span
 
 log = get_logger(__name__)

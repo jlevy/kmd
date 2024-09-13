@@ -16,6 +16,7 @@ from typing import Dict, Optional, Tuple
 from ruamel.yaml.error import YAMLError
 from strif import atomic_output_file
 
+from kmd.errors import FileFormatError
 from kmd.file_formats.yaml_util import (
     custom_key_sort,
     from_yaml_string,
@@ -23,7 +24,6 @@ from kmd.file_formats.yaml_util import (
     to_yaml_string,
     write_yaml,
 )
-from kmd.model.errors_model import FileFormatError
 from kmd.text_formatting.text_formatting import fmt_path
 
 

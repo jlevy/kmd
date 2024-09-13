@@ -7,7 +7,7 @@ from textwrap import dedent
 from typing import Generator, Optional
 
 from kmd.config.logger import get_logger
-from kmd.model.errors_model import ContentError
+from kmd.errors import ContentError
 from kmd.model.file_formats_model import Format
 from kmd.text_docs.text_doc import SentIndex, size, TextDoc, TextUnit
 from kmd.text_formatting.doc_formatting import normalize_formatting

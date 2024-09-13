@@ -6,14 +6,14 @@ from typing import Optional, Tuple
 
 from cachetools import cached
 
-from kmd.config.logger import get_logger, reset_log_root
+from kmd.config.logger import get_logger, reset_logging
+from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
 from kmd.file_storage.metadata_dirs import CACHE_DIR, METADATA_FILE
 from kmd.media.media_download import reset_media_cache_dir
 from kmd.media.web import reset_web_cache_dir
 from kmd.model.arguments_model import InputArg, StorePath
 from kmd.model.canon_url import canonicalize_url
-from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.params_model import param_lookup, USER_SETTABLE_PARAMS
@@ -132,7 +132,7 @@ def current_workspace(log_on_change: bool = True) -> FileStore:
             f"No workspace found in `{fmt_path(Path(".").absolute())}`.\nCreate one with the `workspace` command."
         )
 
-    reset_log_root(workspace_dir)
+    reset_logging(workspace_dir)
     reset_media_cache_dir(workspace_dir / CACHE_DIR / "media")
     reset_web_cache_dir(workspace_dir / CACHE_DIR / "web")
     ws = _get_file_store(workspace_dir, is_sandbox)

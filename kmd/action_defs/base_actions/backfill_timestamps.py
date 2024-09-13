@@ -1,16 +1,9 @@
 from textwrap import indent
 
 from kmd.config.logger import get_logger
+from kmd.errors import ContentError, InvalidInput, UnexpectedError
 from kmd.exec.action_registry import kmd_action
-from kmd.model import (
-    CachedDocAction,
-    ContentError,
-    Format,
-    InvalidInput,
-    Item,
-    ItemType,
-    UnexpectedError,
-)
+from kmd.model import CachedDocAction, Format, Item, ItemType
 from kmd.preconditions.precondition_defs import is_text_doc, is_timestamped_text
 from kmd.provenance.source_items import find_upstream_item
 from kmd.provenance.timestamps import TimestampExtractor

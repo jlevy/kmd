@@ -18,7 +18,8 @@ from xonsh.platform import ON_DARWIN, ON_LINUX, ON_WINDOWS
 
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import BAT_STYLE, BAT_THEME, COLOR_ERROR, COLOR_HINT
-from kmd.model.errors_model import FileNotFound, SetupError
+
+from kmd.errors import FileNotFound, SetupError
 from kmd.model.file_formats_model import parse_file_ext
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import output, Wrap

@@ -3,8 +3,8 @@ import re
 from textwrap import dedent
 from typing import List
 
+from kmd.errors import InvalidInput
 from kmd.model.doc_elements import CHUNK
-from kmd.model.errors_model import InvalidInput
 from kmd.text_chunks.text_node import TextNode
 
 

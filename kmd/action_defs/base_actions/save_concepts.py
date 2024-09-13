@@ -4,8 +4,9 @@ from kmd.concepts.concept_formats import (
     normalize_concepts,
 )
 from kmd.config.logger import get_logger
+from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
-from kmd.model import Action, ActionInput, ActionResult, InvalidInput, ONE_OR_MORE_ARGS
+from kmd.model import Action, ActionInput, ActionResult, ONE_OR_MORE_ARGS
 from kmd.preconditions.precondition_defs import is_markdown_list
 
 log = get_logger(__name__)

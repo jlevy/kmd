@@ -5,13 +5,13 @@ from typing import cast, List, Optional, Tuple
 from kmd.action_defs import look_up_action
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
+from kmd.errors import InvalidInput, InvalidState
 from kmd.exec.system_actions import fetch_page_metadata, FETCH_PAGE_METADATA_NAME
 from kmd.file_storage.workspaces import current_workspace, import_and_load
 from kmd.lang_tools.inflection import plural
 from kmd.model.actions_model import Action, ActionResult, ForEachItemAction, NO_ARGS, PathOpType
 from kmd.model.arguments_model import InputArg, StorePath
 from kmd.model.canon_url import canonicalize_url
-from kmd.model.errors_model import InvalidInput, InvalidState
 from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
 from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
@@ -71,7 +71,7 @@ def run_action(
     ws_params = ws.get_params()
 
     # Update the action with any overridden params.
-    log.info("Action params from workspace: %s", ws_params)
+    log.info("Parameters from workspace: %s", ws_params)
     if ws_params:
         action = action.update_with_params(ws_params)
 

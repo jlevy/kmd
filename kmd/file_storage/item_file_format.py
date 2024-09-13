@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import Optional
 
 from kmd.config.logger import get_logger
+from kmd.errors import FileFormatError
 from kmd.file_formats.frontmatter_format import fmf_read, fmf_write, FmFormat
 from kmd.file_formats.yaml_util import custom_key_sort
-from kmd.model.errors_model import FileFormatError
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ITEM_FIELDS
 from kmd.model.operations_model import OPERATION_FIELDS

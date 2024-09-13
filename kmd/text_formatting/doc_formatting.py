@@ -2,9 +2,9 @@ import textwrap
 from pathlib import Path
 from typing import Optional
 
+from kmd.errors import InvalidInput
 from kmd.file_formats.frontmatter_format import fmf_read
 from kmd.file_storage.frontmatter_format import fmf_write
-from kmd.model.errors_model import InvalidInput
 from kmd.model.file_formats_model import Format, guess_format
 from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH, normalize_markdown
 from kmd.text_formatting.text_formatting import fmt_path

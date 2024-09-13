@@ -7,8 +7,8 @@ from typing import Any, Dict
 import yt_dlp
 
 from kmd.config.logger import get_logger
+from kmd.errors import ApiResultError
 from kmd.file_formats.yaml_util import to_yaml_string
-from kmd.model.errors_model import ApiResultError
 from kmd.model.media_model import MediaFormat
 from kmd.util.url import Url
 

@@ -6,9 +6,10 @@ from slugify import slugify
 from strif import abbreviate_str
 
 from kmd.config.logger import get_logger
+from kmd.config.settings import LogLevel
 from kmd.config.text_styles import HRULE_SHORT
+from kmd.errors import ApiResultError
 from kmd.llms.llm_checks import is_no_results
-from kmd.model.errors_model import ApiResultError
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_formatting.text_formatting import fmt_lines
@@ -91,7 +92,7 @@ def llm_completion(
                     f"{HRULE_SHORT} Response {HRULE_SHORT}\n\n{text_output}",
                 ]
             ),
-            level="message",
+            level=LogLevel.message,
         )
 
     return text_output

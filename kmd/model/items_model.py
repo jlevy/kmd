@@ -11,11 +11,11 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 from slugify import slugify
 
 from kmd.config.logger import get_logger
+from kmd.errors import FileFormatError
 from kmd.file_formats.yaml_util import from_yaml_string
 from kmd.model.arguments_model import Locator
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
-from kmd.model.errors_model import FileFormatError
 from kmd.model.file_formats_model import FileExt, Format
 from kmd.model.media_model import MediaMetadata
 from kmd.model.operations_model import Operation, OperationSummary, Source

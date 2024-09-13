@@ -8,7 +8,7 @@ from textwrap import dedent
 from typing import Callable, List, Optional
 
 from kmd.config.logger import get_logger
-from kmd.model.errors_model import ContentError, UnexpectedError
+from kmd.errors import ContentError, UnexpectedError
 from kmd.model.file_formats_model import Format
 from kmd.text_docs.sliding_windows import sliding_para_window, sliding_word_window
 from kmd.text_docs.text_diffs import diff_docs, DiffFilter, filter_accept_all, find_best_alignment

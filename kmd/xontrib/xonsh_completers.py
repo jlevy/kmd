@@ -5,8 +5,8 @@ from xonsh.completers.tools import CompleterResult, CompletionContext, contextua
 
 from kmd.config.text_styles import COLOR_ACTION_TEXT, COLOR_COMMAND_TEXT, EMOJI_TASK
 from kmd.docs.faq_headings import faq_headings
+from kmd.errors import InvalidState
 from kmd.file_storage.workspaces import current_workspace
-from kmd.model.errors_model import InvalidState
 from kmd.model.params_model import Param
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_checks import items_matching_precondition

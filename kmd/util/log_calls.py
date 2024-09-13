@@ -2,7 +2,7 @@ import functools
 import re
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Literal, Optional
 
 import regex
 from strif import abbreviate_str
@@ -11,6 +11,8 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 
 log = get_logger(__name__)
+
+LogLevelStr = Literal["debug", "info", "warning", "message", "error"]
 
 
 def single_line(text: str) -> str:
@@ -101,7 +103,7 @@ def func_and_module_name(func: Callable):
 
 
 def log_calls(
-    level: str = "info",
+    level: LogLevelStr = "info",
     show_args=True,
     show_return=False,
     if_slower_than: float = 0.0,
@@ -181,7 +183,7 @@ tally: Dict[str, Tally] = {}
 
 
 def tally_calls(
-    level: str = "info",
+    level: LogLevelStr = "info",
     min_total_runtime: float = 0.0,
     periodic_ratio: float = 2.0,
     if_slower_than: float = float("inf"),

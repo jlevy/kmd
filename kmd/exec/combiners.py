@@ -1,10 +1,11 @@
 from typing import Callable, List, Optional, Set
 
 from kmd.config.logger import get_logger
+
+from kmd.errors import InvalidInput
 from kmd.model.actions_model import Action, ActionResult
 from kmd.model.arguments_model import StorePath
 from kmd.model.doc_elements import GROUP, ORIGINAL
-from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item, ItemRelations, ItemType
 from kmd.model.operations_model import OperationSummary
 from kmd.text_chunks.div_elements import div, div_insert_wrapped

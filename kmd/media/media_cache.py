@@ -5,9 +5,9 @@ from typing import Dict, Optional
 from strif import atomic_output_file
 
 from kmd.config.logger import get_logger
+from kmd.errors import FileNotFound, InvalidInput, UnexpectedError
 from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
 from kmd.media.media_services import canonicalize_media_url, download_media
-from kmd.model.errors_model import FileNotFound, InvalidInput, UnexpectedError
 from kmd.model.media_model import MediaFormat
 from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.util.url import as_file_url, is_url, Url

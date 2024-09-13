@@ -2,10 +2,10 @@ from dataclasses import asdict, dataclass
 from typing import List
 
 from kmd.config.logger import get_logger
+from kmd.errors import InvalidInput
 from kmd.file_formats.yaml_util import to_yaml_string
 from kmd.lang_tools.clean_headings import clean_heading, summary_heading
 from kmd.media.media_services import get_media_id
-from kmd.model.errors_model import InvalidInput
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.preconditions.precondition_defs import is_youtube_video

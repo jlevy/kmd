@@ -2,8 +2,9 @@ from pathlib import Path
 from typing import Tuple
 
 from kmd.config.logger import get_logger
+
+from kmd.errors import InvalidFilename
 from kmd.lang_tools.inflection import plural
-from kmd.model.errors_model import InvalidFilename
 from kmd.model.file_formats_model import FileExt, split_filename
 from kmd.model.items_model import ItemType
 from kmd.text_formatting.text_formatting import fmt_path

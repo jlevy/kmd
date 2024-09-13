@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Self
 
-from kmd.model.errors_model import InvalidInput
+from kmd.errors import InvalidInput
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.url import is_url, Url
 

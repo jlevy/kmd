@@ -1,6 +1,7 @@
 from kmd.config.logger import get_logger
+from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
-from kmd.model import ForEachItemAction, Format, InvalidInput, Item, ItemType
+from kmd.model import ForEachItemAction, Format, Item, ItemType
 from kmd.preconditions.precondition_defs import has_text_body
 from kmd.text_docs.wordtoks import raw_text_to_wordtoks, visualize_wordtoks
 

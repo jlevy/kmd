@@ -2,9 +2,10 @@ from dataclasses import dataclass, field
 from typing import List, Optional, TYPE_CHECKING
 
 from kmd.config.logger import get_logger
+
+from kmd.errors import InvalidInput
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.model.arguments_model import StorePath
-from kmd.model.errors_model import InvalidInput
 from kmd.model.items_model import Item, ItemType, State
 from kmd.model.operations_model import Operation
 from kmd.model.preconditions_model import Precondition

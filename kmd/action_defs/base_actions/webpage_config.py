@@ -1,6 +1,7 @@
 from kmd.config.logger import get_logger
+from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
-from kmd.model import Action, ActionInput, ActionResult, InvalidInput
+from kmd.model import Action, ActionInput, ActionResult
 from kmd.preconditions.precondition_defs import has_text_body
 from kmd.web_gen.tabbed_webpage import webpage_config
 

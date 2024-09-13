@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
 
 from kmd.config.logger import get_logger
+from kmd.errors import InvalidInput
 from kmd.model.actions_model import (
     ActionInput,
     ActionResult,
@@ -10,7 +11,6 @@ from kmd.model.actions_model import (
     TransformAction,
 )
 from kmd.model.doc_elements import CHUNK, ORIGINAL, RESULT
-from kmd.model.errors_model import InvalidInput
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, UNTITLED
 from kmd.model.language_models import LLM

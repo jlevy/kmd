@@ -1,6 +1,8 @@
 import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
+from enum import Enum
+from logging import DEBUG, ERROR, INFO, WARNING
 from pathlib import Path
 from typing import Optional
 
@@ -14,6 +16,29 @@ DOT_DIR = ".kmd"
 SANDBOX_KB_PATH = "~/.local/kmd/sandbox.kb"
 
 GLOBAL_CACHE_NAME = "kmd_cache"
+
+
+class LogLevel(Enum):
+    debug = DEBUG
+    info = INFO
+    warning = WARNING
+    message = WARNING  # Same as warning, just for important console messages.
+    error = ERROR
+
+    @classmethod
+    def parse(cls, level_str: str):
+        canon_name = level_str.strip().lower()
+        if canon_name == "warn":
+            canon_name = "warning"
+        try:
+            return cls[canon_name]
+        except KeyError:
+            raise ValueError(
+                f"Invalid log level: `{level_str}`. Valid options are: {', '.join(f'`{name}`' for name in cls.__members__)}"
+            )
+
+    def __str__(self):
+        return self.name
 
 
 @dataclass
@@ -32,6 +57,12 @@ class Settings:
 
     use_sandbox: bool
     """If not in a workspace, use the sandbox workspace."""
+
+    log_level: LogLevel
+    """The log level for file-based logging."""
+
+    console_log_level: LogLevel
+    """The log level for console-based logging."""
 
 
 def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
@@ -65,6 +96,8 @@ _settings = Settings(
     debug_assistant=False,
     default_editor="nano",
     use_sandbox=True,
+    log_level=LogLevel.info,
+    console_log_level=LogLevel.warning,
 )
 
 

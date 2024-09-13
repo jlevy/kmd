@@ -1,7 +1,8 @@
 from kmd.config.logger import get_logger
+from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.media.media_download import download_media
-from kmd.model import ForEachItemAction, InvalidInput, Item
+from kmd.model import ForEachItemAction, Item
 from kmd.preconditions.precondition_defs import is_url
 
 log = get_logger(__name__)

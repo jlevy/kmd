@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Generator, List, Tuple
 
 from kmd.config.logger import get_logger
-from kmd.model.errors_model import FileNotFound
+from kmd.errors import FileNotFound
 from kmd.model.file_formats_model import is_ignored
 from kmd.text_formatting.text_formatting import fmt_path
 

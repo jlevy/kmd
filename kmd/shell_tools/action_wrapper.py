@@ -2,11 +2,12 @@ from typing import List
 
 from kmd.config.logger import get_console, get_logger
 from kmd.config.text_styles import COLOR_ERROR, SPINNER
+
+from kmd.errors import NONFATAL_EXCEPTIONS
 from kmd.exec.action_exec import run_action
 from kmd.file_storage.workspaces import current_workspace
 from kmd.help.command_help import output_command_help
 from kmd.model.actions_model import Action
-from kmd.model.errors_model import NONFATAL_EXCEPTIONS
 from kmd.model.output_model import CommandOutput
 from kmd.model.params_model import RUNTIME_ACTION_PARAMS
 from kmd.shell_tools.exception_printing import summarize_traceback

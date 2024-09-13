@@ -1,9 +1,9 @@
 import logging
 import os
 import threading
-from logging import ERROR, Formatter, INFO, WARNING
+from logging import ERROR, Formatter, INFO
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Optional
 
 from rich import reconfigure
 from rich.console import Console
@@ -13,6 +13,7 @@ from slugify import slugify
 from strif import atomic_output_file, new_timestamped_uid
 
 import kmd.config.suppress_warnings  # noqa: F401
+from kmd.config.settings import global_settings, LogLevel
 from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, KmdHighlighter, RICH_STYLES
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.stack_traces import current_stack_traces
@@ -64,7 +65,7 @@ global _console_handler
 def logging_setup():
     """
     Set up or reset logging setup. Call at initial run and again if log directory changes.
-    Replaces all previous loggers and handlers.
+    Replaces all previous loggers and handlers. Can be called to reset with different settings.
     """
 
     kmd.config.suppress_warnings.filter_warnings()
@@ -75,13 +76,13 @@ def logging_setup():
     # Verbose logging to file, important logging to console.
     global _file_handler
     _file_handler = logging.FileHandler(log_file_path())
-    _file_handler.setLevel(INFO)
+    _file_handler.setLevel(global_settings().log_level.value)
     _file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
 
     global _console_handler
     _console_handler = RichHandler(
         console=_console,
-        level=WARNING,
+        level=global_settings().console_log_level.value,
         show_time=False,
         show_path=False,
         show_level=False,
@@ -129,9 +130,6 @@ def prefix_args(args, emoji: str = ""):
     return args
 
 
-LogLevel = Literal["debug", "info", "message", "warning", "error"]
-
-
 class CustomLogger:
     """
     Custom logger to be clearer about user messages and allow saving objects.
@@ -156,14 +154,18 @@ class CustomLogger:
         self.logger.error(*prefix_args(args, EMOJI_WARN), **kwargs)
 
     def log(self, level: LogLevel, *args, **kwargs):
-        getattr(self, level)(*args, **kwargs)
+        getattr(self, level.name)(*args, **kwargs)
 
     # Fallback for other attributes/methods.
     def __getattr__(self, attr):
         return getattr(self.logger, attr)
 
     def save_object(
-        self, description: str, prefix_slug: Optional[str], obj: Any, level: LogLevel = "info"
+        self,
+        description: str,
+        prefix_slug: Optional[str],
+        obj: Any,
+        level: LogLevel = LogLevel.info,
     ):
         prefix = prefix_slug + "." if prefix_slug else ""
         filename = f"{prefix}{slugify(description, separator='_')}.{new_timestamped_uid()}.txt"
@@ -190,13 +192,14 @@ def get_log_file_stream():
     return _file_handler.stream
 
 
-def reset_log_root(log_root: Path):
+def reset_logging(log_root: Optional[Path] = None):
     global _log_lock
     with _log_lock:
         global _log_root
-        if log_root != _log_root:
+        if log_root and log_root != _log_root:
             log = get_logger(__name__)
             log.info("Resetting log root: %s", fmt_path(log_file_path().absolute()))
 
             _log_root = log_root
-            logging_setup()
+
+        logging_setup()

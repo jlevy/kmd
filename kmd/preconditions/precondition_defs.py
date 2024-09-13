@@ -1,8 +1,8 @@
 import re
 
+from kmd.errors import PreconditionFailure
 from kmd.media.media_services import get_media_id, youtube
 from kmd.model.doc_elements import ANNOTATED_PARA, CHUNK
-from kmd.model.errors_model import PreconditionFailure
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.preconditions_model import precondition

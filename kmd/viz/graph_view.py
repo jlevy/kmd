@@ -5,8 +5,8 @@ from typing import Callable, List, Optional, Tuple
 from kmd.concepts.embeddings import Embeddings
 from kmd.concepts.text_similarity import find_related_pairs, relate_texts_by_embedding
 from kmd.config.logger import get_logger
+from kmd.errors import InvalidInput
 from kmd.file_storage.workspaces import current_workspace, current_workspace_tmp_dir
-from kmd.model.errors_model import InvalidInput
 from kmd.model.graph_model import GraphData, Link, Node
 from kmd.model.items_model import Item, ItemRelations, ItemType
 from kmd.shell_tools.native_tools import view_file_native

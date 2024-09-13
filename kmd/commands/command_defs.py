@@ -12,8 +12,8 @@ from strif import copyfile_atomic
 
 from kmd.action_defs import load_all_actions
 from kmd.commands.command_registry import kmd_command
-from kmd.config.logger import get_logger, log_file_path, log_objects_dir
-from kmd.config.settings import global_settings
+from kmd.config.logger import get_logger, log_file_path, log_objects_dir, reset_logging
+from kmd.config.settings import global_settings, LogLevel, update_global_settings
 from kmd.config.text_styles import (
     COLOR_EMPH,
     COLOR_HEADING,
@@ -27,6 +27,7 @@ from kmd.config.text_styles import (
     PROMPT_ASSIST,
     SPINNER,
 )
+from kmd.errors import InvalidInput, InvalidState
 from kmd.file_formats.frontmatter_format import fmf_read, fmf_read_raw, fmf_strip_frontmatter
 from kmd.file_formats.yaml_util import to_yaml_string
 from kmd.file_storage.file_listings import walk_by_folder
@@ -43,14 +44,7 @@ from kmd.help.assistant import assistance
 from kmd.help.help_page import output_help_page
 from kmd.lang_tools.inflection import plural
 from kmd.media.web import fetch_and_cache
-from kmd.model import (
-    InvalidInput,
-    InvalidState,
-    is_ignored,
-    ItemType,
-    StorePath,
-    USER_SETTABLE_PARAMS,
-)
+from kmd.model import is_ignored, ItemType, StorePath, USER_SETTABLE_PARAMS
 from kmd.model.file_formats_model import guess_format, join_filename, split_filename
 from kmd.model.output_model import CommandOutput
 from kmd.preconditions import ALL_PRECONDITIONS
@@ -441,7 +435,7 @@ def size_summary(*paths: str, slow: bool = False) -> None:
 def param(*args: str) -> None:
     """
     Show or set currently set of global parameters, which are settings that may be used by
-    commands and actions or to override default action parameters.
+    commands and actions or to override default parameters.
     """
     ws = current_workspace()
     if args:
@@ -449,12 +443,12 @@ def param(*args: str) -> None:
 
         for key in new_key_vals:
             if key not in USER_SETTABLE_PARAMS:
-                raise InvalidInput(f"Unknown action parameter: {key}")
+                raise InvalidInput(f"Unknown parameter: {key}")
 
         for key, value in new_key_vals.items():
-            action_param = USER_SETTABLE_PARAMS[key]
-            if value and action_param.valid_values and value not in action_param.valid_values:
-                raise InvalidInput(f"Unrecognized value for action parameter `{key}`: {value}")
+            param = USER_SETTABLE_PARAMS[key]
+            if value and param.valid_values and value not in param.valid_values:
+                raise InvalidInput(f"Unrecognized value for parameter `{key}`: {value}")
 
         current_params = ws.get_params()
         new_params = {**current_params, **new_key_vals}
@@ -463,7 +457,7 @@ def param(*args: str) -> None:
         new_params = remove_values(new_params, deletes)
         ws.set_param(new_params)
 
-    output_heading("Available action parameters")
+    output_heading("Available Parameters")
 
     for ap in USER_SETTABLE_PARAMS.values():
         output(format_name_and_description(ap.name, ap.full_description()))
@@ -471,12 +465,49 @@ def param(*args: str) -> None:
 
     params = ws.get_params()
     if not params:
-        output_status("No action parameters are set.")
+        output_status("No parameters are set.")
     else:
-        output_heading("Current action parameters")
+        output_heading("Current Parameters")
         for key, value in params.items():
             output(format_key_value(key, value))
         output()
+
+
+@kmd_command
+def settings() -> None:
+    """
+    Show the current settings.
+    """
+    settings = global_settings()
+    output_heading("Settings")
+
+    for name, value in settings.__dict__.items():
+        output(format_name_and_description(name, str(value)))
+
+    output()
+
+
+@kmd_command
+def log_level(level_str: Optional[str] = None, console: bool = False) -> None:
+    """
+    Set the log level. Sets console log level if `console` is true, otherwise sets file log level.
+    """
+    if level_str:
+        level = LogLevel.parse(level_str)
+        with update_global_settings() as settings:
+            if console:
+                settings.console_log_level = level
+            else:
+                settings.log_level = level
+
+        reset_logging()
+
+    output()
+    output(format_name_and_description("log_level", global_settings().log_level.name))
+    output(
+        format_name_and_description("console_log_level", global_settings().console_log_level.name)
+    )
+    output()
 
 
 @kmd_command

@@ -9,9 +9,10 @@ import requests
 
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings, update_global_settings
+
+from kmd.errors import WebFetchError
 from kmd.media.media_services import canonicalize_media_url
 from kmd.model.canon_url import thumbnail_url
-from kmd.model.errors_model import WebFetchError
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.log_calls import log_calls
 from kmd.util.obj_utils import abbreviate_obj

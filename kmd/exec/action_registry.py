@@ -4,6 +4,8 @@ from typing import Callable, Dict, List, Tuple, Type
 
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_WARN
+
+from kmd.errors import ContentError
 from kmd.model.actions_model import (
     Action,
     ActionInput,
@@ -12,7 +14,6 @@ from kmd.model.actions_model import (
     ForEachItemAction,
     ONE_ARG,
 )
-from kmd.model.errors_model import ContentError
 from kmd.model.items_model import Item
 
 log = get_logger(__name__)

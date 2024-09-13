@@ -6,9 +6,9 @@ from cachetools import cached
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings
 from kmd.docs import api_docs, assistant_instructions
+from kmd.errors import KmdRuntimeError
 from kmd.file_storage.workspaces import current_workspace_info, get_param_value
 from kmd.llms.llm_completion import llm_completion
-from kmd.model.errors_model import KmdRuntimeError
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_formatting.markdown_normalization import wrap_markdown
