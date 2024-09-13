@@ -69,8 +69,8 @@ class DirStore:
     def find(
         self, key: str, folder: Optional[str] = None, suffix: Optional[str] = None
     ) -> Optional[Path]:
-        local_path = self.path_for(key, folder, suffix)
-        return local_path if path.exists(local_path) else None
+        cache_path = self.path_for(key, folder, suffix)
+        return cache_path if path.exists(cache_path) else None
 
     def find_all(
         self, keys: List[str], folder: Optional[str] = None, suffix: Optional[str] = None
@@ -168,15 +168,15 @@ class WebCache(DirStore):
             raise InvalidCacheState("_download called in test mode")
 
         url = normalize_url(url)
-        local_path = self.path_for(url, folder=self.folder, suffix=self.suffix)
-        download_url(url, local_path, silent=True, timeout=TIMEOUT, headers=user_agent_headers())
-        return local_path
+        cache_path = self.path_for(url, folder=self.folder, suffix=self.suffix)
+        download_url(url, cache_path, silent=True, timeout=TIMEOUT, headers=user_agent_headers())
+        return cache_path
 
-    def _age_in_sec(self, local_path: Path) -> float:
+    def _age_in_sec(self, cache_path: Path) -> float:
         now = time.time()
-        return now - read_mtime(local_path)
+        return now - read_mtime(cache_path)
 
-    def _is_expired(self, local_path: Path, expiration_sec: Optional[float] = None) -> bool:
+    def _is_expired(self, cache_path: Path, expiration_sec: Optional[float] = None) -> bool:
         if self.mode in (WebCacheMode.TEST, WebCacheMode.UPDATE):
             return False
 
@@ -188,24 +188,24 @@ class WebCache(DirStore):
         elif expiration_sec == self.NEVER:
             return False
 
-        return self._age_in_sec(local_path) > expiration_sec
+        return self._age_in_sec(cache_path) > expiration_sec
 
     def is_cached(self, url: Url, expiration_sec: Optional[float] = None) -> bool:
         if expiration_sec is None:
             expiration_sec = self.default_expiration_sec
 
-        local_path = self.find(url, folder=self.folder, suffix=self.suffix)
-        return local_path is not None and not self._is_expired(local_path, expiration_sec)
+        cache_path = self.find(url, folder=self.folder, suffix=self.suffix)
+        return cache_path is not None and not self._is_expired(cache_path, expiration_sec)
 
     def fetch(self, url: Url, expiration_sec: Optional[float] = None) -> tuple[Path, bool]:
         """
         Returns cached download path of given URL and whether it was previously cached.
         """
         url = normalize_url(url)
-        local_path = self.find(url, folder=self.folder, suffix=self.suffix)
-        if local_path and not self._is_expired(local_path, expiration_sec):
-            log.info("URL in cache, not fetching: %s: %s", url, fmt_path(local_path))
-            return local_path, True
+        cache_path = self.find(url, folder=self.folder, suffix=self.suffix)
+        if cache_path and not self._is_expired(cache_path, expiration_sec):
+            log.info("URL in cache, not fetching: %s: %s", url, fmt_path(cache_path))
+            return cache_path, True
         else:
             if self.verbose:
                 log.info("fetching: %s", url)

@@ -43,7 +43,6 @@ from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.help.assistant import assistance
 from kmd.help.help_page import output_help_page
 from kmd.lang_tools.inflection import plural
-from kmd.media.web import fetch_and_cache
 from kmd.model import is_ignored, ItemType, StorePath, USER_SETTABLE_PARAMS
 from kmd.model.file_formats_model import guess_format, join_filename, split_filename
 from kmd.model.output_model import CommandOutput
@@ -74,6 +73,7 @@ from kmd.util.parse_utils import format_key_value, parse_key_value
 from kmd.util.type_utils import not_none
 from kmd.version import get_version
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
+from kmd.web_content.web_fetch import fetch_and_cache
 
 log = get_logger(__name__)
 

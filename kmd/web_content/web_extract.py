@@ -1,28 +1,21 @@
-import enum
-import re
 from dataclasses import dataclass
-from pathlib import Path
+from enum import Enum
 from typing import Optional
 
 import justext
-import requests
 
 from kmd.config.logger import get_logger
-from kmd.config.settings import global_settings, update_global_settings
-
-from kmd.errors import WebFetchError
 from kmd.media.media_services import canonicalize_media_url
 from kmd.model.canon_url import thumbnail_url
-from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.log_calls import log_calls
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
-from kmd.util.web_cache import WebCache
+from kmd.web_content.web_fetch import fetch, fetch_and_cache
 
 log = get_logger(__name__)
 
 
-class PageType(enum.Enum):
+class PageType(Enum):
     html = "html"
     pdf = "pdf"
     video = "video"
@@ -55,60 +48,6 @@ class PageData:
 
     def __str__(self):
         return abbreviate_obj(self)
-
-
-class ContentType(enum.Enum):
-    markdown = "markdown"
-    html = "html"
-    text = "text"
-
-
-def guess_text_content_type(content: str) -> ContentType:
-    """
-    Simple best-effort guess at content type.
-    """
-
-    if re.search(r"<html>|<body>|<head>|<div>|<p>", content, re.IGNORECASE | re.MULTILINE):
-        return ContentType.html
-
-    if re.search(r"^#+ |^- |\*\*|__", content, re.MULTILINE):
-        return ContentType.markdown
-
-    return ContentType.text
-
-
-USER_AGENT = "Mozilla/5.0"
-
-
-def fetch(url: Url) -> requests.Response:
-    response = requests.get(url, headers={"User-Agent": USER_AGENT})
-    log.info("Fetched: %s (%s bytes): %s", response.status_code, len(response.content), url)
-    if response.status_code != 200:
-        raise WebFetchError(f"HTTP error {response.status_code} fetching {url}")
-    return response
-
-
-# Simple global cache for misc use. No expiration.
-_web_cache = WebCache(global_settings().web_cache_dir)
-
-
-def reset_web_cache_dir(path: Path):
-    with update_global_settings() as settings:
-        current_cache_dir = settings.web_cache_dir
-        if current_cache_dir != path:
-            settings.web_cache_dir = path
-            global _web_cache
-            _web_cache = WebCache(path)
-            log.info("Using web cache: %s", fmt_path(path))
-
-
-def fetch_and_cache(url: Url) -> Path:
-    """
-    Fetch the given URL and return a local cached copy. Raises requests.HTTPError
-    if the URL is not reachable.
-    """
-    path, _was_cached = _web_cache.fetch(url)
-    return path
 
 
 @log_calls(level="message")

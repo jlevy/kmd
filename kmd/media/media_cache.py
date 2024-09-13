@@ -11,7 +11,7 @@ from kmd.media.media_services import canonicalize_media_url, download_media
 from kmd.model.media_model import MediaFormat
 from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.util.url import as_file_url, is_url, Url
-from kmd.util.web_cache import DirStore
+from kmd.web_content.web_cache import DirStore
 
 log = get_logger(__name__)
 

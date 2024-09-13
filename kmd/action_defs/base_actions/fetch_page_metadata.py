@@ -1,10 +1,10 @@
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, WebFetchError
 from kmd.exec.action_registry import kmd_action
-from kmd.media import web
 from kmd.media.media_services import get_media_metadata
 from kmd.model import ForEachItemAction, Item
 from kmd.preconditions.precondition_defs import is_url
+from kmd.web_content.web_extract import fetch_extract
 
 log = get_logger(__name__)
 
@@ -29,7 +29,7 @@ class FetchPageMetadata(ForEachItemAction):
             fetched_item = Item.from_media_metadata(media_metadata)
             fetched_item = item.merged_copy(fetched_item)
         else:
-            page_data = web.fetch_extract(item.url)
+            page_data = fetch_extract(item.url)
             fetched_item = item.new_copy_with(
                 title=page_data.title or item.title,
                 description=page_data.description or item.description,

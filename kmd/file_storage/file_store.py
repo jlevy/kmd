@@ -44,7 +44,7 @@ log = get_logger(__name__)
 
 class FileStore:
     """
-    Store items on the filesystem, using a simple convention for filenames and folders.
+    The main class to manage files in a workspace, holding settings and files with items.
     """
 
     # TODO: Consider using a pluggable filesystem (fsspec AbstractFileSystem).
