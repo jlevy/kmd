@@ -2,7 +2,7 @@ import functools
 import re
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Literal, Optional, TypeVar, cast
+from typing import Any, Callable, cast, Dict, Literal, Optional, TypeVar
 
 import regex
 from strif import abbreviate_str

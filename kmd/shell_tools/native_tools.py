@@ -2,7 +2,6 @@
 Platform-specific tools and utilities.
 """
 
-import mimetypes
 import os
 import shlex
 import shutil
@@ -13,6 +12,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Tuple
 
+import magic
+
 from cachetools import cached, TTLCache
 from xonsh.platform import ON_DARWIN, ON_LINUX, ON_WINDOWS
 
@@ -22,7 +23,7 @@ from kmd.errors import FileNotFound, SetupError
 from kmd.model.file_formats_model import parse_file_ext
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import output, Wrap
-from kmd.util.url import is_url
+from kmd.util.url import as_file_url, is_url
 
 log = get_logger(__name__)
 
@@ -73,22 +74,28 @@ def tool_check() -> CmdlineTools:
     return CmdlineTools(tools)
 
 
-def file_info(
+def file_mime_type_size(
     filename: str | Path, max_lines: int = 100, max_bytes: int = 50 * 1024
 ) -> Tuple[str, int, int]:
     """
-    Best effort to guess file type, size, and lines by reading just first part of the file.
+    Best effort to get file type (as a mime type using libmagic), size, and lines
+    (up to max_lines) in a file.
     """
     filename = str(filename)
-    mime_type, _ = mimetypes.guess_type(filename)
+
+    mime = magic.Magic(mime=True)
+    mime_type = mime.from_file(filename)
+    mime_type = mime_type or "unknown"
+
     file_size = os.path.getsize(filename)
-    num_lines = 0
+    line_min = 0
     with open(filename, "rb") as f:
         for i, _line in enumerate(f):
             if i >= max_lines or f.tell() > max_bytes:
                 break
-            num_lines += 1
-    return mime_type or "unknown", file_size, num_lines
+            line_min += 1
+
+    return mime_type, file_size, line_min
 
 
 def native_open(filename: str | Path):
@@ -207,16 +214,17 @@ def view_file_native(file_or_url: str | Path, use_pager: bool = True):
 
     if not use_pager and (is_url(file_or_url) or file_or_url.endswith(".html")):
         if not is_url(file_or_url):
-            file_or_url = f"file://{os.path.abspath(file_or_url)}"
+            file_or_url = as_file_url(Path(file_or_url))
         log.message("Opening URL in browser: %s", file_or_url)
         webbrowser.open(file_or_url)
     elif os.path.isfile(file_or_url):
         file = file_or_url
-        mime_type, file_size, num_lines = file_info(file)
+        mime_type, file_size, min_lines = file_mime_type_size(file)
         ext = parse_file_ext(file)
-        is_text = ext and ext.is_text()
+        is_text = (ext and ext.is_text()) or mime_type.startswith("text")
+
         if use_pager or is_text or (mime_type and mime_type.startswith("text")):
-            view_file_console(file, use_pager=num_lines > 40 or file_size > 20 * 1024)
+            view_file_console(file, use_pager=min_lines > 40 or file_size > 20 * 1024)
         elif mime_type and mime_type.startswith("image"):
             try:
                 terminal_show_image(file)
