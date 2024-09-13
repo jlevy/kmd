@@ -2,7 +2,7 @@ import functools
 import re
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Literal, Optional
+from typing import Any, Callable, Dict, Literal, Optional, TypeVar, cast
 
 import regex
 from strif import abbreviate_str
@@ -13,6 +13,8 @@ from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMIN
 log = get_logger(__name__)
 
 LogLevelStr = Literal["debug", "info", "warning", "message", "error"]
+
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 def single_line(text: str) -> str:
@@ -104,12 +106,12 @@ def func_and_module_name(func: Callable):
 
 def log_calls(
     level: LogLevelStr = "info",
-    show_args=True,
-    show_return=False,
+    show_args: bool = True,
+    show_return: bool = False,
     if_slower_than: float = 0.0,
     truncate_length: Optional[int] = DEFAULT_TRUNCATE,
     repr_func: Callable = friendly_str,
-):
+) -> Callable[[F], F]:
     """
     Decorator to log function calls and returns and time taken, with optional display of
     arguments and return values. If `if_slower_than_sec` is set, only log calls that take longer
@@ -134,7 +136,7 @@ def log_calls(
     if if_slower_than > 0.0:
         show_call = False
 
-    def decorator(func):
+    def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             func_name = func_and_module_name(func)
@@ -166,7 +168,38 @@ def log_calls(
 
             return result
 
-        return wrapper
+        return cast(F, wrapper)
+
+    return cast(Callable[[F], F], decorator)
+
+
+def log_if_modifies(level: LogLevelStr = "info", repr_func: Callable = repr) -> Callable[[F], F]:
+    """
+    Decorator to log function calls if the returned value differs from the first argument input.
+    """
+    log_func = getattr(log, level.lower())
+
+    def decorator(func: F) -> F:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if not args:
+                raise ValueError("Function must have at least one positional argument")
+
+            original_value = args[0]
+            result = func(*args, **kwargs)
+
+            if result != original_value:
+                func_name = func_and_module_name(func)
+                log_func(
+                    "%s(%s) -> %s",
+                    func_name,
+                    repr_func(original_value),
+                    repr_func(result),
+                )
+
+            return result
+
+        return cast(F, wrapper)
 
     return decorator
 
@@ -187,7 +220,7 @@ def tally_calls(
     min_total_runtime: float = 0.0,
     periodic_ratio: float = 2.0,
     if_slower_than: float = float("inf"),
-):
+) -> Callable[[F], F]:
     """
     Decorator to monitor performancy by tallying function calls and total runtime, only logging
     periodically (every time calls exceed `periodic_ratio` more in count or runtime than the last
@@ -196,7 +229,7 @@ def tally_calls(
 
     log_func = getattr(log, level.lower())
 
-    def decorator(func):
+    def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             start_time = time.time()
@@ -234,9 +267,9 @@ def tally_calls(
 
             return result
 
-        return wrapper
+        return cast(F, wrapper)
 
-    return decorator
+    return cast(Callable[[F], F], decorator)
 
 
 def log_tallies(if_slower_than: float = 0.0):
