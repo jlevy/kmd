@@ -1,11 +1,9 @@
 from dataclasses import dataclass
-from enum import Enum
 from typing import Optional
 
 import justext
 
 from kmd.config.logger import get_logger
-from kmd.media.media_services import canonicalize_media_url
 from kmd.model.canon_url import thumbnail_url
 from kmd.util.log_calls import log_calls
 from kmd.util.obj_utils import abbreviate_obj
@@ -15,24 +13,6 @@ from kmd.web_content.web_fetch import fetch, fetch_and_cache
 log = get_logger(__name__)
 
 
-class PageType(Enum):
-    html = "html"
-    pdf = "pdf"
-    video = "video"
-
-    def as_str(self) -> str:
-        return self.name
-
-    # TODO: Use mimetime as well.
-    @classmethod
-    def from_url(cls, url: Url) -> "PageType":
-        if canonicalize_media_url(url):
-            return cls.video
-        if url.endswith(".pdf"):
-            return cls.pdf
-        return cls.html
-
-
 @dataclass
 class PageData:
     """
@@ -40,7 +20,6 @@ class PageData:
     """
 
     url: Url
-    type: PageType = PageType.html
     title: Optional[str] = None
     description: Optional[str] = None
     content: Optional[str] = None
@@ -92,9 +71,7 @@ def _extract_page_data_from_html(url: Url, raw_html: bytes) -> PageData:
 
     # Content without boilerplate.
     content = "\n\n".join([para.text for para in paragraphs if not para.is_boilerplate])
-    return PageData(
-        url, PageType.from_url(url), title=title, description=description, content=content
-    )
+    return PageData(url, title=title, description=description, content=content)
 
 
 from justext.core import (

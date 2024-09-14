@@ -9,7 +9,7 @@ from kmd.model.params_model import ALL_COMMON_PARAMS, Param
 @dataclass(frozen=True)
 class FuncParam:
     name: str
-    type: Type
+    type: Optional[Type]
     default: Any
     is_varargs: bool
 
@@ -25,26 +25,15 @@ def inspect_function_params(func: Callable[..., Any]) -> Tuple[List[FuncParam], 
 
     for param in signature.parameters.values():
         param_name = param.name
-        param_default = param.default
-        if param.default == param.empty:
-            param_default = None
+        param_default = param.default if param.default != param.empty else None
         param_kind = param.kind
 
         # Get type from type annotation or default value.
+        param_type: Optional[Type] = None
         if param.annotation != param.empty:
-            param_type = param.annotation
-        elif param.default != param.empty and param.default is not None:
-            param_type = type(param.default)
-        else:
-            param_type = None
-        # Unwrap Optional type.
-        if get_origin(param_type) is Union:
-            param_type = next(
-                (arg for arg in get_args(param_type) if arg is not type(None)),
-                str,
-            )
-        if param_type is not None and not isinstance(param_type, type):
-            param_type = type(param_type)
+            param_type = _extract_simple_type(param.annotation)
+        elif param_default is not None:
+            param_type = type(param_default)
 
         func_param = FuncParam(
             param_name,
@@ -53,26 +42,42 @@ def inspect_function_params(func: Callable[..., Any]) -> Tuple[List[FuncParam], 
             param_kind in (Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD),
         )
 
-        if param_kind in (
-            Parameter.POSITIONAL_ONLY,
-            Parameter.POSITIONAL_OR_KEYWORD,
-        ):
+        if param_kind in (Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD):
             if param.default == param.empty:
                 pos_args.append(func_param)
             else:
                 kw_args.append(func_param)
         elif param_kind == Parameter.VAR_POSITIONAL:
             pos_args.append(func_param)
-        elif param_kind == Parameter.KEYWORD_ONLY:
-            kw_args.append(func_param)
-        elif param_kind == Parameter.VAR_KEYWORD:
+        elif param_kind in (Parameter.KEYWORD_ONLY, Parameter.VAR_KEYWORD):
             kw_args.append(func_param)
 
     return pos_args, kw_args
 
 
+def _extract_simple_type(annotation: Any) -> Optional[Type]:
+    """
+    Extract a single Type from an annotation that is an explicit simple type (like `str` or
+    an enum) or a simple Union (such as `str` from `Optional[str]`). Return None if it's not
+    clear.
+    """
+    if isinstance(annotation, type):
+        return annotation
+
+    origin = get_origin(annotation)
+    if origin is Union:
+        args = get_args(annotation)
+        non_none_args = [arg for arg in args if arg is not type(None)]
+        if len(non_none_args) == 1 and isinstance(non_none_args[0], type):
+            return non_none_args[0]
+    elif origin is not None and isinstance(origin, type):
+        return origin
+
+    return None
+
+
 def _look_up_func_param(param: FuncParam) -> Param:
-    return ALL_COMMON_PARAMS.get(param.name) or Param(param.name, type=param.type)
+    return ALL_COMMON_PARAMS.get(param.name) or Param(param.name, type=param.type or str)
 
 
 def _look_up_func_params(kw_params: List[FuncParam]) -> List[Param]:
@@ -115,9 +120,7 @@ def test_inspect_function_params():
     ) -> List:
         return [arg1, arg2, arg3, option_one, option_two]
 
-    def func2(
-        *paths: str, summary: Optional[bool] = False, iso_time: Optional[bool] = False
-    ) -> List:
+    def func2(*paths: str, summary: Optional[bool] = False, iso_time: bool = False) -> List:
         return [paths, summary, iso_time]
 
     def func3(arg1: str, **keywords) -> List:

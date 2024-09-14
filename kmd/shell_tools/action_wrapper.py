@@ -42,7 +42,7 @@ class ShellCallableAction:
         # Handle --rerun option at action invocation time.
         rerun = bool(shell_args.kw_args.get("rerun", False))
 
-        self.action = self.action.update_with_params(shell_args.kw_args, strict=True)
+        self.action = self.action.with_params(shell_args.kw_args, strict=True)
 
         try:
             if not self.action.interactive_input:

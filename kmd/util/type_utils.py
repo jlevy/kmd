@@ -17,7 +17,8 @@ def not_none(value: Optional[T], message: Optional[str] = None) -> T:
 
 def is_truthy(value: Any, strict: bool = True) -> bool:
     """
-    True for all common string and non-string values for true.
+    True for all common string and non-string values for true. Useful for parsing
+    string values or command line arguments.
     """
     truthy_values = {"true", "1", "yes", "on", "y"}
     falsy_values = {"false", "0", "no", "off", "n", ""}

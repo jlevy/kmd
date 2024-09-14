@@ -22,19 +22,21 @@ def _map_positional(
     keywords_consumed = 0
 
     for param in pos_params:
+        param_type = param.type or str
         if param.is_varargs:
-            pos_values.extend([param.type(arg) for arg in pos_args[i:]])
+            pos_values.extend([param_type(arg) for arg in pos_args[i:]])
             return pos_values, 0  # All remaining args are consumed, so we can return early.
         elif i < len(pos_args):
-            pos_values.append(param.type(pos_args[i]))
+            pos_values.append(param_type(pos_args[i]))
             i += 1
         else:
             raise InvalidCommand(f"Missing positional argument: {param.name}")
 
     # If there are remaining positional arguments, they will go toward keyword arguments.
     for param in kw_params:
+        param_type = param.type or str
         if not param.is_varargs and i < len(pos_args):
-            pos_values.append(param.type(pos_args[i]))
+            pos_values.append(param_type(pos_args[i]))
             i += 1
             keywords_consumed += 1
 
@@ -64,7 +66,8 @@ def _map_keyword(kw_args: Dict[str, Optional[str]], kw_params: List[FuncParam]) 
     for key, value in kw_args.items():
         matching_param = next((param for param in kw_params if param.name == key), None)
         if matching_param:
-            kw_values[key] = matching_param.type(value)  # Convert value to type.
+            matching_param_type = matching_param.type or str
+            kw_values[key] = matching_param_type(value)  # Convert value to type.
         elif var_kw_param:
             var_kw_values[key] = value
         else:

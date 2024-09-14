@@ -202,7 +202,7 @@ class Action(ABC):
         )
         return f"Parameters:\n{summary_str}"
 
-    def update_with_params(self, param_values: ParamValues, strict: bool = False) -> "Action":
+    def with_params(self, param_values: ParamValues, strict: bool = False) -> "Action":
         """
         Update the action with the given parameters and return a new Action.
         """

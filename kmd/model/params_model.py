@@ -43,18 +43,6 @@ class Param:
 
         return desc
 
-    def parse(self, value: str) -> Optional[Any]:
-        if value is None:
-            return None
-        try:
-            if self.type == bool:
-                return is_truthy(value)
-            return self.type(value)
-        except ValueError as e:
-            raise ValueError(
-                f"Invalid value for {self.name} (expected type {self.type.__name__}): {value}"
-            ) from e
-
     def shell_prefix(self) -> str:
         if self.type == bool:
             return f"--{self.name}"

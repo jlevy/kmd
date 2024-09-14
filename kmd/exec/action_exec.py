@@ -73,7 +73,7 @@ def run_action(
     # Update the action with any overridden params.
     log.info("Parameters from workspace: %s", ws_params)
     if ws_params:
-        action = action.update_with_params(ws_params)
+        action = action.with_params(ws_params)
 
     # Collect args from the provided args or otherwise the current selection.
     args, from_selection = collect_args(*provided_args)

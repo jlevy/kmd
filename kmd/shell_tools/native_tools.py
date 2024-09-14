@@ -250,7 +250,7 @@ def tail_file(filename: str | Path):
     subprocess.run(command, shell=True, check=True)
 
 
-def view_file_console(filename: str | Path, use_pager: bool = False):
+def view_file_console(filename: str | Path, use_pager: bool = True):
     """
     Displays a file in the console with pagination and syntax highlighting.
     """
@@ -270,7 +270,6 @@ def view_file_console(filename: str | Path, use_pager: bool = False):
             command = f"{command} | less -R"
 
     try:
-        output("%s", command, text_wrap=Wrap.NONE, color=COLOR_HINT)
         subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         output(f"Error displaying file: {e}", color=COLOR_ERROR)
