@@ -1,8 +1,8 @@
 from kmd.commands.command_registry import all_commands
 from kmd.config.logger import get_console, get_logger
 from kmd.docs.topics import about_kmd, faq, workspace_and_file_formats
+from kmd.help.command_help import output_action_help, output_command_function_help
 from kmd.text_ui.command_output import (
-    format_name_and_description,
     output,
     output_heading,
     output_markdown,
@@ -24,14 +24,12 @@ def output_help_page(base_only: bool = False) -> None:
 
         output_heading("Available Commands")
         for command in all_commands().values():
-            doc = command.__doc__ if command.__doc__ else ""
-            output(format_name_and_description(command.__name__, doc))
-            output()
+            output_command_function_help(command, verbose=False)
 
         output_heading("Available Actions")
         actions = load_all_actions(base_only=base_only)
         for action in actions.values():
-            output(format_name_and_description(action.name, action.description))
+            output_action_help(action, verbose=False)
             output()
 
         output_heading("More help")

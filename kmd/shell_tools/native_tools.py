@@ -196,14 +196,14 @@ def terminal_link(url: str, text: str, id: str = "") -> str:
         return text
 
 
-def view_file_native(file_or_url: str | Path, use_pager: bool = True):
+def view_file_native(file_or_url: str | Path, console: bool = False):
     """
     Open a file or URL in the user's preferred native application, falling back
     to pagination in console. For images, first tries terminal-based image display.
     """
     file_or_url = str(file_or_url)
 
-    if not use_pager and (is_url(file_or_url) or file_or_url.endswith(".html")):
+    if not console and (is_url(file_or_url) or file_or_url.endswith(".html")):
         if not is_url(file_or_url):
             file_or_url = as_file_url(Path(file_or_url))
         log.message("Opening URL in browser: %s", file_or_url)
@@ -215,7 +215,7 @@ def view_file_native(file_or_url: str | Path, use_pager: bool = True):
         ext = parse_file_ext(file)
         is_text = (ext and ext.is_text()) or mime_type.startswith("text")
 
-        if use_pager or is_text or (mime_type and mime_type.startswith("text")):
+        if console or is_text or (mime_type and mime_type.startswith("text")):
             view_file_console(file, use_pager=min_lines > 40 or file_size > 20 * 1024)
         elif mime_type and mime_type.startswith("image"):
             try:

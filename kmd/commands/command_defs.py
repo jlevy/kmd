@@ -140,6 +140,9 @@ def clear_logs() -> None:
 def cache_list(media: bool = False, web: bool = False) -> None:
     """
     List the contents of the media and/or web caches. By default lists both media and web caches.
+
+    :param media: List media cache only.
+    :param web: List web cache only.
     """
     if not media and not web:
         media = True
@@ -313,10 +316,12 @@ def _check_store_paths(paths: Sequence[StorePath | Path]) -> List[StorePath]:
 
 
 @kmd_command
-def show(path: Optional[str] = None, pager: bool = False) -> None:
+def show(path: Optional[str] = None, console: bool = False) -> None:
     """
     Show the contents of a file if one is given, or the first file if multiple files
     are selected.
+
+    :param console: Force display to console (not browser or native apps).
     """
     try:
         input_paths = _assemble_paths(path)
@@ -335,13 +340,13 @@ def show(path: Optional[str] = None, pager: bool = False) -> None:
                     log.info("Had trouble showing thumbnail image (will skip): %s", e)
                     output(f"[Image: {item.thumbnail_url}]", color=COLOR_HINT)
 
-            view_file_native(ws.base_dir / input_path, use_pager=pager)
+            view_file_native(ws.base_dir / input_path, console=console)
         else:
-            view_file_native(input_path, use_pager=pager)
+            view_file_native(input_path, console=console)
     except (InvalidInput, InvalidState):
         if path:
             # If path is absolute or we couldbn't get a selection, just show the file.
-            view_file_native(path, use_pager=pager)
+            view_file_native(path, console=console)
         else:
             raise InvalidInput("No selection")
 
@@ -350,8 +355,9 @@ def show(path: Optional[str] = None, pager: bool = False) -> None:
 def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
     """
     Copy the contents of a file (or the first file in the selection) to the OS-native
-    clipboard. If `raw` is true, copy the full exact contents of the file. Otherwise,
-    omits any frontmatter if present.
+    clipboard.
+
+    :param raw: Copy the full exact contents of the file. Otherwise frontmatter is omitted.
     """
     import pyperclip
 
@@ -390,7 +396,8 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
 def edit(path: Optional[str] = None, all: bool = False) -> None:
     """
     Edit the contents of a file using the user's default editor (or defaulting to nano).
-    If multiple files are selected, edit the first one.
+
+    :param all: Normally edits only the first file given. This passes all files to the editor.
     """
     input_paths = _assemble_paths(path)
     if not all:
@@ -434,6 +441,9 @@ def strip_frontmatter(*paths: str) -> None:
 def size_summary(*paths: str, slow: bool = False) -> None:
     """
     Show a summary of the size and HTML structure of the items at the given paths.
+
+    :param slow: Normally uses a fast, approximate method to count sentences.
+    This enables slower Spacy sentence segmentation.
     """
     input_paths = _assemble_paths(*paths)
     output()
@@ -519,16 +529,23 @@ def settings() -> None:
 
 
 @kmd_command
-def log_level(level_str: Optional[str] = None, console: bool = False) -> None:
+def log_level(level_str: Optional[str] = None, console: bool = False, file: bool = False) -> None:
     """
-    Set the log level. Sets console log level if `console` is true, otherwise sets file log level.
+    Set the log level. Sets both console and file log levels unless specified.
+
+    :param console: Set console log level only.
+    :param file: Set file log level only.
     """
+    if not console and not file:
+        console = True
+        file = True
+
     if level_str:
         level = LogLevel.parse(level_str)
         with update_global_settings() as settings:
             if console:
                 settings.console_log_level = level
-            else:
+            if file:
                 settings.log_level = level
 
         reset_logging()
@@ -620,6 +637,9 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
     """
     Show the actions that are applicable to the current selection.
     This is a great command to use at any point to see what actions are available!
+
+    :param brief: Show only action names. Otherwise show actions and descriptions.
+    :param all: Include actions with no preconditions.
     """
     store_paths = _check_store_paths(_assemble_paths(*paths))
     ws = current_workspace()
@@ -775,6 +795,9 @@ def files(
     """
     List files or folders in the current directory. Shows the full current workspace if
     no path is provided.
+
+    :param summary: Show only summary of number of files in each folder.
+    :param iso_time: Show time in ISO format.
     """
     if len(paths) == 0:
         paths_to_show = (Path("."),)
@@ -844,6 +867,9 @@ def search(
     """
     Search for a string in files at the given paths and return their store paths.
     Useful to find all docs or resources matching a string or regex.
+
+    :param sort: How to sort results. Can be `path` or `score`.
+    :param ignore_case: Ignore case when searching.
     """
     tool_check().require(CmdlineTool.ripgrep)
     from ripgrepy import RipGrepNotFound, Ripgrepy
@@ -874,6 +900,9 @@ def graph_view(
 ) -> None:
     """
     Open a graph view of the current workspace.
+
+    :param concepts_only: Show only concepts.
+    :param resources_only: Show only resources.
     """
     if docs_only:
         item_filter = lambda item: item.type == ItemType.doc
@@ -919,7 +948,9 @@ def normalize(*paths: str) -> None:
 def reformat(*paths: str, inplace: bool = False) -> None:
     """
     Format text, Markdown, or HTML according to kmd conventions.
-    Saves files
+
+    :param inplace: Overwrite the original file. Otherwise save to a new
+    file with `_formatted` appended to the original name.
     """
     for path in paths:
         target_path = None

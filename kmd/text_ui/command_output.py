@@ -93,7 +93,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
                 wrapped_paragraphs.append(
                     textwrap.fill(
                         paragraph,
-                        width=CONSOLE_WRAP_WIDTH - 4,
+                        width=CONSOLE_WRAP_WIDTH - len(extra_indent + DEFAULT_INDENT),
                         initial_indent=extra_indent + DEFAULT_INDENT,
                         subsequent_indent=extra_indent + DEFAULT_INDENT,
                         replace_whitespace=True,
@@ -105,7 +105,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
                 wrapped_paragraphs.append(
                     textwrap.fill(
                         paragraph,
-                        width=CONSOLE_WRAP_WIDTH - 8,
+                        width=CONSOLE_WRAP_WIDTH - len(extra_indent + DEFAULT_INDENT),
                         initial_indent=extra_indent,
                         subsequent_indent=extra_indent + DEFAULT_INDENT,
                         replace_whitespace=True,
@@ -180,15 +180,17 @@ def output(
     transform: Callable[[str], str] = lambda x: x,
     extra_indent: str = "",
     extra_newlines: bool = False,
+    end="\n",
 ):
     if extra_newlines:
         rprint()
     if isinstance(message, str):
         text = message % args if args else message
         filled_text = fill_text(transform(text), text_wrap, extra_indent)
-        rprint(Text(filled_text, color) if color else filled_text)
+        rprint(Text(filled_text, color) if color else filled_text, end=end)
     else:
-        rprint(message)
+        rprint(extra_indent, end="")
+        rprint(message, end=end)
     if extra_newlines:
         rprint()
 

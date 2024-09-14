@@ -1,16 +1,21 @@
 from typing import List, Optional
 
-from kmd.model.params_model import Param
+from kmd.commands.command_registry import CommandFunction
+from kmd.help.docstrings import parse_docstring
+from kmd.model.actions_model import Action
+from kmd.model.params_model import Param, RUNTIME_ACTION_PARAMS
 from kmd.model.preconditions_model import Precondition
+from kmd.shell_tools.function_inspect import collect_param_info
 from kmd.text_formatting.text_formatting import DEFAULT_INDENT
 from kmd.text_ui.command_output import format_name_and_description, output, output_help, Wrap
 
 
-def output_command_help(
+def _output_command_help(
     name: str,
     description: Optional[str] = None,
-    param_docs: Optional[List[Param]] = None,
+    param_info: Optional[List[Param]] = None,
     precondition: Optional[Precondition] = None,
+    verbose: bool = True,
 ):
     command_str = f"the `{name}` command" if name else "this command"
 
@@ -19,35 +24,74 @@ def output_command_help(
     if not description:
         output_help(f"Sorry, no help available for {command_str}.")
     else:
-        output(format_name_and_description(name, description))
+        docstring = parse_docstring(description)
 
-    if precondition:
-        output()
-        output_help("Precondition:")
-        output(str(precondition), text_wrap=Wrap.WRAP_INDENT)
+        output(format_name_and_description(name, docstring.body))
 
-    if param_docs:
-        output()
-        output_help("Options:")
-        for param in param_docs:
-            desc_suffix = ""
-            if param.description:
-                desc_suffix = f": {param.description}"
-            if param.type == bool:
+        if precondition:
+            output()
+            output(
+                "Precondition: " + str(precondition),
+                text_wrap=Wrap.HANGING_INDENT,
+                extra_indent=DEFAULT_INDENT,
+            )
+
+        if param_info:
+            output()
+            output("Options:", extra_indent=DEFAULT_INDENT)
+            for param in param_info:
+
+                if param.type == bool:
+                    param_doc = f"--{param.name}"
+                else:
+                    param_doc = f"--{param.name}=<value>"
+
+                if param.name in docstring.param:
+                    param_desc = docstring.param[param.name]
+                elif param.description:
+                    param_desc = param.description
+                else:
+                    param_desc = ""
+
+                if param_desc:
+                    param_doc += f": {param_desc}"
+
                 output(
-                    f"--{param.name}{desc_suffix}",
+                    param_doc,
                     text_wrap=Wrap.HANGING_INDENT,
                     extra_indent=DEFAULT_INDENT,
                 )
-            else:
-                output(
-                    f"--{param.name}=<value>{desc_suffix}",
-                    text_wrap=Wrap.HANGING_INDENT,
-                    extra_indent=DEFAULT_INDENT,
-                )
 
-    output()
-    output_help(
-        "For more information, ask the assistant by typing a question (ending in ?) or check `kmd_help`."
+    if verbose:
+        output()
+        output_help(
+            "For more information, ask the assistant by typing a question (ending in ?) or check `kmd_help`."
+        )
+        output()
+
+
+def output_command_function_help(command: CommandFunction, verbose: bool = True):
+    _pos_params, _kw_params, kw_param_docs = collect_param_info(command)
+
+    doc = command.__doc__ if command.__doc__ else ""
+
+    _output_command_help(
+        command.__name__,
+        doc,
+        param_info=kw_param_docs,
+        verbose=verbose,
     )
-    output()
+
+
+def output_action_help(action: Action, verbose: bool = True):
+    params = []
+    if verbose:
+        params = action.params() + list(RUNTIME_ACTION_PARAMS.values())
+
+    _output_command_help(
+        action.name,
+        action.description,
+        param_info=params,
+        precondition=action.precondition,
+        verbose=verbose,
+    )

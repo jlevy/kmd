@@ -6,7 +6,6 @@ from kmd.model.constants import LANGUAGE_LIST
 from kmd.model.language_models import LLM_LIST
 from kmd.model.model_settings import DEFAULT_CAREFUL_LLM, DEFAULT_FAST_LLM
 from kmd.text_docs.sizes import TextUnit
-from kmd.util.type_utils import is_truthy
 
 
 log = get_logger(__name__)

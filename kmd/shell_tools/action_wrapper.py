@@ -6,10 +6,9 @@ from kmd.config.text_styles import COLOR_ERROR, SPINNER
 from kmd.errors import NONFATAL_EXCEPTIONS
 from kmd.exec.action_exec import run_action
 from kmd.file_storage.workspaces import current_workspace
-from kmd.help.command_help import output_command_help
+from kmd.help.command_help import output_action_help
 from kmd.model.actions_model import Action
 from kmd.model.output_model import CommandOutput
-from kmd.model.params_model import RUNTIME_ACTION_PARAMS
 from kmd.shell_tools.exception_printing import summarize_traceback
 from kmd.shell_tools.option_parsing import parse_shell_args
 from kmd.text_ui.command_output import output, output_separator
@@ -28,14 +27,7 @@ class ShellCallableAction:
         shell_args = parse_shell_args(args)
 
         if shell_args.show_help:
-            param_docs = self.action.params() + list(RUNTIME_ACTION_PARAMS.values())
-
-            output_command_help(
-                self.action.name,
-                self.action.description,
-                param_docs=param_docs,
-                precondition=self.action.precondition,
-            )
+            output_action_help(self.action, verbose=True)
 
             return CommandOutput()
 
