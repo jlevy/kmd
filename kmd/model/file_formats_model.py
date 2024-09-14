@@ -4,13 +4,18 @@ from enum import Enum
 from pathlib import Path
 from typing import cast, List, Optional, Tuple
 
+import magic
+
 from kmd.errors import InvalidFilename
 from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.url import Url
 
 
 class Format(Enum):
     """
-    Format of the data in this item. This is the body data format (or "url" for a URL resource).
+    Format of data in a file or in an item. This is just the important formats, not an exhaustive
+    list. For text items that have a body, this is the body data format. For resource items,
+    it is the format of the resource (url, media, etc.).
     """
 
     url = "url"
@@ -86,8 +91,48 @@ class Format(Enum):
         }
         return ext_to_format.get(file_ext.value, None)
 
+    @classmethod
+    def _init_mime_type_map(cls):
+        Format._mime_type_map = {
+            None: Format.url,  # URLs don't have a specific MIME type
+            "text/plain": Format.plaintext,
+            "text/markdown": Format.markdown,
+            "text/x-markdown": Format.markdown,
+            "text/html": Format.html,
+            "application/yaml": Format.yaml,
+            "application/x-yaml": Format.yaml,
+            "text/x-python": Format.python,
+            "application/json": Format.json,
+            "text/csv": Format.csv,
+            "application/pdf": Format.pdf,
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": Format.docx,
+            "audio/mpeg": Format.mp3,
+            "audio/mp3": Format.mp3,
+            "audio/mp4": Format.m4a,
+            "video/mp4": Format.mp4,
+        }
+
+    def mime_type(self) -> Optional[str]:
+        """
+        MIME type for the format, or None if not recognized.
+        """
+        for mime_type, format in self._mime_type_map.items():
+            if format == self:
+                return mime_type
+        return None
+
+    @classmethod
+    def from_mime_type(cls, mime_type: Optional[str]) -> Optional["Format"]:
+        """
+        Format from mime type, or Format.unknown if not recognized.
+        """
+        return cls._mime_type_map.get(mime_type, Format.unknown)
+
     def __str__(self):
         return self.name
+
+
+Format._init_mime_type_map()
 
 
 class FileExt(Enum):
@@ -143,7 +188,7 @@ class FileExt(Enum):
         return format_to_file_ext.get(str(format), None)
 
     @classmethod
-    def from_str(cls, ext_str: str) -> Optional["FileExt"]:
+    def parse(cls, ext_str: str) -> Optional["FileExt"]:
         """
         Convert a string to a FileExt enum.
         """
@@ -166,17 +211,17 @@ def canonicalize_file_ext(ext: str) -> str:
         "yaml": "yml",
     }
     ext = ext.lower().lstrip(".")
-    return ext_map.get(ext, ext) or ext
+    return ext_map.get(ext, ext)
 
 
 def parse_file_ext(path: str | Path) -> Optional[FileExt]:
     """
     Parse a file extension from a path or a raw file extension like "csv" or ".csv".
     """
-    front, ext = os.path.splitext(path)
+    front, ext = os.path.splitext(str(path))
     if not ext:
         ext = front
-    return FileExt.from_str(canonicalize_file_ext(ext))
+    return FileExt.parse(canonicalize_file_ext(ext))
 
 
 def guess_format(path: str | Path) -> Optional[Format]:
@@ -267,6 +312,39 @@ def is_ignored(path: str | Path) -> bool:
     )
 
 
+def file_mime_type(filename: str | Path) -> str:
+    """
+    Get the mime type of a file using libmagic.
+    """
+    filename = str(filename)
+    mime = magic.Magic(mime=True)
+    mime_type = mime.from_file(filename)
+    return mime_type or "unknown"
+
+
+def file_format(filename: str | Path) -> Optional[Format]:
+    """
+    Get file format based on libmagic mime type.
+    """
+    return Format.from_mime_type(file_mime_type(filename))
+
+
+def file_ext_from_name(url_or_path: Url | Path) -> Optional[FileExt]:
+    """
+    Recognize known file extensions from the path or URL.
+    """
+
+    return parse_file_ext(url_or_path)
+
+
+def file_ext_from_content(path: Path) -> Optional[FileExt]:
+    """
+    Recognize known file extensions from the content.
+    """
+    fmt = file_format(path)
+    return FileExt.for_format(fmt) if fmt else None
+
+
 ## Tests
 
 
@@ -305,3 +383,5 @@ def test_parse_file_ext():
     assert parse_file_ext(".md") == FileExt.md
     assert parse_file_ext("md") == FileExt.md
     assert parse_file_ext("foobar") is None
+    assert parse_file_ext(Url("http://example.com/test.md")) == FileExt.md
+    assert parse_file_ext(Url("http://example.com/test")) is None

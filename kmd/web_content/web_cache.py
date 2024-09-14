@@ -10,14 +10,19 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 import requests
-from strif import clean_alphanum_hash
+from strif import clean_alphanum_hash, copyfile_atomic
 
 from kmd.config.logger import get_logger
+from kmd.errors import FileNotFound, InvalidInput
+from kmd.model.file_formats_model import file_ext_from_content, file_ext_from_name
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.download_url import download_url, user_agent_headers
-from kmd.util.url import normalize_url, Url
+from kmd.util.log_calls import log_if_modifies
+from kmd.util.url import is_file_url, normalize_url, parse_file_url, Url
 
 log = get_logger(__name__)
+
+_normalize_url = log_if_modifies(level="info")(normalize_url)
 
 
 def aws_cli(*cmd):
@@ -116,11 +121,27 @@ class InvalidCacheState(RuntimeError):
     pass
 
 
+DEFAULT_SUFFIX = ""
+
+
+def suffix_for(url: Url) -> str:
+    if is_file_url(url):
+        path = parse_file_url(url)
+        if path:
+            ext = file_ext_from_content(path)
+    else:
+        ext = file_ext_from_name(url)
+
+    return "." + ext.value if ext else DEFAULT_SUFFIX
+
+
 class WebCache(DirStore):
     """
     The web cache is a DirStore with a fetching mechanism based on a fixed object expiration time.
 
     Fetch timestamp is modification time on file. Thread safe since file creation is atomic.
+
+    Also works for local files via file:// URLs.
 
     Also supports a backup/restore mechanism to/from an S3 bucket. Supply `backup_url` to use.
     """
@@ -138,38 +159,50 @@ class WebCache(DirStore):
         self,
         root: Path,
         default_expiration_sec: float = NEVER,
-        folder: str = "raw",
-        suffix: str = ".page",
         mode: WebCacheMode = WebCacheMode.LIVE,
         backup_url: Optional[Url] = None,
-        verbose: bool = False,
     ) -> None:
-        """Expiration is in seconds, and can be NEVER or ALWAYS."""
+        """
+        Expiration is in seconds, and can be NEVER or ALWAYS.
+        """
         super().__init__(root)
         self.default_expiration_sec = default_expiration_sec
         self.session = requests.Session()
-        self.folder = folder
-        self.suffix = suffix
+        # In case we want to cache a few types of files in the future.
+        self.folder = "originals"
         self.mode = mode
         self.backup_url = backup_url
-        self.verbose = verbose
 
         if backup_url and mode in (WebCacheMode.TEST, WebCacheMode.UPDATE):
-            self._restore(backup_url, self.folder)
+            self._restore(backup_url)
 
-    def find_url(
-        self, url: Url, folder: Optional[str] = None, suffix: Optional[str] = None
-    ) -> Optional[Path]:
-        url = normalize_url(url)
-        return self.find(url, folder=folder or self.folder, suffix=suffix or self.suffix)
+    def find_url(self, url: Url) -> Optional[Path]:
+        url = _normalize_url(url)
+        return self.find(url, folder=self.folder, suffix=suffix_for(url))
 
-    def _download(self, url: Url) -> Path:
+    def _fetch_or_copy(self, url: Url) -> Path:
         if self.mode == WebCacheMode.TEST:
             raise InvalidCacheState("_download called in test mode")
 
-        url = normalize_url(url)
-        cache_path = self.path_for(url, folder=self.folder, suffix=self.suffix)
-        download_url(url, cache_path, silent=True, timeout=TIMEOUT, headers=user_agent_headers())
+        cache_path = self.path_for(url, folder=self.folder, suffix=suffix_for(url))
+
+        if is_file_url(url):
+            file_path = parse_file_url(url)
+            if not file_path:
+                raise InvalidInput(f"Not a file URL: {url}")
+            if not file_path.exists():
+                raise FileNotFound(f"File not found: {file_path}")
+            log.info(
+                "Copying local file to cache: %s -> %s", fmt_path(file_path), fmt_path(cache_path)
+            )
+            copyfile_atomic(file_path, cache_path, make_parents=True)
+        else:
+            url = _normalize_url(url)
+            log.info("Downloading to cache: %s -> %s", url, fmt_path(cache_path))
+            download_url(
+                url, cache_path, silent=True, timeout=TIMEOUT, headers=user_agent_headers()
+            )
+
         return cache_path
 
     def _age_in_sec(self, cache_path: Path) -> float:
@@ -194,23 +227,23 @@ class WebCache(DirStore):
         if expiration_sec is None:
             expiration_sec = self.default_expiration_sec
 
-        cache_path = self.find(url, folder=self.folder, suffix=self.suffix)
+        cache_path = self.find(url, folder=self.folder, suffix=suffix_for(url))
         return cache_path is not None and not self._is_expired(cache_path, expiration_sec)
 
-    def fetch(self, url: Url, expiration_sec: Optional[float] = None) -> tuple[Path, bool]:
+    def cache(self, url: Url, expiration_sec: Optional[float] = None) -> tuple[Path, bool]:
         """
         Returns cached download path of given URL and whether it was previously cached.
+        For file:// URLs does a copy.
         """
-        url = normalize_url(url)
-        cache_path = self.find(url, folder=self.folder, suffix=self.suffix)
+        url = _normalize_url(url)
+        cache_path = self.find(url, folder=self.folder, suffix=suffix_for(url))
         if cache_path and not self._is_expired(cache_path, expiration_sec):
             log.info("URL in cache, not fetching: %s: %s", url, fmt_path(cache_path))
             return cache_path, True
         else:
-            if self.verbose:
-                log.info("fetching: %s", url)
+            log.info("Caching new copy: %s", url)
             return (
-                self._download(url),
+                self._fetch_or_copy(url),
                 False,
             )
 

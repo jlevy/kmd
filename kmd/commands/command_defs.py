@@ -44,7 +44,7 @@ from kmd.help.assistant import assistance
 from kmd.help.help_page import output_help_page
 from kmd.lang_tools.inflection import plural
 from kmd.model import is_ignored, ItemType, StorePath, USER_SETTABLE_PARAMS
-from kmd.model.file_formats_model import guess_format, join_filename, split_filename
+from kmd.model.file_formats_model import file_mime_type, guess_format, join_filename, split_filename
 from kmd.model.output_model import CommandOutput
 from kmd.preconditions import ALL_PRECONDITIONS
 from kmd.preconditions.precondition_checks import actions_matching_paths
@@ -71,6 +71,7 @@ from kmd.text_ui.command_output import (
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
 from kmd.util.type_utils import not_none
+from kmd.util.url import is_url, Url
 from kmd.version import get_version
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 from kmd.web_content.web_fetch import fetch_and_cache
@@ -149,6 +150,21 @@ def cache_list(media: bool = False, web: bool = False) -> None:
         output()
     if web:
         files(global_settings().web_cache_dir)
+        output()
+
+
+@kmd_command
+def cache_local(*path_or_urls: str) -> None:
+    """
+    Cache the given file in the web cache. Downloads any URL or copies a local file.
+    """
+    output()
+    for path_or_url in path_or_urls:
+        locator = cast(Url, path_or_url) if is_url(path_or_url) else Path(path_or_url)
+        cache_path, was_cached = fetch_and_cache(locator)
+        cache_str = " (already cached)" if was_cached else ""
+        output(f"{fmt_path(path_or_url)}{cache_str}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
+        output(f"{cache_path}", text_wrap=Wrap.INDENT_ONLY)
         output()
 
 
@@ -313,7 +329,7 @@ def show(path: Optional[str] = None, pager: bool = False) -> None:
             item = ws.load(input_path)
             if item.thumbnail_url:
                 try:
-                    local_path = fetch_and_cache(item.thumbnail_url)
+                    local_path, _was_cached = fetch_and_cache(item.thumbnail_url)
                     terminal_show_image_graceful(local_path)
                 except Exception as e:
                     log.error("Error fetching thumbnail image: %s", e)
@@ -421,13 +437,27 @@ def size_summary(*paths: str, slow: bool = False) -> None:
     input_paths = _assemble_paths(*paths)
     output()
     for input_path in input_paths:
-        output(f"{input_path}:", color=COLOR_EMPH)
+        output(f"{fmt_path(input_path)}:", color=COLOR_EMPH)
         body, _frontmatter = fmf_read(input_path)
         if body:
             parsed_body = parse_divs(body)
             output(parsed_body.size_summary(fast=not slow), text_wrap=Wrap.INDENT_ONLY)
         else:
             output("No text body", text_wrap=Wrap.INDENT_ONLY)
+        output()
+
+
+@kmd_command
+def file_info(*paths: str) -> None:
+    """
+    Show information about the file at the given path.
+    """
+    input_paths = _assemble_paths(*paths)
+    output()
+    for input_path in input_paths:
+        mime_type = file_mime_type(input_path)
+        output(f"{fmt_path(input_path)}:", color=COLOR_EMPH)
+        output(f"{mime_type}", text_wrap=Wrap.INDENT_ONLY)
         output()
 
 

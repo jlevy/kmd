@@ -12,15 +12,13 @@ from enum import Enum
 from pathlib import Path
 from typing import Tuple
 
-import magic
-
 from cachetools import cached, TTLCache
 from xonsh.platform import ON_DARWIN, ON_LINUX, ON_WINDOWS
 
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import BAT_STYLE, BAT_THEME, COLOR_ERROR, COLOR_HINT
 from kmd.errors import FileNotFound, SetupError
-from kmd.model.file_formats_model import parse_file_ext
+from kmd.model.file_formats_model import file_mime_type, parse_file_ext
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import output, Wrap
 from kmd.util.url import as_file_url, is_url
@@ -74,19 +72,13 @@ def tool_check() -> CmdlineTools:
     return CmdlineTools(tools)
 
 
-def file_mime_type_size(
+def file_size_check(
     filename: str | Path, max_lines: int = 100, max_bytes: int = 50 * 1024
-) -> Tuple[str, int, int]:
+) -> Tuple[int, int]:
     """
-    Best effort to get file type (as a mime type using libmagic), size, and lines
-    (up to max_lines) in a file.
+    Get the size and scan to get initial line count (up to max_lines) of a file.
     """
     filename = str(filename)
-
-    mime = magic.Magic(mime=True)
-    mime_type = mime.from_file(filename)
-    mime_type = mime_type or "unknown"
-
     file_size = os.path.getsize(filename)
     line_min = 0
     with open(filename, "rb") as f:
@@ -94,8 +86,7 @@ def file_mime_type_size(
             if i >= max_lines or f.tell() > max_bytes:
                 break
             line_min += 1
-
-    return mime_type, file_size, line_min
+    return file_size, line_min
 
 
 def native_open(filename: str | Path):
@@ -179,14 +170,14 @@ def terminal_show_image(filename: str | Path):
     elif _terminal_supports_sixel():
         _terminal_show_image_sixel(filename)
     else:
-        raise SetupError("Image display in terminal not supported")
+        raise SetupError("Image display in this terminal doesn't seem to be supported")
 
 
 def terminal_show_image_graceful(filename: str | Path):
     try:
         terminal_show_image(filename)
     except SetupError:
-        output("[Image: {filename}]", color=COLOR_HINT)
+        output(f"[Image: {filename}]", color=COLOR_HINT)
 
 
 def terminal_link(url: str, text: str, id: str = "") -> str:
@@ -219,7 +210,8 @@ def view_file_native(file_or_url: str | Path, use_pager: bool = True):
         webbrowser.open(file_or_url)
     elif os.path.isfile(file_or_url):
         file = file_or_url
-        mime_type, file_size, min_lines = file_mime_type_size(file)
+        mime_type = file_mime_type(file)
+        file_size, min_lines = file_size_check(file)
         ext = parse_file_ext(file)
         is_text = (ext and ext.is_text()) or mime_type.startswith("text")
 

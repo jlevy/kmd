@@ -8,7 +8,7 @@ from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings, update_global_settings
 from kmd.errors import WebFetchError
 from kmd.text_formatting.text_formatting import fmt_path
-from kmd.util.url import Url
+from kmd.util.url import as_file_url, Url
 from kmd.web_content.web_cache import WebCache
 
 log = get_logger(__name__)
@@ -54,15 +54,19 @@ def reset_web_cache_dir(path: Path):
         current_cache_dir = settings.web_cache_dir
         if current_cache_dir != path:
             settings.web_cache_dir = path
-            global _web_cache
-            _web_cache = WebCache(path)
-            log.info("Using web cache: %s", fmt_path(path))
+
+    global _web_cache
+    _web_cache = WebCache(global_settings().web_cache_dir)
+    log.info("Using web cache: %s", fmt_path(path))
 
 
-def fetch_and_cache(url: Url) -> Path:
+def fetch_and_cache(url_or_path: Url | Path) -> tuple[Path, bool]:
     """
     Fetch the given URL and return a local cached copy. Raises requests.HTTPError
-    if the URL is not reachable.
+    if the URL is not reachable. If a local file path is given, it is cached
+    (using a file:// URL as the key).
     """
-    path, _was_cached = _web_cache.fetch(url)
-    return path
+    if isinstance(url_or_path, Path):
+        url_or_path = as_file_url(url_or_path)
+    path, was_cached = _web_cache.cache(url_or_path)
+    return path, was_cached

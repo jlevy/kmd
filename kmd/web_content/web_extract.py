@@ -60,7 +60,7 @@ def fetch_extract(url: Url, cache=True) -> PageData:
     # Example: https://www.inc.com/atish-davda/5-questions-you-should-ask-before-taking-a-start-up-job-offer.html
 
     if cache:
-        path = fetch_and_cache(url)
+        path, _was_cached = fetch_and_cache(url)
         with open(path, "rb") as file:
             content = file.read()
         page_data = _extract_page_data_from_html(url, content)
