@@ -164,7 +164,7 @@ class KmdHighlighter(RegexHighlighter):
             r"(?P<path>\B(/[-\w._+]+)*\/)(?P<filename>[-\w._+]*)?",
             r"(?<![\\\w])(?P<str>b?'''.*?(?<!\\)'''|b?'.*?(?<!\\)'|b?\"\"\".*?(?<!\\)\"\"\"|b?\".*?(?<!\\)\")",
             r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
-            r"(?P<code_span>`[^`]+`)",
+            r"(?P<code_span>`[^`\n]+`)",
             # Task stack in logs:
             f"(?P<task_stack>{EMOJI_TASK}.*$)",
             f"(?P<task_stack_prefix>{EMOJI_TASK_SEP})",

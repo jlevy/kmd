@@ -52,7 +52,7 @@ from kmd.shell_tools.native_tools import (
     CmdlineTool,
     edit_files,
     tail_file,
-    terminal_show_image_graceful,
+    terminal_show_image,
     tool_check,
     view_file_native,
 )
@@ -330,9 +330,10 @@ def show(path: Optional[str] = None, pager: bool = False) -> None:
             if item.thumbnail_url:
                 try:
                     local_path, _was_cached = fetch_and_cache(item.thumbnail_url)
-                    terminal_show_image_graceful(local_path)
+                    terminal_show_image(local_path)
                 except Exception as e:
                     log.error("Error fetching thumbnail image: %s", e)
+                    output(f"[Image: {item.thumbnail_url}]", color=COLOR_HINT)
 
             view_file_native(ws.base_dir / input_path, use_pager=pager)
         else:

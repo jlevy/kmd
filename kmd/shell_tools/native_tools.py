@@ -259,8 +259,9 @@ def view_file_console(filename: str | Path, use_pager: bool = False):
 
     # TODO: Visualize YAML frontmatter with different syntax/style than Markdown content.
 
+    tool_check().require(CmdlineTool.less)
     if tool_check().has(CmdlineTool.bat):
-        pager_str = "--pager=always " if use_pager else ""
+        pager_str = "--pager=always --pager=less " if use_pager else ""
         command = f"bat {pager_str}--color=always --style={BAT_STYLE} --theme={BAT_THEME} {quoted_filename}"
     else:
         tool_check().require(CmdlineTool.pygmentize)
@@ -269,6 +270,7 @@ def view_file_console(filename: str | Path, use_pager: bool = False):
             command = f"{command} | less -R"
 
     try:
+        output("%s", command, text_wrap=Wrap.NONE, color=COLOR_HINT)
         subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         output(f"Error displaying file: {e}", color=COLOR_ERROR)
