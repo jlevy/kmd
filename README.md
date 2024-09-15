@@ -88,6 +88,8 @@ To run:
 poetry run kmd
 ```
 
+Use the `check_tools` command to confirm tools like `bat` and `ffmpeg` are found.
+
 Optionally, to install kmd globally in current user's Python virtual environment so you can
 conveniently use `kmd` anywhere, make sure you have a usable Python 3.12+ environment active
 (such as using `pyenv`), then:
@@ -243,6 +245,8 @@ Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
 - [**Vizdata**](https://github.com/saulpw/visidata) is a flexible spreadsheet-like multitool
   for tabular data.
 
+## Development
+
 ## Development Tasks
 
 ```shell
@@ -271,3 +275,8 @@ poetry self update
 # Debugging: See Python stack traces of all threads:
 pkill -USR1 kmd
 ```
+
+## Devvelopment Setup
+
+On VSCode or Cursor, the `µfmt` extension works nicely to use both µfmt and black with
+project settings.

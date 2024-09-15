@@ -53,7 +53,6 @@ def ydl_download_media(
     if include_video:
         ydl_opts = {
             # Try for best video+audio, fall back to best available.
-            # This outputs both video and audio (even with just the one postprocessor).
             # Might want to support smaller sizes tho.
             "format": "bestvideo+bestaudio/best",
             # "format": "bestvideo[height<=720]+bestaudio/best",
@@ -62,6 +61,11 @@ def ydl_download_media(
                 {
                     "key": "FFmpegVideoConvertor",
                     "preferedformat": "mp4",
+                },
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "mp3",
+                    "preferredquality": "192",
                 },
             ],
         }

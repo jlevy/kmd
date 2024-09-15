@@ -14,9 +14,6 @@ class Extractor(ABC):
     def __init__(self, doc_str: str):
         self.doc_str = doc_str
 
-    def precondition_check(self) -> None:
-        pass
-
     @abstractmethod
     def extract(self, wordtok_offset: int) -> Any:
         pass

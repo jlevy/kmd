@@ -41,18 +41,13 @@ def normalize_formatting(text: str, format: Optional[Format], width=DEFAULT_WRAP
 
 def normalize_text_file(
     path: str | Path,
-    target_path: Optional[str | Path] = None,
+    target_path: Path,
     format: Optional[Format] = None,
-    inplace: bool = False,
 ) -> None:
     """
     Normalize formatting on a text file, handling Markdown, HTML, or text, as well as
-    frontmatter, if present.
+    frontmatter, if present. `target_path` may be the same as `path`.
     """
-    if not target_path and not inplace:
-        raise InvalidInput("Must specify target path or run in-place")
-    if inplace and not target_path:
-        target_path = path  # fmf_write is atomic.
 
     format = format or guess_format(path)
     if not format or not format.is_text():

@@ -1,12 +1,11 @@
 import re
 
-from kmd.errors import PreconditionFailure
 from kmd.media.media_services import get_media_id, youtube
 from kmd.model.doc_elements import ANNOTATED_PARA, CHUNK
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.preconditions_model import precondition
-from kmd.provenance.timestamps import TimestampExtractor
+from kmd.provenance.timestamps import TIMESTAMP_RE
 from kmd.text_docs.wordtoks import first_wordtok_is_div
 from kmd.text_formatting.markdown_util import extract_bullet_points
 
@@ -72,6 +71,19 @@ def is_markdown(item: Item) -> bool:
 
 
 @precondition
+def is_html(item: Item) -> bool:
+    return has_body(item) and item.format == Format.html
+
+
+@precondition
+def is_text_doc(item: Item) -> bool:
+    """
+    A document that can be processed by LLMs and other plaintext tools.
+    """
+    return (is_plaintext(item) or is_markdown(item)) and has_body(item)
+
+
+@precondition
 def is_markdown_list(item: Item) -> bool:
     try:
         return (
@@ -81,11 +93,6 @@ def is_markdown_list(item: Item) -> bool:
         )
     except TypeError:
         return False
-
-
-@precondition
-def is_html(item: Item) -> bool:
-    return has_body(item) and item.format == Format.html
 
 
 @precondition
@@ -118,20 +125,8 @@ def has_many_paragraphs(item: Item) -> bool:
 
 
 @precondition
-def is_text_doc(item: Item) -> bool:
-    """
-    A document that can be processed by LLMs and other plaintext tools.
-    """
-    return (is_plaintext(item) or is_markdown(item)) and has_body(item)
-
-
-@precondition
-def is_timestamped_text(item: Item) -> bool:
-    if not item.body:
-        raise PreconditionFailure(f"Source item has no body: {item}")
-    extractor = TimestampExtractor(item.body)
-    extractor.precondition_check()
-    return True
+def has_timestamps(item: Item) -> bool:
+    return bool(item.body and TIMESTAMP_RE.search(item.body))
 
 
 @precondition

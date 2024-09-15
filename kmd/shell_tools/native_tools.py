@@ -16,12 +16,20 @@ from cachetools import cached, TTLCache
 from xonsh.platform import ON_DARWIN, ON_LINUX, ON_WINDOWS
 
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import BAT_STYLE, BAT_THEME, COLOR_ERROR, COLOR_HINT
+from kmd.config.text_styles import (
+    BAT_STYLE,
+    BAT_THEME,
+    COLOR_ERROR,
+    COLOR_HINT,
+    EMOJI_FALSE,
+    EMOJI_TRUE,
+)
 from kmd.errors import FileNotFound, SetupError
 from kmd.model.file_formats_model import file_mime_type, parse_file_ext
 from kmd.text_formatting.text_formatting import fmt_path
-from kmd.text_ui.command_output import output, Wrap
+from kmd.text_ui.command_output import format_name_and_description, format_paragraphs, output, Wrap
 from kmd.util.url import as_file_url, is_url
+
 
 log = get_logger(__name__)
 
@@ -59,6 +67,17 @@ class CmdlineTools:
                     tool.value,
                     tool.name,
                 )
+
+    def formatted(self):
+        texts = []
+        for tool, path in self.tools.items():
+            if path:
+                doc = f"{EMOJI_TRUE} Found: `{path}`"
+            else:
+                doc = f"{EMOJI_FALSE} Not found! Consider installing this tool."
+            texts.append(format_name_and_description(tool.name, doc))
+
+        return format_paragraphs(*texts)
 
 
 _tools_cache = TTLCache(maxsize=1, ttl=5.0)

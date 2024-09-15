@@ -4,8 +4,10 @@ Launch xonsh with kmd extensions and customizations.
 
 import os
 import re
-import shlex
+import sys
 import time
+from contextlib import redirect_stdout
+from io import StringIO
 from os.path import expanduser
 from typing import List, Optional
 
@@ -17,6 +19,7 @@ from xonsh.main import events, postmain, premain
 from xonsh.shell import Shell
 from xonsh.xontribs import xontribs_load
 
+from kmd.commands.command_defs import kmd_help
 from kmd.config.lazy_imports import import_start_time
 from kmd.config.logger import get_console, get_logger
 from kmd.config.settings import APP_NAME
@@ -269,35 +272,33 @@ def run_shell(single_command: Optional[str] = None):
         xonsh.main.main()
 
 
+def print_help():
+    output = StringIO()
+    with redirect_stdout(output):
+        kmd_help()
+    print(output.getvalue())
+
+
 def parse_args():
-    import argparse
-    from contextlib import redirect_stdout
-    from io import StringIO
+    # Do our own arg parsing since everything except these two options
+    # should be handled as a kmd command.
+    if sys.argv[1:] == ["--version"]:
+        print(f"{sys.argv[0]} {__version__}")
+        sys.exit(0)
+    elif sys.argv[1:] == ["--help"]:
+        print_help()
+        sys.exit(0)
+    elif len(sys.argv) > 1 and sys.argv[1].startswith("-"):
+        print(f"Unrecognized option: {sys.argv[1]}", file=sys.stderr)
+        sys.exit(2)
 
-    from kmd.commands.command_defs import kmd_help
-
-    class CustomHelpFormatter(argparse.HelpFormatter):
-        def format_help(self):
-            output = StringIO()
-            with redirect_stdout(output):
-                kmd_help()
-            return output.getvalue()
-
-    parser = argparse.ArgumentParser(
-        description="Launch the kmd shell. If a single command is provided, it will run and exit.",
-        formatter_class=CustomHelpFormatter,
-        add_help=False,  # Disable the default help option
-    )
-    parser.add_argument("command", nargs="*", help="Command to run in the shell.")
-    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
-    parser.add_argument("--help", action="help", help="Show help page.")
-    return parser.parse_args()
+    # Everything else is a kmd command so passed to the shell.
+    return " ".join(sys.argv[1:]) if len(sys.argv) > 1 else None
 
 
 def main():
-    args = parse_args()
-    single_command = shlex.join(args.command) if args.command else None
-    run_shell(single_command)
+    command = parse_args()
+    run_shell(command)
 
 
 if __name__ == "__main__":

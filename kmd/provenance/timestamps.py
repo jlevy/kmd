@@ -6,7 +6,7 @@ import regex
 
 from kmd.config.logger import get_logger
 
-from kmd.errors import ContentError, PreconditionFailure
+from kmd.errors import ContentError
 from kmd.provenance.extractors import Extractor
 from kmd.text_docs.wordtoks import raw_text_to_wordtoks, search_tokens
 
@@ -39,12 +39,6 @@ class TimestampExtractor(Extractor):
         wordtoks = raw_text_to_wordtoks(self.doc_str, parse_para_br=True, bof_eof=True)
         return wordtoks
 
-    def precondition_check(self) -> None:
-        if not TIMESTAMP_RE.search(self.doc_str):
-            raise PreconditionFailure(
-                'Document has no timestamps of the form `<span data-timestamp="123.45">`'
-            )
-
     def extract(self, wordtok_offset: int) -> float:
         try:
             _index, wordtok = (
@@ -66,7 +60,6 @@ def test_timestamp_extractor():
     doc_str = '<span data-timestamp="1.234">Sentence one.</span> <span data-timestamp="23">Sentence two.</span> Sentence three.'
 
     extractor = TimestampExtractor(doc_str)
-    extractor.precondition_check()
     wordtoks = extractor.wordtoks
 
     results = []

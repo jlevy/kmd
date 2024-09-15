@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import Any, List
 
 
 @dataclass(frozen=True)
@@ -24,7 +24,7 @@ class StringTemplate:
         except ValueError as e:
             raise ValueError(f"Invalid template format: {e}")
 
-    def format(self, **kwargs: str) -> str:
+    def format(self, **kwargs: Any) -> str:
         unexpected_keys = set(kwargs.keys()) - set(self.allowed_fields)
         if unexpected_keys:
             raise ValueError(f"Unexpected keyword arguments: {', '.join(unexpected_keys)}")

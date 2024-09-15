@@ -4,7 +4,7 @@ from kmd.config.logger import get_logger
 from kmd.errors import ContentError, InvalidInput, UnexpectedError
 from kmd.exec.action_registry import kmd_action
 from kmd.model import CachedDocAction, Format, Item, ItemType
-from kmd.preconditions.precondition_defs import is_text_doc, is_timestamped_text
+from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
 from kmd.provenance.source_items import find_upstream_item
 from kmd.provenance.timestamps import TimestampExtractor
 from kmd.text_docs.sizes import TextUnit
@@ -28,7 +28,7 @@ class BackfillSourceTimestamps(CachedDocAction):
               Seeks through the document this doc is derived from for timestamps and inserts them
               into the text of the current doc. Source must have similar tokens.
             """,
-            precondition=is_text_doc & ~is_timestamped_text,
+            precondition=is_text_doc & ~has_timestamps,
             chunk_unit=TextUnit.paragraphs,
         )
 
@@ -45,7 +45,7 @@ class BackfillSourceTimestamps(CachedDocAction):
             raise UnexpectedError(f"Invalid text unit: {self.chunk_unit}")
 
     def run_item(self, item: Item) -> Item:
-        source_item = find_upstream_item(item, is_timestamped_text)
+        source_item = find_upstream_item(item, has_timestamps)
 
         source_url = source_item.url
         if not item.body:
@@ -68,7 +68,6 @@ class BackfillSourceTimestamps(CachedDocAction):
 
         # Don't bother parsing sentences on the source document, which may be long and with HTML.
         extractor = TimestampExtractor(source_item.body)
-        extractor.precondition_check()
         source_wordtoks = extractor.wordtoks
 
         log.message(

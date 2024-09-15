@@ -190,6 +190,17 @@ def assist(input: Optional[str] = None) -> None:
 
 
 @kmd_command
+def check_tools() -> None:
+    """
+    Check that all tools are installed.
+    """
+    output("Checking for recommended tools:")
+    output()
+    output(tool_check().formatted())
+    output()
+
+
+@kmd_command
 def init(path: Optional[str] = None) -> None:
     """
     Initialize a new workspace at the given path.
@@ -319,7 +330,11 @@ def _check_store_paths(paths: Sequence[StorePath | Path]) -> List[StorePath]:
 def show(path: Optional[str] = None, console: bool = False) -> None:
     """
     Show the contents of a file if one is given, or the first file if multiple files
-    are selected.
+    are selected. Will try to use native apps or web browser to display the file if
+    appropriate, and otherwise display the file in the console.
+
+    Will use `bat` if available to show files in the console, including syntax
+    highlighting and git diffs.
 
     :param console: Force display to console (not browser or native apps).
     """
@@ -954,17 +969,20 @@ def reformat(*paths: str, inplace: bool = False) -> None:
     """
     for path in paths:
         target_path = None
-        if not inplace:
-            dirname, name, item_type, ext = split_filename(path)
-            new_name = f"{name}_formatted"
-            target_path = join_filename(dirname, new_name, item_type, ext)
+        dirname, name, item_type, ext = split_filename(path)
+        new_name = f"{name}_formatted"
+        target_path = join_filename(dirname, new_name, item_type, ext)
 
-        normalize_text_file(path, target_path=target_path, inplace=inplace)
-
-        if target_path:
-            log.message("Formatted: %s -> %s", fmt_path(path), fmt_path(target_path))
+        normalize_text_file(path, target_path=target_path)
+        if inplace:
+            trash(path)
+            os.rename(target_path, path)
+            log.message("Formatted:\n%s", fmt_lines([fmt_path(path)]))
         else:
-            log.message("Formatted in place: %s", fmt_path(path))
+            log.message(
+                "Formatted:\n%s -> %s", fmt_lines([f"{fmt_path(path)} -> {fmt_path(target_path)}"])
+            )
+        output()
 
 
 @kmd_command

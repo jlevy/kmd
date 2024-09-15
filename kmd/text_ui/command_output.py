@@ -137,6 +137,16 @@ def format_name_and_description(name: str, doc: str, extra_note: Optional[str] =
     )
 
 
+def format_paragraphs(*paragraphs: str | Text):
+    text = []
+    for paragraph in paragraphs:
+        if text:
+            text.append("\n\n")
+        text.append(paragraph)
+
+    return Text.assemble(*text)
+
+
 # Allow output stream to be redirected if desired.
 _output_context = threading.local()
 _output_context.stream = None
