@@ -3,8 +3,6 @@ from dataclasses import dataclass
 from inspect import Parameter
 from typing import Any, Callable, get_args, get_origin, List, Optional, Tuple, Type, Union
 
-from kmd.model.params_model import ALL_COMMON_PARAMS, Param
-
 
 @dataclass(frozen=True)
 class FuncParam:
@@ -74,38 +72,6 @@ def _extract_simple_type(annotation: Any) -> Optional[Type]:
         return origin
 
     return None
-
-
-def _look_up_func_param(param: FuncParam) -> Param:
-    return ALL_COMMON_PARAMS.get(param.name) or Param(param.name, type=param.type or str)
-
-
-def _look_up_func_params(kw_params: List[FuncParam]) -> List[Param]:
-    return [_look_up_func_param(func_param) for func_param in kw_params]
-
-
-ParamInfo = Tuple[List[FuncParam], List[FuncParam], List[Param]]
-
-
-def collect_param_info(func: Callable[..., Any]) -> ParamInfo:
-    """
-    Assign info on positional and keyword paramaters for a function, as well as docs for
-    them (if available, matching based on paramater name), to the function's `__param_info__`
-    attribute.
-    """
-    if not hasattr(func, "__param_info__"):
-        pos_params, kw_params = inspect_function_params(func)
-        func.__param_info__ = (pos_params, kw_params, _look_up_func_params(kw_params))
-
-    return func.__param_info__
-
-
-def get_params(command: Callable[..., Any]) -> List[Param]:
-    param_info: ParamInfo | None = getattr(command, "__param_info__", None)
-    if param_info:
-        _pos_params, _kw_params, kw_docs = param_info
-        return kw_docs
-    return []
 
 
 ## Tests

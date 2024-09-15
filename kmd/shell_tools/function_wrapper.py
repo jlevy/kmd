@@ -4,7 +4,7 @@ from kmd.config.logger import get_logger
 
 from kmd.errors import InvalidCommand
 from kmd.help.command_help import output_command_function_help
-from kmd.shell_tools.function_inspect import collect_param_info, FuncParam
+from kmd.shell_tools.function_inspect import FuncParam, inspect_function_params
 from kmd.shell_tools.option_parsing import parse_shell_args
 
 log = get_logger(__name__)
@@ -87,7 +87,7 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
     Wrap a function to accept a list of string shell-style arguments, parse them, and call the
     original function.
     """
-    pos_params, kw_params, kw_param_docs = collect_param_info(func)
+    pos_params, kw_params = inspect_function_params(func)
 
     def wrapped(args: List[str]) -> Optional[R]:
         shell_args = parse_shell_args(args)

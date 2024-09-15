@@ -54,10 +54,10 @@ def reset_web_cache_dir(path: Path):
         current_cache_dir = settings.web_cache_dir
         if current_cache_dir != path:
             settings.web_cache_dir = path
+            log.info("Using web cache: %s", fmt_path(path))
 
     global _web_cache
     _web_cache = WebCache(global_settings().web_cache_dir)
-    log.info("Using web cache: %s", fmt_path(path))
 
 
 def fetch_and_cache(url_or_path: Url | Path) -> tuple[Path, bool]:

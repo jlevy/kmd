@@ -2,10 +2,10 @@ from typing import List, Optional
 
 from kmd.commands.command_registry import CommandFunction
 from kmd.help.docstrings import parse_docstring
+from kmd.help.function_param_info import annotate_param_info
 from kmd.model.actions_model import Action
 from kmd.model.params_model import Param, RUNTIME_ACTION_PARAMS
 from kmd.model.preconditions_model import Precondition
-from kmd.shell_tools.function_inspect import collect_param_info
 from kmd.text_formatting.text_formatting import DEFAULT_INDENT
 from kmd.text_ui.command_output import format_name_and_description, output, output_help, Wrap
 
@@ -71,14 +71,12 @@ def _output_command_help(
 
 
 def output_command_function_help(command: CommandFunction, verbose: bool = True):
-    _pos_params, _kw_params, kw_param_docs = collect_param_info(command)
-
-    doc = command.__doc__ if command.__doc__ else ""
+    param_info = annotate_param_info(command)
 
     _output_command_help(
         command.__name__,
-        doc,
-        param_info=kw_param_docs,
+        command.__doc__ if command.__doc__ else "",
+        param_info=param_info,
         verbose=verbose,
     )
 
