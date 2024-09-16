@@ -1,5 +1,4 @@
 import re
-import textwrap
 from contextlib import contextmanager
 from textwrap import dedent
 from typing import Callable, cast, Generator, List, Tuple
@@ -13,6 +12,7 @@ from marko.source import Source
 
 from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
 from kmd.lang_tools.sentence_split_regex import split_sentences_regex
+from kmd.text_formatting.text_wrapping import text_wrap_fill
 
 
 def _normalize_html_comments(text: str, break_str: str = "\n\n") -> str:
@@ -254,13 +254,11 @@ def wrap_lines_to_width(
     """
     Wrap lines of text to a given width.
     """
-    return textwrap.fill(
+    return text_wrap_fill(
         text,
         width=width,
         initial_indent=initial_indent,
         subsequent_indent=subsequent_indent,
-        break_long_words=False,
-        break_on_hyphens=False,
     )
 
 
@@ -284,13 +282,11 @@ def wrap_lines_and_break_sentences(
             sentences = split_sentences(line)
             for sentence in sentences:
                 wrapped_lines.append(
-                    textwrap.fill(
+                    text_wrap_fill(
                         sentence,
                         width=width,
                         initial_indent=initial_indent if first_line else subsequent_indent,
                         subsequent_indent=subsequent_indent,
-                        break_long_words=False,
-                        break_on_hyphens=False,
                     )
                 )
                 first_line = False

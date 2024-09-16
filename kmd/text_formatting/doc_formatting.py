@@ -8,6 +8,7 @@ from kmd.file_storage.frontmatter_format import fmf_write
 from kmd.model.file_formats_model import Format, guess_format
 from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH, normalize_markdown
 from kmd.text_formatting.text_formatting import fmt_path
+from kmd.text_formatting.text_wrapping import text_wrap_fill
 from kmd.util.type_utils import not_none
 
 
@@ -16,10 +17,7 @@ def wrap_plaintext(text: str, width=80) -> str:
     Wrap lines with our standard settings.
     """
     paragraphs = text.split("\n\n")
-    wrapped_paragraphs = [
-        textwrap.fill(p, width=width, break_long_words=False, replace_whitespace=False)
-        for p in paragraphs
-    ]
+    wrapped_paragraphs = [text_wrap_fill(p, width=width) for p in paragraphs]
     return "\n\n".join(wrapped_paragraphs)
 
 

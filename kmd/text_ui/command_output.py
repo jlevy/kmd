@@ -31,6 +31,7 @@ from kmd.config.text_styles import (
 )
 from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_lines_to_width
 from kmd.text_formatting.text_formatting import DEFAULT_INDENT, split_paragraphs
+from kmd.text_formatting.text_wrapping import text_wrap_fill
 
 console = get_console()
 
@@ -67,50 +68,42 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
         for paragraph in paragraphs:
             if text_wrap == Wrap.WRAP:
                 wrapped_paragraphs.append(
-                    textwrap.fill(
+                    text_wrap_fill(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH,
                         initial_indent=extra_indent,
                         subsequent_indent=extra_indent,
                         replace_whitespace=False,
-                        break_long_words=False,
-                        break_on_hyphens=False,
                     )
                 )
             elif text_wrap == Wrap.WRAP_FULL:
                 wrapped_paragraphs.append(
-                    textwrap.fill(
+                    text_wrap_fill(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH,
                         initial_indent=extra_indent,
                         subsequent_indent=extra_indent,
                         replace_whitespace=True,
-                        break_long_words=False,
-                        break_on_hyphens=False,
                     )
                 )
             elif text_wrap == Wrap.WRAP_INDENT:
                 wrapped_paragraphs.append(
-                    textwrap.fill(
+                    text_wrap_fill(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH - len(extra_indent + DEFAULT_INDENT),
                         initial_indent=extra_indent + DEFAULT_INDENT,
                         subsequent_indent=extra_indent + DEFAULT_INDENT,
                         replace_whitespace=True,
-                        break_long_words=False,
-                        break_on_hyphens=False,
                     )
                 )
             elif text_wrap == Wrap.HANGING_INDENT:
                 wrapped_paragraphs.append(
-                    textwrap.fill(
+                    text_wrap_fill(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH - len(extra_indent + DEFAULT_INDENT),
                         initial_indent=extra_indent,
                         subsequent_indent=extra_indent + DEFAULT_INDENT,
                         replace_whitespace=True,
-                        break_long_words=False,
-                        break_on_hyphens=False,
                     )
                 )
 
