@@ -11,13 +11,17 @@ import regex
 # https://github.com/python/cpython/blob/main/Lib/textwrap.py#L105-L110
 
 # Heuristic: End of sentence must be two letters or more, with the last letter lowercase,
-# followed by a period, exclamation point, question mark, colon, or semicolon.
-# Except for colon or semicolon, a final or preceding parenthesis or quote is allowed.
+# followed by a period, exclamation point, question mark. A final or preceding parenthesis
+# or quote is allowed.
+#
+# Does not break on colon or semicolon currently as that seems to have false positives too
+# often with code or other syntax.
+#
 # XXX: Could also handle rare cases with both quotes and parentheses at sentence end
 # but may not be worth it. Also does not detect sentences ending in numerals, which
 # tends to cause too many false positives. Should be OK for most Latin languages but
 # may need to rethink the 2-letter restriction for some languages.
-SENTENCE_RE = regex.compile(r"(\p{L}[\p{Ll}])([.?!]['\"’”)]?|['\"’”)][.?!]|[:;]) *$")
+SENTENCE_RE = regex.compile(r"(\b\p{L}+[\p{Ll}])([.?!]['\"’”)]?|['\"’”)][.?!]) *$")
 
 # Second heuristic: Very short sentences often not so useful.
 SENTENCE_MIN_LENGTH = 15
