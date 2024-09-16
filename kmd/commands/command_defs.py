@@ -977,12 +977,11 @@ def reformat(*paths: str, inplace: bool = False) -> None:
         if inplace:
             trash(path)
             os.rename(target_path, path)
-            log.message("Formatted:\n%s", fmt_lines([fmt_path(path)]))
+            output_status("Formatted:\n%s", fmt_lines([fmt_path(path)]))
         else:
-            log.message(
-                "Formatted:\n%s -> %s", fmt_lines([f"{fmt_path(path)} -> {fmt_path(target_path)}"])
+            output_status(
+                "Formatted:\n%s", fmt_lines([f"{fmt_path(path)} -> {fmt_path(target_path)}"])
             )
-        output()
 
 
 @kmd_command

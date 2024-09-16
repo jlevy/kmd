@@ -104,7 +104,7 @@ class MarkdownNormalizer(Renderer):
         wrapped_text = self._line_wrapper(
             children,
             self._prefix,
-            " " * len(self._prefix),
+            self._second_prefix,
         )
         self._prefix = self._second_prefix
         return wrapped_text + "\n"
@@ -129,7 +129,9 @@ class MarkdownNormalizer(Renderer):
         if self._suppress_item_break:
             self._suppress_item_break = False
         else:
-            result += "\n"
+            # Add the newline between paragraphs. Normally this would be an empty line but
+            # within a quote block it would be the secondary prefix, like `> `.
+            result += self._second_prefix.strip() + "\n"
         result += self.render_children(element)
         return result
 
@@ -280,18 +282,19 @@ def wrap_lines_and_break_sentences(
             wrapped_lines.append("")
         else:
             sentences = split_sentences(line)
-            wrapped_lines.extend(
-                textwrap.fill(
-                    sentence,
-                    width=width,
-                    initial_indent=initial_indent if first_line else subsequent_indent,
-                    subsequent_indent=subsequent_indent,
-                    break_long_words=False,
-                    break_on_hyphens=False,
+            for sentence in sentences:
+                wrapped_lines.append(
+                    textwrap.fill(
+                        sentence,
+                        width=width,
+                        initial_indent=initial_indent if first_line else subsequent_indent,
+                        subsequent_indent=subsequent_indent,
+                        break_long_words=False,
+                        break_on_hyphens=False,
+                    )
                 )
-                for sentence in sentences
-            )
-        first_line = False
+                first_line = False
+
     return "\n".join(wrapped_lines)
 
 
@@ -378,7 +381,12 @@ A third paragraph.
 <div class="foo">
 Some more HTML. Words and words and words and words and    words and <span data-foo="bar">more HTML</span> and words and words and words and words and words and words.</div>
 
-> This is a quote block. With a couple sentences.
+> This is a quote block. With a couple sentences. Note we have a `>` on this line.
+>
+> - Quotes can also contain lists.
+> - With items. Like this. And these items may have long sentences in them.
+
+- **Intelligent:** Kmd understands itself. It reads its own code and docs and gives you assistance!
 
     """
 ).lstrip()
@@ -447,6 +455,15 @@ words.</div>
 
 > This is a quote block.
 > With a couple sentences.
+> Note we have a `>` on this line.
+> 
+> - Quotes can also contain lists.
+>
+> - With items. Like this.
+>   And these items may have long sentences in them.
+
+- **Intelligent:** Kmd understands itself.
+  It reads its own code and docs and gives you assistance!
     """
 ).lstrip()
 
