@@ -388,6 +388,11 @@ Some more HTML. Words and words and words and words and    words and <span data-
 
 - **Intelligent:** Kmd understands itself. It reads its own code and docs and gives you assistance!
 
+
+<p style="max-width: 450px;">
+“*Simple should be simple.
+Complex should be possible.*” —Alan Kay
+</p>
     """
 ).lstrip()
 
@@ -464,6 +469,10 @@ words.</div>
 
 - **Intelligent:** Kmd understands itself.
   It reads its own code and docs and gives you assistance!
+
+<p style="max-width:
+450px;"> “*Simple should be simple.
+Complex should be possible.*” —Alan Kay </p>
     """
 ).lstrip()
 

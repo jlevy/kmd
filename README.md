@@ -278,5 +278,6 @@ pkill -USR1 kmd
 
 ## Devvelopment Setup
 
-On VSCode or Cursor, the `µfmt` extension works nicely to use both µfmt and black with
-project settings.
+On VSCode or Cursor, the [µfmt
+extension](https://marketplace.visualstudio.com/items?itemName=omnilib.ufmt) works nicely to
+use both µfmt and black with project settings.
