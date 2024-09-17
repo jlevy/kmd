@@ -4,10 +4,10 @@ from kmd.config.logger import get_logger
 
 from kmd.errors import InvalidInput
 from kmd.model.actions_model import Action, ActionResult
-from kmd.model.arguments_model import StorePath
 from kmd.model.doc_elements import GROUP, ORIGINAL
 from kmd.model.items_model import Item, ItemRelations, ItemType
 from kmd.model.operations_model import OperationSummary
+from kmd.model.paths_model import StorePath
 from kmd.text_chunks.div_elements import div, div_insert_wrapped
 from kmd.text_chunks.parse_divs import parse_divs_single
 from kmd.text_formatting.html_in_md import div_wrapper, Wrapper

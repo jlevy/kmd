@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, List, Optional, TYPE_CHECKING
 
-from kmd.model.arguments_model import StorePath
+from kmd.model.paths_model import StorePath
 
 if TYPE_CHECKING:
     from kmd.model.commands_model import Command

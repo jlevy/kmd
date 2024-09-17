@@ -11,11 +11,11 @@ from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
 from kmd.file_storage.metadata_dirs import CACHE_DIR, METADATA_FILE
 from kmd.media.media_download import reset_media_cache_dir
-from kmd.model.arguments_model import InputArg, StorePath
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.params_model import param_lookup, USER_SETTABLE_PARAMS
+from kmd.model.paths_model import InputArg, StorePath
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.url import is_url, Url
 from kmd.web_content.web_fetch import reset_web_cache_dir

@@ -1,9 +1,19 @@
 # kmd
 
-**A command-line power tool for knowledge tasks.**
+<div align="center">
+
+<p style="max-width: 450px;">
+
+<b>A command-line power tool for knowledge tasks.</b>
+
+<br/>
 
 “*Simple should be simple.
 Complex should be possible.*” —Alan Kay
+
+</p>
+
+</div>
 
 ## Running the kmd Shell
 
@@ -57,8 +67,7 @@ poetry config virtualenvs.in-project true
 1. [Fork](https://github.com/jlevy/kmd/fork) this repo (having your own fork will make it
    easier to contribute actions, add models, etc.).
 
-2. [Check
-   out](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
+2. [Check out](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
    the code.
 
 3. Install the package dependencies:
@@ -278,6 +287,6 @@ pkill -USR1 kmd
 
 ## Devvelopment Setup
 
-On VSCode or Cursor, the [µfmt
-extension](https://marketplace.visualstudio.com/items?itemName=omnilib.ufmt) works nicely to
-use both µfmt and black with project settings.
+On VSCode or Cursor, the
+[µfmt extension](https://marketplace.visualstudio.com/items?itemName=omnilib.ufmt) works
+nicely to use both µfmt and black with project settings.

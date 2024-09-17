@@ -26,7 +26,6 @@ from kmd.model.actions_model import (
     TWO_ARGS,
     TWO_OR_MORE_ARGS,
 )
-from kmd.model.arguments_model import InputArg, is_store_path, Locator, StorePath
 from kmd.model.canon_url import canonicalize_url, thumbnail_url
 from kmd.model.compound_actions_model import (
     CachedDocCombo,
@@ -94,4 +93,5 @@ from kmd.model.params_model import (
     RUNTIME_ACTION_PARAMS,
     USER_SETTABLE_PARAMS,
 )
+from kmd.model.paths_model import InputArg, is_store_path, Locator, StorePath
 from kmd.model.preconditions_model import Precondition, precondition

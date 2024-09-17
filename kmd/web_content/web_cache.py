@@ -38,8 +38,28 @@ def aws_cli(*cmd):
         raise RuntimeError("AWS CLI exited with code {}".format(exit_code))
 
 
-def default_hash_func(key):
+def file_mtime_hash(path: Path) -> str:
+    name = path.name
+    size = path.stat().st_size
+    mtime = path.stat().st_mtime_ns
+    key = f"{name}-{size}-{mtime}"
     return clean_alphanum_hash(key, max_length=80)
+
+
+def string_hash(key: str) -> str:
+    return clean_alphanum_hash(key, max_length=80)
+
+
+HashFunc = Callable[[str | Path], str]
+
+
+def default_hash_func(key: str | Path) -> str:
+    if isinstance(key, Path):
+        return file_mtime_hash(key)
+    elif isinstance(key, str):
+        return string_hash(key)
+    else:
+        raise ValueError(f"Invalid key type: {type(key)}")
 
 
 class DirStore:
@@ -51,35 +71,35 @@ class DirStore:
     # TODO: Would be useful to support optional additional root directories, with write always
     # being to the main root but cache lookups checking in sequence, allowing a hierarchy of caches.
 
-    def __init__(self, root: Path, hash_func: Optional[Callable[[str], str]] = None) -> None:
+    def __init__(self, root: Path, hash_func: Optional[HashFunc] = None) -> None:
         self.root: Path = root
-        self.hash_func: Callable[[str], str] = hash_func or default_hash_func
+        self.hash_func: HashFunc = hash_func or default_hash_func
         os.makedirs(self.root, exist_ok=True)
 
     def path_for(
-        self, key: str, folder: Optional[str] = None, suffix: Optional[str] = None
+        self, key: str | Path, folder: Optional[str] = None, suffix: Optional[str] = None
     ) -> Path:
         """
         A unique file path with the given key. It's up to the client how to use it.
         """
         path_str = self.hash_func(key)
+
         if suffix:
             path_str += suffix
-        if folder:
-            path_str = path.join(folder, path_str)
+        path = Path(folder) / path_str if folder else Path(path_str)
+        full_path = self.root / path
 
-        full_path = self.root / path_str
         return full_path
 
     def find(
-        self, key: str, folder: Optional[str] = None, suffix: Optional[str] = None
+        self, key: str | Path, folder: Optional[str] = None, suffix: Optional[str] = None
     ) -> Optional[Path]:
         cache_path = self.path_for(key, folder, suffix)
         return cache_path if path.exists(cache_path) else None
 
     def find_all(
-        self, keys: List[str], folder: Optional[str] = None, suffix: Optional[str] = None
-    ) -> Dict[str, Optional[Path]]:
+        self, keys: List[str | Path], folder: Optional[str] = None, suffix: Optional[str] = None
+    ) -> Dict[str | Path, Optional[Path]]:
         """
         Look up all existing cached results for the set of keys. This should work fine but could
         be optimized for large batches.
@@ -124,13 +144,18 @@ class InvalidCacheState(RuntimeError):
 DEFAULT_SUFFIX = ""
 
 
-def suffix_for(url: Url) -> str:
-    if is_file_url(url):
-        path = parse_file_url(url)
+def suffix_for(url_or_path: Url | Path) -> str:
+    """
+    Pick the suffix to reflect the type of the content, if possible.
+    """
+    if isinstance(url_or_path, Path):
+        ext = file_ext_from_content(url_or_path)
+    elif is_file_url(url_or_path):
+        path = parse_file_url(url_or_path)
         if path:
             ext = file_ext_from_content(path)
     else:
-        ext = file_ext_from_name(url)
+        ext = file_ext_from_name(url_or_path)
 
     return "." + ext.value if ext else DEFAULT_SUFFIX
 
@@ -176,20 +201,29 @@ class WebCache(DirStore):
         if backup_url and mode in (WebCacheMode.TEST, WebCacheMode.UPDATE):
             self._restore(backup_url)
 
-    def find_url(self, url: Url) -> Optional[Path]:
-        url = _normalize_url(url)
-        return self.find(url, folder=self.folder, suffix=suffix_for(url))
+    def _normalize(self, url_or_path: Url | Path) -> Url | Path:
+        if isinstance(url_or_path, Path):
+            return url_or_path
+        else:
+            return _normalize_url(url_or_path)
 
-    def _fetch_or_copy(self, url: Url) -> Path:
+    def _fetch_or_copy(self, url_or_path: Url | Path) -> Path:
+        """
+        Fetch or copy the given URL or local file to the cache.
+        """
         if self.mode == WebCacheMode.TEST:
             raise InvalidCacheState("_download called in test mode")
 
-        cache_path = self.path_for(url, folder=self.folder, suffix=suffix_for(url))
+        key = self._normalize(url_or_path)
+        cache_path = self.path_for(key, folder=self.folder, suffix=suffix_for(url_or_path))
 
-        if is_file_url(url):
-            file_path = parse_file_url(url)
-            if not file_path:
-                raise InvalidInput(f"Not a file URL: {url}")
+        if isinstance(url_or_path, Path) or is_file_url(url_or_path):
+            if isinstance(url_or_path, Path):
+                file_path = url_or_path
+            else:
+                file_path = parse_file_url(url_or_path)
+                if not file_path:
+                    raise InvalidInput(f"Not a file URL: {url_or_path}")
             if not file_path.exists():
                 raise FileNotFound(f"File not found: {file_path}")
             log.info(
@@ -197,7 +231,7 @@ class WebCache(DirStore):
             )
             copyfile_atomic(file_path, cache_path, make_parents=True)
         else:
-            url = _normalize_url(url)
+            url = _normalize_url(url_or_path)
             log.info("Downloading to cache: %s -> %s", url, fmt_path(cache_path))
             download_url(
                 url, cache_path, silent=True, timeout=TIMEOUT, headers=user_agent_headers()
@@ -223,27 +257,29 @@ class WebCache(DirStore):
 
         return self._age_in_sec(cache_path) > expiration_sec
 
-    def is_cached(self, url: Url, expiration_sec: Optional[float] = None) -> bool:
+    def is_cached(self, url_or_path: Url | Path, expiration_sec: Optional[float] = None) -> bool:
         if expiration_sec is None:
             expiration_sec = self.default_expiration_sec
 
-        cache_path = self.find(url, folder=self.folder, suffix=suffix_for(url))
+        cache_path = self.find(url_or_path, folder=self.folder, suffix=suffix_for(url_or_path))
         return cache_path is not None and not self._is_expired(cache_path, expiration_sec)
 
-    def cache(self, url: Url, expiration_sec: Optional[float] = None) -> tuple[Path, bool]:
+    def cache(
+        self, url_or_path: Url | Path, expiration_sec: Optional[float] = None
+    ) -> tuple[Path, bool]:
         """
         Returns cached download path of given URL and whether it was previously cached.
         For file:// URLs does a copy.
         """
-        url = _normalize_url(url)
-        cache_path = self.find(url, folder=self.folder, suffix=suffix_for(url))
+        key = self._normalize(url_or_path)
+        cache_path = self.find(key, folder=self.folder, suffix=suffix_for(url_or_path))
         if cache_path and not self._is_expired(cache_path, expiration_sec):
-            log.info("URL in cache, not fetching: %s: %s", url, fmt_path(cache_path))
+            log.info("URL in cache, not fetching: %s: %s", key, fmt_path(cache_path))
             return cache_path, True
         else:
-            log.info("Caching new copy: %s", url)
+            log.info("Caching new copy: %s", key)
             return (
-                self._fetch_or_copy(url),
+                self._fetch_or_copy(key),
                 False,
             )
 

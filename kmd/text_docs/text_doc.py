@@ -7,7 +7,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pprint import pprint
 from textwrap import dedent
-from typing import Callable, Dict, Generator, Iterable, List, Optional, Tuple
+from typing import Dict, Generator, Iterable, List, Optional, Tuple
 
 import regex
 
@@ -187,9 +187,6 @@ class TextDoc:
         self.paragraphs[index.para_index].sentences[index.sent_index] = Sentence(
             sent_str, old_sent.char_offset
         )
-
-    def update_sent(self, index: SentIndex, transform: Callable[[str], str]) -> None:
-        self.set_sent(index, transform(self.get_sent(index).text))
 
     def seek_to_sent(self, offset: int, unit: TextUnit) -> Tuple[SentIndex, int]:
         """

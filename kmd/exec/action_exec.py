@@ -10,10 +10,10 @@ from kmd.exec.system_actions import fetch_page_metadata, FETCH_PAGE_METADATA_NAM
 from kmd.file_storage.workspaces import current_workspace, import_and_load
 from kmd.lang_tools.inflection import plural
 from kmd.model.actions_model import Action, ActionResult, ForEachItemAction, NO_ARGS, PathOpType
-from kmd.model.arguments_model import InputArg, StorePath
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
+from kmd.model.paths_model import InputArg, StorePath
 from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.util.type_utils import not_none
 

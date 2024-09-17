@@ -5,7 +5,7 @@ confusions of using full HTML escaping (like unnecessary &quot;s etc.)
 """
 
 import re
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 from kmd.model.doc_elements import DATA_SPEAKER_ID, DATA_TIMESTAMP, SPEAKER_LABEL
 
@@ -32,15 +32,26 @@ def escape_attribute(s: str) -> str:
     return s
 
 
+ClassNames = str | List[str]
+
+
 def tag_with_attrs(
     tag: str,
     text: str,
-    cls: Optional[str] = None,
+    class_name: Optional[ClassNames] = None,
     attrs: Optional[Dict[str, str]] = None,
     safe: bool = False,
     padding: Optional[str] = None,
 ) -> str:
-    attr_str = f' class="{escape_attribute(cls)}"' if cls else ""
+    class_value = ""
+    if class_name is not None:
+        if isinstance(class_name, str):
+            class_value = class_name
+        elif isinstance(class_name, list):
+            class_value = " ".join(class_name)
+        else:
+            raise ValueError(f"Expected a string or list of class names but got: {class_name}")
+    attr_str = f' class="{escape_attribute(class_value)}"' if class_value else ""
     if attrs:
         attr_str += "".join(f' {k}="{escape_attribute(v)}"' for k, v in attrs.items())
     # Default padding for div and p tags.
@@ -56,7 +67,7 @@ def tag_with_attrs(
 
 def html_span(
     text: str,
-    class_name: Optional[str] = None,
+    class_name: Optional[ClassNames] = None,
     attrs: Optional[Dict[str, str]] = None,
     safe: bool = False,
 ) -> str:
@@ -68,7 +79,7 @@ def html_span(
 
 def html_div(
     text: str,
-    class_name: Optional[str] = None,
+    class_name: Optional[ClassNames] = None,
     attrs: Optional[Dict[str, str]] = None,
     safe: bool = False,
     padding: Optional[str] = None,
@@ -139,7 +150,7 @@ def test_html():
     assert escape_md_html("&<>") == "&amp;&lt;&gt;"
     assert escape_attribute("\"'&<>") == "&quot;&#39;&amp;&lt;&gt;"
     assert (
-        tag_with_attrs("span", "text", cls="foo", attrs={"id": "a"})
+        tag_with_attrs("span", "text", class_name="foo", attrs={"id": "a"})
         == '<span class="foo" id="a">text</span>'
     )
     assert (

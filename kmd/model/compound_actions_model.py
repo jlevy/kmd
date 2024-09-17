@@ -5,9 +5,9 @@ from kmd.config.logger import get_logger
 
 from kmd.errors import InvalidInput
 from kmd.model.actions_model import Action, ActionInput, ActionResult
-from kmd.model.arguments_model import StorePath
 from kmd.model.items_model import Item, ItemType, State
 from kmd.model.operations_model import Operation
+from kmd.model.paths_model import StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none

@@ -24,11 +24,11 @@ from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import ARCHIVE_DIR, initialize_store_dirs
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_filename_and_type
-from kmd.model.arguments_model import StorePath
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import FileExt, Format, is_ignored, parse_file_format
 from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.params_model import ParamValues
+from kmd.model.paths_model import StorePath
 from kmd.query.vector_index import WsVectorIndex
 from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.text_ui.command_output import output

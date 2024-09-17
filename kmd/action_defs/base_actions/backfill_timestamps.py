@@ -1,14 +1,15 @@
 from textwrap import indent
+from typing import List
 
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, InvalidInput, UnexpectedError
 from kmd.exec.action_registry import kmd_action
 from kmd.model import CachedDocAction, Format, Item, ItemType
 from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
-from kmd.provenance.source_items import find_upstream_item
+from kmd.provenance.source_items import find_upstream_item, find_upstream_resource
 from kmd.provenance.timestamps import TimestampExtractor
 from kmd.text_docs.sizes import TextUnit
-from kmd.text_docs.text_doc import TextDoc
+from kmd.text_docs.text_doc import SentIndex, TextDoc
 from kmd.text_docs.token_mapping import TokenMapping
 from kmd.text_docs.wordtoks import BOF_TOK, EOF_TOK, PARA_BR_TOK, search_tokens, SENT_BR_TOK
 from kmd.text_formatting.citations import add_citation_to_text, format_timestamp_citation
@@ -46,13 +47,17 @@ class BackfillSourceTimestamps(CachedDocAction):
 
     def run_item(self, item: Item) -> Item:
         source_item = find_upstream_item(item, has_timestamps)
+        # Find the original resource (video or audio) this timestamped item came from.
+        orig_resource = find_upstream_resource(source_item)
+        source_path = orig_resource.store_path
+        source_url = orig_resource.url
 
-        source_url = source_item.url
         if not item.body:
             raise InvalidInput(f"Item must have a body: {item}")
-
         if not source_item.body:
             raise InvalidInput(f"Source item must have a body: {source_item}")
+        if not source_path:
+            raise InvalidInput(f"Source item must have a store path: {source_item}")
         if not source_url:
             log.warning(
                 "Source item has no URL, so will not create timestamp hotlinks: %s", source_item
@@ -87,7 +92,9 @@ class BackfillSourceTimestamps(CachedDocAction):
 
         output_item = item.derived_copy(type=ItemType.doc, format=Format.md_html)
 
-        timestamps_found = []
+        sent_index_list: List[SentIndex] = []
+        timestamp_list: List[float] = []
+
         for wordtok_offset, (wordtok, sent_index) in enumerate(
             item_doc.as_wordtok_to_sent(bof_eof=True)
         ):
@@ -125,12 +132,13 @@ class BackfillSourceTimestamps(CachedDocAction):
 
                 try:
                     timestamp = extractor.extract(source_wordtok_offset)
-                    timestamps_found.append(timestamp)
-                    item_doc.update_sent(
-                        sent_index,
-                        lambda old_sent: add_citation_to_text(
-                            old_sent, format_timestamp_citation(source_url, timestamp)
-                        ),
+
+                    timestamp_list.append(timestamp)
+                    sent_index_list.append(sent_index)
+
+                    sent = item_doc.get_sent(sent_index)
+                    sent.text = add_citation_to_text(
+                        sent.text, format_timestamp_citation(source_url, source_path, timestamp)
                     )
                 except ContentError:
                     # Missing timestamps aren't fatal since it might be meta text like "Speaker 1:".
@@ -141,13 +149,12 @@ class BackfillSourceTimestamps(CachedDocAction):
                         wordtok,
                     )
 
-        first = timestamps_found[0] if timestamps_found else "none"
-        last = timestamps_found[-1] if timestamps_found else "none"
+        first = timestamp_list[0] if timestamp_list else "none"
+        last = timestamp_list[-1] if timestamp_list else "none"
         log.message(
-            "Found %s timestamps in source doc from %s to %s.", len(timestamps_found), first, last
+            "Found %s timestamps in source doc from %s to %s.", len(timestamp_list), first, last
         )
-        output_item.body = item_doc.reassemble()
 
-        # TODO: Insert time_stamp source metadata for source video (e.g. YouTube)
+        output_item.body = item_doc.reassemble()
 
         return output_item

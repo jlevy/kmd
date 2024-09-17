@@ -76,7 +76,7 @@
       }
 
       /* Long text stylings, for nicely formatting blog post length or longer texts. */
-      
+
       .long-text h1 {
         font-family: var(--font-serif);
         font-weight: 400;
@@ -204,6 +204,16 @@
         height: 1.3rem;
         transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         border-radius: 0.2rem;
+        padding: 0 0.4rem;
+      }
+
+      /* More novel bracket ideas: [❲⟦⟪⟬〔〘〚〖  ]❳⟧⟫⟭ 〕〙〛〗 */
+      .citation::before {
+        content: "[";
+      }
+
+      .citation::after {
+        content: "]";
       }
 
       .citation:hover {

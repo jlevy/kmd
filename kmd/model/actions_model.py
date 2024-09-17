@@ -7,12 +7,12 @@ from typing import Any, cast, Dict, List, Optional, Sequence, TYPE_CHECKING
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, NONFATAL_EXCEPTIONS
 from kmd.lang_tools.inflection import plural
-from kmd.model.arguments_model import InputArg, StorePath
 from kmd.model.items_model import Item, ItemType, UNTITLED
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
+from kmd.model.paths_model import InputArg, StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.text_formatting.text_formatting import fmt_lines

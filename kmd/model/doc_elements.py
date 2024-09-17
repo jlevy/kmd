@@ -2,7 +2,8 @@
 Common elements within documents, used as HTML class names or attributes to structure text.
 """
 
-# Grouping elements:
+# Grouping element class names:
+
 ORIGINAL = "original"
 """Generic element representing an original text."""
 
@@ -15,21 +16,25 @@ GROUP = "group"
 CHUNK = "chunk"
 """Use when chunking a document for processing."""
 
-# Text blocks:
+# Text blocks class names:
 
 FULL_TEXT = "full-text"
 DESCRIPTION = "description"
 SUMMARY = "summary"
 
-# Inline annotations:
+# Inline class name:
 
 SPEAKER_LABEL = "speaker-label"
-"""Inline annotation for a speaker."""
+"""Inline class name for a speaker."""
 
 CITATION = "citation"
-"""Inline annotation for a citation."""
+"""Inline class name for a citation."""
 
-# Paragraphs:
+TIMESTAMP_LINK = "timestamp-link"
+"""Inline class name for a timestamp link."""
+
+
+# Paragraph class names:
 
 ANNOTATED_PARA = "annotated-para"
 """Paragraph with annotations."""
@@ -40,12 +45,18 @@ PARA = "para"
 PARA_CAPTION = "para-caption"
 """Caption for a paragraph."""
 
-# Concepts:
+# Concepts class names:
 
 CONCEPTS = "concepts"
 """A list of concepts."""
 
 # Data attributes:
 
+DATA_SOURCE_PATH = "data-src"
+"""Path to a source file."""
+
 DATA_TIMESTAMP = "data-timestamp"
+"""Timestamp into an audio or video."""
+
 DATA_SPEAKER_ID = "data-speaker-id"
+"""Identifier for a speaker."""

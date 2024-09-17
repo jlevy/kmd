@@ -1,9 +1,10 @@
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.file_storage.workspaces import current_workspace
-from kmd.model.arguments_model import StorePath
 from kmd.model.items_model import Item
+from kmd.model.paths_model import StorePath
 from kmd.model.preconditions_model import Precondition
+from kmd.preconditions.precondition_defs import is_resource
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.type_utils import not_none
 
@@ -16,10 +17,10 @@ def find_upstream_item(item: Item, precondition: Precondition) -> Item:
     the validator accepts. Validator should throw `PreconditionFailure`.
     """
 
-    workspace = current_workspace()
-
     if not item.relations.derived_from:
         raise InvalidInput(f"Item must be derived from another item: {item}")
+
+    workspace = current_workspace()
 
     source_items = [workspace.load(StorePath(loc)) for loc in item.relations.derived_from]
 
@@ -43,3 +44,7 @@ def find_upstream_item(item: Item, precondition: Precondition) -> Item:
             pass
 
     raise InvalidInput(f"Could not find a source item that passes the validator: {item}")
+
+
+def find_upstream_resource(item: Item) -> Item:
+    return find_upstream_item(item, is_resource)
