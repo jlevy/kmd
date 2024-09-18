@@ -4,11 +4,12 @@ word tokens ("wordtoks").
 """
 
 from textwrap import dedent
-from typing import Callable, List, Tuple, Union
+from typing import List, Tuple
 
 import regex
 
 from kmd.config.text_styles import SYMBOL_SEP
+from kmd.text_docs.search_tokens import search_tokens
 
 # Note these parse as tokens and like HTML tags, so they can safely be mixed into inputs if desired.
 SENT_BR_TOK = "<-SENT-BR->"
@@ -31,6 +32,8 @@ _wordtok_pattern = regex.compile(r"(<(?:[^<>]|\n){0,1024}>|\w+|[^\w\s]|\s+)", re
 _para_br_pattern = regex.compile(r"\s*\n\n\s*")
 
 _tag_pattern = regex.compile(r"<.{0,1024}?>")
+
+_tag_close_pattern = regex.compile(r"</[^>]+>")
 
 _word_pat = regex.compile(r"\w+")
 
@@ -156,65 +159,11 @@ def is_tag(wordtok: str) -> bool:
     return bool(_tag_pattern.match(wordtok))
 
 
-Predicate = Union[Callable[[str], bool], List[str]]
-
-
-class _TokenSearcher:
-    def __init__(self, toks: List[str]):
-        self.toks = toks
-        self.current_idx = 0
-
-    def at(self, index: int):
-        if index is None:
-            raise KeyError("Index cannot be None")
-        # Convert negative indices to positive ones.
-        self.current_idx = index if index >= 0 else len(self.toks) + index
-        return self
-
-    def seek_back(self, predicate: Predicate):
-        if isinstance(predicate, list):
-            allowed: List[str] = predicate
-            predicate = lambda x: x in allowed
-        for idx in range(self.current_idx - 1, -1, -1):
-            if predicate(self.toks[idx]):
-                self.current_idx = idx
-                return self
-        raise KeyError("No matching token found before the current index")
-
-    def seek_forward(self, predicate: Predicate):
-        if isinstance(predicate, list):
-            allowed: List[str] = predicate
-            predicate = lambda x: x in allowed
-        for idx in range(self.current_idx + 1, len(self.toks)):
-            if predicate(self.toks[idx]):
-                self.current_idx = idx
-                return self
-        raise KeyError("No matching token found after the current index")
-
-    def prev(self):
-        if self.current_idx - 1 < 0:
-            raise KeyError("No previous token available")
-        self.current_idx -= 1
-        return self
-
-    def next(self):
-        if self.current_idx + 1 >= len(self.toks):
-            raise KeyError("No next token available")
-        self.current_idx += 1
-        return self
-
-    def get_index(self):
-        return self.current_idx
-
-    def get_token(self):
-        return self.current_idx, self.toks[self.current_idx]
-
-
-def search_tokens(wordtoks: List[str]) -> _TokenSearcher:
+def is_tag_close(wordtok: str) -> bool:
     """
-    Convenience function to search for offsets in an array of tokens.
+    Is this wordtok an HTML tag close?
     """
-    return _TokenSearcher(wordtoks)
+    return bool(_tag_close_pattern.match(wordtok))
 
 
 ## Tests

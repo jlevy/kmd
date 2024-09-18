@@ -45,6 +45,7 @@ class ItemType(Enum):
     doc = "doc"
     concept = "concept"
     resource = "resource"
+    asset = "asset"
     config = "config"
     export = "export"
     instruction = "instruction"

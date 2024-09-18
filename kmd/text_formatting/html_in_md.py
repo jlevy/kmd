@@ -34,6 +34,8 @@ def escape_attribute(s: str) -> str:
 
 ClassNames = str | List[str]
 
+_TAGS_WITH_PADDING = ["div", "p"]
+
 
 def tag_with_attrs(
     tag: str,
@@ -60,7 +62,7 @@ def tag_with_attrs(
     else:
         content = escape_md_html(text, safe)
         if padding is None:
-            padding = "\n" if tag in ["div", "p"] else ""
+            padding = "\n" if tag in _TAGS_WITH_PADDING else ""
         if padding:
             content = content.strip("\n")
             if not content:
@@ -124,6 +126,13 @@ def html_join_blocks(*blocks: str) -> str:
     Join block elements, with double newlines for better Markdown compatibility.
     """
     return "\n\n".join(block.strip("\n") for block in blocks)
+
+
+def md_para(text: str) -> str:
+    """
+    Add double newlines to the start and end of the text to make it a paragraph.
+    """
+    return "\n\n".join(text.split("\n"))
 
 
 Wrapper = Callable[[str], str]

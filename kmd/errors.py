@@ -86,6 +86,12 @@ class ContentError(SkippableError):
     pass
 
 
+class UnrecognizedFileFormat(SkippableError):
+    """Raised when a file has an unrecognized format."""
+
+    pass
+
+
 class PreconditionFailure(ContentError):
     """Raised when content is not suitable for the requested operation."""
 

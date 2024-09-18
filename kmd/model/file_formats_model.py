@@ -109,6 +109,8 @@ class Format(Enum):
             FileExt.py.value: Format.python,
             FileExt.pdf.value: Format.pdf,
             FileExt.docx.value: Format.docx,
+            FileExt.jpg.value: Format.jpeg,
+            FileExt.png.value: Format.png,
             FileExt.mp3.value: Format.mp3,
             FileExt.m4a.value: Format.m4a,
             FileExt.mp4.value: Format.mp4,

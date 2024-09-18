@@ -1,13 +1,14 @@
 from textwrap import dedent
-from typing import Iterable, Tuple
+from typing import Iterable
 
 import regex
 
 from kmd.config.logger import get_logger
-
 from kmd.errors import ContentError
-from kmd.provenance.extractors import Extractor
-from kmd.text_docs.wordtoks import raw_text_to_wordtok_offsets, search_tokens
+from kmd.provenance.extractors import Extractor, Match
+from kmd.text_docs.search_tokens import search_tokens
+from kmd.text_docs.wordtoks import raw_text_to_wordtok_offsets
+
 
 log = get_logger(__name__)
 
@@ -32,20 +33,17 @@ class TimestampExtractor(Extractor):
     def __init__(self, doc_str: str):
         self.doc_str = doc_str
         self.wordtoks, self.offsets = raw_text_to_wordtok_offsets(self.doc_str, bof_eof=True)
-        for wordtok, offset in zip(self.wordtoks, self.offsets):
-            if "timestamp" in wordtok:
-                print(f"{wordtok} {offset}")
 
-    def extract_all(self) -> Iterable[Tuple[float, int]]:
+    def extract_all(self) -> Iterable[Match[float]]:
         """
         Extract all timestamps from the document.
         """
-        for wordtok, offset in zip(self.wordtoks, self.offsets):
+        for index, (wordtok, offset) in enumerate(zip(self.wordtoks, self.offsets)):
             timestamp = extract_timestamp(wordtok)
             if timestamp:
-                yield timestamp, offset
+                yield timestamp, index, offset
 
-    def extract_preceding(self, wordtok_offset: int) -> Tuple[float, int]:
+    def extract_preceding(self, wordtok_offset: int) -> Match[float]:
         try:
             index, wordtok = (
                 search_tokens(self.wordtoks).at(wordtok_offset).seek_back(has_timestamp).get_token()
@@ -53,7 +51,7 @@ class TimestampExtractor(Extractor):
             if wordtok:
                 timestamp = extract_timestamp(wordtok)
                 if timestamp is not None:
-                    return timestamp, self.offsets[index]
+                    return timestamp, index, self.offsets[index]
             raise ContentError(f"No timestamp found seeking back from {wordtok_offset}: {wordtok}")
         except KeyError as e:
             raise ContentError(f"No timestamp found searching back from {wordtok_offset}: {e}")
@@ -72,7 +70,7 @@ def test_timestamp_extractor():
     offsets = []
     for i, wordtok in enumerate(wordtoks):
         try:
-            timestamp, offset = extractor.extract_preceding(i)
+            timestamp, _index, offset = extractor.extract_preceding(i)
         except ContentError:
             timestamp = None
             offset = -1

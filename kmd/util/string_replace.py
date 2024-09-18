@@ -1,7 +1,9 @@
 from typing import List, Tuple
 
+Insertion = Tuple[int, str]
 
-def insert_multiple(text: str, insertions: List[Tuple[int, str]]) -> str:
+
+def insert_multiple(text: str, insertions: List[Insertion]) -> str:
     """
     Insert multiple strings into `text` at the given offsets.
     """

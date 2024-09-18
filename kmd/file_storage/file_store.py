@@ -18,6 +18,7 @@ from kmd.errors import (
     InvalidState,
     SkippableError,
     UnexpectedError,
+    UnrecognizedFileFormat,
 )
 from kmd.file_storage.file_listings import walk_by_folder
 from kmd.file_storage.item_file_format import read_item, write_item
@@ -35,7 +36,6 @@ from kmd.text_ui.command_output import output
 from kmd.util.file_utils import move_file
 from kmd.util.hash_utils import hash_file
 from kmd.util.log_calls import format_duration
-from kmd.util.type_utils import not_none
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import is_url, Url
 
@@ -310,10 +310,14 @@ class FileStore:
         else:
             # This is an exsting file (such as media or docs) so we just return the metadata.
             format = Format.guess_by_file_ext(file_ext)
+            if not format:
+                raise UnrecognizedFileFormat(
+                    f"Unknown file extension: {file_ext}: {fmt_path(store_path)}"
+                )
             return Item(
                 type=item_type,
                 external_path=str(self.base_dir / store_path),
-                format=not_none(format),
+                format=format,
                 file_ext=file_ext,
                 store_path=store_path,
             )

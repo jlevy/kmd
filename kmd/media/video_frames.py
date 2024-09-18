@@ -16,7 +16,8 @@ def capture_frames(
     video_file: Path,
     timestamps: List[float],
     target_dir: Path,
-    target_pattern: str = "frame_{frame_number:04d}.jpg",
+    prefix: str = "frame_",
+    target_pattern: str = "{prefix}_{frame_number:04d}.jpg",
 ) -> List[Path]:
     """
     Capture frames at given timestamps and save them as JPG images using the provided pattern.
@@ -24,7 +25,9 @@ def capture_frames(
     if not Path(video_file).is_file():
         raise FileNotFound(f"Video file not found: {video_file}")
 
-    target_template = StringTemplate(target_pattern, allowed_fields=[("frame_number", int)])
+    target_template = StringTemplate(
+        target_pattern, allowed_fields=[("prefix", str), ("frame_number", int)]
+    )
     captured_frames = []
 
     log.message(f"Capturing frames from video: {fmt_path(video_file)}")
@@ -55,7 +58,7 @@ def capture_frames(
 
             success, frame = video.read()
             if success:
-                target_path = target_dir / target_template.format(frame_number=i)
+                target_path = target_dir / target_template.format(prefix=prefix, frame_number=i)
                 with atomic_output_file(
                     target_path, make_parents=True, suffix="%s." + target_path.suffix
                 ) as tmp_path:

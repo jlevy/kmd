@@ -8,10 +8,11 @@ from kmd.model import CachedDocAction, Format, Item, ItemType
 from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
 from kmd.provenance.source_items import find_upstream_item, find_upstream_resource
 from kmd.provenance.timestamps import TimestampExtractor
+from kmd.text_docs.search_tokens import search_tokens
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_docs.text_doc import SentIndex, TextDoc
 from kmd.text_docs.token_mapping import TokenMapping
-from kmd.text_docs.wordtoks import BOF_TOK, EOF_TOK, PARA_BR_TOK, search_tokens, SENT_BR_TOK
+from kmd.text_docs.wordtoks import BOF_TOK, EOF_TOK, PARA_BR_TOK, SENT_BR_TOK
 from kmd.text_formatting.citations import add_citation_to_text, format_timestamp_citation
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.type_utils import not_none

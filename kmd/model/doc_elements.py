@@ -22,6 +22,11 @@ FULL_TEXT = "full-text"
 DESCRIPTION = "description"
 SUMMARY = "summary"
 
+# Image class names:
+
+FRAME_CAPTURE = "frame-capture"
+"""A frame capture from a video."""
+
 # Inline class name:
 
 SPEAKER_LABEL = "speaker-label"

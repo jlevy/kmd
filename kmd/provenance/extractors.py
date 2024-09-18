@@ -1,9 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, Tuple
+from typing import Any, Iterable, Tuple, TypeVar
 
 from kmd.config.logger import get_logger
 
 log = get_logger(__name__)
+
+T = TypeVar("T")
+
+Match = Tuple[T, int, int]
+"""Match, index, and offset."""
 
 
 class Extractor(ABC):
@@ -16,9 +21,9 @@ class Extractor(ABC):
         self.doc_str = doc_str
 
     @abstractmethod
-    def extract_all(self) -> Iterable[Tuple[Any, int]]:
+    def extract_all(self) -> Iterable[Match[Any]]:
         pass
 
     @abstractmethod
-    def extract_preceding(self, wordtok_offset: int) -> Tuple[Any, int]:
+    def extract_preceding(self, wordtok_offset: int) -> Match[Any]:
         pass

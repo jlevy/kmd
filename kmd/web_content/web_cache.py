@@ -121,7 +121,7 @@ class WebCache(DirStore):
                     raise InvalidInput(f"Not a file URL: {url_or_path}")
             if not file_path.exists():
                 raise FileNotFound(f"File not found: {file_path}")
-            log.message(
+            log.info(
                 "Copying local file to cache: %s -> %s", fmt_path(file_path), fmt_path(cache_path)
             )
             copyfile_atomic(file_path, cache_path, make_parents=True)
