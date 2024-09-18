@@ -8,7 +8,7 @@ from kmd.model.actions_model import Action
 from kmd.model.items_model import Item
 from kmd.model.paths_model import StorePath
 from kmd.model.preconditions_model import Precondition
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 
 log = get_logger(__name__)
 

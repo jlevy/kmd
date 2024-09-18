@@ -7,7 +7,7 @@ from kmd.lang_tools.sentence_split_regex import split_sentences_regex
 from kmd.lang_tools.sentence_split_spacy import split_sentences_spacy
 from kmd.text_docs.sizes import TextUnit
 from kmd.text_formatting.html_in_md import div_wrapper
-from kmd.text_formatting.text_formatting import fmt_lines
+from kmd.util.format_utils import fmt_lines
 
 if TYPE_CHECKING:
     from kmd.text_docs.text_doc import TextDoc

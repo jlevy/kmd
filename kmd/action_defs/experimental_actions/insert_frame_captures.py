@@ -13,7 +13,7 @@ from kmd.provenance.timestamps import TimestampExtractor
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.text_docs.search_tokens import search_tokens
 from kmd.text_formatting.html_in_md import html_img, md_para
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 from kmd.util.string_replace import insert_multiple, Insertion
 from kmd.util.url import as_file_url
 from kmd.web_content.file_cache_tools import cache, cache_resource

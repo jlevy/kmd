@@ -16,7 +16,7 @@ from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.params_model import param_lookup, USER_SETTABLE_PARAMS
 from kmd.model.paths_model import InputArg, StorePath
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 from kmd.util.url import is_url, Url
 from kmd.web_content.file_cache_tools import reset_web_cache_dir
 

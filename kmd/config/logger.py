@@ -15,7 +15,7 @@ from strif import atomic_output_file, new_timestamped_uid
 import kmd.config.suppress_warnings  # noqa: F401
 from kmd.config.settings import global_settings, LogLevel
 from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, KmdHighlighter, RICH_STYLES
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 from kmd.util.stack_traces import current_stack_traces
 from kmd.util.task_stack import task_stack_prefix_str
 

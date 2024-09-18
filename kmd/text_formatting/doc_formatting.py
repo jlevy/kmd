@@ -6,8 +6,8 @@ from kmd.file_formats.frontmatter_format import fmf_read
 from kmd.file_storage.frontmatter_format import fmf_write
 from kmd.model.file_formats_model import detect_file_format, Format
 from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH, normalize_markdown
-from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_formatting.text_wrapping import text_wrap_fill
+from kmd.util.format_utils import fmt_path
 from kmd.util.type_utils import not_none
 
 

@@ -12,7 +12,7 @@ from kmd.model.file_formats_model import detect_media_type
 from kmd.model.items_model import Item
 from kmd.model.media_model import MediaType
 from kmd.preconditions.precondition_defs import is_resource
-from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
+from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.url import Url
 from kmd.web_content.web_cache import WebCache
 
@@ -82,7 +82,7 @@ def cache_resource(item: Item) -> Dict[MediaType, Path]:
 
     log.message(
         "Cached copy of item %s:\n%s",
-        item,
+        item.as_str_brief(),
         fmt_lines(
             f"{media_type.value}: {fmt_path(media_path)}"
             for media_type, media_path in result.items()

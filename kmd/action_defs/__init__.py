@@ -9,7 +9,7 @@ from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.exec.action_registry import instantiate_actions
 from kmd.model.actions_model import Action
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 
 log = get_logger(__name__)
 

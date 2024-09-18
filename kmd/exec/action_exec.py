@@ -14,7 +14,7 @@ from kmd.model.canon_url import canonicalize_url
 from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
 from kmd.model.paths_model import InputArg, StorePath
-from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
+from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
@@ -123,7 +123,7 @@ def run_action(
         # Check if these items already exist, with last_operation matching action and input fingerprints.
         already_present = [ws.find_by_id(item) for item in preassembled_result.items]
         all_present = all(already_present)
-        log.message(
+        log.info(
             "Rerun check: all_present=%s with these items already present:\n%s",
             all_present,
             fmt_lines(already_present),
@@ -138,7 +138,7 @@ def run_action(
                 cached_items = [ws.load(not_none(store_path)) for store_path in already_present]
                 cached_result = ActionResult(cached_items)
     else:
-        log.message(
+        log.info(
             "Rerun check: Will run since `%s` has no rerun check (no preassembly).",
             action_name,
         )

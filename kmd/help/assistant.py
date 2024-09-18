@@ -12,8 +12,8 @@ from kmd.llms.llm_completion import llm_completion
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_formatting.markdown_normalization import wrap_markdown
-from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
+from kmd.util.format_utils import fmt_path
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)

@@ -24,7 +24,7 @@ from kmd.file_formats.yaml_util import (
     to_yaml_string,
     write_yaml,
 )
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 
 
 class FmSyntax(Enum):

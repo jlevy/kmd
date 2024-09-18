@@ -10,7 +10,7 @@ from kmd.file_storage.workspaces import current_tmp_dir, current_workspace
 from kmd.model.graph_model import GraphData, Link, Node
 from kmd.model.items_model import Item, ItemRelations, ItemType
 from kmd.shell_tools.native_tools import view_file_native
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
 

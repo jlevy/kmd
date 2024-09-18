@@ -9,7 +9,7 @@ from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ITEM_FIELDS
 from kmd.model.operations_model import OPERATION_FIELDS
 from kmd.text_formatting.doc_formatting import normalize_formatting
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 
 log = get_logger(__name__)
 

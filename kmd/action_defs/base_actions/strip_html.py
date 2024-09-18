@@ -3,7 +3,7 @@ from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.model import CachedDocAction, Format, Item, ItemType
 from kmd.preconditions.precondition_defs import has_html_body, has_text_body
-from kmd.text_formatting.text_formatting import html_to_plaintext
+from kmd.util.format_utils import html_to_plaintext
 
 log = get_logger(__name__)
 

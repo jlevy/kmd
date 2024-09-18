@@ -12,7 +12,7 @@ from kmd.errors import FileNotFound, InvalidInput
 from kmd.model.file_formats_model import FileExt, parse_file_format
 from kmd.model.media_model import MediaMetadata, MediaService, MediaType, MediaUrlType
 from kmd.shell_tools.native_tools import CmdlineTool, tool_check
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 from kmd.util.url import Url
 
 log = get_logger(__name__)

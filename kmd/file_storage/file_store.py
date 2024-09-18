@@ -31,9 +31,9 @@ from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.params_model import ParamValues
 from kmd.model.paths_model import StorePath
 from kmd.query.vector_index import WsVectorIndex
-from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.text_ui.command_output import output
 from kmd.util.file_utils import move_file
+from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.hash_utils import hash_file
 from kmd.util.log_calls import format_duration
 from kmd.util.uniquifier import Uniquifier
@@ -190,7 +190,7 @@ class FileStore:
                     old_item = self.load(default_path)
                     if old_item.item_id() == item_id:
                         log.message(
-                            "Item with id already saved (disk check):\n%s",
+                            "Item with the same id already saved (disk check):\n%s",
                             fmt_lines([default_path, item_id]),
                         )
                         store_path = default_path
@@ -198,7 +198,7 @@ class FileStore:
                         return default_path
             if store_path and self.exists(store_path):
                 log.message(
-                    "Item with id already saved:\n%s",
+                    "Item with the same id already saved (disk check):\n%s",
                     fmt_lines([store_path, item_id]),
                 )
                 return store_path

@@ -12,7 +12,7 @@ from kmd.errors import ApiResultError
 from kmd.llms.llm_checks import is_no_results
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
-from kmd.text_formatting.text_formatting import fmt_lines
+from kmd.util.format_utils import fmt_lines
 from kmd.util.log_calls import log_calls
 
 

@@ -33,13 +33,6 @@ def html_to_plaintext(text: str):
     return clean_text
 
 
-def fmt_path(path: str | Path) -> str:
-    """
-    Format a path or filename for display in the shell. This quotes it if it contains whitespace.
-    """
-    return shlex.quote(str(path))
-
-
 def fmt_lines(values: Iterable[Any], prefix: str = DEFAULT_INDENT, line_break: str = "\n") -> str:
     """
     Simple indented or prefixed formatting of values one per line.
@@ -136,6 +129,24 @@ def abbreviate_phrase_in_middle(
     result = " ".join(word for word in words if word)
 
     return result
+
+
+def fmt_path(path: str | Path, resolve: bool = True) -> str:
+    """
+    Format a path or filename for display. This quotes it if it contains whitespace.
+
+    :param resolve: If true paths are resolved. If they are within the current working
+    directory, they are formatted as relative. Otherwise, they are formatted as absolute.
+    """
+    if resolve:
+        path = Path(path).resolve()
+        cwd = Path.cwd().resolve()
+        if path.is_relative_to(cwd):
+            path = path.relative_to(cwd)
+    else:
+        path = Path(path)
+
+    return shlex.quote(str(path))
 
 
 ## Tests

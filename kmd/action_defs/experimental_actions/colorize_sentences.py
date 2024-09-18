@@ -4,7 +4,7 @@ from kmd.model import ForEachItemAction, Format, Item, ItemType
 from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_formatting.html_in_md import html_span
-from kmd.text_formatting.text_formatting import single_line
+from kmd.util.format_utils import single_line
 
 
 def color_by_length(count: int) -> str:

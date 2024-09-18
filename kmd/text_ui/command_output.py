@@ -30,8 +30,8 @@ from kmd.config.text_styles import (
     HRULE,
 )
 from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_lines_to_width
-from kmd.text_formatting.text_formatting import DEFAULT_INDENT, split_paragraphs
 from kmd.text_formatting.text_wrapping import text_wrap_fill
+from kmd.util.format_utils import DEFAULT_INDENT, split_paragraphs
 
 console = get_console()
 

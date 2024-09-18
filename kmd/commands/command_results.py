@@ -6,8 +6,8 @@ from kmd.exec.command_exec import run_command
 from kmd.lang_tools.inflection import plural
 from kmd.model.output_model import CommandOutput
 from kmd.model.paths_model import StorePath
-from kmd.text_formatting.text_formatting import fmt_lines
 from kmd.text_ui.command_output import output, output_result, output_status
+from kmd.util.format_utils import fmt_lines
 
 log = get_logger(__name__)
 

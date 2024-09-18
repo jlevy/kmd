@@ -63,7 +63,6 @@ from kmd.shell_tools.native_tools import (
 )
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.text_formatting.doc_formatting import normalize_text_file
-from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.text_ui.command_output import (
     format_name_and_description,
     output,
@@ -73,6 +72,7 @@ from kmd.text_ui.command_output import (
     output_status,
     Wrap,
 )
+from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_utils import format_key_value, parse_key_value
 from kmd.util.type_utils import not_none

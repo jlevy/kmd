@@ -4,7 +4,7 @@ from pathlib import Path
 from kmd.config.logger import get_logger
 from kmd.config.settings import DOT_DIR
 from kmd.file_storage.persisted_yaml import PersistedYaml
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 
 log = get_logger(__name__)
 

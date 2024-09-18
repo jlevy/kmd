@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import List
 
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 
 
 kmd_base_path = Path(os.path.dirname(__file__)).parent

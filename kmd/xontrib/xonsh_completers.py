@@ -11,7 +11,7 @@ from kmd.help.function_param_info import annotate_param_info
 from kmd.model.params_model import Param
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_checks import items_matching_precondition
-from kmd.text_formatting.text_formatting import fmt_path, single_line
+from kmd.util.format_utils import fmt_path, single_line
 from kmd.xontrib.xonsh_customization import _actions, _commands
 
 MAX_COMPLETIONS = 500
@@ -34,7 +34,6 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
     """
     Completes command names. We don't complete on regular shell commands to keep it cleaner.
     """
-
     if context.command and context.command.arg_index == 0:
         prefix = context.command.prefix
 
@@ -79,7 +78,6 @@ def item_completer(context: CompletionContext) -> CompleterResult:
     If the current command is an action, complete with paths that match the precondition
     for that action.
     """
-
     try:
         if context.command and context.command.arg_index >= 1:
             action_name = context.command.args[0].value

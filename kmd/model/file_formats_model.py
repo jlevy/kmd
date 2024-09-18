@@ -8,7 +8,7 @@ import magic
 
 from kmd.errors import InvalidFilename
 from kmd.model.media_model import MediaType
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 from kmd.util.url import is_file_url, parse_file_url, Url
 
 
@@ -349,7 +349,9 @@ def is_html(content: str) -> bool:
     Check if the content is HTML.
     """
     return bool(
-        re.search(r"<!DOCTYPE html>|<html>|<body>|<head>|<div>|<p>", content, re.IGNORECASE)
+        re.search(
+            r"<!DOCTYPE html>|<html>|<body>|<head>|<div>|<p>|<img |<a href", content, re.IGNORECASE
+        )
     )
 
 

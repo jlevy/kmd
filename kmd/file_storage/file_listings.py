@@ -6,7 +6,7 @@ from typing import Generator, List, Tuple
 from kmd.config.logger import get_logger
 from kmd.errors import FileNotFound
 from kmd.model.file_formats_model import is_ignored
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 
 # TODO: Options to cap number of files returned per folder and number of folders walked.
 # TODO: Support other sorting options.

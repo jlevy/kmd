@@ -7,7 +7,7 @@ from kmd.errors import InvalidFilename
 from kmd.lang_tools.inflection import plural
 from kmd.model.file_formats_model import FileExt, split_filename
 from kmd.model.items_model import ItemType
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 
 log = get_logger(__name__)
 

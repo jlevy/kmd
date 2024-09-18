@@ -5,7 +5,7 @@ from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings, update_global_settings
 from kmd.media.media_cache import MediaCache
 from kmd.model.media_model import MediaType
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 from kmd.util.url import Url
 
 log = get_logger(__name__)

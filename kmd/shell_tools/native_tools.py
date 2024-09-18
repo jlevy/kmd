@@ -31,8 +31,8 @@ from kmd.model.file_formats_model import (
     parse_file_ext,
     read_partial_text,
 )
-from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import format_name_and_description, format_paragraphs, output, Wrap
+from kmd.util.format_utils import fmt_path
 from kmd.util.url import as_file_url, is_url
 
 

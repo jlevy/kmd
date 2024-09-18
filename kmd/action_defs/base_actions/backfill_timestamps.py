@@ -14,7 +14,7 @@ from kmd.text_docs.text_doc import SentIndex, TextDoc
 from kmd.text_docs.token_mapping import TokenMapping
 from kmd.text_docs.wordtoks import BOF_TOK, EOF_TOK, PARA_BR_TOK, SENT_BR_TOK
 from kmd.text_formatting.citations import add_citation_to_text, format_timestamp_citation
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)

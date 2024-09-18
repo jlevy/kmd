@@ -13,8 +13,8 @@ import runpy
 
 from kmd.action_defs import reload_all_actions
 from kmd.commands.command_registry import kmd_command
-from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import output
+from kmd.util.format_utils import fmt_path
 from kmd.xontrib.xonsh_customization import _load_xonsh_actions, customize_xonsh, set_alias
 
 # FIXME: Only use absolute imports here.

@@ -5,7 +5,7 @@ from kmd.model.items_model import Item
 from kmd.model.paths_model import StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_resource
-from kmd.text_formatting.text_formatting import fmt_path
+from kmd.util.format_utils import fmt_path
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)

@@ -15,8 +15,8 @@ from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUn
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_text_doc
-from kmd.text_formatting.text_formatting import fmt_lines
 from kmd.text_ui.command_output import fill_text
+from kmd.util.format_utils import fmt_lines
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_utils import format_key_value
 from kmd.util.string_template import StringTemplate

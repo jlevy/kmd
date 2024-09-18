@@ -20,7 +20,7 @@ from kmd.model.media_model import MediaMetadata
 from kmd.model.operations_model import Operation, OperationSummary, Source
 from kmd.model.paths_model import Locator
 from kmd.text_formatting.markdown_util import markdown_to_html
-from kmd.text_formatting.text_formatting import (
+from kmd.util.format_utils import (
     abbreviate_on_words,
     abbreviate_phrase_in_middle,
     clean_up_title,
@@ -331,12 +331,6 @@ class Item:
 
         return item_dict
 
-    def fmt_path_or_title(self) -> str:
-        """
-        Formatted path or title, for error messages etc.
-        """
-        return fmt_path(self.store_path) if self.store_path else repr(self.abbrev_title())
-
     def abbrev_title(self, max_len: int = 100) -> str:
         """
         Get or infer title. Optionally, include the last operation as a parenthetical
@@ -546,20 +540,47 @@ class Item:
         if self.history and self.history[-1] != operation_summary:
             self.history.append(operation_summary)
 
-    def __str__(self):
+    def fmt_path_or_title(self) -> str:
+        """
+        Formatted path or title, for error messages etc.
+        """
+        if self.store_path:
+            return fmt_path(self.store_path)
+        elif self.external_path:
+            return fmt_path(self.external_path)
+        else:
+            return repr(self.abbrev_title())
+
+    def as_str_brief(self) -> str:
         return abbreviate_obj(
             self,
             key_filter={
+                "store_path",
+                "type",
+                "title",
+                "url",
+                "external_path",
+            },
+        )
+
+    def as_str(self) -> str:
+        return abbreviate_obj(
+            self,
+            key_filter={
+                "store_path",
+                "external_path",
                 "type",
                 "state",
                 "title",
                 "url",
-                "foramt",
+                "format",
                 "created_at",
                 "body",
-                "store_path",
             },
         )
+
+    def __str__(self):
+        return self.as_str_brief()
 
 
 # Some refletion magic so the order of the YAML metadata for an item will match
