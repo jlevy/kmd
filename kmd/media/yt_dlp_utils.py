@@ -54,13 +54,13 @@ def ydl_download_media(
         ydl_opts = {
             # Try for best video+audio, fall back to best available.
             # Might want to support smaller sizes tho.
-            "format": "bestvideo+bestaudio/best",
             # "format": "bestvideo[height<=720]+bestaudio/best",
+            "format": "bestvideo+bestaudio/best",
             "outtmpl": os.path.join(temp_dir, "media.%(id)s.%(ext)s"),
             "postprocessors": [
                 {
                     "key": "FFmpegVideoConvertor",
-                    "preferedformat": "mp4",
+                    "preferedformat": "mp4",  # Yep, it's really spelled this way in yt_dlp.
                 },
                 {
                     "key": "FFmpegExtractAudio",
@@ -68,6 +68,7 @@ def ydl_download_media(
                     "preferredquality": "192",
                 },
             ],
+            "keepvideo": True,  # By default yt_dlp will delete the video file.
         }
     else:
         ydl_opts = {

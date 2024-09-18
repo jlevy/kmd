@@ -113,7 +113,7 @@ class FileStore:
             item_id = item.item_id()
             if item_id:
                 old_path = self.id_map.get(item_id)
-                if old_path:
+                if old_path and old_path != store_path:
                     dup_path = old_path
                     log.info(
                         "Duplicate items (%s):\n%s", item_id, fmt_lines([old_path, store_path])

@@ -5,6 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
 
 
@@ -77,6 +78,9 @@ class MediaMetadata:
     view_count: Optional[int] = None
     duration: Optional[int] = None
     heatmap: Optional[List[HeatmapValue]] = None
+
+    def __str__(self) -> str:
+        return abbreviate_obj(self)
 
 
 SERVICE_YOUTUBE = "youtube"

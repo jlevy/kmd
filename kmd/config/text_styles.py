@@ -128,7 +128,9 @@ EMOJI_TRUE = "✓"
 
 EMOJI_FALSE = "✗"
 
-EMOJI_TASK_SEP = "›"
+EMOJI_TASK_SEP = "⋮"
+
+EMOJI_BREADCRUMB_SEP = "›"
 
 
 ## Rich setup
