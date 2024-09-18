@@ -337,6 +337,39 @@ def is_ignored(path: str | Path) -> bool:
     )
 
 
+def is_full_html_page(content: str) -> bool:
+    """
+    A full HTML document that is probably best rendered in a browser.
+    """
+    return bool(re.search(r"<!DOCTYPE html>|<html>|<body>|<head>", content, re.IGNORECASE))
+
+
+def is_html(content: str) -> bool:
+    """
+    Check if the content is HTML.
+    """
+    return bool(
+        re.search(r"<!DOCTYPE html>|<html>|<body>|<head>|<div>|<p>", content, re.IGNORECASE)
+    )
+
+
+def is_markdown(content: str) -> bool:
+    """
+    Check if the content is Markdown.
+    """
+    return bool(re.search(r"^#+ |^- |\*\*|__", content, re.MULTILINE))
+
+
+def read_partial_text(
+    path: Path, max_bytes: int = 200 * 1024, encoding: str = "utf-8", errors: str = "strict"
+) -> Optional[str]:
+    try:
+        with path.open("r", encoding=encoding, errors=errors) as file:
+            return file.read(max_bytes)
+    except UnicodeDecodeError:
+        return None
+
+
 def detect_mime_type(filename: str | Path) -> Optional[str]:
     """
     Get the mime type of a file using libmagic.
@@ -346,37 +379,21 @@ def detect_mime_type(filename: str | Path) -> Optional[str]:
     return mime_type
 
 
-def _detect_html_or_markdown(content: str) -> Optional[Format]:
-    """
-    Another simple best guess in case we can't tell otherwise.
-    """
-    if re.search(
-        r"<!DOCTYPE html>|<html>|<body>|<head>|<div>|<p>", content, re.IGNORECASE | re.MULTILINE
-    ):
-        return Format.html
-
-    if re.search(r"^#+ |^- |\*\*|__", content, re.MULTILINE):
-        return Format.markdown
-
-    return None
-
-
-def _read_partial_content(path: Path, max_bytes: int = 200 * 1024) -> str:
-    with path.open("r", encoding="utf-8", errors="ignore") as file:
-        return file.read(max_bytes)
-
-
 def detect_file_format(path: str | Path) -> Optional[Format]:
     """
-    Get file format based on file content (libmagic).
+    Get file format based on file content (libmagic and heuristics).
     """
     path = Path(path)
     fmt = Format.from_mime_type(detect_mime_type(path))
     if not fmt and path.is_file():
-        try:
-            fmt = _detect_html_or_markdown(_read_partial_content(path))
-        except UnicodeDecodeError:
-            pass
+        # Also try detecting HTML and Markdown directly.
+        content = read_partial_text(path)
+        if content and is_html(content):
+            fmt = Format.html
+        elif content and is_markdown(content):
+            fmt = Format.markdown
+
+    return fmt
 
 
 def detect_media_type(filename: str | Path) -> MediaType:

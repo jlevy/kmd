@@ -92,6 +92,8 @@ class MediaCache(DirStore):
                 cached_paths[MediaType.video] = full_video_file
             if full_audio_file and full_video_file:
                 return cached_paths
+            elif full_audio_file or full_video_file:
+                log.message("Downloading to get missing formats.")
 
         log.message("Downloading media: %s", url)
         media_paths = download_media_by_service(url, self.root)

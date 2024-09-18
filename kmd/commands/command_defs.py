@@ -332,7 +332,7 @@ def _check_store_paths(paths: Sequence[StorePath | Path]) -> List[StorePath]:
 
 
 @kmd_command
-def show(path: Optional[str] = None, console: bool = False) -> None:
+def show(path: Optional[str] = None, console: bool = False, browser: bool = False) -> None:
     """
     Show the contents of a file if one is given, or the first file if multiple files
     are selected. Will try to use native apps or web browser to display the file if
@@ -342,6 +342,7 @@ def show(path: Optional[str] = None, console: bool = False) -> None:
     highlighting and git diffs.
 
     :param console: Force display to console (not browser or native apps).
+    :param browser: Force display to browser (not console or native apps).
     """
     try:
         input_paths = _assemble_paths(path)
@@ -360,13 +361,13 @@ def show(path: Optional[str] = None, console: bool = False) -> None:
                     log.info("Had trouble showing thumbnail image (will skip): %s", e)
                     output(f"[Image: {item.thumbnail_url}]", color=COLOR_HINT)
 
-            view_file_native(ws.base_dir / input_path, console=console)
+            view_file_native(ws.base_dir / input_path, use_console=console, use_browser=browser)
         else:
-            view_file_native(input_path, console=console)
+            view_file_native(input_path, use_console=console, use_browser=browser)
     except (InvalidInput, InvalidState):
         if path:
             # If path is absolute or we couldbn't get a selection, just show the file.
-            view_file_native(path, console=console)
+            view_file_native(path, use_console=console, use_browser=browser)
         else:
             raise InvalidInput("No selection")
 

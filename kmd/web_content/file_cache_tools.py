@@ -84,8 +84,8 @@ def cache_resource(item: Item) -> Dict[MediaType, Path]:
         "Cached copy of item %s:\n%s",
         item,
         fmt_lines(
-            f"{media_format.value}: {fmt_path(media_path)}"
-            for media_format, media_path in result.items()
+            f"{media_type.value}: {fmt_path(media_path)}"
+            for media_type, media_path in result.items()
         ),
     )
 

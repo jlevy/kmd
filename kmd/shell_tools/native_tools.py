@@ -25,7 +25,12 @@ from kmd.config.text_styles import (
     EMOJI_TRUE,
 )
 from kmd.errors import FileNotFound, SetupError
-from kmd.model.file_formats_model import detect_mime_type, parse_file_ext
+from kmd.model.file_formats_model import (
+    detect_mime_type,
+    is_full_html_page,
+    parse_file_ext,
+    read_partial_text,
+)
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_ui.command_output import format_name_and_description, format_paragraphs, output, Wrap
 from kmd.util.url import as_file_url, is_url
@@ -215,18 +220,31 @@ def terminal_link(url: str, text: str, id: str = "") -> str:
         return text
 
 
-def view_file_native(file_or_url: str | Path, console: bool = False):
+def view_file_native(file_or_url: str | Path, use_console: bool = False, use_browser: bool = False):
     """
     Open a file or URL in the user's preferred native application, falling back
     to pagination in console. For images, first tries terminal-based image display.
     """
     file_or_url = str(file_or_url)
+    path = None
+    if not is_url(file_or_url):
+        path = Path(file_or_url)
+        if not path.exists():
+            raise FileNotFound(fmt_path(file_or_url))
 
-    if not console and (is_url(file_or_url) or file_or_url.endswith(".html")):
-        if not is_url(file_or_url):
-            file_or_url = as_file_url(Path(file_or_url))
-        log.message("Opening URL in browser: %s", file_or_url)
-        webbrowser.open(file_or_url)
+    # As a heuristic, we use the browser for URLs and for local files that are
+    # clearly full HTML pages (since HTML fragments are fine on console).
+    if not use_console and is_url(file_or_url):
+        use_browser = True
+    elif path:
+        content = read_partial_text(path)
+        if content and is_full_html_page(content):
+            use_browser = True
+
+    if not use_console and use_browser:
+        url = file_or_url if is_url(file_or_url) else as_file_url(file_or_url)
+        log.message("Opening URL in browser: %s", url)
+        webbrowser.open(url)
     elif os.path.isfile(file_or_url):
         file = file_or_url
         mime_type = detect_mime_type(file)
@@ -234,7 +252,7 @@ def view_file_native(file_or_url: str | Path, console: bool = False):
         ext = parse_file_ext(file)
         is_text = (ext and ext.is_text()) or mime_type and mime_type.startswith("text")
 
-        if console or is_text or (mime_type and mime_type.startswith("text")):
+        if use_console or is_text or (mime_type and mime_type.startswith("text")):
             view_file_console(file, use_pager=min_lines > 40 or file_size > 20 * 1024)
         elif mime_type and mime_type.startswith("image"):
             try:
@@ -246,7 +264,7 @@ def view_file_native(file_or_url: str | Path, console: bool = False):
     elif os.path.isdir(file_or_url):
         native_open(file_or_url)
     else:
-        raise FileNotFound(f"File does not exist: {fmt_path(file_or_url)}")
+        raise FileNotFound(fmt_path(file_or_url))
 
 
 def tail_file(filename: str | Path):

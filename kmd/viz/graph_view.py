@@ -123,7 +123,7 @@ def assemble_workspace_graph(
 
 def open_graph_view(graph: GraphData):
     html_path = generate_graph_view_html(graph)
-    view_file_native(html_path, console=False)
+    view_file_native(html_path, use_console=False)
 
 
 ## Tests

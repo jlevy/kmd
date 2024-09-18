@@ -132,7 +132,7 @@ class BackfillSourceTimestamps(CachedDocAction):
                 )
 
                 try:
-                    timestamp, _offset = extractor.extract_preceding(source_wordtok_offset)
+                    timestamp, _index, _offset = extractor.extract_preceding(source_wordtok_offset)
 
                     timestamp_list.append(timestamp)
                     sent_index_list.append(sent_index)

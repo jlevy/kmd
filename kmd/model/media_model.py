@@ -34,7 +34,7 @@ class MediaType(Enum):
     is possible.
     """
 
-    audio = "audio_full"
+    audio = "audio"
     audio_16k = "audio_16k"  # More efficient for speech-to-text.
     video = "video"
 
