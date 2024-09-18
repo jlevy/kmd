@@ -1,6 +1,5 @@
-from functools import cached_property
 from textwrap import dedent
-from typing import List
+from typing import Iterable, Tuple
 
 import regex
 
@@ -8,46 +7,53 @@ from kmd.config.logger import get_logger
 
 from kmd.errors import ContentError
 from kmd.provenance.extractors import Extractor
-from kmd.text_docs.wordtoks import raw_text_to_wordtoks, search_tokens
+from kmd.text_docs.wordtoks import raw_text_to_wordtok_offsets, search_tokens
 
 log = get_logger(__name__)
 
+# Match any span or div with a data-timestamp attribute.
+_TIMESTAMP_RE = regex.compile(r'(?:<\w+[^>]*\s)?data-timestamp=[\'"](\d+(\.\d+)?)[\'"][^>]*>')
 
-TIMESTAMP_RE = regex.compile(r'<span data-timestamp=[\'"](\d+(\.\d+)?)[\'"]')
 
-
-def _extract_timestamp(wordtok: str):
-    match = TIMESTAMP_RE.search(wordtok)
+def extract_timestamp(wordtok: str):
+    match = _TIMESTAMP_RE.search(wordtok)
     return float(match.group(1)) if match else None
 
 
-def _is_timestamp(wordtok: str):
-    return bool(_extract_timestamp(wordtok))
+def has_timestamp(wordtok: str):
+    return bool(extract_timestamp(wordtok))
 
 
 class TimestampExtractor(Extractor):
     """
-    Extract the first timestamp of the form `<span data-timestamp="123.45">` preceding the
-    given location.
+    Extract the first timestamp of the form `<... data-timestamp="123.45">`.
     """
 
     def __init__(self, doc_str: str):
         self.doc_str = doc_str
+        self.wordtoks, self.offsets = raw_text_to_wordtok_offsets(self.doc_str, bof_eof=True)
+        for wordtok, offset in zip(self.wordtoks, self.offsets):
+            if "timestamp" in wordtok:
+                print(f"{wordtok} {offset}")
 
-    @cached_property
-    def wordtoks(self) -> List[str]:
-        wordtoks = raw_text_to_wordtoks(self.doc_str, parse_para_br=True, bof_eof=True)
-        return wordtoks
+    def extract_all(self) -> Iterable[Tuple[float, int]]:
+        """
+        Extract all timestamps from the document.
+        """
+        for wordtok, offset in zip(self.wordtoks, self.offsets):
+            timestamp = extract_timestamp(wordtok)
+            if timestamp:
+                yield timestamp, offset
 
-    def extract(self, wordtok_offset: int) -> float:
+    def extract_preceding(self, wordtok_offset: int) -> Tuple[float, int]:
         try:
-            _index, wordtok = (
-                search_tokens(self.wordtoks).at(wordtok_offset).seek_back(_is_timestamp).get_token()
+            index, wordtok = (
+                search_tokens(self.wordtoks).at(wordtok_offset).seek_back(has_timestamp).get_token()
             )
             if wordtok:
-                timestamp = _extract_timestamp(wordtok)
+                timestamp = extract_timestamp(wordtok)
                 if timestamp is not None:
-                    return timestamp
+                    return timestamp, self.offsets[index]
             raise ContentError(f"No timestamp found seeking back from {wordtok_offset}: {wordtok}")
         except KeyError as e:
             raise ContentError(f"No timestamp found searching back from {wordtok_offset}: {e}")
@@ -63,14 +69,18 @@ def test_timestamp_extractor():
     wordtoks = extractor.wordtoks
 
     results = []
+    offsets = []
     for i, wordtok in enumerate(wordtoks):
         try:
-            timestamp = extractor.extract(i)
+            timestamp, offset = extractor.extract_preceding(i)
         except ContentError:
             timestamp = None
+            offset = -1
         results.append(f"{i}: {timestamp} ⎪{wordtok}⎪")
+        offsets.append(offset)
 
     print("\n".join(results))
+    print(offsets)
 
     assert (
         "\n".join(results)
@@ -99,3 +109,5 @@ def test_timestamp_extractor():
             """
         ).strip()
     )
+
+    assert offsets == [-1, -1, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50]

@@ -2,7 +2,9 @@
 
 <div align="center">
 
-<p style="max-width: 450px;">
+<p style="max-width: 400px;">
+
+<br/>
 
 <b>A command-line power tool for knowledge tasks.</b>
 
@@ -10,6 +12,8 @@
 
 “*Simple should be simple.
 Complex should be possible.*” —Alan Kay
+
+<br/>
 
 </p>
 
@@ -285,8 +289,3 @@ poetry self update
 pkill -USR1 kmd
 ```
 
-## Devvelopment Setup
-
-On VSCode or Cursor, the
-[µfmt extension](https://marketplace.visualstudio.com/items?itemName=omnilib.ufmt) works
-nicely to use both µfmt and black with project settings.

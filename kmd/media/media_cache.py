@@ -7,11 +7,11 @@ from strif import atomic_output_file
 from kmd.config.logger import get_logger
 from kmd.errors import FileNotFound, InvalidInput, UnexpectedError
 from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
-from kmd.media.media_services import canonicalize_media_url, download_media
-from kmd.model.media_model import MediaFormat
+from kmd.media.media_services import canonicalize_media_url, download_media_by_service
+from kmd.model.media_model import MediaType
 from kmd.text_formatting.text_formatting import fmt_lines, fmt_path
 from kmd.util.url import as_file_url, is_url, Url
-from kmd.web_content.web_cache import DirStore
+from kmd.web_content.dir_store import DirStore
 
 log = get_logger(__name__)
 
@@ -78,31 +78,31 @@ class MediaCache(DirStore):
         self._write_transcript(url, transcript)
         return transcript
 
-    def download(self, url: Url, no_cache=False) -> Dict[MediaFormat, Path]:
-        cached_paths: Dict[MediaFormat, Path] = {}
+    def cache(self, url: Url, no_cache=False) -> Dict[MediaType, Path]:
+        cached_paths: Dict[MediaType, Path] = {}
 
         if not no_cache:
             full_audio_file = self.find(url, suffix=SUFFIX_MP3)
             full_video_file = self.find(url, suffix=SUFFIX_MP4)
             if full_audio_file:
                 log.message("Audio already in cache: %s: %s", url, fmt_path(full_audio_file))
-                cached_paths[MediaFormat.audio_full] = full_audio_file
+                cached_paths[MediaType.audio] = full_audio_file
             if full_video_file:
                 log.message("Video already in cache: %s: %s", url, fmt_path(full_video_file))
-                cached_paths[MediaFormat.video_full] = full_video_file
+                cached_paths[MediaType.video] = full_video_file
             if full_audio_file and full_video_file:
                 return cached_paths
 
         log.message("Downloading media: %s", url)
-        media_paths = download_media(url, self.root)
-        if MediaFormat.audio_full in media_paths:
+        media_paths = download_media_by_service(url, self.root)
+        if MediaType.audio in media_paths:
             full_audio_path = self.path_for(url, suffix=SUFFIX_MP3)
-            os.rename(media_paths[MediaFormat.audio_full], full_audio_path)
-            cached_paths[MediaFormat.audio_full] = full_audio_path
-        if MediaFormat.video_full in media_paths:
+            os.rename(media_paths[MediaType.audio], full_audio_path)
+            cached_paths[MediaType.audio] = full_audio_path
+        if MediaType.video in media_paths:
             video_path = self.path_for(url, suffix=SUFFIX_MP4)
-            os.rename(media_paths[MediaFormat.video_full], video_path)
-            cached_paths[MediaFormat.video_full] = video_path
+            os.rename(media_paths[MediaType.video], video_path)
+            cached_paths[MediaType.video] = video_path
 
         log.message(
             "Downloaded media and saved to cache:\n%s",
@@ -125,7 +125,7 @@ class MediaCache(DirStore):
                 transcript = self._read_transcript(url)
                 if transcript:
                     return transcript
-            self.download(url, no_cache=no_cache)
+            self.cache(url, no_cache=no_cache)
         elif isinstance(url_or_path, Path):
             if not url_or_path.exists():
                 raise FileNotFound(f"File not found: {fmt_path(url_or_path)}")

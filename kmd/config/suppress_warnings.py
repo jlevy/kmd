@@ -7,6 +7,7 @@ def filter_warnings():
     warnings.filterwarnings("ignore", message=".*Deprecation.*")
     warnings.filterwarnings("ignore", module="pydub")
     warnings.filterwarnings("ignore", module="pydantic")
+    warnings.filterwarnings("ignore", category=RuntimeWarning, module="xonsh.tools")
 
 
 filter_warnings()

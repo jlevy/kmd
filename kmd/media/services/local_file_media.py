@@ -10,7 +10,7 @@ from strif import copyfile_atomic
 from kmd.config.logger import get_log_file_stream, get_logger
 from kmd.errors import FileNotFound, InvalidInput
 from kmd.model.file_formats_model import FileExt, parse_file_format
-from kmd.model.media_model import MediaFormat, MediaMetadata, MediaService, MediaUrlType
+from kmd.model.media_model import MediaMetadata, MediaService, MediaType, MediaUrlType
 from kmd.shell_tools.native_tools import CmdlineTool, tool_check
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.url import Url
@@ -70,7 +70,7 @@ class LocalFileMedia(MediaService):
     def timestamp_url(self, url: Url, timestamp: float) -> Url:
         return url
 
-    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaFormat, Path]:
+    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaType, Path]:
         path = self._parse_file_url(url)
         if not path:
             raise InvalidInput(f"Not a local file URL: {url}")
@@ -92,7 +92,7 @@ class LocalFileMedia(MediaService):
                 )
 
                 _run_ffmpeg(["ffmpeg", "-i", str(path), "-f", "mp3", str(target_path)])
-            return {MediaFormat.audio_full: target_path}
+            return {MediaType.audio: target_path}
         elif format.is_video():
             video_target_path = target_dir / (path.stem + ".mp4")
             audio_target_path = target_dir / (path.stem + ".mp3")
@@ -136,8 +136,8 @@ class LocalFileMedia(MediaService):
             )
 
             return {
-                MediaFormat.video_full: video_target_path,
-                MediaFormat.audio_full: audio_target_path,
+                MediaType.video: video_target_path,
+                MediaType.audio: audio_target_path,
             }
         else:
             raise InvalidInput(f"Unsupported file format: {format}")

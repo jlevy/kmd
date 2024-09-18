@@ -33,7 +33,7 @@ def wrap_with_exception_printing(func: Callable[..., R]) -> Callable[[List[str]]
     def command(*args) -> Optional[R]:
         try:
             log.info(
-                "Wrapped function call: %s(%s)",
+                "Command function call: %s(%s)",
                 func.__name__,
                 (", ".join(str(arg) for arg in args)),
             )

@@ -1,120 +1,26 @@
-"""
-Storage and caching of downloaded and processed web pages.
-"""
-
 import os
 import time
 from enum import Enum
-from os import path
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import Optional
 
 import requests
-from strif import clean_alphanum_hash, copyfile_atomic
+
+from strif import copyfile_atomic
 
 from kmd.config.logger import get_logger
 from kmd.errors import FileNotFound, InvalidInput
-from kmd.model.file_formats_model import file_ext_from_content, file_ext_from_name
+from kmd.model.file_formats_model import choose_file_ext
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.download_url import download_url, user_agent_headers
 from kmd.util.log_calls import log_if_modifies
 from kmd.util.url import is_file_url, normalize_url, parse_file_url, Url
+from kmd.web_content.dir_store import DirStore
+
 
 log = get_logger(__name__)
 
 _normalize_url = log_if_modifies(level="info")(normalize_url)
-
-
-def aws_cli(*cmd):
-    # Import dynamically to avoid hard dependency.
-    from awscli.clidriver import create_clidriver  # type: ignore
-
-    log.info("awscli: aws %s" % " ".join(cmd))
-    # Run awscli in the same process
-    exit_code = create_clidriver().main(cmd)
-
-    # Deal with problems
-    if exit_code > 0:
-        raise RuntimeError("AWS CLI exited with code {}".format(exit_code))
-
-
-def file_mtime_hash(path: Path) -> str:
-    name = path.name
-    size = path.stat().st_size
-    mtime = path.stat().st_mtime_ns
-    key = f"{name}-{size}-{mtime}"
-    return clean_alphanum_hash(key, max_length=80)
-
-
-def string_hash(key: str) -> str:
-    return clean_alphanum_hash(key, max_length=80)
-
-
-HashFunc = Callable[[str | Path], str]
-
-
-def default_hash_func(key: str | Path) -> str:
-    if isinstance(key, Path):
-        return file_mtime_hash(key)
-    elif isinstance(key, str):
-        return string_hash(key)
-    else:
-        raise ValueError(f"Invalid key type: {type(key)}")
-
-
-class DirStore:
-    """
-    A simple file storage scheme: A directory of items, organized into folders, stored by readable
-    but uniquely hashed keys so it's possible to inspect the directory.
-    """
-
-    # TODO: Would be useful to support optional additional root directories, with write always
-    # being to the main root but cache lookups checking in sequence, allowing a hierarchy of caches.
-
-    def __init__(self, root: Path, hash_func: Optional[HashFunc] = None) -> None:
-        self.root: Path = root
-        self.hash_func: HashFunc = hash_func or default_hash_func
-        os.makedirs(self.root, exist_ok=True)
-
-    def path_for(
-        self, key: str | Path, folder: Optional[str] = None, suffix: Optional[str] = None
-    ) -> Path:
-        """
-        A unique file path with the given key. It's up to the client how to use it.
-        """
-        path_str = self.hash_func(key)
-
-        if suffix:
-            path_str += suffix
-        path = Path(folder) / path_str if folder else Path(path_str)
-        full_path = self.root / path
-
-        return full_path
-
-    def find(
-        self, key: str | Path, folder: Optional[str] = None, suffix: Optional[str] = None
-    ) -> Optional[Path]:
-        cache_path = self.path_for(key, folder, suffix)
-        return cache_path if path.exists(cache_path) else None
-
-    def find_all(
-        self, keys: List[str | Path], folder: Optional[str] = None, suffix: Optional[str] = None
-    ) -> Dict[str | Path, Optional[Path]]:
-        """
-        Look up all existing cached results for the set of keys. This should work fine but could
-        be optimized for large batches.
-        """
-        return {key: self.find(key, folder=folder, suffix=suffix) for key in keys}
-
-    def _restore(self, url: Url, folder: str = "") -> None:
-        # We *don't* add '--delete' arg to delete remote files based on local status.
-        aws_cli("s3", "sync", path.join(url, folder), self.root / folder)
-
-    def _backup(self, url: Url, folder: str = "") -> None:
-        # We *don't* add '--delete' arg to delete local files based on remote status.
-        aws_cli("s3", "sync", self.root / folder, path.join(url, folder))
-
-    # TODO: Consider other methods to purge or sync with --delete.
 
 
 def read_mtime(path):
@@ -144,41 +50,30 @@ class InvalidCacheState(RuntimeError):
 DEFAULT_SUFFIX = ""
 
 
-def suffix_for(url_or_path: Url | Path) -> str:
-    """
-    Pick the suffix to reflect the type of the content, if possible.
-    """
-    if isinstance(url_or_path, Path):
-        ext = file_ext_from_content(url_or_path)
-    elif is_file_url(url_or_path):
-        path = parse_file_url(url_or_path)
-        if path:
-            ext = file_ext_from_content(path)
-    else:
-        ext = file_ext_from_name(url_or_path)
-
-    return "." + ext.value if ext else DEFAULT_SUFFIX
+def _suffix_for(url_or_path: Url | Path) -> str:
+    return f".{choose_file_ext(url_or_path)}"
 
 
 class WebCache(DirStore):
     """
-    The web cache is a DirStore with a fetching mechanism based on a fixed object expiration time.
+    Storage and caching of local copies of web or file contents of any kind.
+
+    The WebCache is a DirStore with a fetching mechanism based on a fixed object expiration time.
 
     Fetch timestamp is modification time on file. Thread safe since file creation is atomic.
 
     Also works for local files via file:// URLs.
 
-    Also supports a backup/restore mechanism to/from an S3 bucket. Supply `backup_url` to use.
+    Supports a backup/restore mechanism to/from an S3 bucket. Supply `backup_url` to use.
     """
 
     # TODO: We don't fully handle fragments/sections of larger pages. It'd be preferable to extract
     # the part of the page at the anchor/fragment, but for now we ignore fragments and fetch/use
     # the whole page.
+    # TODO: Consider saving HTTP headers as well.
 
     ALWAYS: float = 0
     NEVER: float = -1
-
-    # TODO: Save status codes and HTTP headers as well.
 
     def __init__(
         self,
@@ -215,7 +110,7 @@ class WebCache(DirStore):
             raise InvalidCacheState("_download called in test mode")
 
         key = self._normalize(url_or_path)
-        cache_path = self.path_for(key, folder=self.folder, suffix=suffix_for(url_or_path))
+        cache_path = self.path_for(key, folder=self.folder, suffix=_suffix_for(url_or_path))
 
         if isinstance(url_or_path, Path) or is_file_url(url_or_path):
             if isinstance(url_or_path, Path):
@@ -226,7 +121,7 @@ class WebCache(DirStore):
                     raise InvalidInput(f"Not a file URL: {url_or_path}")
             if not file_path.exists():
                 raise FileNotFound(f"File not found: {file_path}")
-            log.info(
+            log.message(
                 "Copying local file to cache: %s -> %s", fmt_path(file_path), fmt_path(cache_path)
             )
             copyfile_atomic(file_path, cache_path, make_parents=True)
@@ -261,7 +156,8 @@ class WebCache(DirStore):
         if expiration_sec is None:
             expiration_sec = self.default_expiration_sec
 
-        cache_path = self.find(url_or_path, folder=self.folder, suffix=suffix_for(url_or_path))
+        cache_path = self.find(url_or_path, folder=self.folder, suffix=_suffix_for(url_or_path))
+
         return cache_path is not None and not self._is_expired(cache_path, expiration_sec)
 
     def cache(
@@ -272,7 +168,8 @@ class WebCache(DirStore):
         For file:// URLs does a copy.
         """
         key = self._normalize(url_or_path)
-        cache_path = self.find(key, folder=self.folder, suffix=suffix_for(url_or_path))
+        cache_path = self.find(key, folder=self.folder, suffix=_suffix_for(url_or_path))
+
         if cache_path and not self._is_expired(cache_path, expiration_sec):
             log.info("URL in cache, not fetching: %s: %s", key, fmt_path(cache_path))
             return cache_path, True

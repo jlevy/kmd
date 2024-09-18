@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from kmd.config.logger import get_logger
 from kmd.errors import ApiResultError, InvalidInput
 from kmd.media.yt_dlp_utils import parse_date, ydl_download_media, ydl_extract_info
-from kmd.model.media_model import MediaFormat, MediaMetadata, MediaService, MediaUrlType
+from kmd.model.media_model import MediaMetadata, MediaService, MediaType, MediaUrlType
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
 
@@ -62,7 +62,7 @@ class Vimeo(MediaService):
             return Url(f"{canon_url}#t={timestamp}")
         return canon_url  # For channels, just return the canonical URL
 
-    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaFormat, Path]:
+    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaType, Path]:
         url = not_none(self.canonicalize(url), "Not a recognized Vimeo URL")
         return ydl_download_media(url, target_dir, include_video=True)
 

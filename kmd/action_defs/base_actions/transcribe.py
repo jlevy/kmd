@@ -1,7 +1,7 @@
 from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.file_storage.workspaces import current_workspace
-from kmd.media.media_download import download_and_transcribe
+from kmd.media.media_tools import cache_and_transcribe
 from kmd.model import CachedDocAction, FileExt, Format, Item, ItemType
 from kmd.preconditions.precondition_defs import is_audio_resource, is_url, is_video_resource
 from kmd.text_chunks.parse_divs import parse_divs
@@ -26,7 +26,7 @@ class Transcribe(CachedDocAction):
         else:
             url = as_file_url(current_workspace().resolve_path(item))
 
-        transcription = download_and_transcribe(url, language=self.language)
+        transcription = cache_and_transcribe(url, language=self.language)
 
         result_item = item.derived_copy(
             type=ItemType.doc,

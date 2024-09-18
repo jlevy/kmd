@@ -1,7 +1,7 @@
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
-from kmd.media.media_download import download_media
+from kmd.media.media_tools import cache_media
 from kmd.model import ForEachItemAction, Item
 from kmd.preconditions.precondition_defs import is_url
 
@@ -21,7 +21,7 @@ class DownloadMedia(ForEachItemAction):
         if not item.url:
             raise InvalidInput("Item must have a URL")
 
-        download_media(item.url)
+        cache_media(item.url)
 
         # Just return the same item since the video is now saved to cache.
         return item

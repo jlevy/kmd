@@ -28,10 +28,20 @@ class MediaUrlType(Enum):
     """URL for a playlist."""
 
 
-class MediaFormat(Enum):
-    audio_full = "audio_full"
-    audio_16k = "audio_16k"
-    video_full = "video_full"
+class MediaType(Enum):
+    """
+    Media types. For broad categories only, to determine what processing
+    is possible.
+    """
+
+    audio = "audio_full"
+    audio_16k = "audio_16k"  # More efficient for speech-to-text.
+    video = "video"
+
+    webpage = "webpage"
+    text = "text"
+    binary = "binary"
+    image = "image"
 
 
 @dataclass
@@ -109,7 +119,7 @@ class MediaService(ABC):
         pass
 
     @abstractmethod
-    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaFormat, Path]:
+    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaType, Path]:
         """Download media from URL and extract to audio or video formats."""
         pass
 

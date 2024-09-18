@@ -10,7 +10,7 @@ from kmd.config.logger import get_logger, reset_logging
 from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
 from kmd.file_storage.metadata_dirs import CACHE_DIR, METADATA_FILE
-from kmd.media.media_download import reset_media_cache_dir
+from kmd.media.media_tools import reset_media_cache_dir
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
@@ -18,7 +18,7 @@ from kmd.model.params_model import param_lookup, USER_SETTABLE_PARAMS
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.util.url import is_url, Url
-from kmd.web_content.web_fetch import reset_web_cache_dir
+from kmd.web_content.file_cache_tools import reset_web_cache_dir
 
 log = get_logger(__name__)
 
@@ -145,7 +145,7 @@ def current_workspace(log_on_change: bool = True) -> FileStore:
     return ws
 
 
-def current_workspace_tmp_dir() -> Path:
+def current_tmp_dir() -> Path:
     try:
         return current_workspace().tmp_dir
     except InvalidState:

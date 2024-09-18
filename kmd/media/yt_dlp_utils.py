@@ -9,7 +9,7 @@ import yt_dlp
 from kmd.config.logger import get_logger
 from kmd.errors import ApiResultError
 from kmd.file_formats.yaml_util import to_yaml_string
-from kmd.model.media_model import MediaFormat
+from kmd.model.media_model import MediaType
 from kmd.util.url import Url
 
 
@@ -44,7 +44,7 @@ def ydl_extract_info(url: Url) -> Dict[str, Any]:
 
 def ydl_download_media(
     url: Url, target_dir: Path | None = None, include_video: bool = False
-) -> Dict[MediaFormat, Path]:
+) -> Dict[MediaType, Path]:
     """
     Download and convert to mp3 and mp4 using yt_dlp, which is generally the best library for this.
     """
@@ -100,7 +100,7 @@ def ydl_download_media(
     # Check if the audio file exists.
     mp3_path = os.path.splitext(media_file_path)[0] + ".mp3"
     if os.path.exists(mp3_path):
-        result_paths[MediaFormat.audio_full] = Path(mp3_path)
+        result_paths[MediaType.audio] = Path(mp3_path)
     else:
         log.warn("mp3 download not found: %s", mp3_path)
 
@@ -108,7 +108,7 @@ def ydl_download_media(
         # Check if video file exists.
         mp4_path = os.path.splitext(media_file_path)[0] + ".mp4"
         if os.path.exists(mp4_path):
-            result_paths[MediaFormat.video_full] = Path(mp4_path)
+            result_paths[MediaType.video] = Path(mp4_path)
         else:
             log.warn("mp4 download not found: %s", mp4_path)
 

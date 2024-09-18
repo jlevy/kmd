@@ -8,7 +8,7 @@ from kmd.model.canon_url import thumbnail_url
 from kmd.util.log_calls import log_calls
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
-from kmd.web_content.web_fetch import fetch, fetch_and_cache
+from kmd.web_content.file_cache_tools import cache, fetch
 
 log = get_logger(__name__)
 
@@ -30,7 +30,7 @@ class PageData:
 
 
 @log_calls(level="message")
-def fetch_extract(url: Url, cache=True) -> PageData:
+def fetch_extract(url: Url, use_cache: bool = True) -> PageData:
     """
     Fetches a URL and extracts the title, description, and content.
     """
@@ -38,8 +38,8 @@ def fetch_extract(url: Url, cache=True) -> PageData:
     # TODO: Consider a JS-enabled headless browser so it works on more sites.
     # Example: https://www.inc.com/atish-davda/5-questions-you-should-ask-before-taking-a-start-up-job-offer.html
 
-    if cache:
-        path, _was_cached = fetch_and_cache(url)
+    if use_cache:
+        path, _was_cached = cache(url)
         with open(path, "rb") as file:
             content = file.read()
         page_data = _extract_page_data_from_html(url, content)

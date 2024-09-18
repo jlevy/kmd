@@ -7,8 +7,9 @@ from typing import cast, List, Optional, Tuple
 import magic
 
 from kmd.errors import InvalidFilename
+from kmd.model.media_model import MediaType
 from kmd.text_formatting.text_formatting import fmt_path
-from kmd.util.url import Url
+from kmd.util.url import is_file_url, parse_file_url, Url
 
 
 class Format(Enum):
@@ -32,11 +33,13 @@ class Format(Enum):
     csv = "csv"
     pdf = "pdf"
     docx = "docx"
+    jpeg = "jpeg"
+    png = "png"
     mp3 = "mp3"
     m4a = "m4a"
     mp4 = "mp4"
 
-    unknown = "unknown"
+    binary = "binary"
 
     def is_text(self) -> bool:
         """
@@ -51,6 +54,27 @@ class Format(Enum):
             self.json,
             self.python,
         ]
+
+    def media_format(self) -> MediaType:
+        format_to_media_format = {
+            Format.url: MediaType.webpage,
+            Format.plaintext: MediaType.text,
+            Format.markdown: MediaType.text,
+            Format.md_html: MediaType.text,
+            Format.html: MediaType.webpage,
+            Format.yaml: MediaType.text,
+            Format.python: MediaType.text,
+            Format.json: MediaType.text,
+            Format.csv: MediaType.text,
+            Format.pdf: MediaType.text,
+            Format.jpeg: MediaType.image,
+            Format.png: MediaType.image,
+            Format.docx: MediaType.text,
+            Format.mp3: MediaType.audio,
+            Format.m4a: MediaType.audio,
+            Format.mp4: MediaType.video,
+        }
+        return format_to_media_format.get(self, MediaType.binary)
 
     def supports_frontmatter(self) -> bool:
         return self in [
@@ -106,10 +130,13 @@ class Format(Enum):
             "text/csv": Format.csv,
             "application/pdf": Format.pdf,
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document": Format.docx,
+            "image/jpeg": Format.jpeg,
+            "image/png": Format.png,
             "audio/mpeg": Format.mp3,
             "audio/mp3": Format.mp3,
             "audio/mp4": Format.m4a,
             "video/mp4": Format.mp4,
+            "application/octet-stream": Format.binary,
         }
 
     def mime_type(self) -> Optional[str]:
@@ -124,9 +151,9 @@ class Format(Enum):
     @classmethod
     def from_mime_type(cls, mime_type: Optional[str]) -> Optional["Format"]:
         """
-        Format from mime type, or Format.unknown if not recognized.
+        Format from mime type.
         """
-        return cls._mime_type_map.get(mime_type, Format.unknown)
+        return cls._mime_type_map.get(mime_type)
 
     def __str__(self):
         return self.name
@@ -149,6 +176,8 @@ class FileExt(Enum):
     py = "py"
     pdf = "pdf"
     docx = "docx"
+    jpg = "jpg"
+    png = "png"
     mp3 = "mp3"
     m4a = "m4a"
     mp4 = "mp4"
@@ -169,7 +198,7 @@ class FileExt(Enum):
         File extension to use for a given format.
         """
         format_to_file_ext = {
-            Format.url.value: FileExt.yml,
+            Format.url.value: FileExt.yml,  # We save URLs as YAML resources.
             Format.markdown.value: FileExt.md,
             Format.md_html.value: FileExt.md,
             Format.html.value: FileExt.html,
@@ -180,6 +209,8 @@ class FileExt(Enum):
             Format.python.value: FileExt.py,
             Format.pdf.value: FileExt.pdf,
             Format.docx.value: FileExt.docx,
+            Format.jpeg.value: FileExt.jpg,
+            Format.png.value: FileExt.png,
             Format.mp3.value: FileExt.mp3,
             Format.m4a.value: FileExt.m4a,
             Format.mp4.value: FileExt.mp4,
@@ -209,29 +240,21 @@ def canonicalize_file_ext(ext: str) -> str:
     ext_map = {
         "htm": "html",
         "yaml": "yml",
+        "jpeg": "jpg",
     }
     ext = ext.lower().lstrip(".")
     return ext_map.get(ext, ext)
 
 
-def parse_file_ext(path: str | Path) -> Optional[FileExt]:
+def parse_file_ext(url_or_path: str | Url | Path) -> Optional[FileExt]:
     """
-    Parse a file extension from a path or a raw file extension like "csv" or ".csv".
+    Parse a known, canonical file extension from a path, a URL, or even just a
+    raw file extension (like "csv" or ".csv").
     """
-    front, ext = os.path.splitext(str(path))
+    front, ext = os.path.splitext(str(url_or_path).split("/")[-1])
     if not ext:
         ext = front
     return FileExt.parse(canonicalize_file_ext(ext))
-
-
-def guess_format(path: str | Path) -> Optional[Format]:
-    """
-    Guess the format of a file from its extension. None if not clear.
-    """
-    _dirname, _name, _item_type, ext = split_filename(path)
-    file_ext = parse_file_ext(ext)
-    format = file_ext and Format.guess_by_file_ext(file_ext)
-    return format
 
 
 def split_filename(path: str | Path, require_type_ext: bool = False) -> Tuple[str, str, str, str]:
@@ -312,37 +335,81 @@ def is_ignored(path: str | Path) -> bool:
     )
 
 
-def file_mime_type(filename: str | Path) -> str:
+def detect_mime_type(filename: str | Path) -> Optional[str]:
     """
     Get the mime type of a file using libmagic.
     """
-    filename = str(filename)
     mime = magic.Magic(mime=True)
-    mime_type = mime.from_file(filename)
-    return mime_type or "unknown"
+    mime_type = mime.from_file(str(filename))
+    return mime_type
 
 
-def file_format(filename: str | Path) -> Optional[Format]:
+def _detect_html_or_markdown(content: str) -> Optional[Format]:
     """
-    Get file format based on libmagic mime type.
+    Another simple best guess in case we can't tell otherwise.
     """
-    return Format.from_mime_type(file_mime_type(filename))
+    if re.search(
+        r"<!DOCTYPE html>|<html>|<body>|<head>|<div>|<p>", content, re.IGNORECASE | re.MULTILINE
+    ):
+        return Format.html
+
+    if re.search(r"^#+ |^- |\*\*|__", content, re.MULTILINE):
+        return Format.markdown
+
+    return None
 
 
-def file_ext_from_name(url_or_path: Url | Path) -> Optional[FileExt]:
-    """
-    Recognize known file extensions from the path or URL.
-    """
+def _read_partial_content(path: Path, max_bytes: int = 200 * 1024) -> str:
+    with path.open("r", encoding="utf-8", errors="ignore") as file:
+        return file.read(max_bytes)
 
-    return parse_file_ext(url_or_path)
+
+def detect_file_format(path: str | Path) -> Optional[Format]:
+    """
+    Get file format based on file content (libmagic).
+    """
+    path = Path(path)
+    fmt = Format.from_mime_type(detect_mime_type(path))
+    if not fmt and path.is_file():
+        try:
+            fmt = _detect_html_or_markdown(_read_partial_content(path))
+        except UnicodeDecodeError:
+            pass
+
+
+def detect_media_type(filename: str | Path) -> MediaType:
+    """
+    Get media type (text, image, video etc.) based on file content (libmagic).
+    """
+    fmt = detect_file_format(filename)
+    media_format = fmt.media_format() if fmt else MediaType.binary
+    return media_format
 
 
 def file_ext_from_content(path: Path) -> Optional[FileExt]:
     """
     Recognize known file extensions from the content.
     """
-    fmt = file_format(path)
+    fmt = detect_file_format(path)
     return FileExt.for_format(fmt) if fmt else None
+
+
+def choose_file_ext(url_or_path: Url | Path) -> Optional[FileExt]:
+    """
+    Pick a suffix to reflect the type of the content. Recognizes known file
+    extensions, then tries libmagic, then gives up (returns None).
+    """
+
+    if isinstance(url_or_path, Path):
+        ext = parse_file_ext(url_or_path) or file_ext_from_content(url_or_path)
+    elif is_file_url(url_or_path):
+        path = parse_file_url(url_or_path)
+        if path:
+            ext = parse_file_ext(path) or file_ext_from_content(path)
+    else:
+        ext = parse_file_ext(url_or_path)
+
+    return ext
 
 
 ## Tests

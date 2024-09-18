@@ -1,14 +1,15 @@
-from typing import Dict
+import importlib
+import pkgutil
+from pathlib import Path
+from typing import Dict, List, Optional
 
 from cachetools import Cache, cached
 
-from kmd.action_defs.base_actions import import_base_actions
-from kmd.action_defs.compound_actions import import_compound_actions
-from kmd.action_defs.experimental_actions import import_experimental_actions
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.exec.action_registry import instantiate_actions
 from kmd.model.actions_model import Action
+from kmd.text_formatting.text_formatting import fmt_path
 
 log = get_logger(__name__)
 
@@ -16,20 +17,51 @@ log = get_logger(__name__)
 cache = Cache(maxsize=float("inf"))
 
 
+def _import_all_files(path: Path, base_package: str, tallies: Optional[Dict[str, int]]):
+    if tallies is None:
+        tallies = {}
+
+    current_package = __name__
+    for _module_finder, module_name, _is_pkg in pkgutil.iter_modules(path=[str(path)]):
+        importlib.import_module(f"{base_package}.{module_name}", current_package)
+        tallies[base_package] = tallies.get(base_package, 0) + 1
+
+    return tallies
+
+
+def import_actions(subdir_names: List[str], tallies: Optional[Dict[str, int]] = None):
+    """
+    Explicit import of action definitions so all actions go into registry.
+    """
+    base_dir = Path(__file__).parent
+    base_package = __package__
+
+    for subdir_name in subdir_names:
+        full_path = base_dir / subdir_name
+        if full_path.is_dir():
+            package_name = f"{base_package}.{subdir_name}"
+            _import_all_files(full_path, package_name, tallies)
+            log.info("Imported actions: package `%s` at %s", package_name, fmt_path(full_path))
+
+
 @cached(cache)
 def load_all_actions(base_only: bool = False) -> Dict[str, Action]:
-    import_base_actions()
-    # Allow bootstrapping base actions before compound actions.
+    tallies = {}
+    # Allow bootstrapping base actions before compound actions that may depend on them.
+    import_actions(["base_actions"], tallies)
     if not base_only:
-        import_experimental_actions()
-        import_compound_actions()
+        import_actions(["experimental_actions", "compound_actions"], tallies)
 
     actions_map = instantiate_actions()
 
+    if len(actions_map) == 0:
+        log.error("No actions found! Was there an import error?")
+
     log.info(
-        "Loaded %s actions (base_only=%s)",
+        "Loaded %s actions (base_only=%s): %s",
         len(actions_map),
         base_only,
+        tallies,
     )
 
     return actions_map

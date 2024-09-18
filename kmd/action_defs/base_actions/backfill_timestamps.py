@@ -28,7 +28,7 @@ class BackfillSourceTimestamps(CachedDocAction):
               Backfill timestamps from a source document.
               Seeks through the document this doc is derived from for timestamps and inserts them
               into the text of the current doc. Source must have similar tokens.
-            """,
+              """,
             precondition=is_text_doc & ~has_timestamps,
             chunk_unit=TextUnit.paragraphs,
         )
@@ -131,7 +131,7 @@ class BackfillSourceTimestamps(CachedDocAction):
                 )
 
                 try:
-                    timestamp = extractor.extract(source_wordtok_offset)
+                    timestamp, _offset = extractor.extract_preceding(source_wordtok_offset)
 
                     timestamp_list.append(timestamp)
                     sent_index_list.append(sent_index)

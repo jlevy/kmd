@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Iterable, Tuple
 
 from kmd.config.logger import get_logger
 
@@ -9,11 +9,16 @@ log = get_logger(__name__)
 class Extractor(ABC):
     """
     Abstract base class for extractors that extract information from a document at a given location.
+    We use a class not a pure function since we may need to preprocess the document.
     """
 
     def __init__(self, doc_str: str):
         self.doc_str = doc_str
 
     @abstractmethod
-    def extract(self, wordtok_offset: int) -> Any:
+    def extract_all(self) -> Iterable[Tuple[Any, int]]:
+        pass
+
+    @abstractmethod
+    def extract_preceding(self, wordtok_offset: int) -> Tuple[Any, int]:
         pass

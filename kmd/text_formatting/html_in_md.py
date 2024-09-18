@@ -37,7 +37,7 @@ ClassNames = str | List[str]
 
 def tag_with_attrs(
     tag: str,
-    text: str,
+    text: Optional[str],
     class_name: Optional[ClassNames] = None,
     attrs: Optional[Dict[str, str]] = None,
     safe: bool = False,
@@ -55,14 +55,17 @@ def tag_with_attrs(
     if attrs:
         attr_str += "".join(f' {k}="{escape_attribute(v)}"' for k, v in attrs.items())
     # Default padding for div and p tags.
-    content = escape_md_html(text, safe)
-    if padding is None:
-        padding = "\n" if tag in ["div", "p"] else ""
-    if padding:
-        content = content.strip("\n")
-        if not content:
-            padding = ""
-    return f"<{tag}{attr_str}>{padding}{content}{padding}</{tag}>"
+    if text is None:
+        return f"<{tag}{attr_str} />"
+    else:
+        content = escape_md_html(text, safe)
+        if padding is None:
+            padding = "\n" if tag in ["div", "p"] else ""
+        if padding:
+            content = content.strip("\n")
+            if not content:
+                padding = ""
+        return f"<{tag}{attr_str}>{padding}{content}{padding}</{tag}>"
 
 
 def html_span(
@@ -101,6 +104,19 @@ def html_speaker_id_span(text: str, speaker_id: str, safe: bool = False) -> str:
 def html_a(text: str, href: str, safe: bool = False) -> str:
     text = escape_md_html(text, safe)
     return f'<a href="{href}">{text}</a>'
+
+
+def html_img(
+    src: str,
+    alt: str,
+    class_name: Optional[ClassNames] = None,
+    attrs: Optional[Dict[str, str]] = None,
+    safe: bool = False,
+) -> str:
+    img_attrs = {"src": src, "alt": alt}
+    if attrs:
+        img_attrs.update(attrs)
+    return tag_with_attrs("img", None, class_name, img_attrs, safe=safe)
 
 
 def html_join_blocks(*blocks: str) -> str:

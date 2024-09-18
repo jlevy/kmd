@@ -4,7 +4,7 @@ word tokens ("wordtoks").
 """
 
 from textwrap import dedent
-from typing import Callable, List, Union
+from typing import Callable, List, Tuple, Union
 
 import regex
 
@@ -24,9 +24,9 @@ EOF_STR = ""
 SPACE_TOK = " "
 
 # Currently break on words, spaces, or any single other/punctuation character.
-# HTML tags (of length <1024 chars) are also a single token.
+# HTML tags (of length <1024 chars, possibly with newlines) are also a single token.
 # TODO: Could add nicer support for Markdown formatting as well.
-_wordtok_pattern = regex.compile(r"(<.{0,1024}?>|\w+|[^\w\s]|\s+)")
+_wordtok_pattern = regex.compile(r"(<(?:[^<>]|\n){0,1024}>|\w+|[^\w\s]|\s+)", regex.DOTALL)
 
 _para_br_pattern = regex.compile(r"\s*\n\n\s*")
 
@@ -57,25 +57,57 @@ def wordtok_len(wordtok: str) -> int:
     return len(wordtok_to_str(wordtok))
 
 
-def raw_text_to_wordtoks(text: str, parse_para_br=False, bof_eof=False) -> List[str]:
-    """
-    Fast breaking of text into word tokens, including words, whitespace, punctuation, and
-    HTML tags. Does not look for paragraph breaks unless `parse_para_br` is True. Does not
-    parse sentence breaks. Normalizes all other whitespace to a single space character.
-    """
-    if parse_para_br:
-        text = _para_br_pattern.sub(PARA_BR_TOK, text)
+_whitespace = regex.compile(r"\s+")
 
-    wordtoks = _wordtok_pattern.findall(text)
-    wordtoks = [wordtok if not wordtok.isspace() else SPACE_TOK for wordtok in wordtoks]
+
+def normalize_wordtok(wordtok: str) -> str:
+    if wordtok.isspace():
+        normalized = SPACE_TOK
+    elif wordtok.startswith("<"):
+        normalized = _whitespace.sub(" ", wordtok)
+    else:
+        normalized = wordtok
+    return normalized
+
+
+def raw_text_to_wordtok_offsets(text: str, bof_eof=False) -> Tuple[List[str], List[int]]:
+    """
+    Same as `raw_text_to_wordtoks`, but returns a list of tuples `(wordtok, offset)`.
+    """
+    wordtoks = []
+    offsets = []
+    offset = 0
+    for match in _wordtok_pattern.finditer(text):
+        wordtok = normalize_wordtok(match.group())
+        wordtoks.append(wordtok)
+        offsets.append(offset)
+        offset = match.end()
 
     if bof_eof:
-        return [BOF_TOK, *wordtoks, EOF_TOK]
-    else:
-        return wordtoks
+        wordtoks = [BOF_TOK] + wordtoks + [EOF_TOK]
+        offsets = [0] + offsets + [len(text)]
+
+    return wordtoks, offsets
 
 
-def initial_wordtoks(text: str, max_chars: int) -> List[str]:
+def raw_text_to_wordtoks(text: str, bof_eof=False) -> List[str]:
+    """
+    Convert text to word tokens, including words, whitespace, punctuation, and
+    HTML tags. Does not parse paragraph orsentence breaks. Normalizes all
+    whitespace to a single space character.
+    """
+    wordtoks, _offsets = raw_text_to_wordtok_offsets(text, bof_eof)
+    return wordtoks
+
+
+def insert_para_wordtoks(text: str) -> str:
+    """
+    Replace paragraph breaks in text with para break tokens.
+    """
+    return _para_br_pattern.sub(PARA_BR_TOK, text)
+
+
+def _initial_wordtoks(text: str, max_chars: int) -> List[str]:
     sub_text = text[:max_chars]
     wordtoks = raw_text_to_wordtoks(sub_text)
     if wordtoks:
@@ -84,7 +116,7 @@ def initial_wordtoks(text: str, max_chars: int) -> List[str]:
 
 
 def first_wordtok_is_div(text: str) -> bool:
-    wordtoks = initial_wordtoks(text, 100)
+    wordtoks = _initial_wordtoks(text, 100)
     return bool(wordtoks and is_tag(wordtoks[0]) and wordtoks[0].find("<div") >= 0)
 
 
@@ -128,15 +160,15 @@ Predicate = Union[Callable[[str], bool], List[str]]
 
 
 class _TokenSearcher:
-    def __init__(self, wordtoks: List[str]):
-        self.wordtoks = wordtoks
+    def __init__(self, toks: List[str]):
+        self.toks = toks
         self.current_idx = 0
 
     def at(self, index: int):
         if index is None:
             raise KeyError("Index cannot be None")
         # Convert negative indices to positive ones.
-        self.current_idx = index if index >= 0 else len(self.wordtoks) + index
+        self.current_idx = index if index >= 0 else len(self.toks) + index
         return self
 
     def seek_back(self, predicate: Predicate):
@@ -144,7 +176,7 @@ class _TokenSearcher:
             allowed: List[str] = predicate
             predicate = lambda x: x in allowed
         for idx in range(self.current_idx - 1, -1, -1):
-            if predicate(self.wordtoks[idx]):
+            if predicate(self.toks[idx]):
                 self.current_idx = idx
                 return self
         raise KeyError("No matching token found before the current index")
@@ -153,8 +185,8 @@ class _TokenSearcher:
         if isinstance(predicate, list):
             allowed: List[str] = predicate
             predicate = lambda x: x in allowed
-        for idx in range(self.current_idx + 1, len(self.wordtoks)):
-            if predicate(self.wordtoks[idx]):
+        for idx in range(self.current_idx + 1, len(self.toks)):
+            if predicate(self.toks[idx]):
                 self.current_idx = idx
                 return self
         raise KeyError("No matching token found after the current index")
@@ -166,7 +198,7 @@ class _TokenSearcher:
         return self
 
     def next(self):
-        if self.current_idx + 1 >= len(self.wordtoks):
+        if self.current_idx + 1 >= len(self.toks):
             raise KeyError("No next token available")
         self.current_idx += 1
         return self
@@ -175,7 +207,7 @@ class _TokenSearcher:
         return self.current_idx
 
     def get_token(self):
-        return self.current_idx, self.wordtoks[self.current_idx]
+        return self.current_idx, self.toks[self.current_idx]
 
 
 def search_tokens(wordtoks: List[str]) -> _TokenSearcher:
@@ -196,6 +228,9 @@ _test_doc = dedent(
 
     <span data-timestamp="6.16">Here's the deal.</span>
     <span data-timestamp="7.92">You can follow me on my daily workouts.
+    <span class="citation timestamp-link" data-src="resources/the_time_is_now.resource.yml"
+    data-timestamp="10.29"><a
+    href="https://www.youtube.com/">00:10</a></span>
     """
 ).strip()
 
@@ -206,17 +241,18 @@ def test_html_doc():
     print("\n---Wordtoks test:")
     print(visualize_wordtoks(wordtoks))
 
-    wordtoks_with_para = raw_text_to_wordtoks(_test_doc, parse_para_br=True, bof_eof=True)
+    print("\n---Wordtoks with para br:")
+    wordtoks_with_para = raw_text_to_wordtoks(insert_para_wordtoks(_test_doc), bof_eof=True)
     print(visualize_wordtoks(wordtoks_with_para))
 
     assert (
         visualize_wordtoks(wordtoks)
-        == """⎪<-BOF->⎪Hello⎪,⎪ ⎪world⎪!⎪ ⎪This⎪ ⎪is⎪ ⎪an⎪ ⎪"⎪example⎪ ⎪sentence⎪ ⎪with⎪ ⎪punctuation⎪.⎪ ⎪"⎪Special⎪ ⎪characters⎪:⎪ ⎪@⎪#⎪%⎪^⎪&⎪*⎪(⎪)⎪"⎪ ⎪<span data-timestamp="5.60">⎪Alright⎪,⎪ ⎪guys⎪.⎪</span>⎪ ⎪<span data-timestamp="6.16">⎪Here⎪'⎪s⎪ ⎪the⎪ ⎪deal⎪.⎪</span>⎪ ⎪<span data-timestamp="7.92">⎪You⎪ ⎪can⎪ ⎪follow⎪ ⎪me⎪ ⎪on⎪ ⎪my⎪ ⎪daily⎪ ⎪workouts⎪.⎪<-EOF->⎪"""
+        == """⎪<-BOF->⎪Hello⎪,⎪ ⎪world⎪!⎪ ⎪This⎪ ⎪is⎪ ⎪an⎪ ⎪"⎪example⎪ ⎪sentence⎪ ⎪with⎪ ⎪punctuation⎪.⎪ ⎪"⎪Special⎪ ⎪characters⎪:⎪ ⎪@⎪#⎪%⎪^⎪&⎪*⎪(⎪)⎪"⎪ ⎪<span data-timestamp="5.60">⎪Alright⎪,⎪ ⎪guys⎪.⎪</span>⎪ ⎪<span data-timestamp="6.16">⎪Here⎪'⎪s⎪ ⎪the⎪ ⎪deal⎪.⎪</span>⎪ ⎪<span data-timestamp="7.92">⎪You⎪ ⎪can⎪ ⎪follow⎪ ⎪me⎪ ⎪on⎪ ⎪my⎪ ⎪daily⎪ ⎪workouts⎪.⎪ ⎪<span class="citation timestamp-link" data-src="resources/the_time_is_now.resource.yml" data-timestamp="10.29">⎪<a href="https://www.youtube.com/">⎪00⎪:⎪10⎪</a>⎪</span>⎪<-EOF->⎪"""
     )
 
     assert (
         visualize_wordtoks(wordtoks_with_para)
-        == """⎪<-BOF->⎪Hello⎪,⎪ ⎪world⎪!⎪ ⎪This⎪ ⎪is⎪ ⎪an⎪ ⎪"⎪example⎪ ⎪sentence⎪ ⎪with⎪ ⎪punctuation⎪.⎪ ⎪"⎪Special⎪ ⎪characters⎪:⎪ ⎪@⎪#⎪%⎪^⎪&⎪*⎪(⎪)⎪"⎪ ⎪<span data-timestamp="5.60">⎪Alright⎪,⎪ ⎪guys⎪.⎪</span>⎪<-PARA-BR->⎪<span data-timestamp="6.16">⎪Here⎪'⎪s⎪ ⎪the⎪ ⎪deal⎪.⎪</span>⎪ ⎪<span data-timestamp="7.92">⎪You⎪ ⎪can⎪ ⎪follow⎪ ⎪me⎪ ⎪on⎪ ⎪my⎪ ⎪daily⎪ ⎪workouts⎪.⎪<-EOF->⎪"""
+        == """⎪<-BOF->⎪Hello⎪,⎪ ⎪world⎪!⎪ ⎪This⎪ ⎪is⎪ ⎪an⎪ ⎪"⎪example⎪ ⎪sentence⎪ ⎪with⎪ ⎪punctuation⎪.⎪ ⎪"⎪Special⎪ ⎪characters⎪:⎪ ⎪@⎪#⎪%⎪^⎪&⎪*⎪(⎪)⎪"⎪ ⎪<span data-timestamp="5.60">⎪Alright⎪,⎪ ⎪guys⎪.⎪</span>⎪<-PARA-BR->⎪<span data-timestamp="6.16">⎪Here⎪'⎪s⎪ ⎪the⎪ ⎪deal⎪.⎪</span>⎪ ⎪<span data-timestamp="7.92">⎪You⎪ ⎪can⎪ ⎪follow⎪ ⎪me⎪ ⎪on⎪ ⎪my⎪ ⎪daily⎪ ⎪workouts⎪.⎪ ⎪<span class="citation timestamp-link" data-src="resources/the_time_is_now.resource.yml" data-timestamp="10.29">⎪<a href="https://www.youtube.com/">⎪00⎪:⎪10⎪</a>⎪</span>⎪<-EOF->⎪"""
     )
 
     print("\n---Searching tokens")

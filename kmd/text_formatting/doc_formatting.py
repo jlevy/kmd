@@ -4,7 +4,7 @@ from typing import Optional
 from kmd.errors import InvalidInput
 from kmd.file_formats.frontmatter_format import fmf_read
 from kmd.file_storage.frontmatter_format import fmf_write
-from kmd.model.file_formats_model import Format, guess_format
+from kmd.model.file_formats_model import detect_file_format, Format
 from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH, normalize_markdown
 from kmd.text_formatting.text_formatting import fmt_path
 from kmd.text_formatting.text_wrapping import text_wrap_fill
@@ -46,7 +46,7 @@ def normalize_text_file(
     frontmatter, if present. `target_path` may be the same as `path`.
     """
 
-    format = format or guess_format(path)
+    format = format or detect_file_format(path)
     if not format or not format.is_text():
         raise InvalidInput(f"Cannot format non-text files: {fmt_path(path)}")
 

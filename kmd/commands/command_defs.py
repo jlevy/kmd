@@ -44,7 +44,12 @@ from kmd.help.assistant import assistance
 from kmd.help.help_page import output_help_page
 from kmd.lang_tools.inflection import plural
 from kmd.model import is_ignored, ItemType, StorePath, USER_SETTABLE_PARAMS
-from kmd.model.file_formats_model import file_mime_type, guess_format, join_filename, split_filename
+from kmd.model.file_formats_model import (
+    detect_file_format,
+    detect_mime_type,
+    join_filename,
+    split_filename,
+)
 from kmd.model.output_model import CommandOutput
 from kmd.preconditions import ALL_PRECONDITIONS
 from kmd.preconditions.precondition_checks import actions_matching_paths
@@ -74,7 +79,7 @@ from kmd.util.type_utils import not_none
 from kmd.util.url import is_url, Url
 from kmd.version import get_version
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
-from kmd.web_content.web_fetch import fetch_and_cache
+from kmd.web_content.file_cache_tools import cache
 
 log = get_logger(__name__)
 
@@ -164,7 +169,7 @@ def cache_local(*path_or_urls: str) -> None:
     output()
     for path_or_url in path_or_urls:
         locator = cast(Url, path_or_url) if is_url(path_or_url) else Path(path_or_url)
-        cache_path, was_cached = fetch_and_cache(locator)
+        cache_path, was_cached = cache(locator)
         cache_str = " (already cached)" if was_cached else ""
         output(f"{fmt_path(path_or_url)}{cache_str}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
         output(f"{cache_path}", text_wrap=Wrap.INDENT_ONLY)
@@ -349,7 +354,7 @@ def show(path: Optional[str] = None, console: bool = False) -> None:
             item = ws.load(input_path)
             if item.thumbnail_url:
                 try:
-                    local_path, _was_cached = fetch_and_cache(item.thumbnail_url)
+                    local_path, _was_cached = cache(item.thumbnail_url)
                     terminal_show_image(local_path)
                 except Exception as e:
                     log.info("Had trouble showing thumbnail image (will skip): %s", e)
@@ -379,7 +384,7 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
     input_paths = _assemble_paths(path)
     input_path = input_paths[0]
 
-    format = guess_format(input_path)
+    format = detect_file_format(input_path)
     if not format or not format.is_text():
         raise InvalidInput(f"Cannot copy non-text files to clipboard: {fmt_path(input_path)}")
 
@@ -481,7 +486,7 @@ def file_info(*paths: str) -> None:
     input_paths = _assemble_paths(*paths)
     output()
     for input_path in input_paths:
-        mime_type = file_mime_type(input_path)
+        mime_type = detect_mime_type(input_path)
         output(f"{fmt_path(input_path)}:", color=COLOR_EMPH)
         output(f"{mime_type}", text_wrap=Wrap.INDENT_ONLY)
         output()

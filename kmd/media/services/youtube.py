@@ -10,9 +10,9 @@ from kmd.file_formats.yaml_util import to_yaml_string
 from kmd.media.yt_dlp_utils import parse_date, ydl_download_media, ydl_extract_info
 from kmd.model.media_model import (
     HeatmapValue,
-    MediaFormat,
     MediaMetadata,
     MediaService,
+    MediaType,
     MediaUrlType,
     SERVICE_YOUTUBE,
 )
@@ -86,7 +86,7 @@ class YouTube(MediaService):
             raise InvalidInput(f"Unrecognized YouTube URL: {url}")
         return Url(canon_url + f"&t={timestamp}s")
 
-    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaFormat, Path]:
+    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaType, Path]:
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
         return ydl_download_media(url, target_dir, include_video=True)
 

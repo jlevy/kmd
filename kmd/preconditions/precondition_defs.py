@@ -5,7 +5,7 @@ from kmd.model.doc_elements import ANNOTATED_PARA, CHUNK
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.preconditions_model import precondition
-from kmd.provenance.timestamps import TIMESTAMP_RE
+from kmd.provenance.timestamps import has_timestamp
 from kmd.text_docs.wordtoks import first_wordtok_is_div
 from kmd.text_formatting.markdown_util import extract_bullet_points
 
@@ -126,7 +126,7 @@ def has_many_paragraphs(item: Item) -> bool:
 
 @precondition
 def has_timestamps(item: Item) -> bool:
-    return bool(item.body and TIMESTAMP_RE.search(item.body))
+    return bool(item.body and has_timestamp(item.body))
 
 
 @precondition

@@ -3,7 +3,7 @@ from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.model import ForEachItemAction, Format, Item, ItemType
 from kmd.preconditions.precondition_defs import has_text_body
-from kmd.text_docs.wordtoks import raw_text_to_wordtoks, visualize_wordtoks
+from kmd.text_docs.wordtoks import insert_para_wordtoks, raw_text_to_wordtoks, visualize_wordtoks
 
 log = get_logger(__name__)
 
@@ -23,7 +23,7 @@ class Wordtokenize(ForEachItemAction):
 
         new_title = f"Word tokens: {item.title}"
         toks_str = visualize_wordtoks(
-            raw_text_to_wordtoks(item.body, parse_para_br=True, bof_eof=True)
+            raw_text_to_wordtoks(insert_para_wordtoks(item.body), bof_eof=True)
         )
         output_item = item.derived_copy(
             type=ItemType.doc, title=new_title, body=toks_str, format=Format.markdown

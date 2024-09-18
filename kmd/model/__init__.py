@@ -77,6 +77,7 @@ from kmd.model.media_model import (
     HeatmapValue,
     MediaMetadata,
     MediaService,
+    MediaType,
     MediaUrlType,
     SERVICE_APPLE_PODCASTS,
     SERVICE_VIMEO,
