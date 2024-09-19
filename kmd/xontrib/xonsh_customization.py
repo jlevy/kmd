@@ -81,15 +81,14 @@ def _load_xonsh_commands():
     """
     kmd_commands = {}
 
-    # kmd command aliases in xonsh.
-    kmd_commands["kmd_help"] = command_defs.kmd_help
-
     # Override default ? command.
     kmd_commands["?"] = "assist"
 
-    # TODO: Figure out how to get this to work:
-    # _set_alias("py_help", help)
-    # _set_alias("help", commands.kmd_help)
+    # Override the default Python help command.
+    # builtin.help must not be loaded or this won't work.
+    set_alias("help", command_defs.help)
+    # An extra name just in case `help` doesn't work.
+    set_alias("kmd_help", command_defs.help)
 
     # TODO: Doesn't seem to reload modified Python?
     # def reload() -> None:

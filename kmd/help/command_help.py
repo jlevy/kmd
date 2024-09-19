@@ -65,7 +65,7 @@ def _output_command_help(
     if verbose:
         output()
         output_help(
-            "For more information, ask the assistant by typing a question (ending in ?) or check `kmd_help`."
+            "For more information, ask the assistant by typing a question (ending in ?) or check `help`."
         )
         output()
 

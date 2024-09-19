@@ -1,17 +1,16 @@
-# kmd
-
 <div align="center">
 
 <p style="max-width: 400px;">
 
 <br/>
 
+<b>⎪K⎪M⎪D⎪</b>
+
 <b>A command-line power tool for knowledge tasks.</b>
 
-<br/>
+⛭
 
-“*Simple should be simple.
-Complex should be possible.*” —Alan Kay
+“*Simple should be simple. Complex should be possible.*” —Alan Kay
 
 <br/>
 
@@ -23,12 +22,11 @@ Complex should be possible.*” —Alan Kay
 
 The best way to use kmd is as its own shell, which a shell environment based on
 [xonsh](https://xon.sh/). If you've used a bash or Python shell before, xonsh is very
-intuitive.
-If you don't want to use xonsh, you can still use it from other shells or as a Python
-library.
+intuitive. If you don't want to use xonsh, you can still use it from other shells or as a
+Python library.
 
-Within the kmd shell you get a full environment with all actions and commands.
-You also get intelligent auto-complete and a built-in assistant to help you perform tasks.
+Within the kmd shell you get a full environment with all actions and commands. You also get
+intelligent auto-complete and a built-in assistant to help you perform tasks.
 
 ## Python and Shell Setup
 
@@ -118,7 +116,7 @@ This does a pip install of the wheel so you can run it as `kmd`.
 Tab completion is your friend!
 Just press tab to get lists of commands and guidance on help from the LLM-based assistant.
 
-Type `?` or use `kmd_help` within the shell for full documentation.
+Type `?` or use `help` within the shell for full documentation.
 
 ## Examples
 
@@ -259,8 +257,6 @@ Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
   for tabular data.
 
 ## Development
-
-## Development Tasks
 
 ```shell
 # Developers should install poetry plugins to help with dev builds and updates:

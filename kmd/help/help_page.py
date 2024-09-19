@@ -29,8 +29,6 @@ def output_help_page(base_only: bool = False) -> None:
             output()
 
         output_heading("More help")
-        output(
-            "Use `kmd_help` for this list. Use `xonfig tutorial` for xonsh help and `help()` for Python help."
-        )
+        output("Use `help` for this help page. Use `xonfig tutorial` for xonsh help.")
 
         output()

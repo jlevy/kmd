@@ -106,9 +106,9 @@ def welcome() -> None:
 
 
 @kmd_command
-def kmd_help() -> None:
+def help() -> None:
     """
-    kmd help. Lists all available actions.
+    Show the kmd main help page.
     """
     # TODO: Take an argument to show help for a specific command or action.
 
@@ -184,11 +184,11 @@ def assist(input: Optional[str] = None) -> None:
     """
     if not input:
         input = prompt_simple_string(
-            "What do you need help with? (Ask any question or press enter to see main `kmd_help` page.)",
+            "What do you need help with? (Ask any question or press enter to see main `help` page.)",
             prompt_symbol=PROMPT_ASSIST,
         )
         if not input.strip():
-            kmd_help()
+            help()
             return
     with get_console().status("Thinking…", spinner=SPINNER):
         output_assistance(assistance(input))

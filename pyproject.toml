@@ -1,18 +1,18 @@
 [tool.poetry]
 name = "kmd"
 # Keep this a dev version, as the dynamic versioning plugin is used for actual release versions:
-version = "0.0.0.dev427+2cb0007"
+version = "0.0.0.dev"
 description = "A command line for knowledge exploration."
 authors = ["Joshua Levy <joshua@cal.berkeley.edu>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-deepgram-sdk = "^3.5.1"
+deepgram-sdk = "^3.6.0"
 strif = "^1.0.1"
 marko = "^2.1.2"
-regex = "^2024.7.24"
-openai = "^1.44.1"
+regex = "^2024.9.11"
+openai = "^1.46.0"
 cachetools = "^5.5.0"
 requests = "^2.32.3"
 pydub = "^0.25.1"
@@ -30,7 +30,7 @@ xonsh = "^0.17.0"
 pygments = "^2.18.0"
 humanize = "^4.10.0"
 spacy = "^3.7.6"
-litellm = "^1.44.22"
+litellm = "^1.46.5"
 prompt-toolkit = "^3.0.47"
 setproctitle = "^1.3.3"
 tenacity = "^8.5.0"
@@ -54,7 +54,7 @@ opencv-python = "^4.10.0.84"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"
-pytest = "^8.3.2"
+pytest = "^8.3.3"
 ruff = "^0.4.10"
 usort = "^1.0.8.post1"
 

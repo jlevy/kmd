@@ -19,13 +19,13 @@ combined in flexible and powerful ways. It operates on "items" such as URLs, fil
 Markdown notes within a workspace directory. These items are processed by a variety
 of actions.
 
-For more detailed information, you can run `kmd_help` to get background and a list
+For more detailed information, you can run `help` to get background and a list
 of commands and actions.
 
 
 ### How do I get started using kmd?
 
-Run `kmd_help` to get an overview.
+Run `help` to get an overview.
 
 Or use the kmd assistant to get help. Ask by typing any quesion ending in `?`
 The kmd assistant knows the docs and can answer many questions!

@@ -19,7 +19,7 @@ from xonsh.main import events, postmain, premain
 from xonsh.shell import Shell
 from xonsh.xontribs import xontribs_load
 
-from kmd.commands.command_defs import kmd_help
+from kmd.commands.command_defs import help
 from kmd.config.lazy_imports import import_start_time
 from kmd.config.logger import get_console, get_logger
 from kmd.config.settings import APP_NAME
@@ -134,7 +134,7 @@ def not_found(cmd: List[str]):
                     {" ".join(cmd)}
 
                     Please give them a brief suggestion of possible correct commands
-                    and how they can get more help with `kmd_help` or any question
+                    and how they can get more help with `help` or any question
                     ending with ? in the terminal.
                     """,
                     fast=True,
@@ -213,6 +213,11 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     Customize xonsh shell, with custom shell settings and input loop hooks as well
     as the kmd xontrib that loads kmd commands.
     """
+    import builtins
+
+    # XXX: A hack to get kmd help to work. We just delete the builtin help so
+    # that kmd's help can be used in its place (otherwise builtins override aliases).
+    del builtins.help
 
     args = premain(None)  # No xonsh args.
 
@@ -275,7 +280,7 @@ def run_shell(single_command: Optional[str] = None):
 def print_help():
     output = StringIO()
     with redirect_stdout(output):
-        kmd_help()
+        help()
     print(output.getvalue())
 
 
