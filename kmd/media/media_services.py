@@ -93,9 +93,11 @@ def list_channel_items(url: Url) -> List[MediaMetadata]:
     raise InvalidInput(f"Unrecognized media URL: {url}")
 
 
-def download_media_by_service(url: Url, target_dir: Path) -> Dict[MediaType, Path]:
+def download_media_by_service(
+    url: Url, target_dir: Path, media_types: Optional[List[MediaType]] = None
+) -> Dict[MediaType, Path]:
     for service in media_services:
         canonical_url = service.canonicalize(url)
         if canonical_url:
-            return service.download_media(url, target_dir)
+            return service.download_media(url, target_dir, media_types=media_types)
     raise ValueError(f"Unrecognized media URL: {url}")

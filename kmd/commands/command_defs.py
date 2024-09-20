@@ -51,7 +51,7 @@ from kmd.model.file_formats_model import (
     split_filename,
 )
 from kmd.model.output_model import CommandOutput
-from kmd.preconditions import ALL_PRECONDITIONS
+from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths
 from kmd.shell_tools.native_tools import (
     CmdlineTool,
@@ -718,7 +718,7 @@ def preconditions() -> None:
 
     output_status("Precondition check for selection:\n %s", fmt_lines(selection))
 
-    for precondition in ALL_PRECONDITIONS:
+    for precondition in all_preconditions():
         satisfied = all(precondition(item) for item in items)
         emoji = EMOJI_TRUE if satisfied else " "
         satisfied_str = "satisfied" if satisfied else "not satisfied"

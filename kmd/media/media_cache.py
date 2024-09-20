@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from strif import atomic_output_file
 
@@ -78,29 +78,36 @@ class MediaCache(DirStore):
         self._write_transcript(url, transcript)
         return transcript
 
-    def cache(self, url: Url, no_cache=False) -> Dict[MediaType, Path]:
+    def cache(
+        self, url: Url, no_cache=False, media_types: Optional[List[MediaType]] = None
+    ) -> Dict[MediaType, Path]:
         cached_paths: Dict[MediaType, Path] = {}
 
+        if not media_types:
+            media_types = [MediaType.audio, MediaType.video]
+
         if not no_cache:
-            full_audio_file = self.find(url, suffix=SUFFIX_MP3)
-            full_video_file = self.find(url, suffix=SUFFIX_MP4)
-            if full_audio_file:
-                log.message("Audio already in cache: %s: %s", url, fmt_path(full_audio_file))
-                cached_paths[MediaType.audio] = full_audio_file
-            if full_video_file:
-                log.message("Video already in cache: %s: %s", url, fmt_path(full_video_file))
-                cached_paths[MediaType.video] = full_video_file
-            if full_audio_file and full_video_file:
+            if MediaType.audio in media_types:
+                audio_file = self.find(url, suffix=SUFFIX_MP3)
+                if audio_file:
+                    log.message("Audio already in cache: %s: %s", url, fmt_path(audio_file))
+                    cached_paths[MediaType.audio] = audio_file
+            if MediaType.video in media_types:
+                video_file = self.find(url, suffix=SUFFIX_MP4)
+                if video_file:
+                    log.message("Video already in cache: %s: %s", url, fmt_path(video_file))
+                    cached_paths[MediaType.video] = video_file
+            if set(cached_paths.keys()) == set(media_types):
                 return cached_paths
-            elif full_audio_file or full_video_file:
+            else:
                 log.message("Downloading to get missing formats.")
 
         log.message("Downloading media: %s", url)
-        media_paths = download_media_by_service(url, self.root)
+        media_paths = download_media_by_service(url, self.root, media_types)
         if MediaType.audio in media_paths:
-            full_audio_path = self.path_for(url, suffix=SUFFIX_MP3)
-            os.rename(media_paths[MediaType.audio], full_audio_path)
-            cached_paths[MediaType.audio] = full_audio_path
+            audio_path = self.path_for(url, suffix=SUFFIX_MP3)
+            os.rename(media_paths[MediaType.audio], audio_path)
+            cached_paths[MediaType.audio] = audio_path
         if MediaType.video in media_paths:
             video_path = self.path_for(url, suffix=SUFFIX_MP4)
             os.rename(media_paths[MediaType.video], video_path)
@@ -127,7 +134,7 @@ class MediaCache(DirStore):
                 transcript = self._read_transcript(url)
                 if transcript:
                     return transcript
-            self.cache(url, no_cache=no_cache)
+            self.cache(url, no_cache, [MediaType.audio])
         elif isinstance(url_or_path, Path):
             if not url_or_path.exists():
                 raise FileNotFound(f"File not found: {fmt_path(url_or_path)}")

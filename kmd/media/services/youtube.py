@@ -86,9 +86,11 @@ class YouTube(MediaService):
             raise InvalidInput(f"Unrecognized YouTube URL: {url}")
         return Url(canon_url + f"&t={timestamp}s")
 
-    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaType, Path]:
+    def download_media(
+        self, url: Url, target_dir: Path, media_types: Optional[List[MediaType]] = None
+    ) -> Dict[MediaType, Path]:
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")
-        return ydl_download_media(url, target_dir, include_video=True)
+        return ydl_download_media(url, target_dir, media_types)
 
     def _extract_info(self, url: Url) -> Dict[str, Any]:
         url = not_none(self.canonicalize(url), "Not a recognized YouTube URL")

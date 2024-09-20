@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings, update_global_settings
@@ -35,9 +35,11 @@ def cache_and_transcribe(
     return _media_cache.transcribe(url_or_path, no_cache=no_cache, language=language)
 
 
-def cache_media(url: Url, no_cache=False) -> Dict[MediaType, Path]:
+def cache_media(
+    url: Url, no_cache=False, media_types: Optional[List[MediaType]] = None
+) -> Dict[MediaType, Path]:
     """
     Download audio and video (if available), saving in cache. If no_cache is
     True, force fresh download.
     """
-    return _media_cache.cache(url, no_cache=no_cache)
+    return _media_cache.cache(url, no_cache, media_types)

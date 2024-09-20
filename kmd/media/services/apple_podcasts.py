@@ -79,9 +79,11 @@ class ApplePodcasts(MediaService):
         # Apple Podcasts doesn't support timestamp links. We'll return the original URL.
         return url
 
-    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaType, Path]:
+    def download_media(
+        self, url: Url, target_dir: Path, media_types: Optional[List[MediaType]] = None
+    ) -> Dict[MediaType, Path]:
         url = not_none(self.canonicalize(url), "Not a recognized Apple Podcasts URL")
-        return ydl_download_media(url, target_dir, include_video=False)
+        return ydl_download_media(url, target_dir, media_types)
 
     def _extract_info(self, url: Url) -> Dict[str, Any]:
         url = not_none(self.canonicalize(url), "Not a recognized Apple Podcasts URL")

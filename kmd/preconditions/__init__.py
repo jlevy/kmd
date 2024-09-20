@@ -1,11 +1,16 @@
 import inspect
 
-import kmd.preconditions.precondition_defs as precondition_defs
+from cachetools import cached
+
 from kmd.model.preconditions_model import Precondition
 
 
-ALL_PRECONDITIONS = [
-    value
-    for _name, value in inspect.getmembers(precondition_defs)
-    if isinstance(value, Precondition)
-]
+@cached({})
+def all_preconditions():
+    import kmd.preconditions.precondition_defs as precondition_defs
+
+    return [
+        value
+        for _name, value in inspect.getmembers(precondition_defs)
+        if isinstance(value, Precondition)
+    ]

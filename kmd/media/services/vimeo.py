@@ -62,9 +62,11 @@ class Vimeo(MediaService):
             return Url(f"{canon_url}#t={timestamp}")
         return canon_url  # For channels, just return the canonical URL
 
-    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaType, Path]:
+    def download_media(
+        self, url: Url, target_dir: Path, media_types: Optional[List[MediaType]] = None
+    ) -> Dict[MediaType, Path]:
         url = not_none(self.canonicalize(url), "Not a recognized Vimeo URL")
-        return ydl_download_media(url, target_dir, include_video=True)
+        return ydl_download_media(url, target_dir, media_types)
 
     def list_channel_items(self, url: Url) -> List[MediaMetadata]:
         raise NotImplementedError()

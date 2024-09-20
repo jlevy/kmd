@@ -70,7 +70,9 @@ class LocalFileMedia(MediaService):
     def timestamp_url(self, url: Url, timestamp: float) -> Url:
         return url
 
-    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaType, Path]:
+    def download_media(
+        self, url: Url, target_dir: Path, _media_types: Optional[List[MediaType]] = None
+    ) -> Dict[MediaType, Path]:
         path = self._parse_file_url(url)
         if not path:
             raise InvalidInput(f"Not a local file URL: {url}")

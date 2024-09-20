@@ -123,8 +123,14 @@ class MediaService(ABC):
         pass
 
     @abstractmethod
-    def download_media(self, url: Url, target_dir: Path) -> Dict[MediaType, Path]:
-        """Download media from URL and extract to audio or video formats."""
+    def download_media(
+        self, url: Url, target_dir: Path, media_types: Optional[List[MediaType]] = None
+    ) -> Dict[MediaType, Path]:
+        """
+        Download media from URL and extract to audio or video formats.
+        Download all available media types (video, audio, etc.) if media_types
+        is not specified.
+        """
         pass
 
     @abstractmethod

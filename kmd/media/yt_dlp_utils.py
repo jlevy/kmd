@@ -2,7 +2,7 @@ import os
 import tempfile
 from datetime import date
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 import yt_dlp
 
@@ -43,14 +43,18 @@ def ydl_extract_info(url: Url) -> Dict[str, Any]:
 
 
 def ydl_download_media(
-    url: Url, target_dir: Path | None = None, include_video: bool = False
+    url: Url, target_dir: Path | None = None, media_types: Optional[List[MediaType]] = None
 ) -> Dict[MediaType, Path]:
     """
-    Download and convert to mp3 and mp4 using yt_dlp, which is generally the best library for this.
+    Download and convert to mp3 and mp4 using yt_dlp, which is generally the best
+    library for this.
     """
 
+    if not media_types:
+        media_types = [MediaType.audio, MediaType.video]
+
     temp_dir = target_dir or tempfile.mkdtemp()
-    if include_video:
+    if MediaType.video in media_types:
         ydl_opts = {
             # Try for best video+audio, fall back to best available.
             # Might want to support smaller sizes tho.
@@ -98,15 +102,14 @@ def ydl_download_media(
 
     log.info("ydl output filename: %s", media_file_path)
 
-    # Check if the audio file exists.
-    mp3_path = os.path.splitext(media_file_path)[0] + ".mp3"
-    if os.path.exists(mp3_path):
-        result_paths[MediaType.audio] = Path(mp3_path)
-    else:
-        log.warn("mp3 download not found: %s", mp3_path)
-
-    if include_video:
-        # Check if video file exists.
+    # Check audio and video files exist.
+    if MediaType.audio in media_types:
+        mp3_path = os.path.splitext(media_file_path)[0] + ".mp3"
+        if os.path.exists(mp3_path):
+            result_paths[MediaType.audio] = Path(mp3_path)
+        else:
+            log.warn("mp3 download not found: %s", mp3_path)
+    if MediaType.video in media_types:
         mp4_path = os.path.splitext(media_file_path)[0] + ".mp4"
         if os.path.exists(mp4_path):
             result_paths[MediaType.video] = Path(mp4_path)

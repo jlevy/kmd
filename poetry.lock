@@ -6858,10 +6858,8 @@ version = "2024.8.6"
 description = "A feature-rich command-line audio/video downloader"
 optional = false
 python-versions = ">=3.8"
-files = [
-    {file = "yt_dlp-2024.8.6-py3-none-any.whl", hash = "sha256:ab507ff600bd9269ad4d654e309646976778f0e243eaa2f6c3c3214278bb2922"},
-    {file = "yt_dlp-2024.8.6.tar.gz", hash = "sha256:e8551f26bc8bf67b99c12373cc87ed2073436c3437e53290878d0f4b4bb1f663"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 brotli = {version = "*", markers = "implementation_name == \"cpython\""}
@@ -6871,7 +6869,7 @@ mutagen = "*"
 pycryptodomex = "*"
 requests = ">=2.32.2,<3"
 urllib3 = ">=1.26.17,<3"
-websockets = ">=12.0"
+websockets = ">=13.0"
 
 [package.extras]
 build = ["build", "hatchling", "pip", "setuptools (>=71.0.2)", "wheel"]
@@ -6882,6 +6880,12 @@ pyinstaller = ["pyinstaller (>=6.7.0)"]
 secretstorage = ["cffi", "secretstorage"]
 static-analysis = ["autopep8 (>=2.0,<3.0)", "ruff (>=0.5.0,<0.6.0)"]
 test = ["pytest (>=8.1,<9.0)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/coreywright/yt-dlp.git"
+reference = "ie/applepodcasts/Fix_after_website_rewrite"
+resolved_reference = "dc3e8defa261add6cadcf985b7214f821cc22752"
 
 [[package]]
 name = "zipp"
@@ -6978,4 +6982,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "2dbe400b8d439bcfd0141079afcbd8fe42845945e755bf2cd532c22d8c02938e"
+content-hash = "11bbd0858442409815e4458bd6c280c337ecc4c20d8c6737cdfc4f2a253bfac4"
