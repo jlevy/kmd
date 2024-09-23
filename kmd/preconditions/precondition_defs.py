@@ -5,6 +5,7 @@ from kmd.model.doc_elements import ANNOTATED_PARA, CHUNK
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.preconditions_model import precondition
+from kmd.preconditions.speaker_labels import extract_speaker_id
 from kmd.provenance.timestamps import has_timestamp
 from kmd.text_docs.wordtoks import first_wordtok_is_div
 from kmd.text_formatting.markdown_util import extract_bullet_points
@@ -96,6 +97,11 @@ def is_markdown_list(item: Item) -> bool:
 
 
 @precondition
+def has_thumbnail_url(item: Item) -> bool:
+    return bool(item.thumbnail_url)
+
+
+@precondition
 def has_div_chunks(item: Item) -> bool:
     return bool(item.body and item.body.find(f'<div class="{CHUNK}">') != -1)
 
@@ -127,6 +133,11 @@ def has_many_paragraphs(item: Item) -> bool:
 @precondition
 def has_timestamps(item: Item) -> bool:
     return bool(item.body and has_timestamp(item.body))
+
+
+@precondition
+def has_speaker_ids(item: Item) -> bool:
+    return bool(item.body and extract_speaker_id(item.body))
 
 
 @precondition

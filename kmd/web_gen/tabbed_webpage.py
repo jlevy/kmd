@@ -4,12 +4,15 @@ from typing import List, Optional
 
 from kmd.config import colors
 from kmd.config.logger import get_logger
+from kmd.errors import NoMatch
 from kmd.file_formats.yaml_util import read_yaml_file, to_yaml_string, write_yaml_file
 from kmd.file_storage.workspaces import current_workspace
 from kmd.lang_tools.clean_headings import clean_heading, summary_heading
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.paths_model import StorePath
+from kmd.preconditions.precondition_defs import has_thumbnail_url
+from kmd.provenance.source_items import find_upstream_item
 from kmd.util.type_utils import as_dataclass, not_none
 from kmd.web_gen.template_render import render_web_template
 
@@ -23,6 +26,7 @@ class TabInfo:
     id: Optional[str] = None
     content_html: Optional[str] = None
     store_path: Optional[str] = None
+    thumbnail_url: Optional[str] = None
 
 
 @dataclass
@@ -46,8 +50,19 @@ def webpage_config(items: List[Item]) -> Item:
         if not item.store_path:
             raise ValueError(f"Item has no store_path: {item}")
 
+    thumbnail_url = None
+    try:
+        item_with_thumbnail = find_upstream_item(item, has_thumbnail_url)
+        thumbnail_url = item_with_thumbnail.thumbnail_url
+    except NoMatch:
+        log.warning("Item has no thumbnail URL: %s", item)
+
     tabs = [
-        TabInfo(label=clean_heading(item.abbrev_title()), store_path=item.store_path)
+        TabInfo(
+            label=clean_heading(item.abbrev_title()),
+            store_path=item.store_path,
+            thumbnail_url=thumbnail_url,
+        )
         for item in items
     ]
     _fill_in_ids(tabs)

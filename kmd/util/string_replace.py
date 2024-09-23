@@ -17,6 +17,28 @@ def insert_multiple(text: str, insertions: List[Insertion]) -> str:
     return "".join(chunks)
 
 
+Replacement = Tuple[int, int, str]
+
+
+def replace_multiple(text: str, replacements: List[Replacement]) -> str:
+    """
+    Replace multiple substrings in `text` with new strings.
+    The replacements are a list of tuples (start_offset, end_offset, new_string).
+
+    """
+    replacements = sorted(replacements, key=lambda x: x[0])
+    chunks = []
+    last_end = 0
+    for start, end, new_text in replacements:
+        if start < last_end:
+            raise ValueError("Overlapping replacements are not allowed.")
+        chunks.append(text[last_end:start])
+        chunks.append(new_text)
+        last_end = end
+    chunks.append(text[last_end:])
+    return "".join(chunks)
+
+
 ## Tests
 
 
@@ -45,3 +67,28 @@ def test_insert_multiple():
     insertions = []
     expected = "no change"
     assert insert_multiple(text, insertions) == expected, "Empty insertions failed"
+
+
+def test_replace_multiple():
+    text = "The quick brown fox"
+    replacements = [(4, 9, "slow"), (16, 19, "dog")]
+    expected = "The slow brown dog"
+    assert replace_multiple(text, replacements) == expected, "Multiple replacements failed"
+
+    text = "overlap test"
+    replacements = [(0, 6, "start"), (5, 10, "end")]
+    try:
+        replace_multiple(text, replacements)
+        assert False, "Overlapping replacements did not raise ValueError"
+    except ValueError:
+        pass  # Expected exception
+
+    text = "short text"
+    replacements = [(5, 10, " longer text")]
+    expected = "short longer text"
+    assert replace_multiple(text, replacements) == expected, "Out of bounds replacement failed"
+
+    text = "no change"
+    replacements = []
+    expected = "no change"
+    assert replace_multiple(text, replacements) == expected, "Empty replacements failed"

@@ -14,7 +14,13 @@ from strif import atomic_output_file, new_timestamped_uid
 
 import kmd.config.suppress_warnings  # noqa: F401
 from kmd.config.settings import global_settings, LogLevel
-from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN, KmdHighlighter, RICH_STYLES
+from kmd.config.text_styles import (
+    EMOJI_SAVED,
+    EMOJI_MSG_INDENT,
+    EMOJI_WARN,
+    KmdHighlighter,
+    RICH_STYLES,
+)
 from kmd.util.format_utils import fmt_path
 from kmd.util.stack_traces import current_stack_traces
 from kmd.util.task_stack import task_stack_prefix_str
@@ -80,7 +86,7 @@ def logging_setup():
     _file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
 
     global _console_handler
-    _console_handler = RichHandler(
+    _console_handler = PrefixedRichHandler(
         console=_console,
         level=global_settings().console_log_level.value,
         show_time=False,
@@ -117,8 +123,6 @@ def logging_setup():
 
 def prefix(line, emoji: str = ""):
     prefix = task_stack_prefix_str()
-    if prefix:
-        prefix += " "
     if emoji:
         prefix = f"{prefix}{emoji} "
     return f"{prefix}{line}"
@@ -203,3 +207,10 @@ def reset_logging(log_root: Optional[Path] = None):
             _log_root = log_root
 
         logging_setup()
+
+
+class PrefixedRichHandler(RichHandler):
+    # Add an extra
+    def emit(self, record):
+        record.msg = EMOJI_MSG_INDENT + record.msg
+        super().emit(record)

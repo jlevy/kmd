@@ -43,6 +43,12 @@ class InvalidInput(SelfExplanatoryError):
     pass
 
 
+class NoMatch(InvalidInput):
+    """Raised when a match is not found to a search or precondition."""
+
+    pass
+
+
 class FileExists(InvalidInput, FileExistsError):
     """Raised when a file already exists."""
 

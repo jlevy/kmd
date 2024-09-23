@@ -21,6 +21,9 @@
         id="{{ tab.id }}"
         class="tab-pane {% if not loop.first %}hidden{% endif %}"
       >
+        {% if tab.thumbnail_url %}
+        <img class="thumbnail" src="{{ tab.thumbnail_url }}" alt="{{ tab.label }}" />
+        {% endif %}
         {% if show_tabs %} <h2 class="text-2xl">{{ tab.label }}</h2> {% endif %}
         <p>{{ tab.content_html | safe }}</p>
       </div>

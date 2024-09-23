@@ -11,11 +11,14 @@ from kmd.util.type_utils import not_none
 log = get_logger(__name__)
 
 
-def find_upstream_item(item: Item, precondition: Precondition) -> Item:
+def find_upstream_item(item: Item, precondition: Precondition, include_self: bool = True) -> Item:
     """
     Breadth-first search up the `derived_from` provenance tree to find the first item that
     the validator accepts. Validator should throw `PreconditionFailure`.
     """
+
+    if include_self and precondition(item):
+        return item
 
     if not item.relations.derived_from:
         raise InvalidInput(f"Item must be derived from another item: {item}")
@@ -43,7 +46,7 @@ def find_upstream_item(item: Item, precondition: Precondition) -> Item:
         except InvalidInput:
             pass
 
-    raise InvalidInput(f"Could not find a source item that passes the validator: {item}")
+    raise InvalidInput(f"Could not find a source item that fits the precondition: {item}")
 
 
 def find_upstream_resource(item: Item) -> Item:

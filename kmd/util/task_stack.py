@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import List
 
-from kmd.config.text_styles import EMOJI_BREADCRUMB_SEP, EMOJI_TASK, EMOJI_TASK_SEP
+from kmd.config.text_styles import EMOJI_BREADCRUMB_SEP, EMOJI_TASK, EMOJI_MSG_INDENT
 
 
 @dataclass
@@ -47,7 +47,7 @@ class TaskState:
         return f"{self.task_str()}{self.err_str()}"
 
     def prefix_str(self):
-        return EMOJI_TASK_SEP
+        return EMOJI_MSG_INDENT
 
     def __str__(self) -> str:
         return f"TaskState({self.full_str()})"

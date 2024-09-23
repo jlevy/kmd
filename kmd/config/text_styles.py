@@ -128,7 +128,7 @@ EMOJI_TRUE = "✓"
 
 EMOJI_FALSE = "✗"
 
-EMOJI_TASK_SEP = "⋮"
+EMOJI_MSG_INDENT = "⋮"
 
 EMOJI_BREADCRUMB_SEP = "›"
 
@@ -169,7 +169,7 @@ class KmdHighlighter(RegexHighlighter):
             r"(?P<code_span>`[^`\n]+`)",
             # Task stack in logs:
             f"(?P<task_stack>{EMOJI_TASK}.*$)",
-            f"(?P<task_stack_prefix>{EMOJI_TASK_SEP})",
+            f"(?P<task_stack_prefix>{EMOJI_MSG_INDENT})",
             # Emoji colors:
             f"(?P<task>{EMOJI_TASK})",
             f"(?P<success>{EMOJI_SUCCESS})",
