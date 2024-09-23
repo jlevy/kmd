@@ -10,6 +10,7 @@ class TranscribeFormat(CachedDocSequence):
             name="transcribe_format",
             action_names=[
                 "transcribe",
+                "identify_speakers",
                 "strip_html",
                 "break_into_paragraphs",
                 "backfill_timestamps",

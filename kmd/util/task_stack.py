@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import List
 
-from kmd.config.text_styles import EMOJI_BREADCRUMB_SEP, EMOJI_TASK, EMOJI_MSG_INDENT
+from kmd.config.text_styles import EMOJI_BREADCRUMB_SEP, EMOJI_MSG_INDENT, EMOJI_TASK
 
 
 @dataclass

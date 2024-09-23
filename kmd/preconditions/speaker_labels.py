@@ -1,6 +1,7 @@
 from typing import List
+
 from kmd.model.doc_elements import DATA_SPEAKER_ID
-from kmd.text_formatting.html_find_tags import TagMatch, html_extract_attribute_value, html_find_tag
+from kmd.text_formatting.html_find_tags import html_extract_attribute_value, html_find_tag, TagMatch
 
 
 def extract_speaker_id(html_string: str):

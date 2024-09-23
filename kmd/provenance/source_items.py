@@ -1,5 +1,5 @@
 from kmd.config.logger import get_logger
-from kmd.errors import InvalidInput
+from kmd.errors import NoMatch
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.items_model import Item
 from kmd.model.paths_model import StorePath
@@ -21,7 +21,7 @@ def find_upstream_item(item: Item, precondition: Precondition, include_self: boo
         return item
 
     if not item.relations.derived_from:
-        raise InvalidInput(f"Item must be derived from another item: {item}")
+        raise NoMatch(f"Item must be derived from another item: {item}")
 
     workspace = current_workspace()
 
@@ -43,10 +43,10 @@ def find_upstream_item(item: Item, precondition: Precondition, include_self: boo
     for source_item in source_items:
         try:
             return find_upstream_item(source_item, precondition)
-        except InvalidInput:
+        except NoMatch:
             pass
 
-    raise InvalidInput(f"Could not find a source item that fits the precondition: {item}")
+    raise NoMatch(f"Could not find a source item that fits the precondition: {item}")
 
 
 def find_upstream_resource(item: Item) -> Item:

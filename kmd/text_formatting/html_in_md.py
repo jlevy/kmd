@@ -95,17 +95,19 @@ def html_div(
     return tag_with_attrs("div", text, class_name, attrs, safe, padding)
 
 
-def html_timestamp_span(text: str, timestamp: float, safe: bool = False) -> str:
-    return html_span(text, attrs={DATA_TIMESTAMP: f"{timestamp:.2f}"}, safe=safe)
-
-
-def html_speaker_id_span(text: str, speaker_id: str, safe: bool = False) -> str:
-    return html_span(text, class_name=SPEAKER_LABEL, attrs={DATA_SPEAKER_ID: speaker_id}, safe=safe)
-
-
 def html_a(text: str, href: str, safe: bool = False) -> str:
     text = escape_md_html(text, safe)
     return f'<a href="{href}">{text}</a>'
+
+
+def html_b(text: str, safe: bool = False) -> str:
+    text = escape_md_html(text, safe)
+    return f"<b>{text}</b>"
+
+
+def html_i(text: str, safe: bool = False) -> str:
+    text = escape_md_html(text, safe)
+    return f"<i>{text}</i>"
 
 
 def html_img(
@@ -166,6 +168,14 @@ def span_wrapper(class_name: Optional[str] = None, safe: bool = True) -> Wrapper
         return html_span(text, class_name, safe=safe)
 
     return span_wrapper_func
+
+
+def html_timestamp_span(text: str, timestamp: float, safe: bool = False) -> str:
+    return html_span(text, attrs={DATA_TIMESTAMP: f"{timestamp:.2f}"}, safe=safe)
+
+
+def html_speaker_id_span(text: str, speaker_id: str, safe: bool = False) -> str:
+    return html_span(text, class_name=SPEAKER_LABEL, attrs={DATA_SPEAKER_ID: speaker_id}, safe=safe)
 
 
 ## Tests

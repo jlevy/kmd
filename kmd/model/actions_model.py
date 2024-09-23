@@ -108,7 +108,7 @@ class Action(ABC):
     """A description of the action, in a few sentences."""
 
     precondition: Optional[Precondition] = None
-    """Mainly a sanity check. For simplicity we apply one precondition on all args."""
+    """Mainly a sanity check. For simplicity, the precondition must apply to all args."""
 
     expected_args: ExpectedArgs = ONE_ARG
     """The required number of arguments. We use exactly one by default to make it easy to wrap in a ForEachItemAction."""

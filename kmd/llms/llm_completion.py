@@ -9,7 +9,7 @@ from kmd.config.logger import get_logger
 from kmd.config.settings import LogLevel
 from kmd.config.text_styles import HRULE_SHORT
 from kmd.errors import ApiResultError
-from kmd.llms.llm_checks import is_no_results
+from kmd.llms.fuzzy_parsing import is_no_results
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.util.format_utils import fmt_lines

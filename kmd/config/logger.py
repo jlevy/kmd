@@ -15,8 +15,8 @@ from strif import atomic_output_file, new_timestamped_uid
 import kmd.config.suppress_warnings  # noqa: F401
 from kmd.config.settings import global_settings, LogLevel
 from kmd.config.text_styles import (
-    EMOJI_SAVED,
     EMOJI_MSG_INDENT,
+    EMOJI_SAVED,
     EMOJI_WARN,
     KmdHighlighter,
     RICH_STYLES,

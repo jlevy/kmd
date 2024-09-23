@@ -104,7 +104,10 @@ class SequenceAction(Action):
             ws = current_workspace()
             for item in transient_outputs:
                 assert item.store_path
-                ws.archive(StorePath(item.store_path))
+                try:
+                    ws.archive(StorePath(item.store_path))
+                except FileNotFoundError:
+                    log.info("Item to archive not found, moving on: %s", item.store_path)
 
         return ActionResult(items)
 

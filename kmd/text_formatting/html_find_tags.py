@@ -1,6 +1,9 @@
 from dataclasses import dataclass
-import regex
 from typing import List, Optional
+
+import regex
+
+from kmd.util.obj_utils import abbreviate_obj
 
 
 @dataclass(frozen=True)
@@ -11,6 +14,9 @@ class TagMatch:
     attribute_name: Optional[str]
     attribute_value: Optional[str]
     inner_text: str
+
+    def __str__(self):
+        return abbreviate_obj(self)
 
 
 def html_find_tag(
