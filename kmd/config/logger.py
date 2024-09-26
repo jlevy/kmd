@@ -124,8 +124,8 @@ def logging_setup():
 def prefix(line, emoji: str = ""):
     prefix = task_stack_prefix_str()
     if emoji:
-        prefix = f"{prefix}{emoji} "
-    return f"{prefix}{line}"
+        prefix = f"{prefix} {emoji} "
+    return f"{prefix} {line}"
 
 
 def prefix_args(args, emoji: str = ""):

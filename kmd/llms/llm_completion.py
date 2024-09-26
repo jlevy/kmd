@@ -1,7 +1,8 @@
 from textwrap import indent
-from typing import Dict, List
+from typing import Dict, List, Optional, Type, Union
 
 import litellm
+from pydantic import BaseModel
 from slugify import slugify
 from strif import abbreviate_str
 
@@ -19,10 +20,17 @@ from kmd.util.log_calls import log_calls
 log = get_logger(__name__)
 
 
-def _litellm_completion(model: str, messages: List[Dict[str, str]]) -> str:
+def _litellm_completion(
+    model: str,
+    messages: List[Dict[str, str]],
+    response_format: Optional[Union[dict, Type[BaseModel]]] = None,
+    **kwargs,
+) -> str:
     llm_output = litellm.completion(
         model,
         messages=messages,
+        response_format=response_format,
+        **kwargs,
     )
     result = llm_output.choices[0].message.content  # type: ignore
     if not result or not isinstance(result, str):
@@ -42,6 +50,8 @@ def llm_completion(
     input: str,
     save_objects: bool = True,
     check_no_results: bool = True,
+    response_format: Optional[Union[dict, Type[BaseModel]]] = None,
+    **kwargs,
 ) -> str:
     """
     Perform an LLM completion. Input is inserted into the template with a `body` parameter.
@@ -73,6 +83,8 @@ def llm_completion(
             {"role": "system", "content": str(system_message)},
             {"role": "user", "content": user_message},
         ],
+        response_format=response_format,
+        **kwargs,
     )
 
     log.info("LLM completion output:\n%s", indent(text_output, "    "))
