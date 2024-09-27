@@ -41,7 +41,7 @@ class TaskState:
         return " ".join(filter(bool, pieces))
 
     def err_str(self):
-        return f"({self.errors} {'errs' if self.errors > 1 else 'err'})" if self.errors else ""
+        return f" [{self.errors} {'errs' if self.errors > 1 else 'err'}!]" if self.errors else ""
 
     def full_str(self):
         return f"{self.task_str()}{self.err_str()}"

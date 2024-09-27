@@ -41,7 +41,7 @@ class LazyObject(Generic[T]):
     def __init__(self, load: Callable[[], T], ctx: Mapping[str, T], name: str):
         """
         Lazily loads an object via the load function the first time an
-        attribute is accessed. Once loaded it will replace itself in the
+        attribute is accessed. Once loaded, it will replace itself in the
         provided context (typically the globals of the call site) with the
         given name.
 
@@ -73,7 +73,8 @@ class LazyObject(Generic[T]):
             d["loaded"] = True
             return obj
         except Exception as e:
-            raise RuntimeError(f"Error loading object: {e}")
+            raise e
+            raise RuntimeError("Error loading object") from e
 
     def __getattribute__(self, name: str) -> Any:
         if name in {"_lasdo", "_lazy_obj"}:

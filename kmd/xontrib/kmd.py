@@ -21,7 +21,7 @@ import kmd.xontrib.xonsh_customization
 def load(*paths: str) -> None:
     """
     Load kmd Python extensions. Simply imports and the defined actions should use
-    @kmd_action() to register themselves.
+    @kmd_action to register themselves.
     """
     import importlib
     import os

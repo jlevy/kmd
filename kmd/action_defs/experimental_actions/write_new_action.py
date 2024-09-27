@@ -14,15 +14,9 @@ from kmd.model import (
 )
 from kmd.model.actions_model import ONE_ARG
 from kmd.preconditions.precondition_defs import is_instruction
-from kmd.util.lazyobject import lazyobject
 
 
-@lazyobject
-def assistant_coding_preamble() -> Message:
-    return Message(assistant_preamble(False, False))
-
-
-@kmd_action()
+@kmd_action
 class WriteNewAction(LLMAction):
     def __init__(self):
         super().__init__(
@@ -31,7 +25,7 @@ class WriteNewAction(LLMAction):
             Create a new kmd action in Python, based on a description of the features.
             Write an instruction to give as input.
             """,
-            system_message=assistant_coding_preamble,  # Give it context on kmd APIs.
+            system_message=None,  # Will set this in run().
             title_template=TitleTemplate("Action: {title}"),
             template=MessageTemplate(
                 """
@@ -61,7 +55,7 @@ class WriteNewAction(LLMAction):
                 log = get_logger(__name__)
 
 
-                @kmd_action()
+                @kmd_action
                 class StripHtml(CachedDocAction):
                     def __init__(self):
                         super().__init__(
@@ -97,6 +91,10 @@ class WriteNewAction(LLMAction):
         )
 
     def run(self, items: ActionInput) -> ActionResult:
+        # Give the LLM full context on kmd APIs.
+        # But we do this here lazily to prevent circular dependencies.
+        self.system_message = Message(assistant_preamble(skip_api=False, base_only=False))
+
         description_item = items[0]
 
         workspace = current_workspace()

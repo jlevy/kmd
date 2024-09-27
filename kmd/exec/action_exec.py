@@ -5,16 +5,24 @@ from typing import cast, List, Optional, Tuple
 from kmd.action_defs import look_up_action
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
-from kmd.errors import InvalidInput, InvalidState
+from kmd.errors import ContentError, InvalidInput, InvalidState, NONFATAL_EXCEPTIONS
 from kmd.exec.system_actions import fetch_page_metadata, FETCH_PAGE_METADATA_NAME
 from kmd.file_storage.workspaces import current_workspace, import_and_load
 from kmd.lang_tools.inflection import plural
-from kmd.model.actions_model import Action, ActionResult, ForEachItemAction, NO_ARGS, PathOpType
+from kmd.model.actions_model import (
+    Action,
+    ActionInput,
+    ActionResult,
+    NO_ARGS,
+    PathOpType,
+    PerItemAction,
+)
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.util.format_utils import fmt_lines, fmt_path
+from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
@@ -115,9 +123,10 @@ def run_action(
     if action.name != FETCH_PAGE_METADATA_NAME:
         input_items = [fetch_url_items(item) for item in input_items]
 
-    cached_result = None
+    existing_result = None
 
-    # Preassemble outputs, so we can check if they already exist.
+    # Check if a previous run already produced the result.
+    # To do this we preassemble outputs.
     preassembled_result = action.preassemble(operation, input_items)
     if preassembled_result:
         # Check if these items already exist, with last_operation matching action and input fingerprints.
@@ -130,22 +139,22 @@ def run_action(
         )
         if all_present:
             if rerun:
-                log.message("All outputs already exit but running anyway since rerun requested.")
+                log.message("All outputs already exist but running anyway since rerun requested.")
             else:
                 log.message(
                     "All outputs already exist so skipping action (use --rerun to force run).",
                 )
-                cached_items = [ws.load(not_none(store_path)) for store_path in already_present]
-                cached_result = ActionResult(cached_items)
+                existing_items = [ws.load(not_none(store_path)) for store_path in already_present]
+                existing_result = ActionResult(existing_items)
     else:
         log.info(
             "Rerun check: Will run since `%s` has no rerun check (no preassembly).",
             action_name,
         )
 
-    if cached_result:
+    if existing_result:
         # Use the cached result.
-        result = cached_result
+        result = existing_result
 
         result_store_paths = [StorePath(not_none(item.store_path)) for item in result.items]
         archived_store_paths = []
@@ -159,12 +168,15 @@ def run_action(
         )
     else:
         # Run the action.
-        result = action.run(input_items)
+        if action.run_per_item:
+            result = run_for_each_item(action, input_items)
+        else:
+            result = action.run(input_items)
 
         # Record the operation and add to the history of each item.
-        was_run_for_each = isinstance(action, ForEachItemAction)
+        was_run_for_each = isinstance(action, PerItemAction)
         for i, item in enumerate(result.items):
-            # ForEachItemActions should be treated as if they ran on each item individually.
+            # PerItemAction should be treated as if they ran on each item individually.
             if was_run_for_each:
                 this_op = replace(operation, arguments=[operation.arguments[i]])
             else:
@@ -253,3 +265,70 @@ def run_action(
             ws.set_selection(final_outputs)
 
     return result
+
+
+def run_for_each_item(action: Action, items: ActionInput) -> ActionResult:
+    """
+    Process each input item. If non-fatal errors are encountered on any item,
+    they are reported and processing continues with the next item.
+    """
+
+    log.message("Running action `%s` for each input on %s items", action.name, len(items))
+
+    def run_item(item: Item) -> Item:
+        # Should have already validated arg counts by now.
+        result = action.run([item])
+        if result.has_hints():
+            log.warning(
+                "Ignoring result hints for action `%s` when running on multiple items"
+                " (consider setting run_per_item=False): %s",
+                action.name,
+                result,
+            )
+        return result.items[0]
+
+    with task_stack().context(action.name, len(items), "item") as ts:
+        result_items: List[Item] = []
+        errors: List[Exception] = []
+        multiple_inputs = len(items) > 1
+
+        for i, item in enumerate(items):
+            log.message(
+                "Action `%s` input item %d/%d:\n%s",
+                action.name,
+                i + 1,
+                len(items),
+                fmt_lines([item]),
+            )
+            had_error = False
+            try:
+                result_item = run_item(item)
+                result_items.append(result_item)
+                had_error = False
+            except NONFATAL_EXCEPTIONS as e:
+                errors.append(e)
+                had_error = True
+
+                if multiple_inputs:
+                    log.error(
+                        "Error processing item; continuing with others: %s: %s",
+                        e,
+                        item,
+                    )
+                else:
+                    # If there's only one input, fail fast.
+                    raise e
+            finally:
+                ts.next(last_had_error=had_error)
+
+    if errors:
+        log.error(
+            "%s %s occurred while processing items. See above!",
+            len(errors),
+            plural("error", len(errors)),
+        )
+
+    if len(result_items) < 1:
+        raise ContentError(f"Action `{action.name}` returned no items")
+
+    return ActionResult(result_items)

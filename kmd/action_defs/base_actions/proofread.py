@@ -8,7 +8,7 @@ from kmd.text_docs.window_settings import WINDOW_4_PARA
 log = get_logger(__name__)
 
 
-@kmd_action()
+@kmd_action
 class Proofread(CachedLLMAction):
     def __init__(self):
         super().__init__(

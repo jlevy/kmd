@@ -3,7 +3,7 @@ from kmd.model import CachedDocSequence
 from kmd.preconditions.precondition_defs import is_audio_resource, is_url, is_video_resource
 
 
-@kmd_action(for_each_item=True)
+@kmd_action
 class TranscribeFormat(CachedDocSequence):
     def __init__(self):
         super().__init__(
@@ -17,4 +17,5 @@ class TranscribeFormat(CachedDocSequence):
             ],
             description="Transcribe a video, format the transcript into paragraphs, and backfill source timestamps on each paragraph.",
             precondition=is_url | is_audio_resource | is_video_resource,
+            run_per_item=True,
         )

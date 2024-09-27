@@ -1,6 +1,6 @@
 from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
-from kmd.model import ForEachItemAction, Format, Item, ItemType
+from kmd.model import Format, Item, ItemType, PerItemAction
 from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_formatting.html_in_md import html_span
@@ -21,8 +21,8 @@ def color_by_length(count: int) -> str:
     return color
 
 
-@kmd_action()
-class ColorizeSentences(ForEachItemAction):
+@kmd_action
+class ColorizeSentences(PerItemAction):
     def __init__(self):
         super().__init__(
             name="colorize_sentences",

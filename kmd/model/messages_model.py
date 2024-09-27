@@ -1,5 +1,7 @@
 from textwrap import dedent
 
+from pydantic import ValidationInfo
+
 from kmd.config.logger import get_logger
 from kmd.util.string_template import StringTemplate
 
@@ -11,8 +13,13 @@ class Message(str):
     A message for a model or LLM. Just a string.
     """
 
-    def __new__(cls, value: str):
-        return super().__new__(cls, dedent(value))
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str, info: ValidationInfo) -> "Message":
+        return cls(dedent(str(value)))
 
 
 class MessageTemplate(StringTemplate):

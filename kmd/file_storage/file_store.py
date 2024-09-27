@@ -26,7 +26,13 @@ from kmd.file_storage.metadata_dirs import ARCHIVE_DIR, initialize_store_dirs
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_filename_and_type
 from kmd.model.canon_url import canonicalize_url
-from kmd.model.file_formats_model import FileExt, Format, is_ignored, parse_file_format
+from kmd.model.file_formats_model import (
+    FileExt,
+    Format,
+    is_ignored,
+    known_file_format,
+    parse_file_format,
+)
 from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.params_model import ParamValues
 from kmd.model.paths_model import StorePath
@@ -136,7 +142,7 @@ class FileStore:
                     self.id_map.pop(item_id, None)
                 except KeyError:
                     pass  # If we happen to reload a store it might no longer be in memory.
-        except FileNotFoundError:
+        except (FileNotFoundError, InvalidFilename):
             pass
 
     def _new_filename_for(self, item: Item) -> Tuple[str, Optional[str]]:
@@ -293,6 +299,7 @@ class FileStore:
                     os.unlink(full_path)
                     store_path = old_store_path
 
+        # Update in-memory store_path only after successful save.
         item.store_path = store_path
         self._id_index_item(store_path)
 
@@ -485,7 +492,10 @@ class FileStore:
         # TODO: Log more info like number of items by type.
 
     def walk_items(
-        self, store_path: Optional[StorePath] = None, show_hidden: bool = False
+        self,
+        store_path: Optional[StorePath] = None,
+        show_hidden: bool = False,
+        show_unknown_formats: bool = False,
     ) -> Generator[StorePath, None, None]:
         """
         Yields StorePaths of items in a folder or the entire store.
@@ -495,7 +505,9 @@ class FileStore:
             start_path, relative_to=self.base_dir, show_hidden=show_hidden
         ):
             for filename in filenames:
-                yield StorePath(join(store_dirname, filename))
+                path = self.base_dir / store_dirname / filename
+                if show_unknown_formats or known_file_format(path):
+                    yield StorePath(join(store_dirname, filename))
 
     def normalize(self, store_path: StorePath) -> StorePath:
         """

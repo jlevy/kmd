@@ -1,13 +1,13 @@
-from dataclasses import dataclass
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional
 
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
+from kmd.model.commands_model import Command
 from kmd.model.paths_model import StorePath
 
-if TYPE_CHECKING:
-    from kmd.model.commands_model import Command
 
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(arbitrary_types_allowed=True))
 class CommandOutput:
     """
     Everything needed to handle and display the result of an action or command on the console.

@@ -15,7 +15,7 @@ from kmd.util.string_replace import replace_multiple
 log = get_logger(__name__)
 
 
-@kmd_action()
+@kmd_action
 class IdentifySpeakers(CachedDocAction):
     def __init__(self):
         super().__init__(
@@ -38,8 +38,8 @@ class IdentifySpeakers(CachedDocAction):
         system_message = Message("You are an assistant that identifies speakers in transcripts.")
         identification_template = MessageTemplate(
             """
-            The transcript includes speakers identified by IDs like 'SPEAKER 0' or 'SPEAKER 1'.
-            Based on the following transcript, provide a mapping from speaker IDs to actual speaker names.
+            The transcript below includes speakers identified by IDs like 'SPEAKER 0' or 'SPEAKER 1'.
+            Based on the transcript, provide a mapping from speaker IDs to actual speaker names.
             The mapping should be in JSON format like {{"0": "Alice", "1": "Bob"}}.
             If you are not sure from the content, leave the names as is, writing something like
             {{"0": "Alice", "1": "SPEAKER 1"}} or {{"0": "SPEAKER 0", "1": "SPEAKER 1"}}.

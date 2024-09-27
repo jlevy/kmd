@@ -1,7 +1,8 @@
 import inspect
-from dataclasses import dataclass
 from inspect import Parameter
 from typing import Any, Callable, get_args, get_origin, List, Optional, Tuple, Type, Union
+
+from pydantic.dataclasses import dataclass
 
 
 @dataclass(frozen=True)

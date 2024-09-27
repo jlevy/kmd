@@ -4,7 +4,7 @@ from kmd.model import ComboAction, CONCEPTS
 from kmd.preconditions.precondition_defs import is_text_doc
 
 
-@kmd_action(for_each_item=True)
+@kmd_action
 class AddConcepts(ComboAction):
     def __init__(self):
         super().__init__(
@@ -13,4 +13,5 @@ class AddConcepts(ComboAction):
             description="Add a brief description of the content above the full text of the item.",
             combiner=combine_as_div_group(CONCEPTS),
             precondition=is_text_doc,
+            run_per_item=True,
         )

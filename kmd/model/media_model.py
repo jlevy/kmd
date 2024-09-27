@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from datetime import date
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+from pydantic.dataclasses import dataclass
 
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url

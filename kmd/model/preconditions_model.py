@@ -1,5 +1,8 @@
 from typing import Callable, Optional
 
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import core_schema
+
 from kmd.errors import PreconditionFailure
 from kmd.model.items_model import Item
 
@@ -16,6 +19,10 @@ class Precondition:
     def __init__(self, func: Callable[[Item], bool], name: Optional[str] = None):
         self.func = func
         self.name: str = name or func.__name__
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler: GetCoreSchemaHandler):
+        return core_schema.is_instance_schema(cls)
 
     def check(self, item: Item, info: Optional[str] = None) -> None:
         info_str = f" for {info}" if info else ""

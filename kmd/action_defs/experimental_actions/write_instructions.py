@@ -3,7 +3,7 @@ from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.model import Action, ActionInput, ActionResult, Format, Item, ItemType, NO_ARGS
 
 
-@kmd_action()
+@kmd_action
 class WriteInstructions(Action):
     def __init__(self):
         super().__init__(

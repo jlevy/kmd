@@ -3,7 +3,7 @@ from kmd.model import CachedLLMAction, Message, MessageTemplate, TitleTemplate
 from kmd.text_docs.window_settings import WINDOW_128_PARA
 
 
-@kmd_action()
+@kmd_action
 class SummarizeAsBullets(CachedLLMAction):
     def __init__(self):
         super().__init__(

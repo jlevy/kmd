@@ -2,12 +2,13 @@
 The data model for Items and their file formats.
 """
 
-import dataclasses
-from dataclasses import asdict, dataclass, field, fields, replace
+from copy import deepcopy
+from dataclasses import asdict, field, is_dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
+from pydantic.dataclasses import dataclass
 from slugify import slugify
 
 from kmd.config.logger import get_logger
@@ -17,7 +18,7 @@ from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import FileExt, Format
 from kmd.model.media_model import MediaMetadata
-from kmd.model.operations_model import Operation, OperationSummary, Source
+from kmd.model.operations_model import OperationSummary, Source
 from kmd.model.paths_model import Locator
 from kmd.text_formatting.markdown_util import markdown_to_html
 from kmd.util.format_utils import (
@@ -32,9 +33,7 @@ from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.time_util import iso_format_z
 from kmd.util.url import Url
 
-
-log = get_logger(__name__)  # type: ignore
-
+log = get_logger(__name__)
 
 T = TypeVar("T")
 
@@ -173,9 +172,9 @@ class Item:
     NON_METADATA_FIELDS = ["file_ext", "body", "external_path", "is_binary", "store_path"]
 
     def __post_init__(self):
-        assert type(self.type) == ItemType
-        assert self.format is None or type(self.format) == Format
-        assert self.file_ext is None or type(self.file_ext) == FileExt
+        assert isinstance(self.type, ItemType)
+        assert self.format is None or isinstance(self.format, Format)
+        assert self.file_ext is None or isinstance(self.file_ext, FileExt)
 
         if not isinstance(self.relations, ItemRelations):
             self.relations = ItemRelations(**self.relations)
@@ -183,17 +182,17 @@ class Item:
     @classmethod
     def from_dict(cls, item_dict: Dict[str, Any], **kwargs) -> "Item":
         """
-        Deserialize fields from a dict that may incude string and dict values.
+        Deserialize fields from a dict that may include string and dict values.
         """
         item_dict = {**item_dict, **kwargs}
 
         info_prefix = f"{fmt_path(item_dict['store_path'])}: " if "store_path" in item_dict else ""
 
         # Metadata formats might change over time so it's important to gracefully handle issues.
-        def set_field(key: str, default: Any, cls: Type[T]) -> T:
+        def set_field(key: str, default: Any, cls_: Type[T]) -> T:
             try:
                 if key in item_dict:
-                    return cls(item_dict[key])  # type: ignore
+                    return cls_(item_dict[key])  # type: ignore
                 else:
                     return default
             except (KeyError, ValueError) as e:
@@ -208,7 +207,7 @@ class Item:
                 return default
 
         # These are the enum and dataclass fields.
-        type = set_field("type", ItemType.doc, ItemType)
+        type_ = set_field("type", ItemType.doc, ItemType)
         state = set_field("state", State.draft, State)
         format = set_field("format", None, Format)
         file_ext = set_field("file_ext", None, FileExt)
@@ -233,7 +232,7 @@ class Item:
             "relations",
             "store_path",
         ]
-        all_fields = [f.name for f in fields(cls)]
+        all_fields = [f.name for f in cls.__dataclass_fields__.values()]
         allowed_fields = [f for f in all_fields if f not in excluded_fields]
         other_metadata = {key: value for key, value in item_dict.items() if key in allowed_fields}
         unexpected_metadata = {
@@ -244,8 +243,8 @@ class Item:
                 "Skipping unexpected metadata on item: %s: %s", info_prefix, unexpected_metadata
             )
 
-        return Item(
-            type=type,
+        return cls(
+            type=type_,
             state=state,
             format=format,
             file_ext=file_ext,
@@ -294,31 +293,36 @@ class Item:
             raise ValueError("Cannot get doc id for an item that has not been saved")
         return str(self.store_path)
 
-    def metadata(self, datetime_as_str: bool = False) -> dict[str, Any]:
+    def metadata(self, datetime_as_str: bool = False) -> Dict[str, Any]:
         """
         Metadata is all relevant non-None fields in easy-to-serialize form.
         Optional fields are omitted unless they are set.
         """
 
-        item_dict = asdict(self)
+        item_dict = self.__dict__.copy()
 
         # Special case for prettier serialization of input path/hash.
         if self.source:
             item_dict["source"] = self.source.as_dict()
 
-        def serialize(v):
-            if isinstance(v, Enum):
+        def serialize(v: Any) -> Any:
+            if isinstance(v, list):
+                return [serialize(item) for item in v]
+            elif isinstance(v, dict):
+                return {k: serialize(v) for k, v in v.items()}
+            elif isinstance(v, Enum):
                 return v.value
-            elif isinstance(v, Operation):
-                # Special case for prettier display of inputs.
+            elif hasattr(v, "as_dict"):  # Handle Operation or any object with as_dict method.
                 return v.as_dict()
+            elif is_dataclass(v) and not isinstance(v, type):
+                # Handle Python and Pydantic dataclasses.
+                return asdict(v)
             else:
                 return v
 
-        # It's simpler to keep enum values as strings for simplicity with
-        # serialization to YAML and JSON.
+        # Convert enums and dataclasses to serializable forms.
         item_dict = {
-            k: serialize(v)  # Convert enums to strings for serialization.
+            k: serialize(v)
             for k, v in item_dict.items()
             if v is not None and k not in self.NON_METADATA_FIELDS
         }
@@ -439,18 +443,17 @@ class Item:
     def is_url_resource(self) -> bool:
         return self.type == ItemType.resource and self.format == Format.url and self.url is not None
 
-    def _merge_fields(
+    def _copy_and_update(
         self, other: Optional["Item"] = None, update_timestamp: bool = False, **kwargs
-    ) -> dict:
+    ) -> Dict[str, Any]:
         timestamp = datetime.now() if update_timestamp else None
         overrides = {"store_path": None, "created_at": timestamp, "modified_at": None}
 
-        # asdict() creates dicts recursively so using __annotations__ to do a shallow copy.
-        fields = {field: getattr(self, field) for field in self.__annotations__}
+        fields = deepcopy(self.__dict__)
 
         if other:
-            for field in other.__annotations__:
-                fields[field] = getattr(other, field)
+            other_fields = deepcopy(other.__dict__)
+            fields.update(other_fields)
             fields["extra"] = {**(self.extra or {}), **(other.extra or {})}
 
         fields.update(overrides)
@@ -463,7 +466,7 @@ class Item:
         Copy item with the given field updates. Resets store_path to None. Updates
         created time if requested.
         """
-        new_fields = self._merge_fields(update_timestamp=update_timestamp, **kwargs)
+        new_fields = self._copy_and_update(update_timestamp=update_timestamp, **kwargs)
         return Item(**new_fields)
 
     def merged_copy(self, other: "Item") -> "Item":
@@ -471,7 +474,7 @@ class Item:
         Copy item, merging in fields from another, with the other item's fields
         taking precedence. Resets store_path to None.
         """
-        merged_fields = self._merge_fields(other, update_timestamp=False)
+        merged_fields = self._copy_and_update(other, update_timestamp=False)
         return Item(**merged_fields)
 
     def derived_copy(self, **kwargs) -> "Item":
@@ -501,7 +504,8 @@ class Item:
         Update relations with the given field updates.
         """
         self.relations = self.relations or ItemRelations()
-        self.relations = replace(self.relations, **relations)
+        for key, value in relations.items():
+            setattr(self.relations, key, value)
         return self.relations
 
     def update_history(self, source: Source) -> None:
@@ -521,13 +525,15 @@ class Item:
         """
         Check if two items have identical content, ignoring timestamps and store path.
         """
-        metadata_matches = replace(
-            self,
-            created_at=other.created_at,
-            modified_at=other.modified_at,
-            store_path=other.store_path,
-            body=None,
-        ) == replace(other, body=None)
+        # Check relevant metadata fields.
+        self_fields = self.__dict__.copy()
+        other_fields = other.__dict__.copy()
+        for fields_dict in [self_fields, other_fields]:
+            for f in ["created_at", "modified_at", "store_path", "body"]:
+                fields_dict.pop(f, None)
+
+        metadata_matches = self_fields == other_fields
+
         # Trailing newlines don't matter.
         body_matches = (
             self.is_binary == other.is_binary and self.body == other.body
@@ -583,6 +589,6 @@ class Item:
         return self.as_str_brief()
 
 
-# Some refletion magic so the order of the YAML metadata for an item will match
+# Some reflection magic so the order of the YAML metadata for an item will match
 # the order of the fields here.
-ITEM_FIELDS = [f.name for f in dataclasses.fields(Item)]
+ITEM_FIELDS = [f.name for f in Item.__dataclass_fields__.values()]

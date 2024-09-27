@@ -12,7 +12,7 @@ from kmd.preconditions.precondition_defs import is_markdown_list
 log = get_logger(__name__)
 
 
-@kmd_action()
+@kmd_action
 class SaveConcepts(Action):
     def __init__(self):
         super().__init__(

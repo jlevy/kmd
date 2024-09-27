@@ -28,7 +28,12 @@ from kmd.config.text_styles import (
     SPINNER,
 )
 from kmd.errors import InvalidInput, InvalidState
-from kmd.file_formats.frontmatter_format import fmf_read, fmf_read_raw, fmf_strip_frontmatter
+from kmd.file_formats.frontmatter_format import (
+    fmf_read,
+    fmf_read_frontmatter,
+    fmf_read_raw,
+    fmf_strip_frontmatter,
+)
 from kmd.file_formats.yaml_util import to_yaml_string
 from kmd.file_storage.file_listings import walk_by_folder
 from kmd.file_storage.file_store import initialize_store_dirs
@@ -458,38 +463,60 @@ def strip_frontmatter(*paths: str) -> None:
         fmf_strip_frontmatter(path)
 
 
+def _dual_format_size(size: int):
+    readable_size_str = ""
+    if size > 1000000:
+        readable_size = naturalsize(size).replace("Bytes", "B")
+        readable_size_str += f" ({readable_size})"
+    return f"{size} bytes{readable_size_str}"
+
+
 @kmd_command
-def size_summary(*paths: str, slow: bool = False) -> None:
+def file_info(
+    *paths: str, slow: bool = False, size_summary: bool = False, format: bool = False
+) -> None:
     """
-    Show a summary of the size and HTML structure of the items at the given paths.
+    Show info about a file. By default this includes a summary of the size and HTML
+    structure of the items at the given paths (for text documents) and the detected
+    mime type.
 
     :param slow: Normally uses a fast, approximate method to count sentences.
     This enables slower Spacy sentence segmentation.
+    :param size_summary: Only show size summary (words, sentences, paragraphs for a text document).
+    :param mime_type: Only show detected mime type.
     """
+    if not size_summary and not format:
+        size_summary = format = True
+
     input_paths = _assemble_paths(*paths)
     output()
     for input_path in input_paths:
         output(f"{fmt_path(input_path)}:", color=COLOR_EMPH)
-        body, _frontmatter = fmf_read(input_path)
-        if body:
-            parsed_body = parse_divs(body)
-            output(parsed_body.size_summary(fast=not slow), text_wrap=Wrap.INDENT_ONLY)
-        else:
-            output("No text body", text_wrap=Wrap.INDENT_ONLY)
-        output()
 
+        if format:
+            mime_type_str = detect_mime_type(input_path) or "unknown"
+            output(f"{mime_type_str}", text_wrap=Wrap.INDENT_ONLY)
 
-@kmd_command
-def file_info(*paths: str) -> None:
-    """
-    Show information about the file at the given path.
-    """
-    input_paths = _assemble_paths(*paths)
-    output()
-    for input_path in input_paths:
-        mime_type = detect_mime_type(input_path)
-        output(f"{fmt_path(input_path)}:", color=COLOR_EMPH)
-        output(f"{mime_type}", text_wrap=Wrap.INDENT_ONLY)
+        size = Path(input_path).stat().st_size
+        output(_dual_format_size(size), text_wrap=Wrap.INDENT_ONLY)
+
+        try:
+            _frontmatter_str, offset = fmf_read_frontmatter(input_path)
+            if offset:
+                output(f"frontmatter: {_dual_format_size(offset)}", text_wrap=Wrap.INDENT_ONLY)
+        except UnicodeDecodeError:
+            pass
+
+        if size_summary and mime_type_str.startswith("text"):
+            body, frontmatter = fmf_read(input_path)
+
+            if body:
+                parsed_body = parse_divs(body)
+                size_summary_str = parsed_body.size_summary(fast=not slow)
+                output(f"body: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
+            else:
+                output("No text body", text_wrap=Wrap.INDENT_ONLY)
+
         output()
 
 

@@ -4,12 +4,12 @@ Compatible with Markdown.
 """
 
 from collections import defaultdict
-from dataclasses import dataclass
 from pprint import pprint
 from textwrap import dedent
 from typing import Dict, Generator, Iterable, List, Optional, Tuple
 
 import regex
+from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import SYMBOL_PARA, SYMBOL_SENT

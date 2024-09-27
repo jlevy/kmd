@@ -10,7 +10,7 @@ from kmd.util.url import as_file_url
 log = get_logger(__name__)
 
 
-@kmd_action()
+@kmd_action
 class Transcribe(CachedDocAction):
     def __init__(self):
         super().__init__(

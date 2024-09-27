@@ -1,5 +1,7 @@
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, field
 from typing import Dict, Iterable, Optional, Set
+
+from pydantic.dataclasses import dataclass
 
 from strif import abbreviate_list
 
@@ -33,12 +35,6 @@ class GraphData:
     # We allow duplicate links as long as they are of different relationships.
     links: Set[Link] = field(default_factory=set)
 
-    def __init__(
-        self, nodes: Optional[Iterable[Node]] = None, links: Optional[Iterable[Link]] = None
-    ):
-        self.nodes = {node.id: node for node in nodes} if nodes else {}
-        self.links = set(links) if links else set()
-
     def merge(self, nodes: Iterable[Node], links: Iterable[Link]):
         """
         Merge new nodes and links into the existing graph.
@@ -71,7 +67,7 @@ class GraphData:
                 abbreviate_list(list(missing_ids)),
             )
 
-        return GraphData(nodes=self.nodes.values(), links=valid_links)
+        return GraphData(nodes=self.nodes, links=valid_links)
 
     def remove_node(self, node_id: str):
         """

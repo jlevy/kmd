@@ -1,7 +1,7 @@
-from dataclasses import dataclass
 from typing import List, Optional
 
 import regex
+from pydantic.dataclasses import dataclass
 
 from kmd.util.obj_utils import abbreviate_obj
 

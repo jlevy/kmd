@@ -1,32 +1,30 @@
 from abc import ABC, abstractmethod
 from copy import copy
-from dataclasses import dataclass, fields
+from dataclasses import Field
 from enum import Enum
-from typing import Any, cast, Dict, List, Optional, Sequence, TYPE_CHECKING
+from typing import Any, cast, ClassVar, Dict, Iterable, List, Optional, Sequence
+
+from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
-from kmd.errors import InvalidInput, NONFATAL_EXCEPTIONS
-from kmd.lang_tools.inflection import plural
+from kmd.errors import InvalidInput
 from kmd.model.items_model import Item, ItemType, UNTITLED
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.operations_model import Operation, Source
+from kmd.model.output_model import CommandOutput
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_text_doc
+from kmd.text_docs.sliding_transforms import WindowSettings
+from kmd.text_docs.text_diffs import DiffFilterType
 from kmd.text_ui.command_output import fill_text
 from kmd.util.format_utils import fmt_lines
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_utils import format_key_value
 from kmd.util.string_template import StringTemplate
-from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import instantiate_as_type
-
-if TYPE_CHECKING:
-    from kmd.model.output_model import CommandOutput
-    from kmd.text_docs.sliding_transforms import WindowSettings
-    from kmd.text_docs.text_diffs import DiffFilterType
 
 log = get_logger(__name__)
 
@@ -86,17 +84,22 @@ class ActionResult:
     path_ops: Optional[List[PathOp]] = None
     """If specified, operations to perform on specific paths, such as selecting items."""
 
-    command_output: Optional["CommandOutput"] = None
+    command_output: Optional[CommandOutput] = None
     """If specified, control the output from the command."""
+
+    def has_hints(self) -> bool:
+        return bool(
+            self.replaces_input or self.skip_duplicates or self.path_ops or self.command_output
+        )
 
     def __str__(self):
         return abbreviate_obj(self, field_max_len=80)
 
 
-@dataclass(frozen=True)
+@dataclass
 class Action(ABC):
     """
-    The base classes for Actions, which are arbitrary operations that can be
+    The base class for Actions, which are arbitrary operations that can be
     performed on Items. Instantiate this or a more specific subclass to create
     an action.
     """
@@ -113,10 +116,16 @@ class Action(ABC):
     expected_args: ExpectedArgs = ONE_ARG
     """The required number of arguments. We use exactly one by default to make it easy to wrap in a ForEachItemAction."""
 
+    run_per_item: bool = False
+    """
+    Normally, an action runs on all input items at once. If True, run the action separately
+    for each input item, each time on a single item.
+    """
+
     interactive_input: bool = False
     """Does this action ask for input interactively?"""
 
-    # These are set if they make sense, i.e. it's an LLM action.
+    # These are set if they make sense, i.e., it's an LLM action.
     model: Optional[LLM] = None
     language: Optional[str] = None
     chunk_size: Optional[int] = None
@@ -125,7 +134,7 @@ class Action(ABC):
     template: Optional[MessageTemplate] = None
     system_message: Optional[Message] = None
 
-    _NON_PARAM_FIELDS = [
+    _NON_PARAM_FIELDS: ClassVar[List[str]] = [
         "name",
         "description",
         "precondition",
@@ -134,7 +143,7 @@ class Action(ABC):
     ]
 
     # Long fields we don't want to include in the summary.
-    _NON_SUMMARY_FIELDS = [
+    _NON_SUMMARY_FIELDS: ClassVar[List[str]] = [
         "title_template",
         "template",
         "system_message",
@@ -142,10 +151,25 @@ class Action(ABC):
     ]
 
     def __post_init__(self):
-        # Class is frozen but we do want to update the description.
-        object.__setattr__(self, "description", fill_text(self.description))
+        self.description = fill_text(self.description)
+        if self.run_per_item:
+            self.expected_args = ONE_ARG
+        self.validate_sanity()
+
+    def validate_sanity(self):
+        if self.run_per_item and self.expected_args != ONE_ARG:
+            raise InvalidInput(
+                f"Action `{self.name}` has run_per_item=True but does not expect a single argument: {self.expected_args}"
+            )
 
     def validate_args(self, args: Sequence[InputArg]) -> None:
+        self.validate_sanity()
+
+        if self.run_per_item:
+            if len(args) < 1:
+                log.warning("Running action `%s` for each input but got no inputs", self.name)
+            return
+
         nargs = len(args)
         if nargs != 0 and self.expected_args == NO_ARGS:
             raise InvalidInput(f"Action `{self.name}` does not expect any arguments")
@@ -163,11 +187,12 @@ class Action(ABC):
     def validate_precondition(self, items: ActionInput) -> None:
         if self.precondition:
             for item in items:
-                self.precondition.check(item, self.name)
+                self.precondition.check(item, f"action `{self.name}`")
 
     def param_names(self) -> List[str]:
+        fields: Iterable[Field] = self.__dataclass_fields__.values()
         return sorted(
-            set(f.name for f in fields(self) if not f.name.startswith("_"))
+            set([f.name for f in fields if not f.name.startswith("_")])
             - set(self._NON_PARAM_FIELDS)
         )
 
@@ -184,16 +209,14 @@ class Action(ABC):
                 return value.name
             return str(value)
 
-        summary_param_names = sorted(
-            set(f.name for f in fields(self) if not f.name.startswith("_"))
-            - set(self._NON_PARAM_FIELDS)
-            - set(self._NON_SUMMARY_FIELDS)
-        )
+        summary_param_names = sorted(set(self.param_names()) - set(self._NON_SUMMARY_FIELDS))
+
         changed_params: Dict[str, Any] = {}
         for param_name in summary_param_names:
-            value = getattr(self, param_name)
-            if value:
-                changed_params[param_name] = stringify(value)
+            if hasattr(self, param_name):
+                value = getattr(self, param_name)
+                if value:
+                    changed_params[param_name] = stringify(value)
         return changed_params
 
     def param_summary_str(self) -> str:
@@ -215,7 +238,7 @@ class Action(ABC):
             if param_name not in ALL_COMMON_PARAMS and param_name not in action_param_names:
                 if strict:
                     raise InvalidInput(
-                        "Unknown override param for action `%s`: %s", self.name, param_name
+                        f"Unknown override param for action `{self.name}`: {param_name}"
                     )
                 else:
                     log.warning(
@@ -225,13 +248,12 @@ class Action(ABC):
 
             # Convert value to the appropriate type.
             if param_name in action_param_names:
-                field_info = next(f for f in fields(self) if f.name == param_name)
+                field_info: Field = next(f for f in self.__dict__.values() if f.name == param_name)
                 value = instantiate_as_type(value, cast(type, field_info.type))
 
             # Update the action.
             if param_name in ALL_COMMON_PARAMS and param_name in action_param_names:
-                # Use object.__setattr__ to update the frozen instance.
-                object.__setattr__(new_instance, param_name, value)
+                setattr(new_instance, param_name, value)
                 overrides.append(format_key_value(param_name, value))
 
         if overrides:
@@ -283,68 +305,26 @@ class Action(ABC):
         return abbreviate_obj(self)
 
 
-@dataclass(frozen=True)
-class ForEachItemAction(Action):
+@dataclass
+class PerItemAction(Action):
     """
-    Abstract base action that simply processes each arg one after the other. If "non fatal"
-    errors are encountered, they are reported and processing continues with the next item.
+    Abstract base class for an action that processes one input item and returns
+    one output item.
     """
 
-    expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
+    expected_args: ExpectedArgs = ONE_ARG
+    run_per_item: bool = True
 
     def run(self, items: ActionInput) -> ActionResult:
-
-        with task_stack().context(self.name, len(items), "item") as ts:
-            result_items: List[Item] = []
-            errors: List[Exception] = []
-            multiple_inputs = len(items) > 1
-
-            for i, item in enumerate(items):
-
-                log.message(
-                    "Action `%s` input item %d/%d:\n%s",
-                    self.name,
-                    i + 1,
-                    len(items),
-                    fmt_lines([item]),
-                )
-                had_error = False
-                try:
-                    result_item = self.run_item(item)
-                    result_items.append(result_item)
-                    had_error = False
-                except NONFATAL_EXCEPTIONS as e:
-                    errors.append(e)
-                    had_error = True
-
-                    if multiple_inputs:
-                        log.error(
-                            "Error processing item; continuing with others: %s: %s",
-                            e,
-                            item,
-                        )
-                    else:
-                        # If there's only one input, fail fast.
-                        raise e
-                finally:
-                    ts.next(last_had_error=had_error)
-
-            if errors:
-                log.error(
-                    "%s %s occurred while processing items. See above!",
-                    len(errors),
-                    plural("error", len(errors)),
-                )
-
-        return ActionResult(result_items)
+        return ActionResult(items=[self.run_item(items[0])])
 
     @abstractmethod
     def run_item(self, item: Item) -> Item:
         pass
 
 
-@dataclass(frozen=True)
-class CachedDocAction(ForEachItemAction):
+@dataclass
+class CachedDocAction(PerItemAction):
     """
     Abstract base action that simply processes each input and returns a single doc output for each.
     The output title etc. are derived from the first input item. Caches and skips items that have
@@ -358,7 +338,7 @@ class CachedDocAction(ForEachItemAction):
         )
 
 
-@dataclass(frozen=True)
+@dataclass
 class TransformAction(Action):
     """
     Abstract base for actions with windowed transforms.

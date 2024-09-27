@@ -7,7 +7,7 @@ from kmd.model.output_model import CommandOutput
 from kmd.preconditions.precondition_defs import has_text_body, is_html
 
 
-@kmd_action(for_each_item=True)
+@kmd_action
 class ShowAsHtml(SequenceAction):
     def __init__(self):
         super().__init__(
@@ -19,5 +19,5 @@ class ShowAsHtml(SequenceAction):
 
     def run(self, items: ActionInput) -> ActionResult:
         result = super().run(items)
-        result.command_output = CommandOutput(display_command=Command(show))
+        result.command_output = CommandOutput(display_command=Command.from_obj(show))
         return result

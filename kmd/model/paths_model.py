@@ -1,22 +1,33 @@
 from pathlib import Path
-from typing import Self
+
+from pydantic import constr, ValidationInfo
 
 from kmd.errors import InvalidInput
 from kmd.util.format_utils import fmt_path
 from kmd.util.url import is_url, Url
 
 
-class StorePath(str):
+def validate_relative_path(value: str) -> str:
+    if not value or value.startswith("/") or Path(value).is_absolute():
+        raise InvalidInput(f"Must be a relative path: {fmt_path(value)}")
+    return value
+
+
+RelativePath = constr(strip_whitespace=True)
+
+
+class StorePath(RelativePath):
     """
-    A relative path of an item in the file store. This can be used as a str but
-    helps with readability, easy casting from Path, and light type checking.
+    A relative path of an item in the file store.
     """
 
-    def __new__(cls, path: str | Path) -> Self:
-        if not path or str(path).startswith("/") or Path(path).is_absolute():
-            raise InvalidInput(f"StorePath must be a relative path: {fmt_path(path)}")
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
 
-        return super().__new__(cls, str(path))
+    @classmethod
+    def validate(cls, value: str, info: ValidationInfo) -> str:
+        return validate_relative_path(value)
 
 
 Locator = Url | StorePath

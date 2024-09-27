@@ -6,7 +6,7 @@ from kmd.text_chunks.parse_divs import TextNode
 from kmd.text_formatting.markdown_normalization import normalize_markdown
 
 
-@kmd_action()
+@kmd_action
 class SummarizeAsBulletsChunked(ChunkedLLMAction):
     def __init__(self):
         super().__init__(

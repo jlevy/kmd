@@ -21,7 +21,7 @@ from kmd.web_content.file_cache_tools import cache, cache_resource
 log = get_logger(__name__)
 
 
-@kmd_action()
+@kmd_action
 class InsertFrameCaptures(CachedDocAction):
     def __init__(self):
         super().__init__(

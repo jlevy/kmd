@@ -1,8 +1,9 @@
 import difflib
-from dataclasses import dataclass
 from enum import Enum
 from textwrap import dedent
 from typing import Callable, List, Optional, Tuple
+
+from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import SYMBOL_SEP

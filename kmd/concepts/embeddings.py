@@ -1,10 +1,11 @@
 import ast
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
 import pandas as pd
 from litellm import embedding
+
+from pydantic.dataclasses import dataclass
 from strif import abbreviate_list
 
 from kmd.config.logger import get_logger

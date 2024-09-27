@@ -1,5 +1,6 @@
-from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List
+
+from pydantic.dataclasses import dataclass
 
 from kmd.util.parse_utils import parse_key_value
 
@@ -7,7 +8,7 @@ from kmd.util.parse_utils import parse_key_value
 @dataclass(frozen=True)
 class ShellArgs:
     pos_args: List[str]
-    kw_args: Dict[str, Optional[str]]
+    kw_args: Dict[str, str | bool]
     show_help: bool = False
 
 
@@ -17,9 +18,9 @@ def parse_shell_args(args: List[str]) -> ShellArgs:
 
     `["foo", "--opt1", "--opt2=bar"] -> ShellArgs(pos_args=["foo"], kw_args={"opt1": True, "opt2": "bar"}, show_help=False)`
     """
-    pos_args = []
-    kw_args = {}
-    show_help = False
+    pos_args: List[str] = []
+    kw_args: Dict[str, str | bool] = {}
+    show_help: bool = False
 
     i = 0
     while i < len(args):

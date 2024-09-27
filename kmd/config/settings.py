@@ -1,12 +1,12 @@
 import threading
 from contextlib import contextmanager
-from dataclasses import dataclass
 from enum import Enum
 from logging import DEBUG, ERROR, INFO, WARNING
 from pathlib import Path
 from typing import Optional
 
 from cachetools import cached
+from pydantic.dataclasses import dataclass
 
 
 APP_NAME = "kmd"

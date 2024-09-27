@@ -1,5 +1,6 @@
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
+
+from pydantic.dataclasses import dataclass
 
 from kmd.model.paths_model import StorePath
 from kmd.util.format_utils import fmt_path

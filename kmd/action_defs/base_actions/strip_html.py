@@ -8,7 +8,7 @@ from kmd.util.format_utils import html_to_plaintext
 log = get_logger(__name__)
 
 
-@kmd_action()
+@kmd_action
 class StripHtml(CachedDocAction):
     def __init__(self):
         super().__init__(

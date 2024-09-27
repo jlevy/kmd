@@ -1,7 +1,9 @@
 from copy import copy
-from dataclasses import dataclass, field
+from dataclasses import field
 from functools import cached_property
 from typing import List, Optional, TYPE_CHECKING
+
+from pydantic.dataclasses import dataclass
 
 from kmd.lang_tools.sentence_split_regex import split_sentences_regex
 from kmd.lang_tools.sentence_split_spacy import split_sentences_spacy

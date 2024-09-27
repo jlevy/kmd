@@ -320,8 +320,19 @@ def parse_file_format(path: str | Path) -> Tuple[str, Format, FileExt]:
     return name, format, file_ext
 
 
+def known_file_format(path: str | Path) -> Optional[Format]:
+    """
+    Is this a recognized file format?
+    """
+    try:
+        _name, format, _ext = parse_file_format(path)
+        return format
+    except InvalidFilename:
+        return None
+
+
 _hidden_file_pattern = re.compile(r"\.[^.]+")
-_partial_file_pattern = re.compile(r".*\.partial\.[a-z0-9]+$")
+_partial_file_pattern = re.compile(r".*\.partial(\.[a-z0-9]+)?$")
 
 
 def is_ignored(path: str | Path) -> bool:

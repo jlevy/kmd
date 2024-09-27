@@ -1,5 +1,6 @@
-from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
+
+from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
@@ -7,7 +8,7 @@ from kmd.model.actions_model import (
     ActionInput,
     ActionResult,
     CachedDocAction,
-    ForEachItemAction,
+    PerItemAction,
     TransformAction,
 )
 from kmd.model.doc_elements import CHUNK, ORIGINAL, RESULT
@@ -24,8 +25,8 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 
-@dataclass(frozen=True)
-class LLMAction(TransformAction, ForEachItemAction):
+@dataclass
+class LLMAction(TransformAction, PerItemAction):
     """
     Base LLM action that processes each item and is cached.
     """
@@ -33,7 +34,7 @@ class LLMAction(TransformAction, ForEachItemAction):
     model: Optional[LLM] = DEFAULT_CAREFUL_LLM
 
     def run(self, items: ActionInput) -> ActionResult:
-        return super(ForEachItemAction, self).run(items)
+        return super(PerItemAction, self).run(items)
 
     def run_item(self, item: Item) -> Item:
         """
@@ -48,7 +49,7 @@ class LLMAction(TransformAction, ForEachItemAction):
         return item
 
 
-@dataclass(frozen=True)
+@dataclass
 class CachedLLMAction(LLMAction, CachedDocAction):
     """
     Base LLM action that processes each item and is cached.
@@ -58,7 +59,7 @@ class CachedLLMAction(LLMAction, CachedDocAction):
         return super(CachedDocAction, self).run(items)
 
 
-@dataclass(frozen=True)
+@dataclass
 class ChunkedLLMAction(CachedLLMAction):
     """
     Base class for LLM actions that operate on chunks that are already marked with divs.
@@ -71,7 +72,7 @@ class ChunkedLLMAction(CachedLLMAction):
         from kmd.preconditions.precondition_defs import has_div_chunks
 
         if not self.precondition:
-            object.__setattr__(self, "precondition", has_div_chunks)
+            self.precondition = has_div_chunks
 
     def run_item(self, item: Item) -> Item:
         from kmd.text_chunks.parse_divs import parse_divs_by_class

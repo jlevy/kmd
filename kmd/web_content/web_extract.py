@@ -1,7 +1,7 @@
-from dataclasses import dataclass
 from typing import Optional
 
 import justext
+from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.model.canon_url import thumbnail_url

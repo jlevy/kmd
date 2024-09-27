@@ -7,12 +7,12 @@ import shlex
 import shutil
 import subprocess
 import webbrowser
-from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Tuple
 
 from cachetools import cached, TTLCache
+from pydantic.dataclasses import dataclass
 from xonsh.platform import ON_DARWIN, ON_LINUX, ON_WINDOWS
 
 from kmd.config.logger import get_logger

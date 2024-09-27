@@ -2,7 +2,7 @@ from kmd.exec.action_registry import kmd_action
 from kmd.model import CachedLLMAction, Message, MessageTemplate, TitleTemplate
 
 
-@kmd_action()
+@kmd_action
 class DescribeBriefly(CachedLLMAction):
     def __init__(self):
         super().__init__(

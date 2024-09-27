@@ -21,7 +21,7 @@ from kmd.util.task_stack import task_stack
 log = get_logger(__name__)
 
 
-@kmd_action()
+@kmd_action
 class CaptionParas(CachedLLMAction):
     def __init__(self):
         super().__init__(

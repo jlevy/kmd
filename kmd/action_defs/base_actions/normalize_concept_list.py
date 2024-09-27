@@ -9,7 +9,7 @@ from kmd.text_formatting.markdown_util import as_bullet_points
 log = get_logger(__name__)
 
 
-@kmd_action()
+@kmd_action
 class NormalizeConceptList(CachedDocAction):
     def __init__(self):
         super().__init__(

@@ -2,15 +2,15 @@ from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, WebFetchError
 from kmd.exec.action_registry import kmd_action
 from kmd.media.media_services import get_media_metadata
-from kmd.model import ForEachItemAction, Item
+from kmd.model import Item, PerItemAction
 from kmd.preconditions.precondition_defs import is_url
 from kmd.web_content.web_extract import fetch_extract
 
 log = get_logger(__name__)
 
 
-@kmd_action()
-class FetchPageMetadata(ForEachItemAction):
+@kmd_action
+class FetchPageMetadata(PerItemAction):
     def __init__(self):
         super().__init__(
             name="fetch_page_metadata",

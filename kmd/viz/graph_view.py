@@ -129,36 +129,36 @@ def open_graph_view(graph: GraphData):
 ## Tests
 
 test_data = GraphData(
-    nodes=[
-        Node(
+    nodes={
+        "concepts/concept_a.md": Node(
             id="concepts/concept_a.md",
             type="concept",
             title="Concept A",
             body="This is a description of Concept A.",
         ),
-        Node(
+        "docs/doc_b.md": Node(
             id="docs/doc_b.md",
             type="note",
             title="Note B",
             body="This is a note related to Concept A.",
             url="http://example.com/noteB",
         ),
-        Node(
+        "concepts/concept_c.md": Node(
             id="concepts/concept_c.md",
             type="concept",
             title="Concept C",
             body="This is a description of Concept C.",
             url="http://example.com/conceptC",
         ),
-        Node(
+        "resources/resource_d.md": Node(
             id="resources/resource_d.md",
             type="resource",
             title="Resource D",
             body="This is a description of Resource D.",
             url="http://example.com/resourceD",
         ),
-    ],
-    links=[
+    },
+    links={
         Link(source="concepts/concept_a.md", target="docs/doc_b.md", relationship="related to"),
         Link(
             source="concepts/concept_a.md",
@@ -171,7 +171,7 @@ test_data = GraphData(
             target="resources/resource_d.md",
             relationship="references",
         ),
-    ],
+    },
 )
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ from kmd.text_docs.window_settings import WINDOW_2K_WORDTOKS
 log = get_logger(__name__)
 
 
-@kmd_action()
+@kmd_action
 class BreakIntoParagraphs(CachedLLMAction):
     def __init__(self):
         super().__init__(

@@ -1,5 +1,6 @@
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Type
+
+from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.model.constants import LANGUAGE_LIST

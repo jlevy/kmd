@@ -6873,7 +6873,7 @@ websockets = ">=13.0"
 
 [package.extras]
 build = ["build", "hatchling", "pip", "setuptools (>=71.0.2)", "wheel"]
-curl-cffi = ["curl-cffi (==0.5.10)", "curl-cffi (>=0.5.10,<0.6.dev0 || ==0.7.*)"]
+curl-cffi = ["curl-cffi (==0.5.10)", "curl-cffi[] (>=0.5.10,<0.6.dev0 || ==0.7.*)"]
 dev = ["autopep8 (>=2.0,<3.0)", "pre-commit", "pytest (>=8.1,<9.0)", "ruff (>=0.5.0,<0.6.0)"]
 py2exe = ["py2exe (>=0.12)"]
 pyinstaller = ["pyinstaller (>=6.7.0)"]
@@ -6982,4 +6982,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "11bbd0858442409815e4458bd6c280c337ecc4c20d8c6737cdfc4f2a253bfac4"
+content-hash = "16907f40df53b8b6b9e01e6d75317b2b77fc55293527f4bdae02cff96f3e462f"

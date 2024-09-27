@@ -12,7 +12,7 @@ from kmd.preconditions.precondition_defs import has_text_body
 log = get_logger(__name__)
 
 
-@kmd_action()
+@kmd_action
 class CreatePDF(Action):
     def __init__(self):
         super().__init__(

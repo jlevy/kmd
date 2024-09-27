@@ -1,19 +1,17 @@
-from dataclasses import dataclass, field
-from typing import List, Optional, TYPE_CHECKING
+from dataclasses import field
+from typing import List, Optional
+
+from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
-
 from kmd.errors import InvalidInput
+from kmd.exec.combiners import Combiner
 from kmd.model.actions_model import Action, ActionInput, ActionResult
 from kmd.model.items_model import Item, ItemType, State
 from kmd.model.operations_model import Operation
 from kmd.model.paths_model import StorePath
-from kmd.model.preconditions_model import Precondition
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none
-
-if TYPE_CHECKING:
-    from kmd.exec.combiners import Combiner
 
 log = get_logger(__name__)
 
@@ -24,32 +22,27 @@ def look_up_actions(action_names: List[str]) -> List[Action]:
     return [look_up_action(action_name) for action_name in action_names]
 
 
-@dataclass(frozen=True)
+@dataclass
 class SequenceAction(Action):
     """
     A sequential action that chains the outputs of each action to the inputs of the next.
     """
 
-    action_names: List[str] = field(init=False)
+    action_names: List[str] = field(default_factory=list)
 
-    def __init__(
-        self,
-        name: str,
-        action_names: List[str],
-        description: Optional[str] = None,
-        precondition: Optional[Precondition] = None,
-    ):
-        if not action_names or len(action_names) <= 1:
-            raise InvalidInput("Action must have at least two sub-actions: %s", action_names)
+    def __post_init__(self):
+        if not self.action_names or len(self.action_names) <= 1:
+            raise InvalidInput(
+                f"Action must have at least two sub-actions: {self.name}: {self.action_names}"
+            )
 
         extra_desc = "This action is a sequence of these actions:\n\n" + ", ".join(
-            f"`{name}`" for name in action_names
+            f"`{name}`" for name in self.action_names
         )
-        seq_description = "\n\n".join([description, extra_desc]) if description else extra_desc
-
-        super().__init__(name=name, description=seq_description, precondition=precondition)
-
-        object.__setattr__(self, "action_names", action_names)
+        seq_description = (
+            "\n\n".join([self.description, extra_desc]) if self.description else extra_desc
+        )
+        self.description = seq_description
 
     def run(self, items: ActionInput) -> ActionResult:
         from kmd.exec.action_exec import run_action
@@ -84,6 +77,7 @@ class SequenceAction(Action):
                 last_action = i == len(self.action_names) - 1
                 output_state = None if last_action else State.transient
 
+                # Run this action.
                 result = run_action(action_name, *item_paths, override_state=output_state)
 
                 # Track transient items and archive them if all actions succeed.
@@ -98,34 +92,28 @@ class SequenceAction(Action):
 
             # The final items should be derived from the original inputs.
             for item in items:
-                item.update_relations(derived_from=original_input_paths)
+                if item.store_path in original_input_paths:
+                    # Special case in case an action does nothing to an item.
+                    log.info("Result item is an original input: %s", item.store_path)
+                else:
+                    item.update_relations(derived_from=original_input_paths)
 
             log.message("Action sequence `%s` complete. Archiving transient items.", self.name)
             ws = current_workspace()
             for item in transient_outputs:
-                assert item.store_path
                 try:
-                    ws.archive(StorePath(item.store_path))
+                    ws.archive(StorePath(not_none(item.store_path)))
                 except FileNotFoundError:
                     log.info("Item to archive not found, moving on: %s", item.store_path)
 
         return ActionResult(items)
 
 
-@dataclass(frozen=True)
+@dataclass
 class CachedDocSequence(SequenceAction):
     """
     A sequence with a single doc output that allows rerun checking.
     """
-
-    def __init__(
-        self,
-        name: str,
-        action_names: List[str],
-        description: Optional[str] = None,
-        precondition: Optional[Precondition] = None,
-    ):
-        super().__init__(name, action_names, description, precondition)
 
     # Implementing this makes caching work.
     def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
@@ -134,43 +122,33 @@ class CachedDocSequence(SequenceAction):
         )
 
 
-@dataclass(frozen=True)
+@dataclass
 class ComboAction(Action):
     """
     An action that combines the results of other actions.
     """
 
-    action_names: List[str] = field(init=False)
-    combiner: "Combiner" = field(init=False)
+    action_names: List[str] = field(default_factory=list)
+    combiner: Optional[Combiner] = field(default=None)
 
-    def __init__(
-        self,
-        name: str,
-        action_names: List[str],
-        description: Optional[str] = None,
-        combiner: Optional["Combiner"] = None,
-        precondition: Optional[Precondition] = None,
-    ):
-        from kmd.exec.combiners import combine_as_paragraphs
-
-        if not combiner:
-            combiner = combine_as_paragraphs
-
-        if not action_names or len(action_names) <= 1:
-            raise InvalidInput("Action must have at least two sub-actions: %s", action_names)
+    def __post_init__(self):
+        if not self.action_names or len(self.action_names) <= 1:
+            raise InvalidInput(
+                f"Action must have at least two sub-actions: {self.name}: {self.action_names}"
+            )
 
         extra_desc = "This action is a combination of these actions:\n\n" + ", ".join(
-            f"`{name}`" for name in action_names
+            f"`{name}`" for name in self.action_names
         )
-        combo_description = "\n\n".join([description, extra_desc]) if description else extra_desc
+        combo_description = (
+            "\n\n".join([self.description, extra_desc]) if self.description else extra_desc
+        )
 
-        super().__init__(name=name, description=combo_description, precondition=precondition)
-
-        object.__setattr__(self, "action_names", action_names)
-        object.__setattr__(self, "combiner", combiner)
+        self.description = combo_description
 
     def run(self, items: ActionInput) -> ActionResult:
         from kmd.exec.action_exec import run_action
+        from kmd.exec.combiners import combine_as_paragraphs
 
         with task_stack().context(self.name, total_parts=len(self.action_names), unit="part") as ts:
 
@@ -200,7 +178,8 @@ class ComboAction(Action):
 
                 ts.next()
 
-            combined_result = self.combiner(self, items, results)
+            combiner = self.combiner or combine_as_paragraphs
+            combined_result = combiner(self, items, results)
 
         log.message(
             "Combined output of %s actions on %s inputs: %s",
@@ -212,6 +191,7 @@ class ComboAction(Action):
         return ActionResult([combined_result])
 
 
+@dataclass
 class CachedDocCombo(ComboAction):
     """
     A combo action with a single doc output that allows rerun checking.
