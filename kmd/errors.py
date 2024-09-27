@@ -145,3 +145,10 @@ def _nonfatal_exceptions() -> Tuple[Type[Exception], ...]:
 
 NONFATAL_EXCEPTIONS = _nonfatal_exceptions()
 """Exceptions that are not fatal and usually don't merit a full stack trace."""
+
+
+def is_fatal(exception: Exception) -> bool:
+    for e in NONFATAL_EXCEPTIONS:
+        if isinstance(exception, e):
+            return False
+    return True

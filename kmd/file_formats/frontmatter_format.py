@@ -3,10 +3,18 @@ Frontmatter format: Read and write files with YAML frontmatter, to support conve
 metadata on text files in a way that is compatible with browsers, editors, and Markdown
 parsers.
 
-This is common with Jekyll-style Markdown files but also works with other formats.
-Frontmatter can be enclosed either in `---` delimiters, as is typical with Markdown,
-or between `<!---` and `--->` delimiters for convenience in text or HTML files.
-These markers must be alone on their own lines.
+This is a generalization of the common format used by Jekyll and other CMSs for
+Markdown files.
+
+Frontmatter may be enclosed in `---` delimiters, as is typical with many
+Markdown files. But in this generalized format, it can also be enclosed in
+`<!---` and `--->` delimiters for convenience in text or HTML files, or between
+`#---` and `#---` delimiters for Python and other code files. These markers must
+be alone on their own lines.
+
+This is a simple implementation that supports reading small files very easily
+but also allows extracting frontmatter without reading an entire file, with or
+without YAML parsing.
 """
 
 import os
@@ -55,8 +63,8 @@ def fmf_write(
     key_sort: Optional[KeySort] = None,
 ) -> None:
     """
-    Write the given Markdown content to a file, with associated YAML metadata, in
-    Jekyll-style frontmatter format.
+    Write the given Markdown text content to a file, with associated YAML metadata, in a
+    generalized Jekyll-style frontmatter format.
     """
     with atomic_output_file(file_path, make_parents=True) as temp_output:
         with open(temp_output, "w") as f:
@@ -80,6 +88,7 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Metadata]]:
     Read UTF-8 text content (typically Markdown) from a file with optional YAML metadata
     in Jekyll-style frontmatter format. Auto-detects variant formats for HTML and code
     (Python style) based on whether the prefix is `---` or `<!---` or `#---`.
+    Reads the entire file into memory.
     """
     content, metadata_str = fmf_read_raw(file_path)
     metadata = None
@@ -97,7 +106,7 @@ def fmf_read(file_path: Path | str) -> Tuple[str, Optional[Metadata]]:
 def fmf_read_frontmatter(file_path: Path | str) -> Tuple[Optional[str], int]:
     """
     Reads the metadata frontmatter from the file and returns the metadata string and
-    the seek offset of the beginning of the content. Does not read content.
+    the seek offset of the beginning of the content. Does not read body content into memory.
     """
     metadata_lines = []
     in_metadata = False
@@ -163,7 +172,7 @@ def fmf_read_raw(file_path: Path | str) -> Tuple[str, Optional[str]]:
 def fmf_strip_frontmatter(file_path: Path | str) -> None:
     """
     Strips the metadata frontmatter from the file. Does not read the content
-    so works quickly.
+    (except to do a file copy) so should work fairly quickly on large files.
     """
     _, offset = fmf_read_frontmatter(file_path)
     if offset > 0:

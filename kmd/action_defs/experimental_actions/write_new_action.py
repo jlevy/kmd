@@ -13,6 +13,7 @@ from kmd.model import (
     TitleTemplate,
 )
 from kmd.model.actions_model import ONE_ARG
+from kmd.model.language_models import LLM
 from kmd.preconditions.precondition_defs import is_instruction
 
 
@@ -25,6 +26,7 @@ class WriteNewAction(LLMAction):
             Create a new kmd action in Python, based on a description of the features.
             Write an instruction to give as input.
             """,
+            model=LLM.o1_preview,
             system_message=None,  # Will set this in run().
             title_template=TitleTemplate("Action: {title}"),
             template=MessageTemplate(

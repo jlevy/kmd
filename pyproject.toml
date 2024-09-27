@@ -17,7 +17,8 @@ cachetools = "^5.5.0"
 requests = "^2.32.3"
 pydub = "^0.25.1"
 # yt-dlp = "^2024.8.6"
-# Temp support for new Apple Podcasts format:
+# Temp support for new Apple Podcasts format, until yt-dlp is updated:
+# https://github.com/yt-dlp/yt-dlp/pull/10903
 yt-dlp = { git = "https://github.com/coreywright/yt-dlp.git", branch = "ie/applepodcasts/Fix_after_website_rewrite" }
 assertpy = "^1.1"
 ruamel-yaml = "^0.18.6"

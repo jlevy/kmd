@@ -8,6 +8,8 @@ class LLM(Enum):
     For current list of models see: https://docs.litellm.ai/docs/providers
     """
 
+    o1_mini = "o1-mini"
+    o1_preview = "o1-preview"
     gpt_4o_mini = "gpt-4o-mini"
     gpt_4o = "gpt-4o"
     gpt_4 = "gpt-4"

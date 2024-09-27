@@ -2343,13 +2343,13 @@ dev = ["Sphinx (>=5.1.1)", "black (==23.12.1)", "build (>=0.10.0)", "coverage (>
 
 [[package]]
 name = "litellm"
-version = "1.46.5"
+version = "1.48.3"
 description = "Library to easily interface with LLM API providers"
 optional = false
 python-versions = "!=2.7.*,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,>=3.8"
 files = [
-    {file = "litellm-1.46.5-py3-none-any.whl", hash = "sha256:86432303e4a76d56289560978a8e53f64531c08eb4dae67793c7dd1483a58a2a"},
-    {file = "litellm-1.46.5.tar.gz", hash = "sha256:5b5196a5e3578eb15c035ce2bff703af986b676742df6b56adfe056f10bcdce7"},
+    {file = "litellm-1.48.3-py3-none-any.whl", hash = "sha256:bc6f785ac1ce04ca83e734ccc1982f7cce3ed3ab8d3662baba1b636b6fb6789f"},
+    {file = "litellm-1.48.3.tar.gz", hash = "sha256:3be0d1b73240c6956cc9212e476c764e9287abc6fd4c7310b1d18699b5f1be93"},
 ]
 
 [package.dependencies]
@@ -6873,7 +6873,7 @@ websockets = ">=13.0"
 
 [package.extras]
 build = ["build", "hatchling", "pip", "setuptools (>=71.0.2)", "wheel"]
-curl-cffi = ["curl-cffi (==0.5.10)", "curl-cffi[] (>=0.5.10,<0.6.dev0 || ==0.7.*)"]
+curl-cffi = ["curl-cffi (==0.5.10)", "curl-cffi[][] (>=0.5.10,<0.6.dev0 || ==0.7.*)"]
 dev = ["autopep8 (>=2.0,<3.0)", "pre-commit", "pytest (>=8.1,<9.0)", "ruff (>=0.5.0,<0.6.0)"]
 py2exe = ["py2exe (>=0.12)"]
 pyinstaller = ["pyinstaller (>=6.7.0)"]

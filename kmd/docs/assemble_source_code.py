@@ -44,15 +44,21 @@ def _format_file_or_module(path: Path) -> str:
 
 
 def source_for(*paths: Path) -> str:
+    """
+    Get the source code for the given paths, formatted in a format friendly for an LLM.
+    """
     return "\n\n".join(_format_file_or_module(path) for path in paths)
 
 
 model_src = source_for(kmd_base_path / "model")
+"""The source code for the kmd framework model."""
 
 base_action_defs_src = source_for(kmd_base_path / "action_defs" / "base_actions")
+"""The source code for all the base action definitions."""
 
 text_tool_src = source_for(
     kmd_base_path / "text_formatting",
     kmd_base_path / "lang_tools",
     kmd_base_path / "text_docs" / "text_doc.py",
 )
+"""The source code for some generally useful text tools."""

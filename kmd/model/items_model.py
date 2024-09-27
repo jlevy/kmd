@@ -446,8 +446,9 @@ class Item:
     def _copy_and_update(
         self, other: Optional["Item"] = None, update_timestamp: bool = False, **kwargs
     ) -> Dict[str, Any]:
-        timestamp = datetime.now() if update_timestamp else None
-        overrides = {"store_path": None, "created_at": timestamp, "modified_at": None}
+        overrides: Dict[str, Any] = {"store_path": None, "modified_at": None}
+        if update_timestamp:
+            overrides["created_at"] = datetime.now()
 
         fields = deepcopy(self.__dict__)
 
@@ -475,6 +476,7 @@ class Item:
         taking precedence. Resets store_path to None.
         """
         merged_fields = self._copy_and_update(other, update_timestamp=False)
+        log.message("merged_fields: %s", merged_fields)
         return Item(**merged_fields)
 
     def derived_copy(self, **kwargs) -> "Item":

@@ -2,6 +2,7 @@ from typing import Any, List, Optional
 
 from kmd.config.logger import get_console, get_logger
 from kmd.config.text_styles import COLOR_HINT
+from kmd.errors import is_fatal
 from kmd.exec.command_exec import run_command
 from kmd.lang_tools.inflection import plural
 from kmd.model.output_model import CommandOutput
@@ -58,7 +59,9 @@ def print_result(value: Optional[Any]) -> None:
 
 def handle_command_output(res: CommandOutput) -> None:
     if res.exception:
-        raise res.exception
+        # Nonfatal exceptions will already be logged.
+        if is_fatal(res.exception):
+            raise res.exception
 
     if res.display_command:
         log.message("Displaying result with: %s", res.display_command)
