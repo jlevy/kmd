@@ -6,8 +6,9 @@ from strif import atomic_output_file
 
 from kmd.config.logger import get_logger
 from kmd.errors import FileNotFound, InvalidInput, UnexpectedError
-from kmd.media.audio import deepgram_transcribe_audio, downsample_to_16khz
+from kmd.media.audio_processing import downsample_to_16khz
 from kmd.media.media_services import canonicalize_media_url, download_media_by_service
+from kmd.media.speech_transcription import deepgram_transcribe_audio
 from kmd.model.media_model import MediaType
 from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.url import as_file_url, is_url, Url
@@ -31,7 +32,7 @@ class MediaCache(DirStore):
     Download and cache video, audio, and transcripts. It's important to cache these by
     default as they are time-consuming and costly to download and process. We also
     support local files (as file:// URLs) since we still want to cache downsampled
-    audio and transcriptions.
+    extracted audio and transcriptions.
     """
 
     def __init__(self, root):
@@ -68,6 +69,9 @@ class MediaCache(DirStore):
         return downsampled_audio_file
 
     def _do_transcription(self, url: Url, language: Optional[str] = None) -> str:
+        """
+        Transcribe the audio file (from cache if available) for the given media URL.
+        """
         downsampled_audio_file = self._downsample_audio(url)
         log.message(
             "Transcribing audio: %s: %s",
@@ -81,6 +85,11 @@ class MediaCache(DirStore):
     def cache(
         self, url: Url, no_cache=False, media_types: Optional[List[MediaType]] = None
     ) -> Dict[MediaType, Path]:
+        """
+        Cache the media files for the given media URL. Returns paths to cached copies
+        for each media type (video or audio). Returns cached copies if available,
+        unless `no_cache` is True.
+        """
         cached_paths: Dict[MediaType, Path] = {}
 
         if not media_types:
@@ -97,7 +106,7 @@ class MediaCache(DirStore):
                 if video_file:
                     log.message("Video already in cache: %s: %s", url, fmt_path(video_file))
                     cached_paths[MediaType.video] = video_file
-            if set(cached_paths.keys()) == set(media_types):
+            if set(media_types).issubset(cached_paths.keys()):
                 return cached_paths
             else:
                 log.message("Downloading to get missing formats.")
@@ -125,7 +134,12 @@ class MediaCache(DirStore):
     def transcribe(
         self, url_or_path: Url | Path, no_cache=False, language: Optional[str] = None
     ) -> str:
+        """
+        Transcribe the audio file, caching audio, downsampled audio, and the transcription.
+        Return the cached transcript if available, unless `no_cache` is True.
+        """
         if not isinstance(url_or_path, Path) and is_url(url_or_path):
+            # If it is a URL, cache it locally.
             url = url_or_path
             url = canonicalize_media_url(url)
             if not url:
@@ -136,12 +150,15 @@ class MediaCache(DirStore):
                     return transcript
             self.cache(url, no_cache, [MediaType.audio])
         elif isinstance(url_or_path, Path):
+            # Treat local media files as file:// URLs.
+            # Don't need to cache originals but we still will cache audio and transcriptions.
             if not url_or_path.exists():
                 raise FileNotFound(f"File not found: {fmt_path(url_or_path)}")
             url = as_file_url(url_or_path)
         else:
-            raise InvalidInput("Not a media URL or path: %s" % url_or_path)
+            raise InvalidInput(f"Not a media URL or path: {url_or_path}")
 
+        # Now do the transcription.
         transcript = self._do_transcription(url, language=language)
         if not transcript:
             raise UnexpectedError("No transcript found for: %s" % url)

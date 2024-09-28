@@ -478,8 +478,8 @@ class FileStore:
             len(self.uniquifier),
         )
         log.message("Logging to: %s", fmt_path(log_file_path().absolute()))
-        log.info("Media cache: %s", global_settings().media_cache_dir)
-        log.info("Web cache: %s", global_settings().web_cache_dir)
+        log.message("Media cache: %s", global_settings().media_cache_dir)
+        log.message("Content cache: %s", global_settings().content_cache_dir)
 
         if self.is_sandbox:
             output()

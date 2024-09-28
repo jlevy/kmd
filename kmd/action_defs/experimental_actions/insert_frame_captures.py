@@ -16,7 +16,7 @@ from kmd.text_formatting.html_in_md import html_img, md_para
 from kmd.util.format_utils import fmt_path
 from kmd.util.string_replace import insert_multiple, Insertion
 from kmd.util.url import as_file_url
-from kmd.web_content.file_cache_tools import cache, cache_resource
+from kmd.web_content.file_cache_tools import cache_content, cache_resource
 
 log = get_logger(__name__)
 
@@ -60,7 +60,7 @@ class InsertFrameCaptures(CachedDocAction):
 
         # Save images in file cache for later as well.
         for frame_path in frame_paths:
-            cache(frame_path)
+            cache_content(frame_path)
         log.message(f"Saved {len(frame_paths)} frame captures to cache.")
 
         # Prepare insertions.

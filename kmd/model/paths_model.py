@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import cast
 
 from pydantic import constr, ValidationInfo
 
@@ -49,3 +50,7 @@ def is_store_path(input_arg: InputArg) -> bool:
         return False
     else:
         return not is_url(input_arg)
+
+
+def as_url_or_path(input: str | Path) -> Path | Url:
+    return cast(Url, str(input)) if is_url(str(input)) else cast(Path, input)

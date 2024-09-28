@@ -5,6 +5,7 @@ from pydantic_core import core_schema
 
 from kmd.errors import PreconditionFailure
 from kmd.model.items_model import Item
+from kmd.util.format_utils import fmt_words
 
 
 class Precondition:
@@ -25,10 +26,13 @@ class Precondition:
         return core_schema.is_instance_schema(cls)
 
     def check(self, item: Item, info: Optional[str] = None) -> None:
-        info_str = f" for {info}" if info else ""
         if not self(item):
             raise PreconditionFailure(
-                f"Precondition not satisfied{info_str}: {self} is false for {item.fmt_path_or_title()}"
+                fmt_words(
+                    "Precondition",
+                    f"for {info}" if info else "",
+                    f"not satisfied: {self} is false for {item.fmt_path_or_title()}",
+                )
             )
 
     def __call__(self, item: Item) -> bool:

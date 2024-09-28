@@ -31,27 +31,27 @@ def fetch(url: Url) -> requests.Response:
 
 
 # Simple global cache for misc use. No expiration.
-_web_cache = WebCache(global_settings().web_cache_dir)
+_content_cache = WebCache(global_settings().content_cache_dir)
 
 
 def reset_web_cache_dir(path: Path):
     with update_global_settings() as settings:
-        current_cache_dir = settings.web_cache_dir
+        current_cache_dir = settings.content_cache_dir
         if current_cache_dir != path:
-            settings.web_cache_dir = path
+            settings.content_cache_dir = path
             log.info("Using web cache: %s", fmt_path(path))
 
-    global _web_cache
-    _web_cache = WebCache(global_settings().web_cache_dir)
+    global _content_cache
+    _content_cache = WebCache(global_settings().content_cache_dir)
 
 
-def cache(url_or_path: Url | Path) -> tuple[Path, bool]:
+def cache_content(url_or_path: Url | Path) -> tuple[Path, bool]:
     """
     Fetch the given URL and return a local cached copy. Raises requests.HTTPError
     if the URL is not reachable. If a local file path is given, it is cached
     (using a file:// URL as the key).
     """
-    path, was_cached = _web_cache.cache(url_or_path)
+    path, was_cached = _content_cache.cache(url_or_path)
     return path, was_cached
 
 
@@ -67,12 +67,12 @@ def cache_resource(item: Item) -> Dict[MediaType, Path]:
         if is_media_url(item.url):
             result = cache_media(item.url)
         else:
-            path, _was_cached = cache(item.url)
+            path, _was_cached = cache_content(item.url)
     elif item.external_path:
         path = Path(item.external_path)
         if not path.is_file():
             raise FileNotFound(f"External path not found: {path}")
-        path, _was_cached = cache(path)
+        path, _was_cached = cache_content(path)
     else:
         raise ValueError("Item has no URL or external path")
 

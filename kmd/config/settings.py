@@ -44,10 +44,10 @@ class LogLevel(Enum):
 @dataclass
 class Settings:
     media_cache_dir: Path
-    """The media cache directory."""
+    """The media cache directory, for caching audio, video, and transcripts."""
 
-    web_cache_dir: Path
-    """The web cache directory."""
+    content_cache_dir: Path
+    """The content cache directory, for caching web or local files."""
 
     debug_assistant: bool
     """Convenience to allow debugging of full assistant prompts."""
@@ -92,7 +92,7 @@ def _cache_dir(name: str = "") -> Path:
 # Initial default settings.
 _settings = Settings(
     media_cache_dir=_cache_dir("media"),
-    web_cache_dir=_cache_dir("web"),
+    content_cache_dir=_cache_dir("content"),
     debug_assistant=False,
     default_editor="nano",
     use_sandbox=True,

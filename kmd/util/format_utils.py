@@ -149,6 +149,52 @@ def fmt_path(path: str | Path, resolve: bool = True) -> str:
     return shlex.quote(str(path))
 
 
+def fmt_words(*words: str | None, sep: str = " ") -> str:
+    """
+    Format a list of words or phrases into a single string, with no leading or trailing
+    whitespace. Empty or None values are ignored. Other whitespace including \n and \t are
+    preserved. Spaces are trimmed only when they would yield a double space due to
+    a separator.
+
+    Example usage:
+    ```
+    fmt_words("Hello", "world!") == "Hello world!"
+    fmt_words("Hello ", "world!") == "Hello world!"
+    fmt_words("Hello", " world!") == "Hello world!"
+    fmt_words("Hello", None, "world!") == "Hello world!"
+    fmt_words("Hello", "", "world!") == "Hello world!"
+    fmt_words("Hello", " ", "world!") == "Hello world!"
+    fmt_words("\nHello\n", "world!\n") == "\nHello\n world!\n"
+    fmt_words("Hello", " ", "world!", sep="|") == "Hello| |world!"
+    fmt_words("Hello", "John ", "world!", sep=", ") == "Hello, John, world!"
+    ```
+    """
+    # Filter out Nones and empty strings.
+    word_list = [word for word in words if word]
+
+    if not word_list:
+        return ""
+
+    processed_words = []
+
+    sep_starts_with_space = sep.startswith(" ")
+    sep_ends_with_space = sep.endswith(" ")
+
+    for i, word in enumerate(word_list):
+        # Avoid double spaces caused by the separator.
+        if i > 0 and sep_ends_with_space:
+            word = word.lstrip(" ")
+        if i < len(word_list) - 1 and sep_starts_with_space:
+            word = word.rstrip(" ")
+        # If word is now empty, we can skip it.
+        if not word:
+            continue
+
+        processed_words.append(word)
+
+    return sep.join(processed_words)
+
+
 ## Tests
 
 
@@ -223,3 +269,27 @@ def test_abbreviate_phrase_in_middle():
         )
         == "Your Mindset Matters (transcription) (clean … (add_description)"
     )
+
+
+def test_fmt_words():
+    # Basic cases.
+    assert fmt_words("Hello", "world!") == "Hello world!"
+    assert fmt_words("Hello ", "world!") == "Hello world!"
+    assert fmt_words("Hello", " world!") == "Hello world!"
+    assert fmt_words("Hello", None, "world!") == "Hello world!"
+    assert fmt_words("Hello", "", "world!") == "Hello world!"
+    # More complex cases.
+    assert fmt_words("\nHello\n", "world!\n") == "\nHello\n world!\n"
+    assert fmt_words("Hello", " ", "world!") == "Hello world!"
+    assert fmt_words("Hello", " John and", "world!") == "Hello John and world!"
+    assert fmt_words("Hello", " ", "world!", sep="|") == "Hello| |world!"
+    assert fmt_words("Hello", "John", "world!", sep=", ") == "Hello, John, world!"
+    # Edge cases.
+    assert fmt_words() == ""
+    assert fmt_words(None, "x", "   ") == "x"
+    assert fmt_words("   ") == "   "
+    assert fmt_words("Hello\t", "World", sep=" ") == "Hello\t World"
+    assert fmt_words("Hello", "\nWorld", sep=" ") == "Hello \nWorld"
+    assert fmt_words("Hello", "   ", "World", sep="---") == "Hello---   ---World"
+    assert fmt_words("Hello", "World", sep=" | ") == "Hello | World"
+    assert fmt_words(" Hello ", " ", " World ") == " Hello World "

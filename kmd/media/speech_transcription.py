@@ -5,8 +5,6 @@ from typing import List, NamedTuple, Optional, Tuple
 from deepgram import ClientOptionsFromEnv, DeepgramClient, FileSource, PrerecordedOptions
 from httpx import Timeout
 from openai import OpenAI
-from pydub import AudioSegment
-from strif import atomic_output_file
 
 from kmd.config import setup
 from kmd.config.logger import get_logger
@@ -16,30 +14,15 @@ from kmd.text_formatting.html_in_md import html_speaker_id_span, html_timestamp_
 log = get_logger(__name__)
 
 
-def downsample_to_16khz(audio_file_path: Path, downsampled_out_path: Path) -> None:
-    audio = AudioSegment.from_mp3(audio_file_path)
-    audio = audio.set_frame_rate(16000).set_channels(1).set_sample_width(2)
+def openai_whisper_transcribe_audio_small(audio_file_path: str) -> str:
+    """
+    Transcribe an audio file. Whisper is very good quality but (as of 2024-05)
+    OpenAI's version does not support diarization and must be under 25MB.
 
-    with atomic_output_file(downsampled_out_path) as temp_target:
-        audio.export(temp_target, format="mp3")
+    https://help.openai.com/en/articles/7031512-whisper-api-faq
+    """
+    WHISPER_MAX_SIZE = 25 * 1024 * 1024
 
-    log.info(
-        "Downsampled %s -> %s: size %s to 16kHz size %s (%sX reduction)",
-        audio_file_path,
-        downsampled_out_path,
-        getsize(audio_file_path),
-        getsize(downsampled_out_path),
-        getsize(audio_file_path) / getsize(downsampled_out_path),
-    )
-
-
-# Max as of 2024-05 is 25MB.
-# https://help.openai.com/en/articles/7031512-whisper-api-faq
-WHISPER_MAX_SIZE = 25 * 1024 * 1024
-
-
-def whisper_transcribe_audio_small(audio_file_path: str) -> str:
-    """Transcribe an audio file. Must be under 25MB."""
     size = getsize(audio_file_path)
     if size > WHISPER_MAX_SIZE:
         raise ValueError("Audio file too large for Whisper (%s > %s)" % (size, WHISPER_MAX_SIZE))
@@ -218,7 +201,14 @@ def _format_words(words: List[Tuple[float, str]], include_sentence_timestamps=Tr
 
 
 def format_speaker_segments(speaker_segments: List[SpeakerSegment]) -> str:
-    """Format speaker segments for display."""
+    """
+    Format speaker segments in a simple HTML format with <span> tags including speaker
+    ids and timestamps.
+    """
+
+    # Can use \n\n for readability between segments but having inconsistent whitespace
+    # can be messier for auto-formatting later.
+    SEGMENT_SEP = "\n"
 
     speakers = set(segment.speaker for segment in speaker_segments)
     if len(speakers) > 1:
@@ -227,6 +217,6 @@ def format_speaker_segments(speaker_segments: List[SpeakerSegment]) -> str:
             lines.append(
                 f"{html_speaker_id_span(f'SPEAKER {segment.speaker}:', str(segment.speaker))}\n{_format_words(segment.words)}"
             )
-        return "\n\n".join(lines)
+        return SEGMENT_SEP.join(lines)
     else:
-        return "\n\n".join(_format_words(segment.words) for segment in speaker_segments)
+        return SEGMENT_SEP.join(_format_words(segment.words) for segment in speaker_segments)

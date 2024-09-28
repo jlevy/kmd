@@ -9,7 +9,7 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_WARN
 from kmd.errors import ApiResultError
 from kmd.file_formats.yaml_util import to_yaml_string
-from kmd.media.yt_dlp_utils import ydl_download_media, ydl_extract_info
+from kmd.media.yt_dlp_tools import ydl_download_media, ydl_extract_info
 from kmd.model.media_model import (
     MediaMetadata,
     MediaService,
