@@ -7,9 +7,13 @@ from typing import Optional, Tuple
 from cachetools import cached
 
 from kmd.config.logger import get_logger, reset_logging
+from kmd.config.settings import CONTENT_CACHE_NAME, MEDIA_CACHE_NAME
 from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
-from kmd.file_storage.metadata_dirs import CACHE_DIR, METADATA_FILE
+from kmd.file_storage.metadata_dirs import (
+    CACHE_DIR,
+    METADATA_FILE,
+)
 from kmd.media.media_tools import reset_media_cache_dir
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format
@@ -18,7 +22,7 @@ from kmd.model.params_model import param_lookup, USER_SETTABLE_PARAMS
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.util.format_utils import fmt_path
 from kmd.util.url import is_url, Url
-from kmd.web_content.file_cache_tools import reset_web_cache_dir
+from kmd.web_content.file_cache_tools import reset_content_cache_dir
 
 log = get_logger(__name__)
 
@@ -133,8 +137,8 @@ def current_workspace(log_on_change: bool = True) -> FileStore:
         )
 
     reset_logging(workspace_dir)
-    reset_media_cache_dir(workspace_dir / CACHE_DIR / "media")
-    reset_web_cache_dir(workspace_dir / CACHE_DIR / "web")
+    reset_media_cache_dir(workspace_dir / CACHE_DIR / MEDIA_CACHE_NAME)
+    reset_content_cache_dir(workspace_dir / CACHE_DIR / CONTENT_CACHE_NAME)
     ws = _get_file_store(workspace_dir, is_sandbox)
 
     global _last_workspace_dir

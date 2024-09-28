@@ -6,7 +6,11 @@
 
 <b>⎪K⎪M⎪D⎪</b>
 
-<b>A command-line power tool for knowledge tasks.</b>
+<b>The Knowledge Command Line</b>
+
+⛭
+
+<b>An intelligent, extensible shell for knowledge tasks.</b>
 
 ⛭
 
@@ -61,7 +65,6 @@ pyenv install
 # Install recent Poetry if needed:
 pipx install poetry
 poetry self update  
-poetry config virtualenvs.in-project true
 ```
 
 ## Building
@@ -250,11 +253,15 @@ Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
 
 ### More Command-Line Tools
 
+These aren't directly related to kmd but are very useful to know about if you wish
+to have modern text UIs for your data files. These can work well with files created
+by kmd.
+
 - [**Ranger**](https://github.com/ranger/ranger) is a powerful terminal-based file manager
   that works well with kmd generated files.
 
 - [**Vizdata**](https://github.com/saulpw/visidata) is a flexible spreadsheet-like multitool
-  for tabular data.
+  for tabular data, if you are wanting to manipulate these with actions.
 
 ## Development
 

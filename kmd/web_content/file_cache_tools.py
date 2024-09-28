@@ -34,7 +34,7 @@ def fetch(url: Url) -> requests.Response:
 _content_cache = WebCache(global_settings().content_cache_dir)
 
 
-def reset_web_cache_dir(path: Path):
+def reset_content_cache_dir(path: Path):
     with update_global_settings() as settings:
         current_cache_dir = settings.content_cache_dir
         if current_cache_dir != path:

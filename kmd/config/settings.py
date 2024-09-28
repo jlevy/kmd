@@ -16,6 +16,8 @@ DOT_DIR = ".kmd"
 SANDBOX_KB_PATH = "~/.local/kmd/sandbox.kb"
 
 GLOBAL_CACHE_NAME = "kmd_cache"
+MEDIA_CACHE_NAME = "media"
+CONTENT_CACHE_NAME = "content"
 
 
 class LogLevel(Enum):
@@ -81,7 +83,7 @@ def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
 
 
 @cached(cache={})
-def _cache_dir(name: str = "") -> Path:
+def _global_cache_dir(name: str) -> Path:
     cache_dir = find_in_cwd_or_parents(GLOBAL_CACHE_NAME)
     if not cache_dir:
         cache_dir = Path(".").absolute() / GLOBAL_CACHE_NAME
@@ -91,8 +93,9 @@ def _cache_dir(name: str = "") -> Path:
 
 # Initial default settings.
 _settings = Settings(
-    media_cache_dir=_cache_dir("media"),
-    content_cache_dir=_cache_dir("content"),
+    # These default to the global
+    media_cache_dir=_global_cache_dir(MEDIA_CACHE_NAME),
+    content_cache_dir=_global_cache_dir(CONTENT_CACHE_NAME),
     debug_assistant=False,
     default_editor="nano",
     use_sandbox=True,
