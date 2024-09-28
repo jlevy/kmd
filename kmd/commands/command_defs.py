@@ -452,7 +452,7 @@ def edit(path: Optional[str] = None, all: bool = False) -> None:
 
 
 @kmd_command
-def save(path: Optional[str] = None) -> None:
+def save(path: Optional[str] = None, no_frontmatter: bool = False) -> None:
     """
     Save the current selection to the given directory (which must exist), or to the
     current directory if no target given. Output will have YAML frontmatter.
@@ -467,7 +467,10 @@ def save(path: Optional[str] = None) -> None:
     for store_path in store_paths:
         target_path = target_dir / basename(store_path)
         log.message("Saving: %s -> %s", store_path, target_path)
-        copyfile_atomic(ws.base_dir / store_path, target_path)
+        copyfile_atomic(ws.base_dir / store_path, target_path, backup_suffix=".bak")
+
+        if no_frontmatter:
+            fmf_strip_frontmatter(target_path)
 
 
 @kmd_command
