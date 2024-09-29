@@ -137,16 +137,20 @@ Please help me make it better by sharing your ideas and feedback!
 
 - Tab auto-completion and help on almost everything
 
-- A generalized frontmatter format, a simple format for Markdown, HTML, Python, and other
-  text files that allows YAML metadata on any text file
+- A
+  [generalized frontmatter format](https://github.com/jlevy/kmd/blob/main/kmd/file_formats/frontmatter_format.py),
+  a simple format for Markdown, HTML, Python, and other text files that allows YAML metadata
+  on any text file
 
-- A data model that includes items such as documents, resources, concepts, etc., all stored
-  as files within a workspace of files, and with consistent metadata in YAML on text files
+- A [data model](https://github.com/jlevy/kmd/tree/main/kmd/model) that includes items such
+  as documents, resources, concepts, etc., all stored as files within a workspace of files,
+  and with consistent metadata in YAML on text files
 
 - A few dozen built-in commands for listing, showing and paging through files, etc.
+  (see `help` for full docs.)
 
 - An extensible set of actions for all kinds of tasks like editing or summarizing text or
-  transcribing videos
+  transcribing videos (see `help`)
 
 - A way of tracking the provenance of each file (what actions created each item) so you can
   tell when to skip running a command (like a Makefile)
@@ -154,13 +158,15 @@ Please help me make it better by sharing your ideas and feedback!
 - A selection system for maintaining context between commands so you can pass outputs of one
   action into the inputs of another command
 
-- A simple library for downloading and caching, downsampling, and transcribing videos and
-  audios using Whisper or Deepgram
+- A media cache, which is a mechanism for downloading and caching, downsampling, and
+  transcribing video, audio, using Whisper or Deepgram
+
+- A content cache, for downloading and caching web pages or other files
 
 - An LLM-based assistant that wraps the docs and the Kmd source code into a tool that
   assists you in using or extending Kmd (this part is quite fun)
 
-- A bunch of little utilities for managing all this, including
+- A bunch of little utilities for making all this easier, including
 
   - parsing text docs into sentences and paragraphs
 
