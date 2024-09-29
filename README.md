@@ -23,51 +23,62 @@ Complex should be possible.*” —Alan Kay
 
 ## What is kmd?
 
-Kmd (“Knowledge comMand Line”) is a power tool to help you with practical knowledge tasks
-and for the exploration of what's possible with the myriad of AI tools we now have.
+Kmd (“Knowledge comMand Line”) is a power tool for practical knowledge tasks.
+It’s an early prototype for the exploration of what’s possible with the myriad of AI tools
+we now have.
 
 Kmd makes it easier to use APIs and tools such as **OpenAI GPT-4o and o1**, **Anthropic
 Claude 3.5**, **Groq Llama 3.1** (and any others via **LiteLLM**), **Deepgram**,
 **LlamaIndex**, **ChromaDB**, and any other Python tools.
 
-Use commands to transcribe videos, summarize and organize transcripts and notes, extract
-concepts, check citations, convert notes to PDFs or beautifully formatted HTML, or perform
-numerous other content-related tasks.
+Use commands to transcribe videos, summarize and organize transcripts and notes, write blog
+posts, extract or visualize concepts, check citations, convert notes to PDFs or beautifully
+formatted HTML, or perform numerous other content-related tasks possible by orchestrating AI
+tools in the right ways.
 
 The goals of Kmd are:
 
-- **Make simple tasks simple:** Doing a simple thing should be as easy as running a single
-  command (not clicking through a dozen menus).
-  Telling someone how to do something by telling them the command, instead of sharing a Loom
-  video or a complex prompt.
+- **Make simple tasks simple:** Doing a simple thing (like transcribing a video or
+  proofreading a document) should be as easy as running a single command (not clicking
+  through a dozen menus).
+  We should be able to tell someone how to do something just by telling them the command,
+  instead of sharing a complex prompt or a tutorial video on how to use several apps.
 
 - **Make complex tasks possible:** Highly complex tasks and workflows should be easy to
-  assemble (and rerun if they need to be automated) by adding new actions and combining them
-  with existing actions.
-  Almost anything should be extensible.
+  assemble (and rerun if they need to be automated) by adding new primitive actions and
+  combining primitive actions into more complex workflows.
+  Any step should be as extensible with arbitrary code when needed.
 
-- **Work well with other tools:** Using this tool shouldn't mean you can't use other tools,
-  too.
+- **Augment human skills and judgement:** Some agent-style tools aim for pure automation.
+  But even with powerful LLMs and tools, full automation is rare.
+  Invariably, the best results come from human review wherever it's needed—experimenting
+  with different models and prompts, looking at what works, focusing expert human attention
+  in the right places.
+  The most flexible tools augment, not replace, your ability to review and manipulate
+  information.
 
-- **Allow you to iterate quickly on your documents, data, and workflows:** We have so many
-  powerful APIs, models, libraries, and tools now—but the real bottleneck is in figuring out
-  how to use them in the right ways.
-  To do that we need to experiment with practical workflows without waiting for engineers or
-  designers (or LLM agents) to build our tools.
+- **Accelerate discovery of the workflows that work best:** We have so many powerful APIs,
+  models, libraries, and tools now—but the real bottleneck is in discovering and then
+  orchestrating the right workflows with the right inputs, models, prompts, and human
+  assistance.
+  Anyone should be able to discover new steps and workflows without waiting on engineers or
+  designers.
 
-- **Be self-reflective:** All of this should make work easier for LLMs too.
-  Kmd should understand and enhance itself to better help you.
-  With better primitives, we get smarter—and LLMs get smarter, too.
+- **Be self-reflective:** Kmd should understand and be able to enhance itself.
+  If a tool like this can assist humans, it will also augment the power of LLMs to automate
+  and orchestrate complex tasks.
+  Better tools make LLMs smarter, too.
 
 ## Why a New Command Line?
 
-It may be better to call Kmd a "shell" since it is actually evolving into far more than a
+It may be better to call Kmd a “shell” since it is actually evolving into more than a
 command line.
-It's more like a first step toward an item-based information operating sytem—an alternate,
+It's more like a first step toward an item-based information operating system—an alternate,
 more flexible UX and information architecture for tasks that manipulate content.
 
 The classic Unix-style command line has been the Swiss Army knife for savvy developers for
 decades.
+(The still widely used bash shell was released 35 years ago!)
 
 Like many developers, I love the terminal (I even wrote a popular
 [guide on it](https://github.com/jlevy/the-art-of-command-line), with millions of readers).
@@ -78,7 +89,8 @@ big issues:
 - Arcane commands and a confusing interface mean relatively few people feel comfortable
   using the command line
 
-- No easy, “native” support for modern APIs and apps, especially LLMs (curl doesn't count!)
+- No easy, “native” support for modern APIs and apps, especially LLMs (`curl` doesn't
+  count!)
 
 - For legacy reasons, it's sadly hard to improve these problems
 
@@ -155,7 +167,7 @@ Please help me make it better by sharing your ideas and feedback!
   as documents, resources, concepts, etc., all stored as files within a workspace of files,
   and with consistent metadata in YAML on text files
 
-- A few dozen built-in commands for listing, showing and paging through files, etc.
+- A few dozen built-in commands for listing, showing, and paging through files, etc.
   (see `help` for full docs)
 
 - An extensible set of actions for all kinds of tasks like editing or summarizing text or
@@ -182,7 +194,7 @@ Please help me make it better by sharing your ideas and feedback!
   [Markdown auto-formatter](https://github.com/jlevy/kmd/blob/main/kmd/text_formatting/markdown_normalization.py),
   so text documents are saved in a normalized form that can be diffed consistently
 
-- A bunch of other small utilities for making all this easier, including
+- A bunch of other small utilities for making all this easier, including:
 
   - parsing and representing text docs as sentences, paragraphs, or chunks of text
 
@@ -200,7 +212,7 @@ intuitive.
 If you don't want to use xonsh, you can still use it from other shells or as a Python
 library.
 
-Within the Kmd shell you get a full environment with all actions and commands.
+Within the Kmd shell, you get a full environment with all actions and commands.
 You also get intelligent auto-complete and a built-in assistant to help you perform tasks.
 
 ## Python and Shell Setup
@@ -275,9 +287,9 @@ poetry run kmd
 
 Use the `check_tools` command to confirm tools like `bat` and `ffmpeg` are found.
 
-Optionally, to install Kmd globally in current user's Python virtual environment so you can
-conveniently use `kmd` anywhere, make sure you have a usable Python 3.12+ environment active
-(such as using `pyenv`), then:
+Optionally, to install Kmd globally in the current user's Python virtual environment so you
+can conveniently use `kmd` anywhere, make sure you have a usable Python 3.12+ environment
+active (such as using `pyenv`), then:
 
 ```shell
 ./install_local.sh
@@ -308,7 +320,7 @@ help
 check_tools
 
 # The assistant is built into the shell, so you can just ask questions:
-how do I set get started with a new workspace?
+how do I get started with a new workspace?
 
 # Set up a workspace to test things out (we'll use fitness as an example):
 workspace fitness
@@ -443,7 +455,7 @@ preferred editor is set up for `.yml` and `.md` files.
 
 For convenience, a reminder on how to do this:
 
-- In Finder, pick a `.md` or `.yml` file and hit Cmd-I (or right click and select Get Info).
+- In Finder, pick a `.md` or `.yml` file and hit Cmd-I (or right-click and select Get Info).
 
 - Select the editor, such as Cursor or VSCode or Obsidian, and click the "Change All…"
   button to have it apply to all files with that extension.

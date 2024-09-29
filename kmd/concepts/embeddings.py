@@ -4,7 +4,6 @@ from typing import Dict, Iterable, List, Tuple
 
 import pandas as pd
 from litellm import embedding
-
 from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger

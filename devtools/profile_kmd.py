@@ -4,11 +4,11 @@ Quick profiler, helpful to monitor startup time etc.
 
 import cProfile
 import pstats
-import kmdsh
+from kmd.main import main
 
 
 def entrypoint():
-    kmdsh.main()
+    main()
 
 
 if __name__ == "__main__":

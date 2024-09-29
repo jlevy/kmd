@@ -12,6 +12,9 @@ Markdown files. But in this generalized format, it can also be enclosed in
 `#---` and `#---` delimiters for Python and other code files. These markers must
 be alone on their own lines.
 
+Frontmatter may also be omitted, so almost any text file can be read as
+frontmatter format.
+
 This is a simple implementation that supports reading small files very easily
 but also allows extracting frontmatter without reading an entire file, with or
 without YAML parsing.
