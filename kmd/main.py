@@ -43,8 +43,8 @@ __version__ = get_version()
 # xontrib only (in ~/.xonshrc) but this is not preferred.
 USE_KMD_SHELL = True
 
-# Turn off for cleaner outputs. Likely want this on for development.
-XONSH_SHOW_TRACEBACK = True
+# Turn off for cleaner outputs. Sometimes you want this on for development.
+XONSH_SHOW_TRACEBACK = False
 
 
 ## Non-customized xonsh shell setup

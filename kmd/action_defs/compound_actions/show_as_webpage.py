@@ -8,10 +8,10 @@ from kmd.preconditions.precondition_defs import has_text_body, is_html
 
 
 @kmd_action
-class ShowAsHtml(SequenceAction):
+class ShowAsWebpage(SequenceAction):
     def __init__(self):
         super().__init__(
-            name="show_as_html",
+            name="show_as_webpage",
             action_names=["webpage_config", "webpage_generate"],
             description="Show text, Markdown, or HTML as a nicely formatted webpage.",
             precondition=is_html | has_text_body,

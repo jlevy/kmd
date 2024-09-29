@@ -26,7 +26,7 @@ Complex should be possible.*” —Alan Kay
 Kmd (“Knowledge comMand Line”) is a power tool to help you with practical knowledge tasks
 and for the exploration of what's possible with the myriad of AI tools we now have.
 
-Kmd makes it easier to use APIs and tools such as **OpenAI GPT-4 and O1**, **Anthropic
+Kmd makes it easier to use APIs and tools such as **OpenAI GPT-4o and o1**, **Anthropic
 Claude 3.5**, **Groq Llama 3.1** (and any others via **LiteLLM**), **Deepgram**,
 **LlamaIndex**, **ChromaDB**, and any other Python tools.
 
@@ -38,17 +38,26 @@ The goals of Kmd are:
 
 - **Make simple tasks simple:** Doing a simple thing should be as easy as running a single
   command (not clicking through a dozen menus).
+  Telling someone how to do something by telling them the command, instead of sharing a Loom
+  video or a complex prompt.
 
-- **Make complex tasks possible:** Highly complex tasks and workflows need to be easier to
-  assemble (and rerun if they need to be automated).
+- **Make complex tasks possible:** Highly complex tasks and workflows should be easy to
+  assemble (and rerun if they need to be automated) by adding new actions and combining them
+  with existing actions.
   Almost anything should be extensible.
 
-- **Work well with other tools:** Using one tool shouldn't mean you can't use other tools,
+- **Work well with other tools:** Using this tool shouldn't mean you can't use other tools,
   too.
 
-- **Help you iterate on your documents, data, and workflows:** We have so many powerful
-  APIs, models, libraries, and tools now that the real bottleneck is in figuring out how to
-  iterate on practical workflows that help us *actually* be productive.
+- **Allow you to iterate quickly on your documents, data, and workflows:** We have so many
+  powerful APIs, models, libraries, and tools now—but the real bottleneck is in figuring out
+  how to use them in the right ways.
+  To do that we need to experiment with practical workflows without waiting for engineers or
+  designers (or LLM agents) to build our tools.
+
+- **Be self-reflective:** All of this should make work easier for LLMs too.
+  Kmd should understand and enhance itself to better help you.
+  With better primitives, we get smarter—and LLMs get smarter, too.
 
 ## Why a New Command Line?
 
@@ -66,12 +75,12 @@ But the command line has limitations.
 We've seen improvements to terminals and shells, but they generally still suffer from three
 big issues:
 
-- Arcane commands and a confusing interface, so few people except developers feel
-  comfortable using it
+- Arcane commands and a confusing interface mean relatively few people feel comfortable
+  using the command line
 
-- No “native” support for modern APIs and apps, especially LLMs (curl doesn't count!)
+- No easy, “native” support for modern APIs and apps, especially LLMs (curl doesn't count!)
 
-- Even worse, it's painful and hard to improve these problems
+- For legacy reasons, it's sadly hard to improve these problems
 
 On the other hand, we have wonderful and powerful cloud apps, but we all know the
 limitations of the ChatGPT interface, Notion, Google Docs, Slack, Excel, and Zapier.
@@ -93,12 +102,12 @@ I hope it becomes the tool you need when you don't know what tool you need.
 
 Some key elements:
 
-- **Operations are simple commands:** Simple tasks should run in a simple way, without the
-  need to adopt a whole framework.
+- **Operations are simple commands:** Simple tasks run in a simple way, without the need to
+  adopt a whole framework.
   This includes working with APIs and cloud-based tools as easily as you work with local
   files.
 
-- **Use local files and transparent file formats:** Run tasks locally using clean, simple
+- **Content is just files:** We run tasks on local files that are in readable, transparent
   file formats compatible with other tools (Markdown, YAML, HTML, PDFs).
 
 - **Maintain context:** The framework helps you keep files organized into a simple
@@ -117,9 +126,9 @@ Some key elements:
 
 All of this is only possible by relying on a wide variety of powerful libraries, especially
 [LiteLLM](https://github.com/BerriAI/litellm), [yt-dlp](https://github.com/yt-dlp/yt-dlp),
-[Pydantic](https://github.com/pydantic/pydantic),s
-[Rich](https://github.com/Textualize/rich), [Ripgrep](https://github.com/BurntSushi/ripgrep),
-[Bat](https://github.com/sharkdp/bat), [jusText](https://github.com/miso-belica/jusText),
+[Pydantic](https://github.com/pydantic/pydantic), [Rich](https://github.com/Textualize/rich),
+[Ripgrep](https://github.com/BurntSushi/ripgrep), [Bat](https://github.com/sharkdp/bat),
+[jusText](https://github.com/miso-belica/jusText),
 [WeasyPrint](https://github.com/Kozea/WeasyPrint),
 [Marko](https://github.com/frostming/marko), and [Xonsh](https://github.com/xonsh/xonsh).
 
@@ -147,7 +156,7 @@ Please help me make it better by sharing your ideas and feedback!
   and with consistent metadata in YAML on text files
 
 - A few dozen built-in commands for listing, showing and paging through files, etc.
-  (see `help` for full docs.)
+  (see `help` for full docs)
 
 - An extensible set of actions for all kinds of tasks like editing or summarizing text or
   transcribing videos (see `help`)
@@ -166,13 +175,15 @@ Please help me make it better by sharing your ideas and feedback!
 - An LLM-based assistant that wraps the docs and the Kmd source code into a tool that
   assists you in using or extending Kmd (this part is quite fun)
 
+- A
+  [Markdown auto-formatter](https://github.com/jlevy/kmd/blob/main/kmd/text_formatting/markdown_normalization.py),
+  so text documents are saved in a normalized form that can be diffed consistently
+
 - A bunch of little utilities for making all this easier, including
 
   - parsing text docs into sentences and paragraphs
 
-  - diffing words and tokens and filtering diffs to control what LLMs do with text
-
-  - auto-formatting text and Markdown in a consistent way
+  - diffing words and tokens and filtering diffs to control what changes LLMs make to text
 
   - tools for detecting file types and naming files in a clear way
 
@@ -276,55 +287,96 @@ This does a pip install of the wheel so you can run it as `kmd`.
 Tab completion is your friend!
 Just press tab to get lists of commands and guidance on help from the LLM-based assistant.
 
-Type `?` or use `help` within the shell for full documentation.
+You can also ask any question directly in the shell.
 
-## Examples
+Type `help` for the full documentation.
 
-A few commands you can try one at a time to see how kmd works:
+The simplest way to illustrate how to use Kmd is by example.
+You can go through the commands below a few at a time, trying each one.
+
+For each command below you can use tab completion (which shows information about each
+command or option) or run with `--help` to get more details.
 
 ```shell
-# Set up a workspace to test things out:
+# Check the help page for a full overview:
+help
+
+# Confirm kmd is set up correctly with right tools:
+check_tools
+
+# The assistant is built into the shell, so you can just ask questions:
+how do I set get started with a new workspace?
+
+# Set up a workspace to test things out (we'll use fitness as an example):
 workspace fitness
 
-# A short transcription:
-transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
+# A short transcription (use this one or pick any video on YouTube):
+transcribe 'https://www.youtube.com/watch?v=KLSRg2s3SSY'
 
 # Take a look at the output:
 show
 
-# Now manipulate that transcription (note we are using the outputs of each previous command,
-# which are auto-selected as input to each next command):
+# Now manipulate that transcription. Note we are using the outputs
+# of each previous command, which are auto-selected as input to each
+# subsequent command. You can always run `show` to see the last result.
+
+# Remove the speaker id <span> tags from the transcript.
 strip_html
+show
+
+# Break the text into paragraphs:
 break_into_paragraphs
-summarize_as_bullets
+show
+
+# Look at the paragraphs and (by looking at the document this text
+# doc was derived from) infer the timestamps and backfill them, inserting
+# timestamped link to the YouTube video at the end of each paragraph.
+backfill_timestamps
+show
+
+# Render it as a PDF:
 create_pdf
 
-# Note transcription works with multiple speakers:
-transcribe 'https://www.youtube.com/watch?v=uUd7LleJuqM'
+# See the PDF:
+show
 
-# Or all videos on a channel and then download and transcribe them all:
+# See all the files we have created so far:
+files
+
+# Browse more detailed system logs (for debugging when necessary):
+logs
+
+# Note transcription works with multiple speakers, thanks to Deepgram
+# diarization. 
+transcribe 'https://www.youtube.com/watch?v=_8djNYprRDI'
+show
+
+# We can create more advanced commands that combine sequences of actions.
+# This command does everything we just did above: transcribe, format,
+# and include timestamps for each paragraph.
+transcribe_format 'https://www.youtube.com/watch?v=_8djNYprRDI'
+
+# Getting a little fancier, this one adds little paragraph annotations and
+# a nicer summary at the top:
+transcribe_annotate_summarize 'https://www.youtube.com/watch?v=_8djNYprRDI'
+
+# Time to see it in a prettier form. Let's look at that as a web page:
+show_as_webpage
+
+# We can also list all videos on a channel, saving links to each one as
+# a resource .yml file:
 list_channel 'https://www.youtube.com/@Kboges'
-transcribe
 
-# Process a really long document (this one is a 3-hour interview) with sliding windows,
-# and a sequence action that transcribes, formats, and includes timestamps for each
-# paragraph:
+# Look at what we have and transcribe a couple more:
+files resources
+transcribe resources/quality_first.resource.yml resources/why_we_train.resource.yml
+
+# Another important thing to note is you can process a really long document.
+# This one is a 3-hour interview. Kmd uses sliding windows that process a
+# group of paragraphs at a time, then stitches the results back together:
 transcribe_format 'https://www.youtube.com/watch?v=juD99_sPWGU'
 
-# Now look at these as a web page:
-webpage_config
-# Edit the config if desired:
-edit
-# Now generate the webpage:
-webpage_generate
-# And look at it in the browser:
-show
-
-# Combine more actions in a more complex combo action, adding paragraph annotations and concepts:
-transcribe_annotate_summarize 'https://www.youtube.com/watch?v=XRQnWomofIY'
-webpage_config
-webpage_generate
-show
+show_as_webpage
 ```
 
 ## Other Ways to Run Kmd
@@ -359,7 +411,7 @@ easily viewing thumbnail images.
 Most any editor will work.
 Kmd respects the `EDITOR` environment variable if you use the `edit` command.
 
-### macOS
+### Using on macOS
 
 Kmd calls `open` to open some files, so in general, it's convenient to make sure your
 preferred editor is set up for `.yml` and `.md` files.
@@ -373,16 +425,16 @@ For convenience, a reminder on how to do this:
 
 - Repeat with each file type.
 
-### Cursor and VSCode
+### Using with Cursor and VSCode
 
 [Cursor](https://www.cursor.com/) and [VSCode](https://code.visualstudio.com/) work fine out
 of the box to edit workspace files in Markdown, HTML, and YAML in Kmd workspaces.
 
-### Zed
+### Using with Zed
 
 [Zed](https://zed.dev/) is another, newer editor that works great out of the box.
 
-### Obsidian
+### Using with Obsidian
 
 Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
 [Obsidian](https://obsidian.md/). Some notes:
@@ -392,8 +444,7 @@ Kmd uses Markdown files with YAML frontmatter, which is fully compatible with
 - This makes the line breaks in Kmd's normalized Markdown output work well in Obsidian.
 
 - Some Kmd files also contain HTML in Markdown.
-
-- This works fine, but note that only the current line's HTML is shown in Obsidian.
+  This works fine, but note that only the current line's HTML is shown in Obsidian.
 
 - Install the [Front Matter Title
   plugin](https://github.com/snezhig/obsidian-front-matter-title):

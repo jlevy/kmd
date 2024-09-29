@@ -2,6 +2,8 @@
 Formatting of Markdown with a small set of known HTML classes. We do this directly
 ourselves to keep the HTML very minimal, control whitespace, and to avoid any
 confusions of using full HTML escaping (like unnecessary &quot;s etc.)
+
+Perhaps worth using FastHTML for this?
 """
 
 import re

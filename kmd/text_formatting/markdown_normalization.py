@@ -1,3 +1,14 @@
+"""
+Auto-formatting of Markdown text.
+
+This is similar to what is offered by
+[markdownfmth](https://github.com/shurcooL/markdownfmt) but with a few
+adaptations, including more aggressive normalization and wrapping of
+lines semi-semantically (e.g. on sentence boundaries when appropriate).
+(See [here](https://github.com/shurcooL/markdownfmt/issues/17) for
+some old discussion on why line wrapping this way is convenient.)
+"""
+
 import re
 from contextlib import contextmanager
 from textwrap import dedent

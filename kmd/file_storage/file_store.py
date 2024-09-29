@@ -409,9 +409,9 @@ class FileStore:
         Archive the item by moving it into the archive directory.
         """
         log.message(
-            "Archiving item: %s -> %s",
+            "Archiving item: %s -> %s/",
             fmt_path(store_path),
-            fmt_path(Path(ARCHIVE_DIR) / store_path),
+            fmt_path(Path(ARCHIVE_DIR)),
         )
         orig_path = self.base_dir / store_path
         archive_path = self.archive_dir / store_path

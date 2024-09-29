@@ -206,9 +206,9 @@ def format_speaker_segments(speaker_segments: List[SpeakerSegment]) -> str:
     ids and timestamps.
     """
 
-    # Can use \n\n for readability between segments but having inconsistent whitespace
-    # can be messier for auto-formatting later.
-    SEGMENT_SEP = "\n"
+    # Use \n\n for readability between segments so each speaker is its own
+    # paragraph.
+    SEGMENT_SEP = "\n\n"
 
     speakers = set(segment.speaker for segment in speaker_segments)
     if len(speakers) > 1:

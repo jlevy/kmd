@@ -80,5 +80,5 @@ class IdentifySpeakers(CachedDocAction):
         # Perform replacements.
         updated_body = replace_multiple(item.body, replacements)
 
-        result_item = item.derived_copy(body=updated_body, format=Format.md_html)
+        result_item = item.derived_copy(body=updated_body)
         return result_item
