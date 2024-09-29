@@ -385,26 +385,36 @@ def read_partial_text(
 
 def detect_mime_type(filename: str | Path) -> Optional[str]:
     """
-    Get the mime type of a file using libmagic.
+    Get the mime type of a file using heuristics for HTML and Markdown and libmagic.
     """
     mime = magic.Magic(mime=True)
     mime_type = mime.from_file(str(filename))
+    path = Path(filename)
+    if (not mime_type or mime_type == "text/plain") and path.is_file():
+        # Also try detecting HTML and Markdown directly to discriminate these from plaintext.
+        content = read_partial_text(path)
+        if content and is_html(content):
+            mime_type = "text/html"
+        elif content and is_markdown(content):
+            mime_type = "text/markdown"
+
     return mime_type
 
 
 def detect_file_format(path: str | Path) -> Optional[Format]:
     """
-    Get file format based on file content (libmagic and heuristics).
+    Get file format based on file extenion and file content (libmagic and heuristics).
     """
     path = Path(path)
-    fmt = Format.from_mime_type(detect_mime_type(path))
-    if not fmt and path.is_file():
-        # Also try detecting HTML and Markdown directly.
-        content = read_partial_text(path)
-        if content and is_html(content):
-            fmt = Format.html
-        elif content and is_markdown(content):
-            fmt = Format.markdown
+
+    # First, try by filename.
+    ext = parse_file_ext(path)
+    if ext:
+        fmt = Format.guess_by_file_ext(ext)
+
+    # Next, try by mime type.
+    if not fmt:
+        fmt = Format.from_mime_type(detect_mime_type(path))
 
     return fmt
 

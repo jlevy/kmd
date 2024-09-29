@@ -141,24 +141,26 @@ class MarkdownNormalizer(Renderer):
         self._prefix = self._second_prefix
         return f"{result}\n"
 
-    def render_fenced_code(self, element: block.FencedCode) -> str:
-        extra = f" {element.extra}" if element.extra else ""
-        lines = [f"{self._prefix}```{element.lang}{extra}"]
-        lines.extend(
-            f"{self._second_prefix}{line}" for line in self.render_children(element).splitlines()
-        )
+    def _render_code(self, element: block.CodeBlock | block.FencedCode) -> str:
+        # Preserve code content without reformatting.
+        code_child = cast(inline.RawText, element.children[0])
+        code_content = code_child.children.rstrip("\n")
+        lang = element.lang if isinstance(element, block.FencedCode) else ""
+        extra = element.extra if isinstance(element, block.FencedCode) else ""
+        extra_text = f" {extra}" if extra else ""
+        lang_text = f"{lang}{extra_text}" if lang else ""
+        lines = [f"{self._prefix}```{lang_text}"]
+        lines.extend(f"{self._second_prefix}{line}" for line in code_content.splitlines())
         lines.append(f"{self._second_prefix}```")
         self._prefix = self._second_prefix
         return "\n".join(lines) + "\n"
 
+    def render_fenced_code(self, element: block.FencedCode) -> str:
+        return self._render_code(element)
+
     def render_code_block(self, element: block.CodeBlock) -> str:
-        indent = " " * 4
-        lines = self.render_children(element).splitlines()
-        lines = [f"{self._prefix}{indent}{lines[0]}"] + [
-            f"{self._second_prefix}{indent}{line}" for line in lines[1:]
-        ]
-        self._prefix = self._second_prefix
-        return "\n".join(lines) + "\n"
+        # Convert indented code blocks to fenced code blocks.
+        return self._render_code(element)
 
     def render_html_block(self, element: block.HTMLBlock) -> str:
         result = f"{self._prefix}{element.body}"
@@ -382,6 +384,25 @@ Some more HTML. Words and words and words and words and    words and <span data-
 > - Quotes can also contain lists.
 > - With items. Like this. And these items may have long sentences in them.
 
+```python
+def hello_world():
+    print("Hello, World!")
+
+# End of code
+```
+
+
+```
+more code
+```
+
+
+Intented code:
+
+    more code here
+
+    and more
+
 - **Intelligent:** Kmd understands itself. It reads its own code and docs and gives you assistance!
 
 
@@ -462,6 +483,25 @@ words.</div>
 >
 > - With items. Like this.
 >   And these items may have long sentences in them.
+
+```python
+def hello_world():
+    print("Hello, World!")
+
+# End of code
+```
+
+```
+more code
+```
+
+Intented code:
+
+```
+more code here
+
+and more
+```
 
 - **Intelligent:** Kmd understands itself.
   It reads its own code and docs and gives you assistance!
