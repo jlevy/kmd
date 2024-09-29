@@ -5713,17 +5713,6 @@ dev = ["attribution (==1.7.1)", "black (==24.4.2)", "coverage (==7.5.1)", "flake
 docs = ["sphinx (==7.3.7)", "sphinx-mdinclude (==0.6.0)"]
 
 [[package]]
-name = "strif"
-version = "1.0.1"
-description = "Tiny, useful lib for strings and files"
-optional = false
-python-versions = "<4.0,>=3.6"
-files = [
-    {file = "strif-1.0.1-py3-none-any.whl", hash = "sha256:3276bf98829ddefa9ad7efe1eb6f177ceafa499beff68cc1bba746176e5f5dfd"},
-    {file = "strif-1.0.1.tar.gz", hash = "sha256:ff9eccb0efadc3ca4b587d8623036831bbf374f051a6964d7ce4ff342a5eec6b"},
-]
-
-[[package]]
 name = "sympy"
 version = "1.13.3"
 description = "Computer algebra system (CAS) in Python"
@@ -6901,7 +6890,7 @@ websockets = ">=13.0"
 
 [package.extras]
 build = ["build", "hatchling", "pip", "setuptools (>=71.0.2)", "wheel"]
-curl-cffi = ["curl-cffi (==0.5.10)", "curl-cffi (>=0.5.10,<0.6.dev0 || ==0.7.*)"]
+curl-cffi = ["curl-cffi (==0.5.10)", "curl-cffi[] (>=0.5.10,<0.6.dev0 || ==0.7.*)"]
 dev = ["autopep8 (>=2.0,<3.0)", "pre-commit", "pytest (>=8.1,<9.0)", "ruff (>=0.5.0,<0.6.0)"]
 py2exe = ["py2exe (>=0.12)"]
 pyinstaller = ["pyinstaller (>=6.7.0)"]
@@ -7010,4 +6999,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "2a93dd2f7d5687dd54cd34f3edbbdc8cec6eec5f9dd05f5a3e5b1cab18e30361"
+content-hash = "12844af0266e9435b528c2b142d28b9df12946392f76b38ef9c928dcc6bb0cfb"

@@ -5,9 +5,9 @@ from urllib.parse import urlparse
 
 import requests
 from requests import Session
-from strif import atomic_output_file, copyfile_atomic
 
 from kmd.config.logger import get_logger
+from kmd.util.strif import atomic_output_file, copyfile_atomic
 from kmd.util.url import Url
 
 log = get_logger(__name__)

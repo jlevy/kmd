@@ -30,7 +30,7 @@ from kmd.util.format_utils import (
     plaintext_to_html,
 )
 from kmd.util.obj_utils import abbreviate_obj
-from kmd.util.time_util import iso_format_z
+from kmd.util.time_utils import iso_format_z
 from kmd.util.url import Url
 
 log = get_logger(__name__)

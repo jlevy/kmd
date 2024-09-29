@@ -10,10 +10,7 @@ from kmd.config.logger import get_logger, reset_logging
 from kmd.config.settings import CONTENT_CACHE_NAME, MEDIA_CACHE_NAME
 from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
-from kmd.file_storage.metadata_dirs import (
-    CACHE_DIR,
-    METADATA_FILE,
-)
+from kmd.file_storage.metadata_dirs import CACHE_DIR, METADATA_FILE
 from kmd.media.media_tools import reset_media_cache_dir
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format

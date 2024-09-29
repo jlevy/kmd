@@ -2,11 +2,11 @@ from pathlib import Path
 from typing import List
 
 import cv2
-from strif import atomic_output_file
 
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, FileNotFound
 from kmd.util.format_utils import fmt_path
+from kmd.util.strif import atomic_output_file
 from kmd.util.string_template import StringTemplate
 
 log = get_logger(__name__)

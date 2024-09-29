@@ -6,14 +6,13 @@ from typing import Optional
 
 import requests
 
-from strif import copyfile_atomic
-
 from kmd.config.logger import get_logger
 from kmd.errors import FileNotFound, InvalidInput
 from kmd.model.file_formats_model import choose_file_ext
 from kmd.util.download_url import download_url, user_agent_headers
 from kmd.util.format_utils import fmt_path
 from kmd.util.log_calls import log_if_modifies
+from kmd.util.strif import copyfile_atomic
 from kmd.util.url import is_file_url, normalize_url, parse_file_url, Url
 from kmd.web_content.dir_store import DirStore
 

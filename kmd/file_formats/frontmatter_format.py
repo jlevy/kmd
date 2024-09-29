@@ -24,7 +24,6 @@ from pathlib import Path
 from typing import Any, cast, Dict, Optional, Tuple
 
 from ruamel.yaml.error import YAMLError
-from strif import atomic_output_file
 
 from kmd.errors import FileFormatError, FileNotFound
 from kmd.file_formats.yaml_util import (
@@ -35,6 +34,7 @@ from kmd.file_formats.yaml_util import (
     write_yaml,
 )
 from kmd.util.format_utils import fmt_path
+from kmd.util.strif import atomic_output_file
 
 
 class FmFormat(Enum):

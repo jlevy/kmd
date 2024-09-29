@@ -167,6 +167,9 @@ Please help me make it better by sharing your ideas and feedback!
 - A selection system for maintaining context between commands so you can pass outputs of one
   action into the inputs of another command
 
+- A set of preconditions, like whether a document is Markdown or HTML, if it's a transcript
+  with timestamps, and so on, so you and Kmd know what actions might apply to any selection
+
 - A media cache, which is a mechanism for downloading and caching, downsampling, and
   transcribing video, audio, using Whisper or Deepgram
 
@@ -179,15 +182,15 @@ Please help me make it better by sharing your ideas and feedback!
   [Markdown auto-formatter](https://github.com/jlevy/kmd/blob/main/kmd/text_formatting/markdown_normalization.py),
   so text documents are saved in a normalized form that can be diffed consistently
 
-- A bunch of little utilities for making all this easier, including
+- A bunch of other small utilities for making all this easier, including
 
-  - parsing text docs into sentences and paragraphs
+  - parsing and representing text docs as sentences, paragraphs, or chunks of text
 
   - diffing words and tokens and filtering diffs to control what changes LLMs make to text
 
-  - tools for detecting file types and naming files in a clear way
+  - tools for detecting file types and automatic, readable file naming conventions
 
-  - media handling of videos and audio, including downloading and translating videos
+  - media handling of videos and audio, including downloading and transcribing videos
 
 ## Running the Kmd Shell
 
@@ -363,6 +366,28 @@ transcribe_annotate_summarize 'https://www.youtube.com/watch?v=_8djNYprRDI'
 # Time to see it in a prettier form. Let's look at that as a web page:
 show_as_webpage
 
+# A few more possibilities...
+
+# Let's now look at the concepts discussed in that video (adjust the filename
+# if needed):
+find_concepts docs/how_to_train_your_peter_attia_step14_add_description_1.doc.md
+show
+
+# And save them as items:
+save_concepts
+
+# We now have about 40 concepts. But maybe some are near duplicates (like
+# "high intensity interval training" vs "high intensity intervals").
+# Let's embed them and find near duplicates:
+find_near_duplicates
+
+# In my case I see one near duplicate, which I'll archive:
+archive
+
+# And for fun now let's vizualize them in 3d (proof of concept, this could
+# get a lot better):
+graph_view --concepts_only
+
 # We can also list all videos on a channel, saving links to each one as
 # a resource .yml file:
 list_channel 'https://www.youtube.com/@Kboges'
@@ -474,13 +499,13 @@ These can work well with files created by Kmd.
 
 ## Development
 
+Developer setup:
+
 ```shell
 # Developers should install poetry plugins to help with dev builds and updates:
+poetry self update
 poetry self add "poetry-dynamic-versioning[plugin]"
 poetry self add poetry-plugin-up
-
-# Build wheel:
-poetry build
 
 # Run pytests:
 poetry run test
@@ -488,16 +513,23 @@ poetry run test
 pytest   # all tests
 pytest -s kmd/text_docs/text_doc.py  # one test, with outputs
 
+# Build wheel:
+poetry build
+
 # Before committing, be sure to check formatting/linting issues:
 poetry run lint
 
 # Upgrade packages:
 poetry up
+```
 
-# Poetry update:
-poetry self update
+A few debugging tips when finding issues:
 
-# Debugging: See Python stack traces of all threads:
+```shell
+# To see tracebacks if xonsh does not show them:
+$XONSH_SHOW_TRACEBACK=1
+
+# To dump Python stack traces of all threads (from another terminal):
 pkill -USR1 kmd
 ```
 

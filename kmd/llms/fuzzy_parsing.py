@@ -1,5 +1,6 @@
 import json
 import re
+from textwrap import dedent
 
 from thefuzz import fuzz
 
@@ -8,7 +9,7 @@ NO_RESULTS = "(No results)"
 
 
 def is_no_results(response: str) -> bool:
-    return fuzzy_match(response, NO_RESULTS)
+    return fuzzy_match(response, "") or fuzzy_match(response, NO_RESULTS)
 
 
 def fuzzy_match(response: str, sentinel: str, threshold: int = 80) -> bool:
@@ -17,26 +18,26 @@ def fuzzy_match(response: str, sentinel: str, threshold: int = 80) -> bool:
     """
     response = response.lower().strip()
     sentinel = sentinel.lower().strip()
-    return fuzz.ratio(response, sentinel) > threshold or not response
+    return bool(response and fuzz.ratio(response, sentinel) > threshold)
+
+
+def strip_markdown_fence(response: str) -> str:
+    """
+    Remove any extraneous Markdown fenced code block markers wrapping a response.
+    """
+    response = response.strip()
+    code_block_pattern = r"^```(?:\w+)?\s*\n(.*?)\n```\s*$"
+    match = re.match(code_block_pattern, response, re.DOTALL)
+    if match:
+        response = match.group(1).strip()
+    return response.strip()
 
 
 def fuzzy_parse_json(response: str):
     """
-    Attempt to extract and parse JSON data from a string that may include spurious Markdown
-    text or formatting around it.
+    Attempt to parse JSON data from a string, after removing any markdown code blocks.
     """
-
-    # Remove code block markers and any markdown formatting.
-    response = response.strip()
-    code_block_pattern = r"```(?:json)?\s*\n(.*?)\n```"
-    match = re.search(code_block_pattern, response, re.DOTALL)
-    if match:
-        json_str = match.group(1)
-    else:
-        json_str = response
-
-    # Remove any leading or trailing text outside of JSON structures.
-    json_str = json_str.strip()
+    json_str = strip_markdown_fence(response)
 
     # Try to find the first '{' or '[' and the corresponding closing '}' or ']'
     try:
@@ -58,5 +59,34 @@ def fuzzy_parse_json(response: str):
     except json.JSONDecodeError:
         pass
 
-    # Parsing failed.
     return None
+
+
+## Tests
+
+
+def test_fuzzy_parsing():
+    response = dedent(
+        """
+        ```markdown
+        This is a test.
+        ```
+        """
+    )
+    assert strip_markdown_fence(response) == "This is a test."
+
+    response = """
+    ```json
+    {
+        "key": "value"
+    }
+    """
+    expected = {"key": "value"}
+    assert fuzzy_parse_json(response) == expected
+
+    response = '{ "key": "value" }'
+    expected = {"key": "value"}
+    assert fuzzy_parse_json(response) == expected
+
+    response = "This is not JSON."
+    assert fuzzy_parse_json(response) is None

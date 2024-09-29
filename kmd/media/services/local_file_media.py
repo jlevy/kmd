@@ -5,14 +5,13 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
-from strif import copyfile_atomic
-
 from kmd.config.logger import get_log_file_stream, get_logger
 from kmd.errors import FileNotFound, InvalidInput
 from kmd.model.file_formats_model import FileExt, parse_file_format
 from kmd.model.media_model import MediaMetadata, MediaService, MediaType, MediaUrlType
 from kmd.shell_tools.native_tools import CmdlineTool, tool_check
 from kmd.util.format_utils import fmt_path
+from kmd.util.strif import copyfile_atomic
 from kmd.util.url import Url
 
 log = get_logger(__name__)

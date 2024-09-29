@@ -5,8 +5,6 @@ from os.path import basename, commonpath, join, relpath
 from pathlib import Path
 from typing import Dict, Generator, List, Optional, Tuple
 
-from strif import copyfile_atomic
-
 from kmd.config.logger import get_logger, log_file_path
 from kmd.config.settings import global_settings
 from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
@@ -42,6 +40,8 @@ from kmd.util.file_utils import move_file
 from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.hash_utils import hash_file
 from kmd.util.log_calls import format_duration
+
+from kmd.util.strif import copyfile_atomic
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import is_url, Url
 

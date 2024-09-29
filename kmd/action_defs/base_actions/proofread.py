@@ -1,8 +1,8 @@
 from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.model import CachedLLMAction, Message, MessageTemplate
-from kmd.model.model_settings import DEFAULT_FAST_LLM
-from kmd.text_docs.window_settings import WINDOW_4_PARA
+from kmd.model.language_models import LLM
+from kmd.text_docs.window_settings import WINDOW_256_PARA
 
 
 log = get_logger(__name__)
@@ -14,7 +14,7 @@ class Proofread(CachedLLMAction):
         super().__init__(
             name="proofread",
             description="Proofread text, only fixing spelling, punctuation, and grammar.",
-            model=DEFAULT_FAST_LLM,
+            model=LLM.o1_mini,
             system_message=Message(
                 """
                 You are a careful and precise editor.
@@ -52,5 +52,5 @@ class Proofread(CachedLLMAction):
                 Corrected text:
                 """
             ),
-            windowing=WINDOW_4_PARA,
+            windowing=WINDOW_256_PARA,
         )

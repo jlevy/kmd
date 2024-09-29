@@ -2,7 +2,8 @@ import shlex
 import shutil
 from pathlib import Path
 
-from strif import move_to_backup
+from kmd.util.strif import move_to_backup
+
 
 # TODO: Have a copy_to_backup function that always adds a backup suffix.
 

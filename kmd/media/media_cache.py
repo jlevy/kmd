@@ -2,8 +2,6 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from strif import atomic_output_file
-
 from kmd.config.logger import get_logger
 from kmd.errors import FileNotFound, InvalidInput, UnexpectedError
 from kmd.media.audio_processing import downsample_to_16khz
@@ -11,6 +9,7 @@ from kmd.media.media_services import canonicalize_media_url, download_media_by_s
 from kmd.media.speech_transcription import deepgram_transcribe_audio
 from kmd.model.media_model import MediaType
 from kmd.util.format_utils import fmt_lines, fmt_path
+from kmd.util.strif import atomic_output_file
 from kmd.util.url import as_file_url, is_url, Url
 from kmd.web_content.dir_store import DirStore
 

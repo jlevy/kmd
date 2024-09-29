@@ -6,10 +6,10 @@ import pandas as pd
 from litellm import embedding
 
 from pydantic.dataclasses import dataclass
-from strif import abbreviate_list
 
 from kmd.config.logger import get_logger
 from kmd.model.model_settings import DEFAULT_EMBEDDING_MODEL
+from kmd.util.strif import abbreviate_list
 
 log = get_logger(__name__)
 

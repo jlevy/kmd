@@ -5,7 +5,7 @@ from kmd.errors import ApiResultError, InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.llms.fuzzy_parsing import fuzzy_parse_json
 from kmd.llms.llm_completion import llm_completion
-from kmd.model import CachedDocAction, Format, Item, Message, MessageTemplate
+from kmd.model import CachedDocAction, Item, Message, MessageTemplate
 from kmd.model.language_models import LLM
 from kmd.preconditions.precondition_defs import has_html_body, has_text_body
 from kmd.preconditions.speaker_labels import find_speaker_labels

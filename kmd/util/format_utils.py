@@ -5,7 +5,8 @@ from textwrap import indent
 from typing import Any, Iterable, List
 
 import regex
-from strif import abbreviate_str
+
+from kmd.util.strif import abbreviate_str
 
 DEFAULT_INDENT = "    "
 

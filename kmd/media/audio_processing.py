@@ -2,9 +2,9 @@ from os.path import getsize
 from pathlib import Path
 
 from pydub import AudioSegment
-from strif import atomic_output_file
 
 from kmd.config.logger import get_logger
+from kmd.util.strif import atomic_output_file
 
 log = get_logger(__name__)
 

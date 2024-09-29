@@ -3,9 +3,8 @@ from os import path
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
-from strif import clean_alphanum_hash
-
 from kmd.config.logger import get_logger
+from kmd.util.strif import clean_alphanum_hash
 from kmd.util.url import Url
 
 

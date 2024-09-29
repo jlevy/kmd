@@ -4,7 +4,6 @@ from typing import Dict, List, Optional, Type, Union
 import litellm
 from pydantic import BaseModel
 from slugify import slugify
-from strif import abbreviate_str
 
 from kmd.config.logger import get_logger
 from kmd.config.settings import LogLevel
@@ -15,6 +14,7 @@ from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.util.format_utils import fmt_lines
 from kmd.util.log_calls import log_calls
+from kmd.util.strif import abbreviate_str
 
 
 log = get_logger(__name__)

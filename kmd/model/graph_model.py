@@ -3,9 +3,8 @@ from typing import Dict, Iterable, Optional, Set
 
 from pydantic.dataclasses import dataclass
 
-from strif import abbreviate_list
-
 from kmd.config.logger import get_logger
+from kmd.util.strif import abbreviate_list
 
 log = get_logger(__name__)
 

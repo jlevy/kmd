@@ -10,7 +10,6 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
 from slugify import slugify
-from strif import atomic_output_file, new_timestamped_uid
 
 import kmd.config.suppress_warnings  # noqa: F401
 from kmd.config.settings import global_settings, LogLevel
@@ -23,6 +22,7 @@ from kmd.config.text_styles import (
 )
 from kmd.util.format_utils import fmt_path
 from kmd.util.stack_traces import current_stack_traces
+from kmd.util.strif import atomic_output_file, new_timestamped_uid
 from kmd.util.task_stack import task_stack_prefix_str
 
 LOG_DIR_NAME = ".kmd/logs"

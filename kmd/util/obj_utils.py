@@ -3,9 +3,9 @@ from dataclasses import asdict, is_dataclass
 from enum import Enum
 from typing import Any, Callable, Collection, Iterable, List, Optional, Set, Tuple
 
-from strif import abbreviate_str
-
 from kmd.util.log_calls import quote_if_needed
+
+from kmd.util.strif import abbreviate_str
 
 
 class DeleteSentinel:

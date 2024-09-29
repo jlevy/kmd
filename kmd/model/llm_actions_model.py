@@ -4,6 +4,7 @@ from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
+from kmd.llms.fuzzy_parsing import strip_markdown_fence
 from kmd.model.actions_model import (
     ActionInput,
     ActionResult,
@@ -45,6 +46,8 @@ class LLMAction(TransformAction, PerItemAction):
 
         item = llm_transform_item(self, item)
         if item.body:
+            # Both these should be safe for almost all LLM outputs.
+            item.body = strip_markdown_fence(item.body)
             item.body = normalize_markdown(item.body)
         return item
 

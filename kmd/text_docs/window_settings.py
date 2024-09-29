@@ -77,3 +77,18 @@ WINDOW_128_PARA = WindowSettings(
     TextUnit.paragraphs, size=128, shift=128, min_overlap=0, separator=WINDOW_BR_SEP
 )
 """Process 128 paragraphs at a time."""
+
+WINDOW_256_PARA = WindowSettings(
+    TextUnit.paragraphs, size=256, shift=256, min_overlap=0, separator=WINDOW_BR_SEP
+)
+"""Process 256 paragraphs at a time."""
+
+WINDOW_512_PARA = WindowSettings(
+    TextUnit.paragraphs, size=512, shift=512, min_overlap=0, separator=WINDOW_BR_SEP
+)
+"""Process 512 paragraphs at a time."""
+
+WINDOW_1024_PARA = WindowSettings(
+    TextUnit.paragraphs, size=1024, shift=1024, min_overlap=0, separator=WINDOW_BR_SEP
+)
+"""Process 1024 paragraphs at a time."""
