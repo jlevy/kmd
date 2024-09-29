@@ -1,5 +1,3 @@
-# Just a list of common languages.
-# Currently the main languages supported by DeepGram nova-2.
 LANGUAGE_LIST = [
     "bg",
     "ca",
@@ -35,3 +33,7 @@ LANGUAGE_LIST = [
     "uk",
     "vi",
 ]
+"""
+Just a list of common languages.
+Currently the main languages supported by DeepGram nova-2.
+"""

@@ -335,7 +335,7 @@ class Item:
 
         return item_dict
 
-    def abbrev_title(self, max_len: int = 100) -> str:
+    def abbrev_title(self, max_len: int = 100, add_ops_suffix: bool = True) -> str:
         """
         Get or infer title. Optionally, include the last operation as a parenthetical
         at the end of the title.
@@ -348,13 +348,16 @@ class Item:
             or UNTITLED
         )
 
-        # For notes, exports, etc but not for concepts, add a suffix indicating the
-        # last operation, if there was one.
         suffix = ""
-        with_last_op = self.type not in [ItemType.concept, ItemType.resource]
-        last_op = with_last_op and self.history and self.history[-1].action_name
-        if last_op:
-            suffix = f" ({last_op})"
+        if add_ops_suffix:
+            # For notes, exports, etc but not for concepts, add a parenthical note
+            # indicating the last operation, if there was one. This makes filename slugs
+            # more readable.
+            with_last_op = self.type not in [ItemType.concept, ItemType.resource]
+            last_op = with_last_op and self.history and self.history[-1].action_name
+            step_num = len(self.history) + 1 if self.history else 1
+            if last_op:
+                suffix = f" (step{step_num:02d}, {last_op})"
 
         shorter_len = min(max_len, max(max_len - len(suffix), 20))
         clean_text = clean_up_title(
@@ -545,7 +548,8 @@ class Item:
     def add_to_history(self, operation_summary: OperationSummary):
         if not self.history:
             self.history = []
-        if self.history and self.history[-1] != operation_summary:
+        # Don't add duplicates to the history.
+        if not self.history or self.history[-1] != operation_summary:
             self.history.append(operation_summary)
 
     def fmt_path_or_title(self) -> str:

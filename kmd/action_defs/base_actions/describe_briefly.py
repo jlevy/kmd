@@ -15,6 +15,9 @@ class DescribeBriefly(CachedLLMAction):
                 """
             ),
             title_template=TitleTemplate("Summary of {title}"),
+            # TODO: Get a scene context/description from the resource and add it to this template.
+            # Is this a book/article/transcript/lecture/interview/etc? Who was involved? When was it?
+            # Create a question template and have this filled in.
             template=MessageTemplate(
                 """
                 Give a brief description of the entire text below, as a summary of two or three sentences.

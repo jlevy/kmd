@@ -23,13 +23,13 @@
 
 ## What is kmd?
 
-Kmd ("the Knowledge comMand Line") is a power tool to help you with practical
+Kmd (“Knowledge comMand Line”) is a power tool to help you with practical
 knowledge tasks and for the exploration of what's possible with the myriad
 of AI tools we now have.
 
 Kmd makes it easier to use APIs and tools such as **OpenAI GPT-4 and O1**,
-**Anthropic Claude 3.5**, **Groq Llama 3** (and others via **LiteLLM**), **Deepgram**,
-**LlamaIndex**, **ChromaDB**, and any other Python tools.
+**Anthropic Claude 3.5**, **Groq Llama 3.1** (and any others via **LiteLLM**),
+**Deepgram**, **LlamaIndex**, **ChromaDB**, and any other Python tools.
 
 Use commands to transcribe videos, summarize and organize transcripts and notes,
 extract concepts, check citations, convert notes to PDFs or beautifully formatted HTML,
@@ -54,9 +54,10 @@ The goals of Kmd are:
 
 ## Why a New Command Line?
 
-I prefer to call Kmd a "shell" since it is actually evolving into far more than a command
-line. It's more like a first step toward an alternate, more powerful UX and framework to
-work with information.
+It may be better to call Kmd a "shell" since it is actually evolving into far more
+than a command line. It's more like a first step toward an item-based information
+operating sytem—an alternate, more flexible UX and information architecture for
+tasks that manipulate content.
 
 The classic Unix-style command line has been the Swiss Army knife for savvy developers for
 decades.
@@ -115,7 +116,9 @@ Some key elements:
   It reads its own code and docs to give you assistance, including at writing new Kmd actions.
 
 All of this is only possible by relying on a wide variety of powerful libraries, especially
+[LiteLLM](https://github.com/BerriAI/litellm),
 [yt-dlp](https://github.com/yt-dlp/yt-dlp),
+[Pydantic](https://github.com/pydantic/pydantic),s
 [Rich](https://github.com/Textualize/rich),
 [Ripgrep](https://github.com/BurntSushi/ripgrep),
 [Bat](https://github.com/sharkdp/bat),
@@ -124,7 +127,7 @@ All of this is only possible by relying on a wide variety of powerful libraries,
 [Marko](https://github.com/frostming/marko), and
 [Xonsh](https://github.com/xonsh/xonsh).
 
-## Is Kmd mature?
+## Is Kmd Mature?
 
 No. Not at all. :) It's the result of a few weeks of coding and experimentation, and it's
 very much in progress. Please help me make it better by sharing your ideas and feedback!
