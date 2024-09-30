@@ -3,7 +3,12 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import List
 
-from kmd.config.text_styles import EMOJI_BREADCRUMB_SEP, EMOJI_MSG_INDENT, EMOJI_TASK
+from kmd.config.text_styles import (
+    EMOJI_BREADCRUMB_SEP,
+    EMOJI_MSG_INDENT,
+    EMOJI_TASK,
+    TASK_STACK_HEADER,
+)
 
 
 @dataclass
@@ -92,7 +97,9 @@ class TaskStack:
         if not self.stack:
             return ""
         else:
-            return f" {EMOJI_BREADCRUMB_SEP} ".join(state.full_str() for state in self.stack)
+            prefix = f"{EMOJI_TASK} "
+            sep = f" {EMOJI_BREADCRUMB_SEP}\n{EMOJI_TASK} "
+            return prefix + sep.join(state.full_str() for state in self.stack)
 
     def prefix_str(self) -> str:
         if not self.stack:
@@ -105,7 +112,7 @@ class TaskStack:
 
     def log(self):
         self._output()
-        self._log.message("%s %s", EMOJI_TASK, self.full_str())
+        self._log.message(f"{TASK_STACK_HEADER}\n%s", self.full_str())
 
     @contextmanager
     def context(self, name: str, total_parts: int = 1, unit: str = ""):
