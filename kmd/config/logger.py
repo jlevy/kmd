@@ -14,6 +14,7 @@ from slugify import slugify
 import kmd.config.suppress_warnings  # noqa: F401
 from kmd.config.settings import global_settings, LogLevel
 from kmd.config.text_styles import (
+    EMOJI_ERROR,
     EMOJI_MSG_INDENT,
     EMOJI_SAVED,
     EMOJI_WARN,
@@ -121,16 +122,19 @@ def logging_setup():
         logger.addHandler(_file_handler)
 
 
-def prefix(line, emoji: str = ""):
+def prefix(line, emoji: str = "", warn_emoji: str = ""):
     prefix = task_stack_prefix_str()
-    if emoji:
-        prefix = f"{prefix} {emoji} "
+    emojis = emoji
+    if warn_emoji:
+        emojis = f"{warn_emoji}{emojis}"
+    if emojis:
+        prefix = f"{prefix} {emojis} "
     return f"{prefix} {line}"
 
 
-def prefix_args(args, emoji: str = ""):
+def prefix_args(args, emoji: str = "", warn_emoji: str = ""):
     if len(args) > 0:
-        args = (prefix(args[0], emoji),) + args[1:]
+        args = (prefix(args[0], emoji, warn_emoji),) + args[1:]
     return args
 
 
@@ -152,10 +156,10 @@ class CustomLogger:
         self.logger.warning(*prefix_args(args), **kwargs)
 
     def warning(self, *args, **kwargs):
-        self.logger.warning(*prefix_args(args, EMOJI_WARN), **kwargs)
+        self.logger.warning(*prefix_args(args, warn_emoji=EMOJI_WARN), **kwargs)
 
     def error(self, *args, **kwargs):
-        self.logger.error(*prefix_args(args, EMOJI_WARN), **kwargs)
+        self.logger.error(*prefix_args(args, warn_emoji=EMOJI_ERROR), **kwargs)
 
     def log(self, level: LogLevel, *args, **kwargs):
         getattr(self, level.name)(*args, **kwargs)

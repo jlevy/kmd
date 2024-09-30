@@ -112,6 +112,8 @@ EMOJI_TASK = "⛭"
 
 EMOJI_WARN = "△"
 
+EMOJI_ERROR = EMOJI_WARN + EMOJI_WARN
+
 EMOJI_SAVED = "⩣"
 
 EMOJI_TIMING = "⏱"
@@ -131,6 +133,11 @@ EMOJI_FALSE = "✗"
 EMOJI_MSG_INDENT = "⋮"
 
 EMOJI_BREADCRUMB_SEP = "›"
+
+
+## Special headings
+
+TASK_STACK_HEADER = "Task stack:"
 
 
 ## Rich setup
@@ -168,7 +175,8 @@ class KmdHighlighter(RegexHighlighter):
             r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
             r"(?P<code_span>`[^`\n]+`)",
             # Task stack in logs:
-            f"(?P<task_stack>{EMOJI_TASK}.*$)",
+            f"(?P<task_stack_header>{TASK_STACK_HEADER})",
+            f"(?P<task_stack>{EMOJI_TASK}.*)",
             f"(?P<task_stack_prefix>{EMOJI_MSG_INDENT})",
             # Emoji colors:
             f"(?P<task>{EMOJI_TASK})",
@@ -224,10 +232,11 @@ RICH_STYLES = {
     "kmd.call": Style(italic=True),
     "kmd.path": Style(color=COLOR_PATH),
     "kmd.filename": Style(color=COLOR_VALUE),
+    "kmd.task_stack_header": Style(color=COLOR_TASK, italic=True),
     "kmd.task_stack": Style(color=COLOR_TASK, italic=True),
     "kmd.task_stack_prefix": Style(color=COLOR_HINT, italic=False),
     # Emoji colors:
-    "kmd.task": Style(color=COLOR_TASK, bold=True),
+    "kmd.task": Style(color=COLOR_TASK, italic=True),
     "kmd.success": Style(color=COLOR_SUCCESSS, bold=True),
     "kmd.timing": Style(color=COLOR_TIMING, bold=True),
     "kmd.warn": Style(color=COLOR_VALUE, bold=True),
