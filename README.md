@@ -21,9 +21,9 @@ Complex should be possible.*” —Alan Kay
 
 </div>
 
-## What is kmd?
+## What is Kmd?
 
-Kmd (“Knowledge comMand Line”) is a power tool for practical knowledge tasks.
+Kmd (“Knowledge comManD line”) is a power tool for practical knowledge tasks.
 It’s an early prototype for the exploration of what’s possible with the myriad of AI tools
 we now have.
 
@@ -41,13 +41,14 @@ The goals of Kmd are:
 - **Make simple tasks simple:** Doing a simple thing (like transcribing a video or
   proofreading a document) should be as easy as running a single command (not clicking
   through a dozen menus).
-  We should be able to tell someone how to do something just by telling them the command,
+  We should be able to tell someone how to do something simply by telling them a command,
   instead of sharing a complex prompt or a tutorial video on how to use several apps.
 
 - **Make complex tasks possible:** Highly complex tasks and workflows should be easy to
   assemble (and rerun if they need to be automated) by adding new primitive actions and
   combining primitive actions into more complex workflows.
-  Any step should be as extensible with arbitrary code when needed.
+  You shouldn't need to be a programmer to use any task—but any task should be
+  extensible with arbitrary code (written by you and an LLM) when needed.
 
 - **Augment human skills and judgement:** Some agent-style tools aim for pure automation.
   But even with powerful LLMs and tools, full automation is rare.
