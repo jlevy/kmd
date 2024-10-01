@@ -15,6 +15,7 @@ class DownloadMedia(PerItemAction):
             name="download_media",
             description="Download and save audio from a podcast or video. Only saves to media cache; does not create new items.",
             precondition=is_url,
+            cachable=False,
         )
 
     def run_item(self, item: Item) -> Item:

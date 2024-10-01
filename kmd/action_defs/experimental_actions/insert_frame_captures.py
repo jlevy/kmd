@@ -5,8 +5,7 @@ from kmd.errors import ContentError, InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.file_storage.workspaces import current_workspace
 from kmd.media.video_frames import capture_frames
-from kmd.model import CachedDocAction, Format, Item, ItemType, MediaType
-from kmd.model.doc_elements import FRAME_CAPTURE
+from kmd.model import Format, FRAME_CAPTURE, Item, ItemType, MediaType, PerItemAction
 from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
 from kmd.provenance.source_items import find_upstream_resource
 from kmd.provenance.timestamps import TimestampExtractor
@@ -22,7 +21,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class InsertFrameCaptures(CachedDocAction):
+class InsertFrameCaptures(PerItemAction):
     def __init__(self):
         super().__init__(
             name="insert_frame_captures",

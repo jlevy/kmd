@@ -7,8 +7,7 @@ from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.exec.combiners import Combiner
 from kmd.model.actions_model import Action, ActionInput, ActionResult
-from kmd.model.items_model import Item, ItemType, State
-from kmd.model.operations_model import Operation
+from kmd.model.items_model import Item, State
 from kmd.model.paths_model import StorePath
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none
@@ -110,19 +109,6 @@ class SequenceAction(Action):
 
 
 @dataclass
-class CachedDocSequence(SequenceAction):
-    """
-    A sequence with a single doc output that allows rerun checking.
-    """
-
-    # Implementing this makes caching work.
-    def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
-        return ActionResult(
-            [self.preassemble_one(operation, items, output_num=0, type=ItemType.doc)]
-        )
-
-
-@dataclass
 class ComboAction(Action):
     """
     An action that combines the results of other actions.
@@ -189,16 +175,3 @@ class ComboAction(Action):
         )
 
         return ActionResult([combined_result])
-
-
-@dataclass
-class CachedDocCombo(ComboAction):
-    """
-    A combo action with a single doc output that allows rerun checking.
-    """
-
-    # Implementing this makes caching work.
-    def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
-        return ActionResult(
-            [self.preassemble_one(operation, items, output_num=0, type=ItemType.doc)]
-        )

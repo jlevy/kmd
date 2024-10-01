@@ -4,7 +4,7 @@ from typing import List
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, InvalidInput, UnexpectedError
 from kmd.exec.action_registry import kmd_action
-from kmd.model import CachedDocAction, Format, Item, ItemType
+from kmd.model import Format, Item, ItemType, PerItemAction
 from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
 from kmd.provenance.source_items import find_upstream_item, find_upstream_resource
 from kmd.provenance.timestamps import TimestampExtractor
@@ -21,7 +21,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class BackfillSourceTimestamps(CachedDocAction):
+class BackfillSourceTimestamps(PerItemAction):
     def __init__(self):
         super().__init__(
             name="backfill_timestamps",
@@ -139,7 +139,8 @@ class BackfillSourceTimestamps(CachedDocAction):
 
                     sent = item_doc.get_sent(sent_index)
                     sent.text = add_citation_to_text(
-                        sent.text, format_timestamp_citation(source_url, source_path, timestamp)
+                        sent.text,
+                        format_timestamp_citation(source_url, source_path, timestamp, emoji="⏱️"),
                     )
                 except ContentError:
                     # Missing timestamps aren't fatal since it might be meta text like "Speaker 1:".

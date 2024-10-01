@@ -4,9 +4,10 @@ from kmd.exec.action_registry import kmd_action
 from kmd.exec.llm_transforms import llm_transform_str
 from kmd.model import (
     ANNOTATED_PARA,
-    CachedLLMAction,
     Format,
     Item,
+    ItemType,
+    LLMAction,
     Message,
     MessageTemplate,
     PARA,
@@ -22,7 +23,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class CaptionParas(CachedLLMAction):
+class CaptionParas(LLMAction):
     def __init__(self):
         super().__init__(
             name="caption_paras",
@@ -94,7 +95,7 @@ class CaptionParas(CachedLLMAction):
 
         final_output = "\n\n".join(output)
 
-        result_item = item.derived_copy(body=final_output, format=Format.md_html)
+        result_item = item.derived_copy(type=ItemType.doc, body=final_output, format=Format.md_html)
 
         return result_item
 

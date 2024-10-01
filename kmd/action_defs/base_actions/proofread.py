@@ -1,7 +1,6 @@
 from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
-from kmd.model import CachedLLMAction, Message, MessageTemplate
-from kmd.model.language_models import LLM
+from kmd.model import LLM, LLMAction, Message, MessageTemplate
 from kmd.text_docs.window_settings import WINDOW_256_PARA
 
 
@@ -9,7 +8,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class Proofread(CachedLLMAction):
+class Proofread(LLMAction):
     def __init__(self):
         super().__init__(
             name="proofread",

@@ -5,7 +5,7 @@ from typing import cast, List, Optional, Tuple
 from kmd.action_defs import look_up_action
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
-from kmd.errors import ContentError, InvalidInput, InvalidState, NONFATAL_EXCEPTIONS
+from kmd.errors import ContentError, InvalidInput, InvalidOutput, InvalidState, NONFATAL_EXCEPTIONS
 from kmd.exec.system_actions import fetch_page_metadata, FETCH_PAGE_METADATA_NAME
 from kmd.file_storage.workspaces import current_workspace, import_and_load
 from kmd.lang_tools.inflection import plural
@@ -172,6 +172,9 @@ def run_action(
             result = run_for_each_item(action, input_items)
         else:
             result = action.run(input_items)
+
+        if not result:
+            raise InvalidOutput(f"Action `{action_name}` did not return any results")
 
         # Record the operation and add to the history of each item.
         was_run_for_each = isinstance(action, PerItemAction)

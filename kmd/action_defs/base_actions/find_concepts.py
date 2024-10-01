@@ -2,7 +2,7 @@ from kmd.concepts.concept_formats import concepts_from_markdown
 from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.exec.llm_transforms import llm_transform_item
-from kmd.model import CachedLLMAction, Item, Message, MessageTemplate, TitleTemplate
+from kmd.model import Item, LLMAction, Message, MessageTemplate, TitleTemplate
 from kmd.text_docs.window_settings import WINDOW_64_PARA
 from kmd.text_formatting.markdown_util import as_bullet_points
 from kmd.util.type_utils import not_none
@@ -11,7 +11,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class FindConcepts(CachedLLMAction):
+class FindConcepts(LLMAction):
     def __init__(self):
         super().__init__(
             name="find_concepts",

@@ -16,6 +16,7 @@ class FetchPageMetadata(PerItemAction):
             name="fetch_page_metadata",
             description="Fetches a web page for title, description, and thumbnail, if available.",
             precondition=is_url,
+            cachable=False,
         )
 
     def run_item(self, item: Item) -> Item:

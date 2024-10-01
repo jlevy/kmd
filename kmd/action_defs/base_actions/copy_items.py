@@ -11,6 +11,7 @@ class CopyAction(PerItemAction):
         super().__init__(
             name="copy_items",
             description="Identity action that copies the input items with no changes. Useful in combo actions.",
+            cachable=False,
         )
 
     def run_item(self, item: Item) -> Item:

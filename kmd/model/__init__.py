@@ -9,8 +9,7 @@ from kmd.model.actions_model import (
     ActionInput,
     ActionResult,
     ANY_ARGS,
-    CachedDocAction,
-    ExpectedArgs,
+    ArgCount,
     NO_ARGS,
     ONE_ARG,
     ONE_OR_MORE_ARGS,
@@ -19,18 +18,11 @@ from kmd.model.actions_model import (
     PathOpType,
     PerItemAction,
     TitleTemplate,
-    TransformAction,
     TWO_ARGS,
     TWO_OR_MORE_ARGS,
 )
 from kmd.model.canon_url import canonicalize_url, thumbnail_url
-from kmd.model.compound_actions_model import (
-    CachedDocCombo,
-    CachedDocSequence,
-    ComboAction,
-    look_up_actions,
-    SequenceAction,
-)
+from kmd.model.compound_actions_model import ComboAction, look_up_actions, SequenceAction
 from kmd.model.doc_elements import (
     ANNOTATED_PARA,
     CHUNK,
@@ -38,6 +30,7 @@ from kmd.model.doc_elements import (
     CONCEPTS,
     DATA_TIMESTAMP,
     DESCRIPTION,
+    FRAME_CAPTURE,
     FULL_TEXT,
     GROUP,
     ORIGINAL,
@@ -69,7 +62,7 @@ from kmd.model.items_model import (
     UNTITLED,
 )
 from kmd.model.language_models import EmbeddingModel, LLM, LLM_LIST
-from kmd.model.llm_actions_model import CachedLLMAction, ChunkedLLMAction, LLMAction
+from kmd.model.llm_actions_model import ChunkedLLMAction, LLMAction
 from kmd.model.media_model import (
     HeatmapValue,
     MediaMetadata,

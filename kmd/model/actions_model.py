@@ -16,7 +16,6 @@ from kmd.model.output_model import CommandOutput
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.model.preconditions_model import Precondition
-from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.text_docs.sliding_transforms import WindowSettings
 from kmd.text_docs.text_diffs import DiffFilterType
 from kmd.text_ui.command_output import fill_text
@@ -30,18 +29,18 @@ log = get_logger(__name__)
 
 
 @dataclass(frozen=True)
-class ExpectedArgs:
+class ArgCount:
     min_args: Optional[int]
     max_args: Optional[int]
 
 
-ANY_ARGS = ExpectedArgs(0, None)
-NO_ARGS = ExpectedArgs(0, 0)
-ONE_OR_NO_ARGS = ExpectedArgs(0, 1)
-ONE_OR_MORE_ARGS = ExpectedArgs(1, None)
-ONE_ARG = ExpectedArgs(1, 1)
-TWO_OR_MORE_ARGS = ExpectedArgs(2, None)
-TWO_ARGS = ExpectedArgs(2, 2)
+ANY_ARGS = ArgCount(0, None)
+NO_ARGS = ArgCount(0, 0)
+ONE_OR_NO_ARGS = ArgCount(0, 1)
+ONE_OR_MORE_ARGS = ArgCount(1, None)
+ONE_ARG = ArgCount(1, 1)
+TWO_OR_MORE_ARGS = ArgCount(2, None)
+TWO_ARGS = ArgCount(2, 2)
 
 
 class TitleTemplate(StringTemplate):
@@ -110,11 +109,22 @@ class Action(ABC):
     description: str
     """A description of the action, in a few sentences."""
 
+    cachable: bool = True
+    """
+    If True, the action execution may be skipped if the output is already present.
+    """
+
     precondition: Optional[Precondition] = None
     """Mainly a sanity check. For simplicity, the precondition must apply to all args."""
 
-    expected_args: ExpectedArgs = ONE_ARG
+    expected_args: ArgCount = ONE_ARG
     """The required number of arguments. We use exactly one by default to make it easy to wrap in a ForEachItemAction."""
+
+    output_type: ItemType = ItemType.doc
+    """The type of the output item(s)."""
+
+    expected_outputs: ArgCount = ONE_ARG
+    """The number of outputs expected from this action."""
 
     run_per_item: bool = False
     """
@@ -125,7 +135,14 @@ class Action(ABC):
     interactive_input: bool = False
     """Does this action ask for input interactively?"""
 
-    # These are set if they make sense, i.e., it's an LLM action.
+    # More specific options that apply only to certain types of actions below.
+    # TODO: Might want to move these into an ActionParams class for clarity.
+
+    # Transform-specific options:
+    windowing: Optional["WindowSettings"] = None
+    diff_filter: Optional["DiffFilterType"] = None
+
+    # LLM-specific options:
     model: Optional[LLM] = None
     language: Optional[str] = None
     chunk_size: Optional[int] = None
@@ -265,7 +282,7 @@ class Action(ABC):
 
         return new_instance
 
-    def preassemble_one(
+    def _preassemble_one(
         self,
         operation: Operation,
         items: ActionInput,
@@ -293,9 +310,22 @@ class Action(ABC):
         determine the title and types for the output items and check if they were already
         generated before running slow or expensive actions.
 
-        Default behavior is to return None, which means this is disabled.
+        For now, this only applies to actions with a single output, if self.cachable is True.
         """
-        return None
+        log.info(
+            "Preassemble check for `%s` is %s (%s with cachable=%s)",
+            self.name,
+            self.cachable and self.expected_outputs == ONE_ARG,
+            self.expected_outputs,
+            self.cachable,
+        )
+        if self.cachable and self.expected_outputs == ONE_ARG:
+            return ActionResult(
+                [self._preassemble_one(operation, items, output_num=0, type=self.output_type)]
+            )
+        else:
+            # Caching disabled.
+            return None
 
     @abstractmethod
     def run(self, items: ActionInput) -> ActionResult:
@@ -310,46 +340,19 @@ class PerItemAction(Action):
     """
     Abstract base class for an action that processes one input item and returns
     one output item.
+
+    Note that this action can be invoked on many input items, but the run method
+    itself must expect exactly one input item and the executor will run it for each
+    input.
     """
 
-    expected_args: ExpectedArgs = ONE_ARG
+    expected_args: ArgCount = ONE_ARG
     run_per_item: bool = True
 
     def run(self, items: ActionInput) -> ActionResult:
+        log.info("Running action `%s` per-item.", self.name)
         return ActionResult(items=[self.run_item(items[0])])
 
     @abstractmethod
     def run_item(self, item: Item) -> Item:
-        pass
-
-
-@dataclass
-class CachedDocAction(PerItemAction):
-    """
-    Abstract base action that simply processes each input and returns a single doc output for each.
-    The output title etc. are derived from the first input item. Caches and skips items that have
-    already been processed.
-    """
-
-    # Implementing this makes caching work.
-    def preassemble(self, operation: Operation, items: ActionInput) -> Optional[ActionResult]:
-        return ActionResult(
-            [self.preassemble_one(operation, items, output_num=0, type=ItemType.doc)]
-        )
-
-
-@dataclass
-class TransformAction(Action):
-    """
-    Abstract base for actions with windowed transforms.
-    """
-
-    expected_args: ExpectedArgs = ONE_OR_MORE_ARGS
-    precondition: Optional[Precondition] = is_text_doc
-
-    windowing: Optional["WindowSettings"] = None
-    diff_filter: Optional["DiffFilterType"] = None
-
-    @abstractmethod
-    def run(self, items: ActionInput) -> ActionResult:
         pass

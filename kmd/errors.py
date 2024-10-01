@@ -43,6 +43,12 @@ class InvalidInput(SelfExplanatoryError):
     pass
 
 
+class InvalidOutput(SelfExplanatoryError):
+    """Raised when an action returns invalid output."""
+
+    pass
+
+
 class NoMatch(InvalidInput):
     """Raised when a match is not found to a search or precondition."""
 

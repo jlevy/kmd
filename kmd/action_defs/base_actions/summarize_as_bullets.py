@@ -1,10 +1,10 @@
 from kmd.exec.action_registry import kmd_action
-from kmd.model import CachedLLMAction, Message, MessageTemplate, TitleTemplate
+from kmd.model import LLMAction, Message, MessageTemplate, TitleTemplate
 from kmd.text_docs.window_settings import WINDOW_128_PARA
 
 
 @kmd_action
-class SummarizeAsBullets(CachedLLMAction):
+class SummarizeAsBullets(LLMAction):
     def __init__(self):
         super().__init__(
             name="summarize_as_bullets",

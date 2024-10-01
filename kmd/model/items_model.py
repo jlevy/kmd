@@ -482,17 +482,16 @@ class Item:
         log.message("merged_fields: %s", merged_fields)
         return Item(**merged_fields)
 
-    def derived_copy(self, **kwargs) -> "Item":
+    def derived_copy(self, type: ItemType, **kwargs) -> "Item":
         """
         Same as `new_copy_with()`, but also updates `derived_from` relation.
-        Defaults to `ItemType.doc` if not specified.
         """
         if not self.store_path:
             raise ValueError(f"Cannot derive from an item that has not been saved: {self}")
 
         updates = kwargs.copy()
-        if "type" not in updates:
-            updates["type"] = ItemType.doc
+        updates["type"] = type
+
         # External resource paths only make sense for resources, so clear them out if new item
         # is not a resource.
         new_type = updates.get("type") or self.type

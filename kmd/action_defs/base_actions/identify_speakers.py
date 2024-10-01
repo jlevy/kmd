@@ -5,8 +5,7 @@ from kmd.errors import ApiResultError, InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.llms.fuzzy_parsing import fuzzy_parse_json
 from kmd.llms.llm_completion import llm_completion
-from kmd.model import CachedDocAction, Item, Message, MessageTemplate
-from kmd.model.language_models import LLM
+from kmd.model import Item, ItemType, LLM, Message, MessageTemplate, PerItemAction
 from kmd.preconditions.precondition_defs import has_html_body, has_text_body
 from kmd.preconditions.speaker_labels import find_speaker_labels
 from kmd.text_formatting.html_in_md import html_speaker_id_span
@@ -16,7 +15,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class IdentifySpeakers(CachedDocAction):
+class IdentifySpeakers(PerItemAction):
     def __init__(self):
         super().__init__(
             name="identify_speakers",
@@ -80,5 +79,5 @@ class IdentifySpeakers(CachedDocAction):
         # Perform replacements.
         updated_body = replace_multiple(item.body, replacements)
 
-        result_item = item.derived_copy(body=updated_body)
+        result_item = item.derived_copy(type=ItemType.doc, body=updated_body)
         return result_item

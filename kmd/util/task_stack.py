@@ -120,7 +120,7 @@ class TaskStack:
         try:
             yield self
         except Exception as e:
-            self._log.error("Exception in task context: %s", e)
+            self._log.warning("Exception in task context: %s: %s", type(e).__name__, e)
             self.next(last_had_error=True)
             raise
         finally:

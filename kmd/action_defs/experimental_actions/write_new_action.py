@@ -26,6 +26,7 @@ class WriteNewAction(LLMAction):
             Create a new kmd action in Python, based on a description of the features.
             Write an instruction to give as input.
             """,
+            cachable=False,
             model=LLM.o1_preview,
             system_message=None,  # Will set this in run().
             title_template=TitleTemplate("Action: {title}"),

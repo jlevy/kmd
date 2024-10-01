@@ -4,10 +4,10 @@ from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.llms.llm_completion import llm_completion
-from kmd.model.actions_model import TransformAction
 from kmd.model.file_formats_model import Format
-from kmd.model.items_model import Item, UNTITLED
+from kmd.model.items_model import Item, ItemType, UNTITLED
 from kmd.model.language_models import LLM
+from kmd.model.llm_actions_model import LLMAction
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_docs.sliding_transforms import filtered_transform, WindowSettings
 from kmd.text_docs.text_diffs import DiffFilter, DiffFilterType
@@ -46,9 +46,7 @@ def windowed_llm_transform(
     return result_doc
 
 
-def llm_transform_str(
-    action: TransformAction, input_str: str, check_no_results: bool = True
-) -> str:
+def llm_transform_str(action: LLMAction, input_str: str, check_no_results: bool = True) -> str:
     if not action.model:
         raise InvalidInput(f"LLM action `{action.name}` is missing a model")
     if not action.system_message:
@@ -94,7 +92,7 @@ def llm_transform_str(
     return result_str
 
 
-def llm_transform_item(action: TransformAction, item: Item) -> Item:
+def llm_transform_item(action: LLMAction, item: Item) -> Item:
     """
     Run an LLM transform action on the input, optionally using a sliding window.
     """
@@ -104,7 +102,7 @@ def llm_transform_item(action: TransformAction, item: Item) -> Item:
 
     log.info("LLM transform in item: %s", item)
 
-    result_item = item.derived_copy(body=None, format=Format.markdown)
+    result_item = item.derived_copy(type=ItemType.doc, body=None, format=Format.markdown)
 
     result_item.body = llm_transform_str(action, item.body)
 

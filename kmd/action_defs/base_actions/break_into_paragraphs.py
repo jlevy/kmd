@@ -1,7 +1,7 @@
 from kmd.config.logger import get_logger
 from kmd.errors import NoMatch
 from kmd.exec.action_registry import kmd_action
-from kmd.model import CachedLLMAction, DEFAULT_FAST_LLM, Message, MessageTemplate
+from kmd.model import DEFAULT_FAST_LLM, LLMAction, Message, MessageTemplate
 from kmd.model.items_model import Item
 from kmd.preconditions.precondition_defs import has_speaker_ids
 from kmd.provenance.source_items import find_upstream_item
@@ -13,7 +13,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class BreakIntoParagraphs(CachedLLMAction):
+class BreakIntoParagraphs(LLMAction):
     def __init__(self):
         super().__init__(
             name="break_into_paragraphs",

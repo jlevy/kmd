@@ -3,7 +3,7 @@ from textwrap import dedent
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
-from kmd.model import CachedDocAction, Format, Item, ItemType
+from kmd.model import Format, Item, ItemType, PerItemAction
 from kmd.preconditions.precondition_defs import has_div_chunks, is_text_doc
 from kmd.text_chunks.div_elements import chunk_text_as_divs
 from kmd.text_docs.sizes import TextUnit
@@ -12,7 +12,7 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class Chunkify(CachedDocAction):
+class Chunkify(PerItemAction):
     def __init__(self):
         super().__init__(
             name="chunkify",

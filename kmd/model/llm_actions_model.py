@@ -5,19 +5,14 @@ from pydantic.dataclasses import dataclass
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.llms.fuzzy_parsing import strip_markdown_fence
-from kmd.model.actions_model import (
-    ActionInput,
-    ActionResult,
-    CachedDocAction,
-    PerItemAction,
-    TransformAction,
-)
+from kmd.model.actions_model import ActionInput, ActionResult, PerItemAction
 from kmd.model.doc_elements import CHUNK, ORIGINAL, RESULT
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, UNTITLED
 from kmd.model.language_models import LLM
 from kmd.model.model_settings import DEFAULT_CAREFUL_LLM
 from kmd.model.preconditions_model import Precondition
+from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.util.task_stack import task_stack
 
 if TYPE_CHECKING:
@@ -27,15 +22,17 @@ log = get_logger(__name__)
 
 
 @dataclass
-class LLMAction(TransformAction, PerItemAction):
+class LLMAction(PerItemAction):
     """
-    Base LLM action that processes each item and is cached.
+    Base LLM action that processes each item one at a time.
     """
 
     model: Optional[LLM] = DEFAULT_CAREFUL_LLM
+    precondition: Optional[Precondition] = is_text_doc
 
     def run(self, items: ActionInput) -> ActionResult:
-        return super(PerItemAction, self).run(items)
+        log.info("Running LLM action `%s`.", self.name)
+        return super().run(items)
 
     def run_item(self, item: Item) -> Item:
         """
@@ -53,17 +50,7 @@ class LLMAction(TransformAction, PerItemAction):
 
 
 @dataclass
-class CachedLLMAction(LLMAction, CachedDocAction):
-    """
-    Base LLM action that processes each item and is cached.
-    """
-
-    def run(self, items: ActionInput) -> ActionResult:
-        return super(CachedDocAction, self).run(items)
-
-
-@dataclass
-class ChunkedLLMAction(CachedLLMAction):
+class ChunkedLLMAction(LLMAction):
     """
     Base class for LLM actions that operate on chunks that are already marked with divs.
     """
@@ -91,7 +78,9 @@ class ChunkedLLMAction(CachedLLMAction):
                 output.append(self.process_chunk(chunk))
                 ts.next()
 
-        result_item = item.derived_copy(body="\n\n".join(output), format=Format.md_html)
+        result_item = item.derived_copy(
+            type=item.type, body="\n\n".join(output), format=Format.md_html
+        )
 
         if self.title_template:
             result_item.title = self.title_template.format(
