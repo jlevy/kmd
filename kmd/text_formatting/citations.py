@@ -30,14 +30,16 @@ def add_citation_to_sentence(
     )
 
 
-def format_timestamp_citation(base_url: Url | None, source_path: str, timestamp: float) -> str:
+def format_timestamp_citation(
+    base_url: Url | None, source_path: str, timestamp: float, emoji: str = "⏱️"
+) -> str:
     formatted_timestamp = format_timestamp(timestamp)
     if base_url:
         timestamp_url = timestamp_media_url(base_url, timestamp)
         formatted_timestamp = html_a(formatted_timestamp, timestamp_url)
 
     return html_span(
-        f"{formatted_timestamp}",
+        f"{emoji}{formatted_timestamp}&nbsp;",
         [CITATION, TIMESTAMP_LINK],
         attrs={DATA_SOURCE_PATH: source_path, DATA_TIMESTAMP: f"{timestamp:.2f}"},
         safe=True,

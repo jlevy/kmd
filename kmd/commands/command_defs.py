@@ -543,6 +543,25 @@ def file_info(
 
 
 @kmd_command
+def relations(*paths: str) -> None:
+    """
+    Show the relations for the current selection.
+    """
+    input_paths = _assemble_paths(*paths)
+
+    output()
+    for input_path in input_paths:
+        item = current_workspace().load(StorePath(input_path))
+        output(f"{fmt_path(not_none(item.store_path))}:", color=COLOR_EMPH)
+        relations = item.relations.__dict__ if item.relations else {}
+        if any(relations.values()):
+            output(to_yaml_string(relations), text_wrap=Wrap.INDENT_ONLY)
+        else:
+            output("(no relations)", text_wrap=Wrap.INDENT_ONLY)
+        output()
+
+
+@kmd_command
 def param(*args: str) -> None:
     """
     Show or set currently set of global parameters, which are settings that may be used by

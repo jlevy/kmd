@@ -16,6 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Varta:wght@300..700&display=swap"
       rel="stylesheet"
     />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&display=swap" rel="stylesheet">
     <style>
       :root {
         --color-primary: #488189;
@@ -27,8 +28,8 @@
         --color-hover-bg: #eff0f1;
         --color-hint: #9ca3af;
 
-        --font-sans: "Varta", sans-serif;
-        --font-serif: "PT Serif", serif;
+        --font-sans: "Varta", "Noto Emoji", sans-serif;
+        --font-serif: "PT Serif", "Noto Emoji", serif;
       }
 
       {{ color_defs|safe }}
@@ -100,7 +101,7 @@
       }
 
       .subtitle {
-        font-family: "PT Serif", serif;
+        font-family: var(--font-serif);
         font-style: italic;
         font-size: 1rem;
       }
@@ -179,12 +180,12 @@
       @page {
         @bottom-right {
           content: counter(page) " of " counter(pages);
-          font-family: "PT Serif", serif;
+          font-family: var(--font-serif);
           color: #666;
         }
         @bottom-left {
           content: "{{ footer }}";
-          font-family: "PT Serif", serif;
+          font-family: var(--font-serif);
           color: #666;
         }
       }
@@ -198,7 +199,7 @@
       }
 
       .citation {
-        font-family: "Varta", sans-serif;
+        font-family: var(--font-sans);
         color: var(--color-secondary);
         display: inline-block;
         height: 1.3rem;
@@ -229,14 +230,14 @@
       }
 
       .description {
-        font-family: "Varta", sans-serif;
+        font-family: var(--font-sans);
         font-size: 0.95rem;
         color: var(--color-secondary);
         margin: 2rem 0;
       }
 
       .summary {
-        font-family: "Varta", sans-serif;
+        font-family: var(--font-sans);
         font-size: 0.95rem;
         margin: 2rem 0;
         padding: 1rem;
@@ -255,7 +256,7 @@
       }
 
       .concepts {
-        font-family: "Varta", sans-serif;
+        font-family: var(--font-sans);
         font-size: 0.95rem;
         font-weight: bold;
         margin: 2rem 0;
@@ -298,7 +299,7 @@
         max-width: 10rem;
         text-align: center;
 
-        font-family: "Varta", sans-serif;
+        font-family: var(--font-sans);
         font-size: 0.95rem;
         font-weight: 600;
         text-transform: uppercase;

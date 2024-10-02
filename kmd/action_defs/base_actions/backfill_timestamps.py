@@ -140,7 +140,7 @@ class BackfillSourceTimestamps(PerItemAction):
                     sent = item_doc.get_sent(sent_index)
                     sent.text = add_citation_to_text(
                         sent.text,
-                        format_timestamp_citation(source_url, source_path, timestamp, emoji="⏱️"),
+                        format_timestamp_citation(source_url, source_path, timestamp),
                     )
                 except ContentError:
                     # Missing timestamps aren't fatal since it might be meta text like "Speaker 1:".
