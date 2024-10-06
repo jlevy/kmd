@@ -1,18 +1,18 @@
 from textwrap import dedent
-from typing import List
+from typing import List, Optional
 
 from kmd.config.logger import get_logger
 from kmd.model.doc_elements import CHUNK, ORIGINAL
 from kmd.text_chunks.chunk_utils import chunk_children, chunk_paras
 from kmd.text_chunks.parse_divs import parse_divs, parse_divs_single, TextNode
 from kmd.text_docs.text_doc import TextDoc, TextUnit
-from kmd.text_docs.wordtoks import first_wordtok_is_div
+from kmd.text_docs.wordtoks import first_wordtok, is_div
 from kmd.text_formatting.html_in_md import div_wrapper, html_join_blocks
 
 log = get_logger(__name__)
 
 
-def div(class_name: str, *blocks: str) -> str:
+def div(class_name: str, *blocks: Optional[str]) -> str:
     """
     Convenience to create Markdown-compatible div with HTML in its own paragraphs.
     """
@@ -59,7 +59,7 @@ def chunk_text_as_divs(text: str, min_size: int, unit: TextUnit, class_name: str
     specified minimum size.
     """
 
-    if first_wordtok_is_div(text):
+    if is_div(first_wordtok(text)):
         log.message("Chunking paragraphs using divs.")
         parsed = parse_divs(text)
         chunks = chunk_children(parsed, min_size, unit)

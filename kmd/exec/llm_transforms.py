@@ -4,10 +4,10 @@ from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.llms.llm_completion import llm_completion
+from kmd.model.actions_model import ExecContext
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType, UNTITLED
 from kmd.model.language_models import LLM
-from kmd.model.llm_actions_model import LLMAction
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_docs.diff_filters import accept_all, DiffFilter
 from kmd.text_docs.sliding_transforms import filtered_transform, WindowSettings
@@ -25,6 +25,7 @@ def windowed_llm_transform(
     windowing: Optional[WindowSettings],
     diff_filter: DiffFilter,
     check_no_results: bool = True,
+    context: Optional[ExecContext] = None,
 ) -> TextDoc:
     def doc_transform(input_doc: TextDoc) -> TextDoc:
         return TextDoc.from_text(
@@ -41,12 +42,15 @@ def windowed_llm_transform(
             )
         )
 
-    result_doc = filtered_transform(TextDoc.from_text(input), doc_transform, windowing, diff_filter)
+    result_doc = filtered_transform(
+        TextDoc.from_text(input), doc_transform, windowing, diff_filter, context
+    )
 
     return result_doc
 
 
-def llm_transform_str(action: LLMAction, input_str: str, check_no_results: bool = True) -> str:
+def llm_transform_str(context: ExecContext, input_str: str, check_no_results: bool = True) -> str:
+    action = context.action
     if not action.model:
         raise InvalidInput(f"LLM action `{action.name}` is missing a model")
     if not action.system_message:
@@ -73,6 +77,7 @@ def llm_transform_str(action: LLMAction, input_str: str, check_no_results: bool 
             input_str,
             action.windowing,
             diff_filter,
+            context=context,
         ).reassemble()
     else:
         log.message(
@@ -92,11 +97,11 @@ def llm_transform_str(action: LLMAction, input_str: str, check_no_results: bool 
     return result_str
 
 
-def llm_transform_item(action: LLMAction, item: Item) -> Item:
+def llm_transform_item(context: ExecContext, item: Item) -> Item:
     """
     Run an LLM transform action on the input, optionally using a sliding window.
     """
-
+    action = context.action
     if not item.body:
         raise InvalidInput(f"LLM actions expect a body: {action.name} on {item}")
 
@@ -104,7 +109,7 @@ def llm_transform_item(action: LLMAction, item: Item) -> Item:
 
     result_item = item.derived_copy(type=ItemType.doc, body=None, format=Format.markdown)
 
-    result_item.body = llm_transform_str(action, item.body)
+    result_item.body = llm_transform_str(context, item.body)
 
     if action.title_template:
         result_item.title = action.title_template.format(

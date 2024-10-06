@@ -17,7 +17,7 @@ from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUn
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.text_docs.diff_filters import DiffFilter
-from kmd.text_docs.sliding_transforms import WindowSettings
+from kmd.text_docs.window_settings import WindowSettings
 from kmd.text_ui.command_output import fill_text
 from kmd.util.format_utils import fmt_lines
 from kmd.util.obj_utils import abbreviate_obj
@@ -93,6 +93,16 @@ class ActionResult:
 
     def __str__(self):
         return abbreviate_obj(self, field_max_len=80)
+
+
+@dataclass
+class ExecContext:
+    """
+    Context for an action's execution.
+    """
+
+    action: "Action"
+    """The action being executed."""
 
 
 @dataclass
@@ -326,6 +336,9 @@ class Action(ABC):
         else:
             # Caching disabled.
             return None
+
+    def context(self) -> ExecContext:
+        return ExecContext(action=self)
 
     @abstractmethod
     def run(self, items: ActionInput) -> ActionResult:

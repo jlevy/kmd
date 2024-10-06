@@ -14,6 +14,7 @@ class TranscribeFormat(SequenceAction):
                 "strip_html",
                 "break_into_paragraphs",
                 "backfill_timestamps",
+                "insert_section_headings",
             ],
             description="Transcribe a video, format the transcript into paragraphs, and backfill source timestamps on each paragraph.",
             cachable=True,

@@ -138,6 +138,10 @@ class BackfillSourceTimestamps(PerItemAction):
                     sent_index_list.append(sent_index)
 
                     sent = item_doc.get_sent(sent_index)
+                    if sent.is_markup():
+                        log.info("Skipping markup-only sentence: %s", sent.text)
+                        continue
+
                     sent.text = add_citation_to_text(
                         sent.text,
                         format_timestamp_citation(source_url, source_path, timestamp),

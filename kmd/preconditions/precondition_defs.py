@@ -7,7 +7,7 @@ from kmd.model.items_model import Item, ItemType
 from kmd.model.preconditions_model import precondition
 from kmd.preconditions.speaker_labels import extract_speaker_id
 from kmd.provenance.timestamps import has_timestamp
-from kmd.text_docs.wordtoks import first_wordtok_is_div
+from kmd.text_docs.wordtoks import first_wordtok, is_div
 from kmd.text_formatting.markdown_util import extract_bullet_points
 
 
@@ -113,7 +113,7 @@ def has_annotated_paras(item: Item) -> bool:
 
 @precondition
 def starts_with_div(item: Item) -> bool:
-    return bool(item.body and first_wordtok_is_div(item.body))
+    return bool(item.body and is_div(first_wordtok(item.body)))
 
 
 @precondition

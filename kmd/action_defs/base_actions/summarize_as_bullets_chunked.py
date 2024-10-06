@@ -53,7 +53,7 @@ class SummarizeAsBulletsChunked(ChunkedLLMAction):
 
     def process_chunk(self, chunk: TextNode) -> str:
         transform_input = div_get_original(chunk)
-        llm_response = normalize_markdown(llm_transform_str(self, transform_input))
+        llm_response = normalize_markdown(llm_transform_str(self.context(), transform_input))
         new_div = div(SUMMARY, llm_response)
 
         return div_insert_wrapped(chunk, [new_div])

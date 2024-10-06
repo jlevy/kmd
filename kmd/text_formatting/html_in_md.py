@@ -125,11 +125,12 @@ def html_img(
     return tag_with_attrs("img", None, class_name, img_attrs, safe=safe)
 
 
-def html_join_blocks(*blocks: str) -> str:
+def html_join_blocks(*blocks: Optional[str]) -> str:
     """
     Join block elements, with double newlines for better Markdown compatibility.
+    Ignore empty strings or None.
     """
-    return "\n\n".join(block.strip("\n") for block in blocks)
+    return "\n\n".join(block.strip("\n") for block in blocks if block)
 
 
 def md_para(text: str) -> str:

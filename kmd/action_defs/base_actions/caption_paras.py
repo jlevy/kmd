@@ -100,12 +100,13 @@ class CaptionParas(LLMAction):
         return result_item
 
     def process_para(self, para: Paragraph) -> str:
-        llm_response = ""
+        caption_div = None
 
         para_str = para.reassemble()
-        if para.size(TextUnit.words) > 25:
-            llm_response = llm_transform_str(self, para_str)
+        # Only caption non-markup paragraphs with enough words.
+        if para.size(TextUnit.words) > 40 and not para.is_markup():
+            llm_response = llm_transform_str(self.context(), para_str)
+            caption_div = div(PARA_CAPTION, llm_response)
 
-        new_div = div(ANNOTATED_PARA, div(PARA_CAPTION, llm_response), div(PARA, para.reassemble()))
-
+        new_div = div(ANNOTATED_PARA, caption_div, div(PARA, para_str))
         return new_div

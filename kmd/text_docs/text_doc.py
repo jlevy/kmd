@@ -21,15 +21,20 @@ from kmd.text_docs.wordtoks import (
     BOF_TOK,
     EOF_TOK,
     is_break_or_space,
+    is_entity,
+    is_number,
     is_tag,
+    is_word,
     join_wordtoks,
     PARA_BR_STR,
     PARA_BR_TOK,
     raw_text_to_wordtoks,
     SENT_BR_STR,
     SENT_BR_TOK,
+    visualize_wordtoks,
     wordtok_len,
 )
+from kmd.util.format_utils import fmt_words
 from kmd.util.log_calls import tally_calls
 
 log = get_logger(__name__)
@@ -65,6 +70,24 @@ class Sentence:
 
     def as_wordtoks(self) -> List[str]:
         return raw_text_to_wordtoks(self.text)
+
+    def is_markup(self) -> bool:
+        """
+        Is this sentence all markup, e.g. a <span> or <div> tag or some other content with no words?
+        """
+        wordtoks = self.as_wordtoks()
+        is_all_markup = all(is_tag(wordtok) or is_break_or_space(wordtok) for wordtok in wordtoks)
+        if is_all_markup:
+            return True
+        is_markup_no_words = (
+            len(wordtoks) > 2
+            and is_tag(wordtoks[0])
+            and is_tag(wordtoks[-1])
+            and all(not is_word(wordtok) for wordtok in wordtoks[1:-1])
+        )
+        if is_markup_no_words:
+            return True
+        return False
 
     def __str__(self):
         return repr(self.text)
@@ -132,6 +155,12 @@ class Paragraph:
 
     def as_wordtoks(self) -> List[str]:
         return [wordtok for wordtok, _ in self.as_wordtok_to_sent()]
+
+    def is_markup(self) -> bool:
+        """
+        Is this paragraph all markup, e.g. a <div> tag as a paragraph by itself?
+        """
+        return all(sent.is_markup() for sent in self.sentences)
 
 
 @dataclass
@@ -397,6 +426,16 @@ _med_test_doc = dedent(
         2. Item 2
 
         3. Item 3
+
+        Testing some embedded HTML tags.
+
+        <!--window-br-->
+        
+        <span class="citation timestamp-link"
+        data-src="resources/https_www_youtube_com_watch_v_da_2h2b4fau.resource.yml"
+        data-timestamp="352.81">⏱️<a
+        href="https://www.youtube.com/watch?v=Da-2h2B4faU&t=352.81s">05:52</a>&nbsp;</span>
+
         """
 ).strip()
 
@@ -424,6 +463,51 @@ def test_document_parse_reassemble():
     assert last_para.char_offset == last_para_char_offset
 
 
+def test_markup_detection():
+    text = _med_test_doc
+    doc = TextDoc.from_text(text)
+
+    print(doc.paragraphs[-2].as_wordtoks())
+    print(doc.paragraphs[-1].as_wordtoks())
+
+    wordtoks = doc.paragraphs[-1].as_wordtoks()
+    result = []
+    for wordtok in wordtoks:
+        result.append(
+            fmt_words(
+                visualize_wordtoks([wordtok]),
+                "is_break_or_space" if is_break_or_space(wordtok) else "",
+                "is_word" if is_word(wordtok) else "",
+                "is_number" if is_number(wordtok) else "",
+                "is_tag" if is_tag(wordtok) else "",
+                "is_entity" if is_entity(wordtok) else "",
+            )
+        )
+    print("\n".join(result))
+
+    assert (
+        "\n".join(result)
+        == dedent(
+            """
+            ⎪<span class="citation timestamp-link" data-src="resources/https_www_youtube_com_watch_v_da_2h2b4fau.resource.yml" data-timestamp="352.81">⎪ is_tag
+            ⎪⏱⎪
+            ⎪️⎪
+            ⎪<a href="https://www.youtube.com/watch?v=Da-2h2B4faU&t=352.81s">⎪ is_tag
+            ⎪05⎪ is_number
+            ⎪:⎪
+            ⎪52⎪ is_number
+            ⎪</a>⎪ is_tag
+            ⎪&nbsp;⎪ is_entity
+            ⎪</span>⎪ is_tag
+            """
+        ).strip()
+    )
+
+    assert doc.paragraphs[-2].sentences[0].text == "<!--window-br-->"
+    assert doc.paragraphs[-2].is_markup() == True
+    assert doc.paragraphs[-1].sentences[-1].is_markup()
+
+
 _simple_test_doc = dedent(
     """
     This is the first paragraph. It has multiple sentences.
@@ -444,7 +528,7 @@ def test_doc_sizes():
 
     assert (
         size_summary
-        == "417 bytes (12 paragraphs, 17 sentences, 73 words, 182 wordtoks, 116 tiktokens)"
+        == "701 bytes (15 paragraphs, 20 sentences, 79 words, 206 wordtoks, 210 tiktokens)"
     )
 
 

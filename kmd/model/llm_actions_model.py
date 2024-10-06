@@ -41,7 +41,7 @@ class LLMAction(PerItemAction):
         from kmd.exec.llm_transforms import llm_transform_item
         from kmd.text_formatting.markdown_normalization import normalize_markdown
 
-        item = llm_transform_item(self, item)
+        item = llm_transform_item(self.context(), item)
         if item.body:
             # Both these should be safe for almost all LLM outputs.
             item.body = strip_markdown_fence(item.body)
@@ -97,7 +97,7 @@ class ChunkedLLMAction(LLMAction):
         from kmd.text_chunks.div_elements import div, div_get_original, div_insert_wrapped
 
         transform_input = div_get_original(chunk, child_name=ORIGINAL)
-        llm_response = llm_transform_str(self, transform_input)
+        llm_response = llm_transform_str(self.context(), transform_input)
         new_div = div(RESULT, llm_response)
 
         return div_insert_wrapped(chunk, [new_div], container_class=CHUNK, original_class=ORIGINAL)

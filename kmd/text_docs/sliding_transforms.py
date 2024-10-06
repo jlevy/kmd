@@ -9,6 +9,7 @@ from typing import Callable, List, Optional
 
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, UnexpectedError
+from kmd.model.actions_model import ExecContext
 from kmd.model.file_formats_model import Format
 from kmd.text_docs.diff_filters import accept_all
 from kmd.text_docs.sliding_windows import sliding_para_window, sliding_word_window
@@ -17,7 +18,7 @@ from kmd.text_docs.text_doc import Paragraph, TextDoc, TextUnit
 from kmd.text_docs.window_settings import WINDOW_BR, WINDOW_BR_SEP, WindowSettings
 from kmd.text_docs.wordtoks import join_wordtoks
 from kmd.text_formatting.markdown_normalization import normalize_markdown
-from kmd.util.format_utils import fmt_lines
+from kmd.util.format_utils import fmt_lines, fmt_words
 from kmd.util.task_stack import task_stack
 
 log = get_logger(__name__)
@@ -37,6 +38,7 @@ def filtered_transform(
     transform_func: TextDocTransform,
     windowing: Optional[WindowSettings],
     diff_filter: DiffFilter = accept_all,
+    context: Optional[ExecContext] = None,
 ) -> TextDoc:
     """
     Apply a transform with sliding window across the input doc, enforcing the changes it's
@@ -117,6 +119,7 @@ def filtered_transform(
             doc,
             transform_and_check_diff,
             windowing,
+            context,
         )
 
     return transformed_doc
@@ -126,11 +129,12 @@ def sliding_window_transform(
     doc: TextDoc,
     transform_func: TextDocTransform,
     settings: WindowSettings,
+    context: Optional[ExecContext] = None,
 ) -> TextDoc:
     if settings.unit == TextUnit.wordtoks:
-        return sliding_wordtok_window_transform(doc, transform_func, settings)
+        return sliding_wordtok_window_transform(doc, transform_func, settings, context)
     elif settings.unit == TextUnit.paragraphs:
-        return sliding_para_window_transform(doc, transform_func, settings)
+        return sliding_para_window_transform(doc, transform_func, settings, context)
     else:
         raise UnexpectedError(f"Unsupported sliding transform unit: {settings.unit}")
 
@@ -139,6 +143,7 @@ def sliding_wordtok_window_transform(
     doc: TextDoc,
     transform_func: TextDocTransform,
     settings: WindowSettings,
+    context: Optional[ExecContext] = None,
 ) -> TextDoc:
     """
     Apply a transformation function to each TextDoc in a sliding window over the given document,
@@ -156,7 +161,10 @@ def sliding_wordtok_window_transform(
     nwindows = ceil(nwordtoks / settings.shift)
     sep_wordtoks = [settings.separator] if settings.separator else []
 
-    with task_stack().context("window_transform", nwindows, "window") as ts:
+    task_name = fmt_words(
+        context.action.name if context else None, "sliding_wordtok_window_transform"
+    )
+    with task_stack().context(task_name, nwindows, "window") as ts:
         log.message(
             "Sliding word transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
             nwordtoks,
@@ -226,7 +234,10 @@ def sliding_wordtok_window_transform(
 
 
 def sliding_para_window_transform(
-    doc: TextDoc, transform_func: TextDocTransform, settings: WindowSettings
+    doc: TextDoc,
+    transform_func: TextDocTransform,
+    settings: WindowSettings,
+    context: Optional[ExecContext] = None,
 ) -> TextDoc:
     """
     Apply a transformation function to each TextDoc, stepping through paragraphs `settings.size`
@@ -241,7 +252,8 @@ def sliding_para_window_transform(
 
     nwindows = ceil(doc.size(TextUnit.paragraphs) / settings.size)
 
-    with task_stack().context("sliding_para_window_transform", nwindows, "window") as ts:
+    task_name = fmt_words(context.action.name if context else None, "sliding_para_window_transform")
+    with task_stack().context(task_name, nwindows, "window") as ts:
         log.message(
             "Sliding paragraph transform: Begin on doc: %s windows of size %s paragraphs on total %s",
             nwindows,

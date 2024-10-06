@@ -26,7 +26,6 @@ def output_help_page(base_only: bool = False) -> None:
         actions = load_all_actions(base_only=base_only)
         for action in actions.values():
             output_action_help(action, verbose=False)
-            output()
 
         output_heading("More help")
         output("Use `help` for this help page. Use `xonfig tutorial` for xonsh help.")
