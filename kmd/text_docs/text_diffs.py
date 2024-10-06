@@ -9,14 +9,13 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import SYMBOL_SEP
 from kmd.errors import UnexpectedError
 from kmd.text_docs.text_doc import SentIndex, TextDoc
-from kmd.text_docs.wordtoks import is_break_or_space, is_word
 from kmd.util.log_calls import log_calls, tally_calls
 
 
 log = get_logger(__name__)
 
 
-class DiffTag(Enum):
+class OpType(Enum):
     EQUAL = "equal"
     INSERT = "insert"
     DELETE = "delete"
@@ -24,37 +23,37 @@ class DiffTag(Enum):
 
     def as_symbol(self):
         abbrev = {
-            DiffTag.EQUAL: " ",
-            DiffTag.INSERT: "+",
-            DiffTag.DELETE: "-",
-            DiffTag.REPLACE: "±",
+            OpType.EQUAL: " ",
+            OpType.INSERT: "+",
+            OpType.DELETE: "-",
+            OpType.REPLACE: "±",
         }
         return abbrev[self]
 
     def as_abbrev(self):
         abbrev = {
-            DiffTag.EQUAL: "keep",
-            DiffTag.INSERT: "add ",
-            DiffTag.DELETE: "del ",
-            DiffTag.REPLACE: "repl",
+            OpType.EQUAL: "keep",
+            OpType.INSERT: "add ",
+            OpType.DELETE: "del ",
+            OpType.REPLACE: "repl",
         }
         return abbrev[self]
 
 
 @dataclass(frozen=True)
 class DiffOp:
-    action: DiffTag
+    action: OpType
     left: List[str]
     right: List[str]
 
     def __post_init__(self):
-        if self.action == DiffTag.REPLACE:
+        if self.action == OpType.REPLACE:
             assert self.left and self.right
-        elif self.action == DiffTag.EQUAL:
+        elif self.action == OpType.EQUAL:
             assert self.left == self.right
-        elif self.action == DiffTag.INSERT:
+        elif self.action == OpType.INSERT:
             assert not self.left
-        elif self.action == DiffTag.DELETE:
+        elif self.action == OpType.DELETE:
             assert not self.right
 
     def left_str(self, show_toks=True) -> str:
@@ -74,6 +73,9 @@ class DiffOp:
         if show_toks:
             s += f":   {SYMBOL_SEP}{''.join(tok for tok in self.left)}{SYMBOL_SEP}"
         return s
+
+    def all_changed(self) -> List[str]:
+        return self.left + self.right
 
     def __str__(self):
         return
@@ -95,45 +97,6 @@ class DiffStats:
 DiffFilter = Callable[[DiffOp], bool]
 
 
-def filter_only_breaks_and_spaces(diff_op: DiffOp) -> bool:
-    return all(is_break_or_space(tok) for tok in diff_op.left + diff_op.right)
-
-
-def filter_only_punct_and_spaces(diff_op: DiffOp) -> bool:
-    return all(not is_word(tok) for tok in diff_op.left + diff_op.right)
-
-
-def filter_accept_all(diff_op: DiffOp) -> bool:
-    return True
-
-
-class DiffFilterType(Enum):
-    """
-    Enum for different types of diff filters. Helps make these serializable.
-    """
-
-    only_breaks_and_spaces = "only_breaks_and_spaces"
-    """Only accepts changes to sentence and paragraph breaks and whitespace."""
-
-    only_punct_and_spaces = "only_punct_and_spaces"
-    """Only accepts changes to punctuation and whitespace."""
-
-    accept_all = "accept_all"
-    """Accepts all changes."""
-
-    def get_filter(self) -> DiffFilter:
-        filter_map = {
-            DiffFilterType.only_breaks_and_spaces: filter_only_breaks_and_spaces,
-            DiffFilterType.only_punct_and_spaces: filter_only_punct_and_spaces,
-            DiffFilterType.accept_all: filter_accept_all,
-        }
-
-        try:
-            return filter_map[self]
-        except KeyError:
-            raise ValueError(f"Unknown DiffFilterType: {self}")
-
-
 @dataclass
 class TextDiff:
     """
@@ -149,11 +112,11 @@ class TextDiff:
         return sum(len(op.right) for op in self.ops)
 
     def changes(self) -> List[DiffOp]:
-        return [op for op in self.ops if op.action != DiffTag.EQUAL]
+        return [op for op in self.ops if op.action != OpType.EQUAL]
 
     def stats(self) -> DiffStats:
-        wordtoks_added = sum(len(op.right) for op in self.ops if op.action != DiffTag.EQUAL)
-        wordtoks_removed = sum(len(op.left) for op in self.ops if op.action != DiffTag.EQUAL)
+        wordtoks_added = sum(len(op.right) for op in self.ops if op.action != OpType.EQUAL)
+        wordtoks_removed = sum(len(op.left) for op in self.ops if op.action != OpType.EQUAL)
         return DiffStats(wordtoks_added, wordtoks_removed, self.left_size())
 
     def apply_to(self, original_wordtoks: List[str]) -> List[str]:
@@ -184,7 +147,7 @@ class TextDiff:
         accepted_ops, rejected_ops = [], []
 
         for op in self.ops:
-            if op.action == DiffTag.EQUAL:
+            if op.action == OpType.EQUAL:
                 # For equal ops, all tokens are both accepted and rejected.
                 accepted_ops.append(op)
                 rejected_ops.append(op)
@@ -193,9 +156,9 @@ class TextDiff:
                 # token would give odd results, like deleting words but leaving whitespace.
                 if accept_fn(op):
                     accepted_ops.append(op)
-                    rejected_ops.append(DiffOp(DiffTag.EQUAL, op.left, op.left))
+                    rejected_ops.append(DiffOp(OpType.EQUAL, op.left, op.left))
                 else:
-                    accepted_ops.append(DiffOp(DiffTag.EQUAL, op.left, op.left))
+                    accepted_ops.append(DiffOp(OpType.EQUAL, op.left, op.left))
                     rejected_ops.append(op)
 
         assert len(accepted_ops) == len(self.ops)
@@ -215,14 +178,14 @@ class TextDiff:
         pos = 0
         lines = []
         for op in self.ops:
-            if op.action == DiffTag.EQUAL:
+            if op.action == OpType.EQUAL:
                 if include_equal:
                     lines.append(f"at pos {pos:4} {op.equal_str()}")
-            elif op.action == DiffTag.INSERT:
+            elif op.action == OpType.INSERT:
                 lines.append(f"at pos {pos:4} {op.right_str()}")
-            elif op.action == DiffTag.DELETE:
+            elif op.action == OpType.DELETE:
                 lines.append(f"at pos {pos:4} {op.left_str()}")
-            elif op.action == DiffTag.REPLACE:
+            elif op.action == OpType.REPLACE:
                 lines.append(f"at pos {pos:4} {op.left_str()}")
                 lines.append(f"       {'':4} {op.right_str()}")
 
@@ -268,13 +231,13 @@ def diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
         if tag == "equal":
             slice1 = wordtoks1[i1:i2]
             assert slice1 == wordtoks2[j1:j2]
-            diff.append(DiffOp(DiffTag.EQUAL, slice1, slice1))
+            diff.append(DiffOp(OpType.EQUAL, slice1, slice1))
         elif tag == "insert":
-            diff.append(DiffOp(DiffTag.INSERT, [], wordtoks2[j1:j2]))
+            diff.append(DiffOp(OpType.INSERT, [], wordtoks2[j1:j2]))
         elif tag == "delete":
-            diff.append(DiffOp(DiffTag.DELETE, wordtoks1[i1:i2], []))
+            diff.append(DiffOp(OpType.DELETE, wordtoks1[i1:i2], []))
         elif tag == "replace":
-            diff.append(DiffOp(DiffTag.REPLACE, wordtoks1[i1:i2], wordtoks2[j1:j2]))
+            diff.append(DiffOp(OpType.REPLACE, wordtoks1[i1:i2], wordtoks2[j1:j2]))
 
     return TextDiff(diff)
 
@@ -457,29 +420,6 @@ def test_apply_to():
     diff2 = diff_wordtoks(wordtoks3, wordtoks4)
     result2 = diff2.apply_to(wordtoks3)
     assert result2 == wordtoks4
-
-
-def test_filter_br_and_space():
-    wordtoks1 = TextDoc.from_text(_short_text1).as_wordtoks()
-    wordtoks2 = TextDoc.from_text(_short_text2).as_wordtoks()
-    wordtoks3 = TextDoc.from_text(_short_text3).as_wordtoks()
-
-    diff = diff_wordtoks(wordtoks1, wordtoks2)
-
-    accepted, rejected = diff.filter(DiffFilterType.only_breaks_and_spaces.get_filter())
-
-    accepted_result = accepted.apply_to(wordtoks1)
-    rejected_result = rejected.apply_to(wordtoks1)
-
-    print("---Filtered diff:")
-    print("Original: " + "/".join(wordtoks1))
-    print("Full diff:", diff)
-    print("Accepted diff:", accepted)
-    print("Rejected diff:", rejected)
-    print("Accepted result: " + "/".join(accepted_result))
-    print("Rejected result: " + "/".join(rejected_result))
-
-    assert accepted_result == wordtoks3
 
 
 def test_find_best_alignment():

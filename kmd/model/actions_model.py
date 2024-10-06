@@ -16,8 +16,8 @@ from kmd.model.output_model import CommandOutput
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.model.preconditions_model import Precondition
+from kmd.text_docs.diff_filters import DiffFilter
 from kmd.text_docs.sliding_transforms import WindowSettings
-from kmd.text_docs.text_diffs import DiffFilterType
 from kmd.text_ui.command_output import fill_text
 from kmd.util.format_utils import fmt_lines
 from kmd.util.obj_utils import abbreviate_obj
@@ -139,8 +139,8 @@ class Action(ABC):
     # TODO: Might want to move these into an ActionParams class for clarity.
 
     # Transform-specific options:
-    windowing: Optional["WindowSettings"] = None
-    diff_filter: Optional["DiffFilterType"] = None
+    windowing: Optional[WindowSettings] = None
+    diff_filter: Optional[DiffFilter] = None
 
     # LLM-specific options:
     model: Optional[LLM] = None

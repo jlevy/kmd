@@ -10,8 +10,9 @@ from typing import Callable, List, Optional
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, UnexpectedError
 from kmd.model.file_formats_model import Format
+from kmd.text_docs.diff_filters import accept_all
 from kmd.text_docs.sliding_windows import sliding_para_window, sliding_word_window
-from kmd.text_docs.text_diffs import diff_docs, DiffFilter, filter_accept_all, find_best_alignment
+from kmd.text_docs.text_diffs import diff_docs, DiffFilter, find_best_alignment
 from kmd.text_docs.text_doc import Paragraph, TextDoc, TextUnit
 from kmd.text_docs.window_settings import WINDOW_BR, WINDOW_BR_SEP, WindowSettings
 from kmd.text_docs.wordtoks import join_wordtoks
@@ -35,7 +36,7 @@ def filtered_transform(
     doc: TextDoc,
     transform_func: TextDocTransform,
     windowing: Optional[WindowSettings],
-    diff_filter: DiffFilter = filter_accept_all,
+    diff_filter: DiffFilter = accept_all,
 ) -> TextDoc:
     """
     Apply a transform with sliding window across the input doc, enforcing the changes it's
@@ -43,7 +44,7 @@ def filtered_transform(
 
     If windowing is None, apply the transform to the entire document at once.
     """
-    has_filter = diff_filter != filter_accept_all
+    has_filter = diff_filter != accept_all
 
     if not windowing:
         transformed_doc = transform_func(doc)

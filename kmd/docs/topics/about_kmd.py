@@ -92,7 +92,7 @@ set of items using `suggest_actions`.
 Kmd makes a few kinds of messy text manipulations easier:
 
 - Reusable LLM actions: A common kind of action is to invoke an LLM (like
-  GPT-4o) on a text item, with a given system and user prompt template. New LLM
+  GPT-4o or o1) on a text item, with a given system and user prompt template. New LLM
   actions can be added with a few lines of Python by subclassing an action
   base class, typically `Action`, `CachedItemAction` (for any action that
   doesn't need to be rerun if it has the same single output), `CachedLLMAction`

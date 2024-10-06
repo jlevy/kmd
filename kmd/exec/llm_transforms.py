@@ -9,8 +9,8 @@ from kmd.model.items_model import Item, ItemType, UNTITLED
 from kmd.model.language_models import LLM
 from kmd.model.llm_actions_model import LLMAction
 from kmd.model.messages_model import Message, MessageTemplate
+from kmd.text_docs.diff_filters import accept_all, DiffFilter
 from kmd.text_docs.sliding_transforms import filtered_transform, WindowSettings
-from kmd.text_docs.text_diffs import DiffFilter, DiffFilterType
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_formatting.markdown_normalization import normalize_markdown
 
@@ -64,7 +64,7 @@ def llm_transform_str(action: LLMAction, input_str: str, check_no_results: bool 
             action.windowing,
             "with filter" if action.diff_filter else "without filter",  # TODO: Give filters names.
         )
-        diff_filter = action.diff_filter or DiffFilterType.accept_all
+        diff_filter = action.diff_filter or accept_all
 
         result_str = windowed_llm_transform(
             action.model,
@@ -72,7 +72,7 @@ def llm_transform_str(action: LLMAction, input_str: str, check_no_results: bool 
             action.template,
             input_str,
             action.windowing,
-            diff_filter.get_filter(),
+            diff_filter,
         ).reassemble()
     else:
         log.message(

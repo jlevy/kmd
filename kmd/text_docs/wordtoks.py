@@ -4,7 +4,7 @@ word tokens ("wordtoks").
 """
 
 from textwrap import dedent
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import regex
 
@@ -30,10 +30,6 @@ SPACE_TOK = " "
 _wordtok_pattern = regex.compile(r"(<(?:[^<>]|\n){0,1024}>|\w+|[^\w\s]|\s+)", regex.DOTALL)
 
 _para_br_pattern = regex.compile(r"\s*\n\n\s*")
-
-_tag_pattern = regex.compile(r"<.{0,1024}?>")
-
-_tag_close_pattern = regex.compile(r"</[^>]+>")
 
 _word_pat = regex.compile(r"\w+")
 
@@ -96,7 +92,7 @@ def raw_text_to_wordtok_offsets(text: str, bof_eof=False) -> Tuple[List[str], Li
 def raw_text_to_wordtoks(text: str, bof_eof=False) -> List[str]:
     """
     Convert text to word tokens, including words, whitespace, punctuation, and
-    HTML tags. Does not parse paragraph orsentence breaks. Normalizes all
+    HTML tags. Does not parse paragraph or sentence breaks. Normalizes all
     whitespace to a single space character.
     """
     wordtoks, _offsets = raw_text_to_wordtok_offsets(text, bof_eof)
@@ -140,9 +136,16 @@ def visualize_wordtoks(wordtoks: List[str]) -> str:
 
 def is_break_or_space(wordtok: str) -> bool:
     """
-    Any kind of paragraph break, sentence break, or space.
+    Any kind of paragraph break, sentence break, or space (including
+    the beginning or end of the document).
     """
-    return wordtok == PARA_BR_TOK or wordtok == SENT_BR_TOK or wordtok.isspace()
+    return (
+        wordtok == PARA_BR_TOK
+        or wordtok == SENT_BR_TOK
+        or wordtok.isspace()
+        or wordtok == BOF_TOK
+        or wordtok == EOF_TOK
+    )
 
 
 def is_word(wordtok: str) -> bool:
@@ -152,18 +155,48 @@ def is_word(wordtok: str) -> bool:
     return bool(_word_pat.match(wordtok))
 
 
-def is_tag(wordtok: str) -> bool:
-    """
-    Is this wordtok an HTML tag?
-    """
-    return bool(_tag_pattern.match(wordtok))
+_tag_pattern = regex.compile(r"<(/?)(\w+)([^>/]*?)(/?)\s*>", regex.IGNORECASE)
 
 
-def is_tag_close(wordtok: str) -> bool:
+def _match_tag(
+    wordtok: str, tag_names: List[str], match_open: bool = True, match_close: bool = True
+) -> bool:
+    match = _tag_pattern.match(wordtok)
+    if not match:
+        return False
+    is_close = bool(match.group(1) or match.group(4))
+    tag_name = match.group(2).lower()
+    if tag_names and tag_name not in [name.lower() for name in tag_names]:
+        return False
+    else:
+        return (match_open and not is_close) or (match_close and is_close)
+
+
+def is_tag(wordtok: str, tag_names: Optional[List[str]] = None) -> bool:
     """
-    Is this wordtok an HTML tag close?
+    Is this wordtok an HTML tag? Must be in `tag_names` if provided.
     """
-    return bool(_tag_close_pattern.match(wordtok))
+    if tag_names is None:
+        tag_names = []
+    return _match_tag(wordtok, tag_names)
+
+
+def is_tag_close(wordtok: str, tag_names: Optional[List[str]] = None) -> bool:
+    """
+    Is this wordtok an HTML close tag? Must be in `tag_names` if provided.
+    """
+    if tag_names is None:
+        tag_names = []
+    return _match_tag(wordtok, tag_names, match_open=False, match_close=True)
+
+
+def is_tag_open(wordtok: str, tag_names: Optional[List[str]] = None) -> bool:
+    """
+    Is this wordtok an HTML open tag? Must be in `tag_names` if provided.
+    """
+    if tag_names is None:
+        tag_names = []
+    return _match_tag(wordtok, tag_names, match_open=True, match_close=False)
 
 
 ## Tests
@@ -215,3 +248,24 @@ def test_html_doc():
     assert search_tokens(wordtoks).at(-1).seek_back(["Special"]).seek_forward(
         is_tag
     ).get_token() == (39, '<span data-timestamp="5.60">')
+
+
+def test_tag_functions():
+    assert is_tag("foo") == False
+    assert is_tag("<a") == False
+    assert is_tag("<div>") == True
+    assert is_tag("</div>") == True
+    assert is_tag("<span>") == True
+    assert is_tag("<div>", ["div"]) == True
+    assert is_tag("<div>", ["span"]) == False
+    assert is_tag("<div/>") == True
+
+    assert is_tag_close("</div>") == True
+    assert is_tag_close("<div>") == False
+    assert is_tag_close("</div>", ["div"]) == True
+    assert is_tag_close("</div>", ["span"]) == False
+    assert is_tag_close("<div/>") == True
+    assert is_tag_open("<div>") == True
+    assert is_tag_open("</div>") == False
+    assert is_tag_open("<div>", ["div"]) == True
+    assert is_tag_open("<div>", ["span"]) == False

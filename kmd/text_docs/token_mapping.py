@@ -2,7 +2,7 @@ from textwrap import dedent
 from typing import Dict, List, Optional
 
 from kmd.config.text_styles import SYMBOL_SEP
-from kmd.text_docs.text_diffs import diff_wordtoks, DiffTag, TextDiff
+from kmd.text_docs.text_diffs import diff_wordtoks, OpType, TextDiff
 from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.wordtoks import raw_text_to_wordtoks
 
@@ -46,21 +46,21 @@ class TokenMapping:
         last_offset1 = 0
 
         for op in self.diff.ops:
-            if op.action == DiffTag.EQUAL:
+            if op.action == OpType.EQUAL:
                 for _ in op.left:
                     self.backmap[offset2] = offset1
                     last_offset1 = offset1
                     offset1 += 1
                     offset2 += 1
-            elif op.action == DiffTag.DELETE:
+            elif op.action == OpType.DELETE:
                 for _ in op.left:
                     last_offset1 = offset1
                     offset1 += 1
-            elif op.action == DiffTag.INSERT:
+            elif op.action == OpType.INSERT:
                 for _ in op.right:
                     self.backmap[offset2] = last_offset1
                     offset2 += 1
-            elif op.action == DiffTag.REPLACE:
+            elif op.action == OpType.REPLACE:
                 for _ in op.left:
                     last_offset1 = offset1
                     offset1 += 1
