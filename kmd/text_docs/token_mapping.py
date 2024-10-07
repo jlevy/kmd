@@ -87,7 +87,7 @@ def test_offset_mapping():
         "This is<-PARA-BR->a simple pytest adding other words.<-SENT-BR->And another sentence."
     )
 
-    mapping = TokenMapping(doc1.as_wordtoks(), doc2.as_wordtoks())
+    mapping = TokenMapping(list(doc1.as_wordtoks()), list(doc2.as_wordtoks()))
 
     mapping_str = mapping.full_mapping_str()
 
@@ -144,7 +144,7 @@ def test_offset_mapping_longer():
     )
 
     doc1_wordtoks = raw_text_to_wordtoks(doc1)
-    doc2_wordtoks = TextDoc.from_text(doc2).as_wordtoks()
+    doc2_wordtoks = list(TextDoc.from_text(doc2).as_wordtoks())
 
     mapping = TokenMapping(doc1_wordtoks, doc2_wordtoks)
 

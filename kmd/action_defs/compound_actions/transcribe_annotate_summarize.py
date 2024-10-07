@@ -14,6 +14,7 @@ class TranscribeAnnotateSummarize(SequenceAction):
                 "add_summary_bullets",
                 # "add_concepts",  # Better to do this across all docs and review, then reinsert.
                 "add_description",
+                "insert_frame_captures",
             ],
             description="A fancy action to transcribe a video, format the transcript into paragraphs, backfill timestamps, and add a summary and description.",
             cachable=True,

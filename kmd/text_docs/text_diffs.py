@@ -205,10 +205,10 @@ def diff_docs(doc1: TextDoc, doc2: TextDoc) -> TextDiff:
     Calculate the LCS-style diff between two documents based on words.
     """
 
-    diff = diff_wordtoks(doc1.as_wordtoks(), doc2.as_wordtoks())
+    diff = diff_wordtoks(list(doc1.as_wordtoks()), list(doc2.as_wordtoks()))
 
-    # log.save_object("doc1 wordtoks", "diff_docs", "\n".join(doc1.as_wordtoks()))
-    # log.save_object("doc2 wordtoks", "diff_docs", "\n".join(doc2.as_wordtoks()))
+    # log.save_object("doc1 wordtoks", "diff_docs", "\n".join(list(doc1.as_wordtoks())))
+    # log.save_object("doc2 wordtoks", "diff_docs", "\n".join(list(doc2.as_wordtoks())))
     # log.save_object("diff", "diff_docs", diff)
 
     return diff
@@ -368,8 +368,8 @@ _short_text3 = dedent(
 
 
 def test_lcs_diff_wordtoks():
-    wordtoks1 = TextDoc.from_text(_short_text1).as_wordtoks()
-    wordtoks2 = TextDoc.from_text(_short_text2).as_wordtoks()
+    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
+    wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks())
 
     diff = diff_wordtoks(wordtoks1, wordtoks2)
 
@@ -400,8 +400,8 @@ def test_lcs_diff_wordtoks():
 
 
 def test_apply_to():
-    wordtoks1 = TextDoc.from_text(_short_text1).as_wordtoks()
-    wordtoks2 = TextDoc.from_text(_short_text2).as_wordtoks()
+    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
+    wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks())
 
     diff = diff_wordtoks(wordtoks1, wordtoks2)
 
@@ -423,8 +423,8 @@ def test_apply_to():
 
 
 def test_find_best_alignment():
-    wordtoks1 = TextDoc.from_text(_short_text1).as_wordtoks()
-    wordtoks2 = TextDoc.from_text(_short_text1).sub_doc(SentIndex(1, 1)).as_wordtoks()
+    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
+    wordtoks2 = list(TextDoc.from_text(_short_text1).sub_doc(SentIndex(1, 1)).as_wordtoks())
     wordtoks3 = wordtoks2 + ["Extra", "wordtoks", "at", "the", "end"]
     wordtoks4 = list(wordtoks3)
     wordtoks4[0] = "X"

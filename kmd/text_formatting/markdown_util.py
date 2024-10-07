@@ -45,6 +45,13 @@ def markdown_to_html(markdown: str, converter: marko.Markdown = custom_markdown)
     return converter.convert(markdown)
 
 
+def is_markdown_header(markdown: str) -> bool:
+    """
+    Is the start of this content a Markdown header?
+    """
+    return regex.match(r"^#+ ", markdown) is not None
+
+
 def _tree_links(element, include_internal=False):
     links = []
 

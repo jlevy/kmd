@@ -133,9 +133,9 @@ def accept_all(diff_op: DiffOp) -> bool:
 def test_filter_br_and_space():
     from kmd.text_docs.text_diffs import _short_text1, _short_text2, _short_text3, diff_wordtoks
 
-    wordtoks1 = TextDoc.from_text(_short_text1).as_wordtoks()
-    wordtoks2 = TextDoc.from_text(_short_text2).as_wordtoks()
-    wordtoks3 = TextDoc.from_text(_short_text3).as_wordtoks()
+    wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
+    wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks())
+    wordtoks3 = list(TextDoc.from_text(_short_text3).as_wordtoks())
 
     diff = diff_wordtoks(wordtoks1, wordtoks2)
 

@@ -22,6 +22,7 @@ from kmd.text_docs.wordtoks import (
     EOF_TOK,
     is_break_or_space,
     is_entity,
+    is_header_tag,
     is_number,
     is_tag,
     is_word,
@@ -34,8 +35,10 @@ from kmd.text_docs.wordtoks import (
     visualize_wordtoks,
     wordtok_len,
 )
+from kmd.text_formatting.markdown_util import is_markdown_header
 from kmd.util.format_utils import fmt_words
 from kmd.util.log_calls import tally_calls
+from kmd.util.strif import abbreviate_str
 
 log = get_logger(__name__)
 
@@ -153,14 +156,23 @@ class Paragraph:
             if sent_index != last_sent_index:
                 yield SENT_BR_TOK, sent_index
 
-    def as_wordtoks(self) -> List[str]:
-        return [wordtok for wordtok, _ in self.as_wordtok_to_sent()]
+    def as_wordtoks(self) -> Generator[str, None, None]:
+        for wordtok, _ in self.as_wordtok_to_sent():
+            yield wordtok
 
     def is_markup(self) -> bool:
         """
         Is this paragraph all markup, e.g. a <div> tag as a paragraph by itself?
         """
         return all(sent.is_markup() for sent in self.sentences)
+
+    def is_header(self) -> bool:
+        """
+        Is this paragraph a Markdown or HTML header tag?
+        """
+        first_wordtok = next(self.as_wordtoks(), None)
+        is_html_header = first_wordtok and is_tag(first_wordtok) and is_header_tag(first_wordtok)
+        return is_html_header or is_markdown_header(self.original_text)
 
 
 @dataclass
@@ -375,8 +387,9 @@ class TextDoc:
         if bof_eof:
             yield EOF_TOK, self.last_index()
 
-    def as_wordtoks(self, bof_eof=False) -> List[str]:
-        return [wordtok for wordtok, _sent_index in self.as_wordtok_to_sent(bof_eof=bof_eof)]
+    def as_wordtoks(self, bof_eof=False) -> Generator[str, None, None]:
+        for wordtok, _sent_index in self.as_wordtok_to_sent(bof_eof=bof_eof):
+            yield wordtok
 
     def wordtok_mappings(self) -> Tuple[WordtokMapping, SentenceMapping]:
         """
@@ -429,6 +442,8 @@ _med_test_doc = dedent(
 
         Testing some embedded HTML tags.
 
+        <h3>An HTML header</h3>
+
         <!--window-br-->
         
         <span class="citation timestamp-link"
@@ -467,8 +482,45 @@ def test_markup_detection():
     text = _med_test_doc
     doc = TextDoc.from_text(text)
 
-    print(doc.paragraphs[-2].as_wordtoks())
-    print(doc.paragraphs[-1].as_wordtoks())
+    print("Paragraph markup and header detection:")
+    result = []
+    for para in doc.paragraphs:
+        result.append(
+            fmt_words(
+                abbreviate_str(para.original_text, 10),
+                "is_markup" if para.is_markup() else "",
+                "is_header" if para.is_header() else "",
+            )
+        )
+
+    print("\n".join(result))
+    assert (
+        "\n".join(result)
+        == dedent(
+            """
+            # Title is_header
+            Hello Wor…
+            ## Subtit… is_header
+            This is a…
+            ### Itemi… is_header
+            - Item 1
+            - Item 2
+            - Item 3
+            ### Numbe… is_header
+            1. Item 1
+            2. Item 2
+            3. Item 3
+            Testing s…
+            <h3>An HT… is_header
+            <!--windo… is_markup
+            <span cla… is_markup
+            """
+        ).strip()
+    )
+
+    print("Last paragraphs:")
+    print(list(doc.paragraphs[-2].as_wordtoks()))
+    print(list(doc.paragraphs[-1].as_wordtoks()))
 
     wordtoks = doc.paragraphs[-1].as_wordtoks()
     result = []
@@ -480,6 +532,7 @@ def test_markup_detection():
                 "is_word" if is_word(wordtok) else "",
                 "is_number" if is_number(wordtok) else "",
                 "is_tag" if is_tag(wordtok) else "",
+                "is_header_tag" if is_header_tag(wordtok) else "",
                 "is_entity" if is_entity(wordtok) else "",
             )
         )
@@ -528,7 +581,7 @@ def test_doc_sizes():
 
     assert (
         size_summary
-        == "701 bytes (15 paragraphs, 20 sentences, 79 words, 206 wordtoks, 210 tiktokens)"
+        == "726 bytes (16 paragraphs, 21 sentences, 82 words, 214 wordtoks, 219 tiktokens)"
     )
 
 
@@ -616,7 +669,7 @@ def test_sub_doc():
 
 def test_tokenization():
     doc = TextDoc.from_text(_short_test_doc)
-    wordtoks = doc.as_wordtoks()
+    wordtoks = list(doc.as_wordtoks())
 
     print("\n---Tokens:")
     pprint(wordtoks)
@@ -711,11 +764,11 @@ def test_wordtokization():
 
 def test_html_tokenization():
     doc = TextDoc.from_text(_sentence_test_html)
+    wordtoks = list(doc.as_wordtoks())
 
     print("\n---HTML Tokens:")
-    pprint(doc.as_wordtoks())
+    pprint(wordtoks)
 
-    wordtoks = doc.as_wordtoks()
     assert wordtoks == [
         "This",
         " ",

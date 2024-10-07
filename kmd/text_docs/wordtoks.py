@@ -253,6 +253,16 @@ def is_entity(wordtok: Optional[str] = None) -> bool:
     return bool(wordtok and wordtok.startswith("&") and wordtok.endswith(";"))
 
 
+header_tags = ["h1", "h2", "h3", "h4", "h5", "h6"]
+
+
+def is_header_tag(wordtok: str) -> bool:
+    """
+    Is this wordtok an HTML header tag?
+    """
+    return is_tag(wordtok, tag_names=header_tags)
+
+
 ## Tests
 
 _test_doc = dedent(

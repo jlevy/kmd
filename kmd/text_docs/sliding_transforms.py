@@ -81,7 +81,9 @@ def filtered_transform(
                     )
 
                 # Apply only the accepted changes.
-                final_doc = TextDoc.from_wordtoks(accepted_diff.apply_to(input_doc.as_wordtoks()))
+                final_doc = TextDoc.from_wordtoks(
+                    accepted_diff.apply_to(list(input_doc.as_wordtoks()))
+                )
                 log.message(
                     "Word token changes:\n%s",
                     fmt_lines(
@@ -186,7 +188,7 @@ def sliding_wordtok_window_transform(
 
             transformed_window = transform_func(window)
 
-            new_wordtoks = transformed_window.as_wordtoks()
+            new_wordtoks = list(transformed_window.as_wordtoks())
 
             if not output_wordtoks:
                 output_wordtoks = new_wordtoks
