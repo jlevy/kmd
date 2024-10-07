@@ -70,7 +70,7 @@ class BackfillSourceTimestamps(PerItemAction):
 
         # Parse current doc.
         item_doc = TextDoc.from_text(item.body)
-        item_wordtoks = item_doc.as_wordtoks(bof_eof=True)
+        item_wordtoks = list(item_doc.as_wordtoks(bof_eof=True))
 
         # Don't bother parsing sentences on the source document, which may be long and with HTML.
         extractor = TimestampExtractor(source_item.body)

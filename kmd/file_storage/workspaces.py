@@ -130,7 +130,8 @@ def current_workspace(log_on_change: bool = True) -> FileStore:
     workspace_dir, is_sandbox = current_workspace_info()
     if not workspace_dir:
         raise InvalidState(
-            f"No workspace found in `{fmt_path(Path(".").absolute())}`.\nCreate one with the `workspace` command."
+            f"No workspace found in `{fmt_path(Path('.').absolute())}`.\n"
+            "Create one with the `workspace` command."
         )
 
     reset_logging(workspace_dir)

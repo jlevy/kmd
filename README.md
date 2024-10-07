@@ -36,6 +36,11 @@ posts, extract or visualize concepts, check citations, convert notes to PDFs or 
 formatted HTML, or perform numerous other content-related tasks possible by orchestrating AI
 tools in the right ways.
 
+## Background
+
+I'd like to give a little motivation for experimenting with Kmd and why I think it's potentially so useful.
+But if you want to just try it, jump to [Getting Started](#getting-started)!
+
 The goals of Kmd are:
 
 - **Make simple tasks simple:** Doing a simple thing (like transcribing a video or
@@ -47,8 +52,8 @@ The goals of Kmd are:
 - **Make complex tasks possible:** Highly complex tasks and workflows should be easy to
   assemble (and rerun if they need to be automated) by adding new primitive actions and
   combining primitive actions into more complex workflows.
-  You shouldn't need to be a programmer to use any task—but any task should be
-  extensible with arbitrary code (written by you and an LLM) when needed.
+  You shouldn't need to be a programmer to use any task—but any task should be extensible
+  with arbitrary code (written by you and an LLM) when needed.
 
 - **Augment human skills and judgement:** Some agent-style tools aim for pure automation.
   But even with powerful LLMs and tools, full automation is rare.
@@ -70,7 +75,7 @@ The goals of Kmd are:
   and orchestrate complex tasks.
   Better tools make LLMs smarter, too.
 
-## Why a New Command Line?
+### Why a New Command Line?
 
 It may be better to call Kmd a “shell” since it is actually evolving into more than a
 command line.
@@ -145,14 +150,14 @@ All of this is only possible by relying on a wide variety of powerful libraries,
 [WeasyPrint](https://github.com/Kozea/WeasyPrint),
 [Marko](https://github.com/frostming/marko), and [Xonsh](https://github.com/xonsh/xonsh).
 
-## Is Kmd Mature?
+### Is Kmd Mature?
 
 No. Not at all.
 :) It's the result of a few weeks of coding and experimentation, and it's very much in
 progress.
 Please help me make it better by sharing your ideas and feedback!
 
-## What is Included?
+### What is Included?
 
 - A bash-like, Python-compatible shell based on xonsh, with pretty syntax coloring of
   commands and outputs
@@ -205,7 +210,9 @@ Please help me make it better by sharing your ideas and feedback!
 
   - media handling of videos and audio, including downloading and transcribing videos
 
-## Running the Kmd Shell
+## Getting Started
+
+### Running the Kmd Shell
 
 The best way to use Kmd is as its own shell, which is a shell environment based on
 [xonsh](https://xon.sh/). If you've used a bash or Python shell before, xonsh is very
@@ -216,42 +223,47 @@ library.
 Within the Kmd shell, you get a full environment with all actions and commands.
 You also get intelligent auto-complete and a built-in assistant to help you perform tasks.
 
-## Python and Shell Setup
+### Python and Tool Dependencies
 
-Ensure you have these set up:
+These are needed to run:
 
-- Python 3.12+
+- Python 3.11+
 
 - Poetry
 
-- `ffmpeg`, `ripgrep`, `bat`
+- `ffmpeg` (for video conversions), `ripgrep` (for search), `bat` (for prettier file
+  display), `libmagic`
 
-I recommend using pyenv to update Python if needed.
+Cheat sheets to get these set up, if you're not already:
 
-Here is the cheat sheet for these installations on macOS. For Linux and Windows, see the
-pyenv and poetry instructions.
+
+For macOS, I recommend using brew:
 
 ```shell
-# Install pyenv and pipx if needed:
+# Install pyenv, pipx, and other tools:
 brew update
-brew install pyenv pipx
+brew install pyenv pipx ffmpeg ripgrep bat libmagic
+```
 
-# Install some additional helpful tools.
-# ffmpeg is needed for video conversions.
-# ripgrep is needed for the search command.
-# bat is optional but improves the show and logs commands.
-brew install ffmpeg ripgrep bat
+For Ubuntu:
 
-# Ensure you are in the source directory (where .python-version is)
-# and install recent Python if needed:
+```shell
+# Install pyenv and other tools:
+curl https://pyenv.run | bash
+apt install pipx ffmpeg ripgrep bat libmagic1
+```
+
+Now install recent Python and Poetry:
+
+```shell
 pyenv install
-
-# Install recent Poetry if needed:
 pipx install poetry
 poetry self update  
 ```
 
-## Building
+For Windows or other platforms, see the pyenv and poetry instructions.
+
+### Building
 
 1. [Fork](https://github.com/jlevy/kmd/fork) this repo (having your own fork will make it
    easier to contribute actions, add models, etc.).
@@ -265,7 +277,7 @@ poetry self update
    poetry install
    ```
 
-## API Key Setup
+### API Key Setup
 
 You will need API keys for all services you wish to use.
 Configuring OpenAI, Anthropic, Groq (for Llama 3), and Deepgram is recommended.
@@ -278,7 +290,7 @@ cp .env.template .env
 # Now edit the .env file to add all desired API keys
 ```
 
-## Running
+### Running
 
 To run:
 
@@ -298,7 +310,7 @@ active (such as using `pyenv`), then:
 
 This does a pip install of the wheel so you can run it as `kmd`.
 
-## Using Kmd
+### Using Kmd
 
 Tab completion is your friend!
 Just press tab to get lists of commands and guidance on help from the LLM-based assistant.
@@ -417,7 +429,7 @@ transcribe_format 'https://www.youtube.com/watch?v=juD99_sPWGU'
 show_as_webpage
 ```
 
-## Other Ways to Run Kmd
+### Other Ways to Run Kmd
 
 You can also run Kmd directly from your regular shell, by giving a Kmd shell command.
 

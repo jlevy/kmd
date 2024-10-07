@@ -19,9 +19,11 @@ def main():
     rprint()
 
     errcount = 0
-    errcount += _run(["usort", "format", "kmd", "tests"])
-    errcount += _run(["ruff", "check", "--fix", "kmd", "tests"])
-    errcount += _run(["black", "kmd", "tests"])
+    paths = ["kmd", "tests"]
+    errcount += _run(["usort", "format", *paths])
+    errcount += _run(["ruff", "check", "--fix", *paths])
+    errcount += _run(["black", *paths])
+    # errcount += _run(["mypy", *paths])  # TODO: Enable.
 
     rprint()
 

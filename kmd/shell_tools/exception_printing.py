@@ -42,6 +42,7 @@ def wrap_with_exception_printing(func: Callable[..., R]) -> Callable[[List[str]]
             log.error(f"[{COLOR_ERROR}]Command error:[/{COLOR_ERROR}] %s", summarize_traceback(e))
             output()
             log.info("Command error details: %s", e, exc_info=True)
+            return None
 
     command.__name__ = func.__name__
     command.__doc__ = func.__doc__

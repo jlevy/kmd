@@ -93,6 +93,7 @@ def check_for_assistance_command(line: str) -> Optional[str]:
     line = line.strip()
     if re.search(r"\b\w+\.$", line) or re.search(r"\b\w+\?$", line) or line.startswith("?"):
         return line.lstrip("?").strip()
+    return None
 
 
 ## Custom xonsh shell setup

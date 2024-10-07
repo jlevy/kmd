@@ -103,7 +103,7 @@ class WriteNewAction(LLMAction):
         workspace = current_workspace()
         workspace.save(description_item)
 
-        result_item = llm_transform_item(self, description_item)
+        result_item = llm_transform_item(self.context(), description_item)
         result_item.type = ItemType.extension
         result_item.format = Format.python
 

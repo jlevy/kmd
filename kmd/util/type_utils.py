@@ -98,7 +98,8 @@ def instantiate_as_type(value: Any, target_type: Type[T]) -> Optional[T]:
                 allowed_values.extend([e.value for e in t])
 
         if allowed_values:
-            extra_info = f" (allowed values: {', '.join(f"`{v}`" for v in allowed_values)})"
+            allowed_values_str = ", ".join(f"`{v}`" for v in allowed_values)
+            extra_info = f" (allowed values: {allowed_values_str})"
 
         raise ValueError(
             f"Cannot convert value `{value}` to type {' or '.join(map(str, failed_types))}{extra_info}"

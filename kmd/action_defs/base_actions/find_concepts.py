@@ -55,6 +55,6 @@ class FindConcepts(LLMAction):
         )
 
     def run_item(self, item: Item) -> Item:
-        item = llm_transform_item(self, item)
+        item = llm_transform_item(self.context(), item)
         item.body = as_bullet_points(concepts_from_markdown(not_none(item.body)))
         return item

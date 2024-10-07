@@ -1,6 +1,5 @@
 import threading
 import time
-from types import NoneType
 from typing import Any, Callable, Dict, List, TypeVar
 
 from xonsh.completers.completer import add_one_completer
@@ -14,6 +13,7 @@ from kmd.config.logger import get_logger
 from kmd.config.setup import setup
 from kmd.config.text_styles import PROMPT_COLOR_NORMAL, PROMPT_COLOR_WARN, PROMPT_MAIN
 from kmd.file_storage.workspaces import current_workspace
+from kmd.model.actions_model import Action
 from kmd.model.output_model import CommandOutput
 from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
@@ -52,7 +52,7 @@ _is_interactive = get_env("XONSH_INTERACTIVE")
 R = TypeVar("R")
 
 
-def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], NoneType]:
+def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], None]:
 
     def command(*args) -> None:
         retval = func(*args)
@@ -73,6 +73,11 @@ def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], NoneTy
     command.__name__ = func.__name__
     command.__doc__ = func.__doc__
     return command
+
+
+_commands: Dict[str, Callable[..., Any]]
+
+_actions: Dict[str, Action]
 
 
 def _load_xonsh_commands():

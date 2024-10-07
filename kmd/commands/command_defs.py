@@ -889,7 +889,7 @@ def files(
     :param iso_time: Show time in ISO format.
     """
     if len(paths) == 0:
-        paths_to_show = (Path("."),)
+        paths_to_show = [Path(".")]
     else:
         paths_to_show = [Path(path) for path in paths]
 
