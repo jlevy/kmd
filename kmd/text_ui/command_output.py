@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from enum import Enum
 from io import StringIO
 from textwrap import dedent, indent
-from typing import Any, Callable, Optional
+from typing import Any, Callable, List, Optional
 
 import rich
 from rich.markdown import Markdown
@@ -131,7 +131,7 @@ def format_name_and_description(name: str, doc: str, extra_note: Optional[str] =
 
 
 def format_paragraphs(*paragraphs: str | Text):
-    text = []
+    text: List[str | Text] = []
     for paragraph in paragraphs:
         if text:
             text.append("\n\n")

@@ -479,7 +479,6 @@ class Item:
         taking precedence. Resets store_path to None.
         """
         merged_fields = self._copy_and_update(other, update_timestamp=False)
-        log.message("merged_fields: %s", merged_fields)
         return Item(**merged_fields)
 
     def derived_copy(self, type: ItemType, **kwargs) -> "Item":

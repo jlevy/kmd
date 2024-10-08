@@ -1,8 +1,8 @@
-import difflib
 from enum import Enum
 from textwrap import dedent
 from typing import Callable, List, Optional, Tuple
 
+import cydifflib as difflib
 from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
@@ -219,7 +219,7 @@ def diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
     """
     Perform an LCS-style diff on two lists of wordtoks.
     """
-    s = difflib.SequenceMatcher(None, wordtoks1, wordtoks2, autojunk=False)
+    s = difflib.SequenceMatcher(None, wordtoks1, wordtoks2, autojunk=False)  # type: ignore
     diff: List[DiffOp] = []
 
     # log.message(f"Diffing {len(wordtoks1)} wordtoks against {len(wordtoks2)} wordtoks")

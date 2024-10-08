@@ -1,7 +1,7 @@
 import ast
 import shlex
 from enum import Enum
-from typing import Any, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, cast, Optional, Tuple, Type, TypeVar
 
 from kmd.util.type_utils import instantiate_as_type
 
@@ -33,26 +33,35 @@ T = TypeVar("T")
 
 
 def parse_key_value(
-    key_value_str: str, value_parser=parse_python_str, target_type: Type[T] = str
+    key_value_str: str,
+    value_parser: Callable[[str], Any] = parse_python_str,
+    target_type: Optional[Type[T]] = None,
 ) -> Tuple[str, Optional[T]]:
     """
-    Parse a key-alue string like `foo=123` or `bar="some value"` into a `(key, value)` tuple.
+    Parse a key-value string like `foo=123` or `bar="some value"` into a `(key, value)` tuple.
     A string like `foo=` (with only whitespace after the `=`) will yield `("foo", None)`.
     """
-    key, _, value = key_value_str.partition("=")
-    if not value.strip():
+    if target_type is None:
+        target_type = cast(Type[T], str)
+
+    key, _, value_str = key_value_str.partition("=")
+    key = key.strip()
+    value_str = value_str.strip()
+
+    value: Optional[Any]
+    if not value_str:
         value = None
     else:
-        # Handle quoted values.
-        value = value_parser(value)
-    key = key.strip()
+        value = value_parser(value_str)
 
     value = instantiate_as_type(value, target_type)
 
     return key, value
 
 
-def format_key_value(key: str, value: Any, value_formatter=format_shell_str) -> str:
+def format_key_value(
+    key: str, value: Any, value_formatter: Callable[[Any], str] = format_shell_str
+) -> str:
     """
     Format a key-value pair as a string like `foo=123` or `bar='some value'`.
     """

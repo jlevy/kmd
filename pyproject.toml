@@ -54,6 +54,7 @@ pyperclip = "^1.9.0"
 python-magic = "^0.4.27"
 opencv-python = "^4.10.0.84"
 pydantic = "^2.9.2"
+cydifflib = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"

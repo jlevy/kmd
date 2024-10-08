@@ -46,7 +46,7 @@ def import_actions(subdir_names: List[str], tallies: Optional[Dict[str, int]] = 
 
 @cached(cache)
 def load_all_actions(base_only: bool = False) -> Dict[str, Action]:
-    tallies = {}
+    tallies: Dict[str, int] = {}
     # Allow bootstrapping base actions before compound actions that may depend on them.
     import_actions(["base_actions"], tallies)
     if not base_only:

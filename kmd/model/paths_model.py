@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import cast
+from typing import cast, Type
 
 from pydantic import constr, ValidationInfo
 
@@ -14,7 +14,7 @@ def validate_relative_path(value: str) -> str:
     return value
 
 
-RelativePath = constr(strip_whitespace=True)
+RelativePath: Type[str] = constr(strip_whitespace=True)
 
 
 class StorePath(RelativePath):

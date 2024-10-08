@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypeVar
 
 from kmd.config.logger import get_logger
 
@@ -48,7 +48,7 @@ def _map_positional(
     return pos_values, keywords_consumed
 
 
-def _map_keyword(kw_args: Dict[str, Optional[str]], kw_params: List[FuncParam]) -> Dict[str, Any]:
+def _map_keyword(kw_args: Mapping[str, str | bool], kw_params: List[FuncParam]) -> Dict[str, Any]:
     """
     Map parsed keyword arguments to function parameters, converting types and handling var
     keyword arguments.
@@ -94,7 +94,7 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
 
         if shell_args.show_help:
             output_command_function_help(func, verbose=True)
-            return
+            return None
 
         pos_values, keywords_consumed = _map_positional(shell_args.pos_args, pos_params, kw_params)
 

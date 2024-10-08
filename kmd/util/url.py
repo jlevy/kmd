@@ -73,6 +73,7 @@ def normalize_url(
     ):
         raise ValueError(f"Expected http:// or https:// or file:// URL but found: {url}")
 
+    fragment: str | None
     scheme, netloc, path, query, fragment = urlsplit(url)
 
     if drop_fragment:

@@ -25,7 +25,7 @@ class Uniquifier:
         """
         Same as uniquify, but also return the list of previous names that were used.
         """
-        old_names = []
+        old_names: List[str] = []
 
         if Key(name, group) not in self.keys:
             self.keys.add(Key(name, group))

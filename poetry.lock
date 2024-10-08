@@ -1083,6 +1083,105 @@ dev = ["charset-normalizer (>=3.3.2,<4.0)", "coverage (>=6.4.1,<7.0)", "cryptogr
 test = ["charset-normalizer (>=3.3.2,<4.0)", "cryptography (>=42.0.5,<43.0)", "fastapi (==0.110.0)", "httpx (==0.23.1)", "proxy.py (>=2.4.3,<3.0)", "pytest (>=8.1.1,<9.0)", "pytest-asyncio (>=0.23.6,<1.0)", "pytest-trio (>=0.8.0,<1.0)", "python-multipart (>=0.0.9,<1.0)", "trio (>=0.25.0,<1.0)", "trustme (>=1.1.0,<2.0)", "uvicorn (>=0.29.0,<1.0)", "websockets (>=12.0,<13.0)"]
 
 [[package]]
+name = "cydifflib"
+version = "1.1.0"
+description = "Fast implementation of difflib's algorithms"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "cydifflib-1.1.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:a080e3eec00ffde0eb9475b910518f5968196a4490d5656c58930c062e9491a5"},
+    {file = "cydifflib-1.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:5a38d155f2766763238867afa890280760793029a062342f90475ee5ea5b43c2"},
+    {file = "cydifflib-1.1.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4ce85aad08e400d291c8b4548a16b45ee7ca54316ff2f0bbc76a1817e942d74f"},
+    {file = "cydifflib-1.1.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:191dc11a1a950850258f44aad1362900617f32a6fc9ee8fef88d925d74a23d1f"},
+    {file = "cydifflib-1.1.0-cp310-cp310-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:90e9c438c05f5cf90814e3601151c6a4c82497f51b0bb9013892574ea0c6adba"},
+    {file = "cydifflib-1.1.0-cp310-cp310-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:0f67481e9bee391a7974f03e717bbc6926f6dbdc28c8ecd5a2cba4d333451afd"},
+    {file = "cydifflib-1.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e19fcacacfd732a6f58762ed64d9b1751b7babdd5acce838d38432a92531441a"},
+    {file = "cydifflib-1.1.0-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:0e72cb2275190b34fc54679d9a3ee09920a6384032c27b831dd9f8af01ca9310"},
+    {file = "cydifflib-1.1.0-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:fba9bc1cec3c292daae821cd6702d63249a5cc7f2d67a8655865f85adc3a4e03"},
+    {file = "cydifflib-1.1.0-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:befe064f7ef4389dcf53aaa1264e885c4bf484ae0ef8071a735324548281b4b8"},
+    {file = "cydifflib-1.1.0-cp310-cp310-musllinux_1_1_ppc64le.whl", hash = "sha256:49b4f526e51048b55ed5d3f0f4507cef3a37923b975a8b16a02852c367d636bc"},
+    {file = "cydifflib-1.1.0-cp310-cp310-musllinux_1_1_s390x.whl", hash = "sha256:decf17ff55bd357f578c9dee8c3fa190e60af7791669ee641b07265708b9bc55"},
+    {file = "cydifflib-1.1.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:ab00eb434d729833d7c34a92a2570b0472983f29ba78c3c6ffc9ea0766dfb42b"},
+    {file = "cydifflib-1.1.0-cp310-cp310-win32.whl", hash = "sha256:54ecc7cf30d132c1243607888aadf97a963591402ba5376d8a35ebfd2ec75b7e"},
+    {file = "cydifflib-1.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:3adb4f5e80ebc483e44539c5a29246eb6ad8fca76e33a1b56eca0809b88c69ce"},
+    {file = "cydifflib-1.1.0-cp310-cp310-win_arm64.whl", hash = "sha256:dbed1934f6b7e453ebe8a015cc5cb26f9e9fccaaa4f43c70a35b2811d41ff5a1"},
+    {file = "cydifflib-1.1.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:ec99090116bd92200088d1e0c9eab0388e40f408c57bd289683bd2b0cdf70aa4"},
+    {file = "cydifflib-1.1.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:f895058f07c075fdc87ef17f556df4103e1e2bd674101b5cb6606404939e1752"},
+    {file = "cydifflib-1.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:f9d93b38e8f5f4656f2ef00ef7301771fb750bb4a329c0a144db01d5e8c05da2"},
+    {file = "cydifflib-1.1.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a74341ce4c85145550ff1ca4abcf07882b9bd6c66d979fbdbd4d432f14a59694"},
+    {file = "cydifflib-1.1.0-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:3df7f7f6e0f18e0a780cbbaeafe286715ff2c0f71403cc73985836125144e5e0"},
+    {file = "cydifflib-1.1.0-cp311-cp311-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:75457f5230814a211d0923195b7fbd62c7194fed8d04bdaaf67fa6dba52fad48"},
+    {file = "cydifflib-1.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d1f1a354079432bf0497a7d38f53e787112a6d01926fb9f6f66aea2bc8ff4b13"},
+    {file = "cydifflib-1.1.0-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7d4a3216f82d84cc5051b7916e48c970f9ebebe68dcebc588e0d255bf4f74662"},
+    {file = "cydifflib-1.1.0-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:cbaf477e0f7eddc5f08bcb6286ea6076f97526d1b4be6b62742f387d9e417847"},
+    {file = "cydifflib-1.1.0-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:2126e8e4404843c931f257540c6709e485f8768f8bd3998c35c09d9fb7938894"},
+    {file = "cydifflib-1.1.0-cp311-cp311-musllinux_1_1_ppc64le.whl", hash = "sha256:8954a74599ba6d3c42b49b201de01ed54849e0bc347b8da4a99e02e0ce0e8423"},
+    {file = "cydifflib-1.1.0-cp311-cp311-musllinux_1_1_s390x.whl", hash = "sha256:8111cae715178813442e39c6881226136bf8b48a16e921dcb98e13bd61f1b354"},
+    {file = "cydifflib-1.1.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:6455c5ccbba1b518c146c167ade444bc2f6ae3b19f480f8fd2bf43c495d028a0"},
+    {file = "cydifflib-1.1.0-cp311-cp311-win32.whl", hash = "sha256:84bff691a0c7838042e8f055310ace53e8c27ed5bb6037e0e97255caa3bd72bc"},
+    {file = "cydifflib-1.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:50c9c80748f92957c98fc101a5075b1cc52f6628865d54eaac0f0d9168627b18"},
+    {file = "cydifflib-1.1.0-cp311-cp311-win_arm64.whl", hash = "sha256:023b80e68c74c035b2600c96b7b2229e83f58f1c1dab69bb655f27bf93a6ada1"},
+    {file = "cydifflib-1.1.0-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:d05e3f89bb5f62357dca9375bab6dcbf3096db59c654afd9d1f118e5d49d24e9"},
+    {file = "cydifflib-1.1.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:6883f510ce0d0fec525d088a7dc9659fc6eeea230d57e6c15541bacb26c9ba8f"},
+    {file = "cydifflib-1.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:ec4f8a3ad074c4c3b4c677317198186040b6d2581862f821a09443b7de729b7f"},
+    {file = "cydifflib-1.1.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fae2335f77e95c9a8d0444e251ec27fdceb3db68f2702909765322c7c26aa98b"},
+    {file = "cydifflib-1.1.0-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:d69c9cd581d6eec050e124216c076a9123a88cdac96f97d47099bf1ee06fa24e"},
+    {file = "cydifflib-1.1.0-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f0dc0cdb00630e0ba42b1560eccac6cd5c5c11eeac50174416a979c4a669b6e4"},
+    {file = "cydifflib-1.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3827e286402c7d7189beaaa693391952fb83e924cc3daea478558aa1aabb52b6"},
+    {file = "cydifflib-1.1.0-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:551de7841d530afaa62cfd7f74a20cacb5affacd90f64d2bf666f8682d299a76"},
+    {file = "cydifflib-1.1.0-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:444993cacefff7111b97031e56aabba914d90c4da2d1a114f7210308b7f281af"},
+    {file = "cydifflib-1.1.0-cp312-cp312-musllinux_1_1_i686.whl", hash = "sha256:a94ca672d7c8e31ea12ee6525d9428c10fd3f967481d6c4267975fbbabf8afe3"},
+    {file = "cydifflib-1.1.0-cp312-cp312-musllinux_1_1_ppc64le.whl", hash = "sha256:a7478adbe4696d477853dbc3c77e9ae671b0a07b64a41f9cef0ca3c6680b52c2"},
+    {file = "cydifflib-1.1.0-cp312-cp312-musllinux_1_1_s390x.whl", hash = "sha256:c326a1d43065be143da251fb0d720cd00592bb9b8b79134beefff1fe5e62a81f"},
+    {file = "cydifflib-1.1.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:eb8a5300570b9c62c47c366663cbe4db1992476ec8e423d6b7a66f8939a97d93"},
+    {file = "cydifflib-1.1.0-cp312-cp312-win32.whl", hash = "sha256:3a9c8a4937fee10d4e38d3f9f51c1da8fbdbc8e702c10c98d449755eba76832b"},
+    {file = "cydifflib-1.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:77eb9885e8f1e204b5a10e5ae7530111f656d4d7436814ed9cdec0d9a5c3b664"},
+    {file = "cydifflib-1.1.0-cp312-cp312-win_arm64.whl", hash = "sha256:8579aafd1e95a44bddd23a33fa0443d90e8c3e22f1d73fe15fbf763cc47e36b4"},
+    {file = "cydifflib-1.1.0-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:3811605aa5de4e3cd72b56abdf678b84470cf99f6cb7f097fbc23ef82cff7625"},
+    {file = "cydifflib-1.1.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:271727073001b7a6ccdfa964c6fdafeaf28132e478b95d4f8d2354b14933ff17"},
+    {file = "cydifflib-1.1.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:5ae3cf2bfd5934935f288c050740bc65df3c64be9ba63497a7431c7ce0d83acd"},
+    {file = "cydifflib-1.1.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f7b9c40770c2351de1e3a90aea7660b78e9e8466682aa12f0a155f7e12d6b9fe"},
+    {file = "cydifflib-1.1.0-cp38-cp38-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:ee83b5b2961b67ccae6e79cbfb176e8702ddadfbfa43c2c879718d0da93c4a2d"},
+    {file = "cydifflib-1.1.0-cp38-cp38-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:8f2d70e18a3491fdf12bc0d8d561a8008e2dcf2f01d0074a6216bce5e644ed6e"},
+    {file = "cydifflib-1.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3ceff98ecd780b573195ea4e151163c42c1334c64caa2e19836d73c8bb601eda"},
+    {file = "cydifflib-1.1.0-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:09c4a45be6d96db2fa6477cce6ccab418d4d7ea5b20375a733b8ad44e01fd832"},
+    {file = "cydifflib-1.1.0-cp38-cp38-musllinux_1_1_aarch64.whl", hash = "sha256:12ea68dbd483230c47c11d3451c788fd34ca5af85f0f8be2378024bd02eb13de"},
+    {file = "cydifflib-1.1.0-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:820c6b9e1f8ab316b115cfb666a48d9cda48a848e44e7582cb0762dfe2c3c990"},
+    {file = "cydifflib-1.1.0-cp38-cp38-musllinux_1_1_ppc64le.whl", hash = "sha256:8df5b90161b4e13bd190fdb41756d95a9249e02c366af77f558c5dccdcbf3ee4"},
+    {file = "cydifflib-1.1.0-cp38-cp38-musllinux_1_1_s390x.whl", hash = "sha256:e1f861ea884e81aef18a337e3c830b33c7052fee1ab7f9d950e33dad680948db"},
+    {file = "cydifflib-1.1.0-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:f42b8c486c55b5f04e0127c9bae605adfba141402a60e55de99a430bb8aa43f7"},
+    {file = "cydifflib-1.1.0-cp38-cp38-win32.whl", hash = "sha256:d9d6c0f473677da4b48990601ea18da4eba795a25a2a507fbd9b424ec83df96f"},
+    {file = "cydifflib-1.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:323b39072b3896b83e7411fb01d7e99f4ca9cc013c08cddce14aa0fd21ab2c2d"},
+    {file = "cydifflib-1.1.0-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:fde98eb5639388ce1a0c2f58d6e390e3662fc980b1e17ef793019d798a570676"},
+    {file = "cydifflib-1.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:1d8d0cdf6a7343ac98b2812a01fd5619a76b5a68ab5d2b05498a25d2348ebec3"},
+    {file = "cydifflib-1.1.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:5ca799cccdc2712d057b6e55361e41a655a9aecacf96143a7d2dc4d3af0e2a37"},
+    {file = "cydifflib-1.1.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4501614f983f3a544d1616e001f2dfdca9c6023095a78ec252f0cef9da4e776f"},
+    {file = "cydifflib-1.1.0-cp39-cp39-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:bd740be24f16472410f52d731cc1206b4e53afb5d706e1ab57cf06ea6c907661"},
+    {file = "cydifflib-1.1.0-cp39-cp39-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:0f50d2200df2fd69c6795f677ac55104c16136a3958ab2d690cb0fc4549cb524"},
+    {file = "cydifflib-1.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fda0105ac7dc44dc746c9c80bb2dd012810eaf5e0dc4f861911d2e822b8a449d"},
+    {file = "cydifflib-1.1.0-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:f8c570727bf76a7ba4da8d6e70f16158422d6af08d89b2dc524205c06d0ed63b"},
+    {file = "cydifflib-1.1.0-cp39-cp39-musllinux_1_1_aarch64.whl", hash = "sha256:fa0df6651d605e0cdbdfb6760142385f5b414a1b3667b3a1c920d37ed9598a04"},
+    {file = "cydifflib-1.1.0-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:1650047cd1ba888069666c3dd3ff28f51aa5e7c1bd6856735716d5c6da77f330"},
+    {file = "cydifflib-1.1.0-cp39-cp39-musllinux_1_1_ppc64le.whl", hash = "sha256:2908482de33dae859c5c19a8dd98c690027784a1cef391c44c0fc1ac0a39e660"},
+    {file = "cydifflib-1.1.0-cp39-cp39-musllinux_1_1_s390x.whl", hash = "sha256:a1a3c71ab203db64b135362ebecf37a3162937e9252d74a5de3bbbc3ea5a4bb5"},
+    {file = "cydifflib-1.1.0-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:aa63db6c6cf59bd20f076d2537b12448e5a4220358d3b2302055078e1265f81c"},
+    {file = "cydifflib-1.1.0-cp39-cp39-win32.whl", hash = "sha256:442b433abaae3821c192d2d9c42edb01637883ff471411f457f19f21b427202b"},
+    {file = "cydifflib-1.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:8d6ebeee6e480908188388a56e3670097bd529a0ac99027c814bfc58a0213ca7"},
+    {file = "cydifflib-1.1.0-cp39-cp39-win_arm64.whl", hash = "sha256:5502a7ec0580fe64b28250ab61c3c46b6c2ad58bb1e10cdceabfe94d5f84bdc6"},
+    {file = "cydifflib-1.1.0-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:72a5bea8845c4d361ada3a1d0805e2971024c416ef7bd53445ff18e029c82e0a"},
+    {file = "cydifflib-1.1.0-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ac1eb97fd4bc6483cd67ef300f5b5569a6dd2da137b9059a010bdd7ebafb2fba"},
+    {file = "cydifflib-1.1.0-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0c4b99a501e6c2bdb1c071d9f3ed3c22b42ace04985166f2b3db8959e424d226"},
+    {file = "cydifflib-1.1.0-pp38-pypy38_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:e55642068eff84da67657b430b79f0634599526d64cca0a5300b4b3156571e1a"},
+    {file = "cydifflib-1.1.0-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:e7010322cdff29823d3ec102a5f7ed099f2e6b32dc5e403ba32027c76f638a8b"},
+    {file = "cydifflib-1.1.0-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:c3e2178c071bbfdd91ac85779cbfbd1395d539fe56abbe2aa605d33b5da23a32"},
+    {file = "cydifflib-1.1.0-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5cd76c02c0d893cba616fc061cd2ccc52112e6723e87a563ffee08d7f5fcbf12"},
+    {file = "cydifflib-1.1.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e2cd610ce7ab85e97844eb5ced01c32c515fcda356f28f91537dacedb4335c54"},
+    {file = "cydifflib-1.1.0-pp39-pypy39_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7b109402fbadcd2fc7951e8362af99ab409644ee24fe3724aa1176b313d32ada"},
+    {file = "cydifflib-1.1.0-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:81839e764a32a8820873d44bee7a28dcc42d7f3c06df6d4803ee89334636b6c0"},
+    {file = "cydifflib-1.1.0.tar.gz", hash = "sha256:9117957ed05944d51d6788580a9a0519f113532e76b4e8bfaf8ffb9eeeca2e8a"},
+]
+
+[[package]]
 name = "cymem"
 version = "2.0.8"
 description = "Manage calls to calloc/free through Cython"
@@ -6969,7 +7068,7 @@ websockets = ">=13.0"
 
 [package.extras]
 build = ["build", "hatchling", "pip", "setuptools (>=71.0.2)", "wheel"]
-curl-cffi = ["curl-cffi (==0.5.10)", "curl-cffi (>=0.5.10,<0.6.dev0 || ==0.7.*)"]
+curl-cffi = ["curl-cffi (==0.5.10)", "curl-cffi[][] (>=0.5.10,<0.6.dev0 || ==0.7.*)"]
 dev = ["autopep8 (>=2.0,<3.0)", "pre-commit", "pytest (>=8.1,<9.0)", "ruff (>=0.5.0,<0.6.0)"]
 py2exe = ["py2exe (>=0.12)"]
 pyinstaller = ["pyinstaller (>=6.7.0)"]
@@ -7078,4 +7177,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "455b2a6e22a5f8152018702ede3167fcaa2a80b678c1ed1378745d3f4774c649"
+content-hash = "338136dcfbf6af04f68ef99e08af7879083b893cbbb88ca55d7dbc734ef52ee7"

@@ -109,7 +109,7 @@ class FileStore:
             name, item_type, file_ext = parse_filename_and_type(store_path)
         except InvalidFilename:
             log.debug("Skipping file with invalid name: %s", fmt_path(store_path))
-            return
+            return None
         self.uniquifier.add(name, join_suffix(item_type.name, file_ext.name))
 
         dup_path = None

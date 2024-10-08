@@ -92,10 +92,10 @@ def deepgram_transcribe_audio(audio_file_path: Path, language: Optional[str] = N
 def _deepgram_diarized_segments(data, confidence_threshold=0.3) -> List[SpeakerSegment]:
     """Process Deepgram diarized results into text segments per speaker."""
 
-    speaker_segments = []
+    speaker_segments: List[SpeakerSegment] = []
     current_speaker = 0
-    current_text = []
-    current_confidences = []
+    current_text: List[Tuple[float, str]] = []
+    current_confidences: List[float] = []
     segment_start = 0.0
     segment_end = 0.0
 
