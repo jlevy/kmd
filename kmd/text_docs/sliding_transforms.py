@@ -18,7 +18,7 @@ from kmd.text_docs.text_doc import Paragraph, TextDoc, TextUnit
 from kmd.text_docs.window_settings import WINDOW_BR, WINDOW_BR_SEP, WindowSettings
 from kmd.text_docs.wordtoks import join_wordtoks
 from kmd.text_formatting.markdown_normalization import normalize_markdown
-from kmd.util.format_utils import fmt_lines, fmt_words
+from kmd.util.format_utils import fmt_lines
 from kmd.util.task_stack import task_stack
 
 log = get_logger(__name__)

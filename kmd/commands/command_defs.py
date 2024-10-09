@@ -83,7 +83,7 @@ from kmd.text_ui.command_output import (
 )
 from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.obj_utils import remove_values
-from kmd.util.parse_utils import format_key_value, parse_key_value
+from kmd.util.parse_key_vals import format_key_value, parse_key_value
 from kmd.util.strif import copyfile_atomic
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url

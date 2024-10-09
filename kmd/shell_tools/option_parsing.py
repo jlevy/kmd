@@ -2,7 +2,7 @@ from typing import Dict, List
 
 from pydantic.dataclasses import dataclass
 
-from kmd.util.parse_utils import parse_key_value
+from kmd.util.parse_key_vals import parse_key_value
 
 
 @dataclass(frozen=True)

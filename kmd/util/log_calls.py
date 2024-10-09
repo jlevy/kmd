@@ -31,7 +31,7 @@ def quote_if_needed(arg: str) -> str:
     """
     Only quote if necessary for readability. Quoting compatible with most shells and xonsh.
     """
-    if _QUOTABLE.search(arg):
+    if not str or _QUOTABLE.search(arg):
         return repr(arg)
     return arg
 

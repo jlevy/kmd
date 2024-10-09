@@ -4,8 +4,8 @@ from pydantic.dataclasses import dataclass
 
 from kmd.model.paths_model import StorePath
 from kmd.util.format_utils import fmt_path
-from kmd.util.log_calls import quote_if_needed
-from kmd.util.parse_utils import format_key_value, format_shell_str
+from kmd.util.parse_key_vals import format_key_value
+from kmd.util.parse_shell_args import shell_quote
 
 
 @dataclass(frozen=True)
@@ -99,13 +99,13 @@ class Operation:
         return OperationSummary(self.action_name)
 
     def quoted_args(self):
-        return [quote_if_needed(str(arg.path)) for arg in self.arguments]
+        return [shell_quote(str(arg.path)) for arg in self.arguments]
 
     def hashed_args(self):
         return [arg.path_and_hash() for arg in self.arguments]
 
     def quoted_options(self):
-        return [f"--{k}={quote_if_needed(str(v))}" for k, v in self.options.items()]
+        return [f"--{k}={shell_quote(str(v))}" for k, v in self.options.items()]
 
     def command_line(self, with_options=True):
         cmd = f"{self.action_name}"
@@ -122,8 +122,7 @@ class Operation:
     def as_str(self):
         args_str = ",".join(self.hashed_args())
         options_str = ",".join(
-            format_key_value(k, v, value_formatter=format_shell_str)
-            for k, v in self.options.items()
+            format_key_value(k, v, value_formatter=shell_quote) for k, v in self.options.items()
         )
         if options_str:
             options_str = ";" + options_str

@@ -1,7 +1,7 @@
 from kmd.exec.action_registry import kmd_action
+from kmd.llms.fuzzy_parsing import strip_markdown_fence
 from kmd.model import Item, PerItemAction
 from kmd.preconditions.precondition_defs import contains_fenced_code
-from kmd.llms.fuzzy_parsing import strip_markdown_fence
 
 
 @kmd_action

@@ -21,7 +21,7 @@ from kmd.text_docs.window_settings import WindowSettings
 from kmd.text_ui.command_output import fill_text
 from kmd.util.format_utils import fmt_lines
 from kmd.util.obj_utils import abbreviate_obj
-from kmd.util.parse_utils import format_key_value
+from kmd.util.parse_key_vals import format_key_value
 from kmd.util.string_template import StringTemplate
 from kmd.util.type_utils import instantiate_as_type
 

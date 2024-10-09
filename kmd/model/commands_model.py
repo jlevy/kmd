@@ -1,9 +1,10 @@
 import re
-import shlex
 from collections.abc import Callable
 from typing import Dict, Iterable, List, Optional, TYPE_CHECKING
 
 from pydantic.dataclasses import dataclass
+
+from kmd.util.parse_shell_args import format_command_str, parse_command_str
 
 
 if TYPE_CHECKING:
@@ -31,15 +32,23 @@ def assist_request_str(request: str) -> str:
 @dataclass
 class Command:
     """
-    A command that can be run on the console. It can be a basic function implementation
-    (like `show` or `files`) or correspond to an action.
+    A command that can be run on the console. It can be a function implementation
+    in Python (like `show` or `files`) or correspond to an action.
 
-    Can be a parsed command or a natural language query to the assistant.
+    `args` is the list of string arguments, as they appear.
+
+    `options` is a dictionary of options. Options with values will have a string value.
+    Options without values will be treated as boolean flags.
     """
 
     name: str
     args: List[str]
-    options: Dict[str, str]
+    options: Dict[str, str | bool]
+
+    @classmethod
+    def from_command_str(cls, command_str: str) -> "Command":
+        name, args, options = parse_command_str(command_str)
+        return cls(name, args, options)
 
     @classmethod
     def from_obj(
@@ -59,12 +68,10 @@ class Command:
         else:
             raise ValueError(f"Invalid action or command: {obj}")
 
-        return cls(name, list(args or []), options or {})
+        return cls(name, list(args or []), dict(options or {}))
 
     def command_str(self) -> str:
-        args_str = " ".join(shlex.quote(arg) for arg in self.args)
-        options_str = " ".join(f"--{k}={shlex.quote(v)}" for k, v in self.options.items())
-        return "`" + " ".join(filter(bool, [self.name, args_str, options_str])) + "`"
+        return format_command_str(self.name, self.args, self.options)
 
     def __str__(self):
         return self.command_str()

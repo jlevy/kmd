@@ -1,26 +1,13 @@
-import ast
-import shlex
+"""
+Tiny parsing library for key-value pairs. Useful for command-line handling of
+options like `foo=123` or `bar="some value"`.
+"""
+
 from enum import Enum
 from typing import Any, Callable, cast, Optional, Tuple, Type, TypeVar
 
+from kmd.util.parse_shell_args import shell_quote, shell_unquote
 from kmd.util.type_utils import instantiate_as_type
-
-
-def parse_shell_str(s: str) -> str:
-    s = s.strip()
-    return shlex.split(s)[0]
-
-
-def format_shell_str(s: Any) -> str:
-    return shlex.quote(str(s))
-
-
-def parse_python_str(s: str) -> str:
-    s = s.strip()
-    if s.startswith(("'", '"')) and s.endswith(("'", '"')):
-        return ast.literal_eval(s)
-    else:
-        return ast.literal_eval(f'"{s}"')
 
 
 def format_python_str_or_enum(s: Any) -> str:
@@ -34,7 +21,7 @@ T = TypeVar("T")
 
 def parse_key_value(
     key_value_str: str,
-    value_parser: Callable[[str], Any] = parse_python_str,
+    value_parser: Callable[[str], Any] = shell_unquote,
     target_type: Optional[Type[T]] = None,
 ) -> Tuple[str, Optional[T]]:
     """
@@ -60,7 +47,7 @@ def parse_key_value(
 
 
 def format_key_value(
-    key: str, value: Any, value_formatter: Callable[[Any], str] = format_shell_str
+    key: str, value: Any, value_formatter: Callable[[Any], str] = shell_quote
 ) -> str:
     """
     Format a key-value pair as a string like `foo=123` or `bar='some value'`.
@@ -83,6 +70,6 @@ def test_key_value_parsing_and_formatting():
     assert parse_key_value("foo=") == ("foo", None)
 
     assert format_key_value("foo", "123") == "foo=123"
-    assert format_key_value("bar", "some value") == "bar='some value'"
+    assert format_key_value("bar", "some value") == 'bar="some value"'
     assert format_key_value("foo", None) == "foo="
-    assert format_key_value("foo", "") == "foo=''"
+    assert format_key_value("foo", "") == 'foo=""'
