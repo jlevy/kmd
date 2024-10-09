@@ -47,8 +47,9 @@ class SequenceAction(Action):
         from kmd.exec.action_exec import run_action
         from kmd.file_storage.workspaces import current_workspace
 
-        with task_stack().context(self.name, total_parts=len(self.action_names), unit="step") as ts:
-
+        with task_stack().context(
+            self.name, total_parts=len(self.action_names), unit="sequence step"
+        ) as ts:
             look_up_actions(self.action_names)  # Validate action names.
 
             log.message("Begin action sequence `%s`", self.name)
@@ -136,7 +137,9 @@ class ComboAction(Action):
         from kmd.exec.action_exec import run_action
         from kmd.exec.combiners import combine_as_paragraphs
 
-        with task_stack().context(self.name, total_parts=len(self.action_names), unit="part") as ts:
+        with task_stack().context(
+            self.name, total_parts=len(self.action_names), unit="combo part"
+        ) as ts:
 
             look_up_actions(self.action_names)  # Validate action names.
 

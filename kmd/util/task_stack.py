@@ -23,14 +23,10 @@ class TaskState:
         self.current_part += 1
 
     def task_str(self):
-        start_end_str = (
-            "start"
-            if self.current_part == 0
-            else "done" if self.current_part == self.total_parts else None
-        )
+        done_str = "(done)" if self.current_part == self.total_parts else None
         unit_str = None
         parts_str = None
-        if self.total_parts > 1 and self.current_part < self.total_parts:
+        if self.current_part < self.total_parts:
             unit_str = self.unit or None
             parts_str = f"{min(self.current_part + 1, self.total_parts)}/{self.total_parts}"
 
@@ -42,7 +38,7 @@ class TaskState:
                 else f"({unit_str or parts_str})"
             )
 
-        pieces = [self.name, start_end_str, parenthetical]
+        pieces = [self.name, done_str, parenthetical]
         return " ".join(filter(bool, pieces))
 
     def err_str(self):

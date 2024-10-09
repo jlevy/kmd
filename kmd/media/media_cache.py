@@ -147,7 +147,8 @@ class MediaCache(DirStore):
                 transcript = self._read_transcript(url)
                 if transcript:
                     return transcript
-            self.cache(url, no_cache, [MediaType.audio])
+            # Cache all formats since we usually will want them.
+            self.cache(url, no_cache)
         elif isinstance(url_or_path, Path):
             # Treat local media files as file:// URLs.
             # Don't need to cache originals but we still will cache audio and transcriptions.

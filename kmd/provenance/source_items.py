@@ -60,7 +60,7 @@ def find_upstream_item(
             return source_item
         else:
             log.message(
-                "Skipping source item that does not match precondition `%s`:\n%s",
+                "Skipping source item that does not match precondition %s:\n%s",
                 precondition,
                 fmt_lines([fmt_path(source_path)]),
             )

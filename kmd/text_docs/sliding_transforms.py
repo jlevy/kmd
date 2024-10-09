@@ -163,10 +163,7 @@ def sliding_wordtok_window_transform(
     nwindows = ceil(nwordtoks / settings.shift)
     sep_wordtoks = [settings.separator] if settings.separator else []
 
-    task_name = fmt_words(
-        context.action.name if context else None, "sliding_wordtok_window_transform"
-    )
-    with task_stack().context(task_name, nwindows, "window") as ts:
+    with task_stack().context("sliding_wordtok_window_transform", nwindows, "wordtok window") as ts:
         log.message(
             "Sliding word transform: Begin on doc: total %s wordtoks, %s bytes, %s windows, %s",
             nwordtoks,
@@ -254,8 +251,7 @@ def sliding_para_window_transform(
 
     nwindows = ceil(doc.size(TextUnit.paragraphs) / settings.size)
 
-    task_name = fmt_words(context.action.name if context else None, "sliding_para_window_transform")
-    with task_stack().context(task_name, nwindows, "window") as ts:
+    with task_stack().context("sliding_para_window_transform", nwindows, "para window") as ts:
         log.message(
             "Sliding paragraph transform: Begin on doc: %s windows of size %s paragraphs on total %s",
             nwindows,
