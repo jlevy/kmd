@@ -26,10 +26,10 @@ def strip_markdown_fence(response: str) -> str:
     Remove any extraneous Markdown fenced code block markers wrapping a response.
     """
     response = response.strip()
-    code_block_pattern = r"^```(?:\w+)?\s*\n(.*?)\n```\s*$"
-    match = re.match(code_block_pattern, response, re.DOTALL)
+    code_block_pattern = r"(?:^|\n)```(?:\w+)?\s*\n(.*?)\n```"
+    match = re.search(code_block_pattern, response, re.DOTALL)
     if match:
-        response = match.group(1).strip()
+        return match.group(1).strip()
     return response.strip()
 
 
@@ -68,9 +68,22 @@ def fuzzy_parse_json(response: str):
 def test_fuzzy_parsing():
     response = dedent(
         """
+        ```
+        code
+        ```
+        """
+    ).strip()
+    assert strip_markdown_fence(response) == "code"
+
+    response = dedent(
+        """
+        Blah blah.
+        
         ```markdown
         This is a test.
         ```
+
+        Blah blah.
         """
     )
     assert strip_markdown_fence(response) == "This is a test."

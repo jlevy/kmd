@@ -1,6 +1,8 @@
+from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.help.assistant import assistant_preamble
+from kmd.llms.fuzzy_parsing import strip_markdown_fence
 from kmd.llms.llm_completion import llm_completion
 from kmd.model import (
     ActionInput,
@@ -17,6 +19,8 @@ from kmd.model.language_models import LLM
 from kmd.model.model_settings import DEFAULT_CAREFUL_LLM
 from kmd.preconditions.precondition_defs import is_instructions
 from kmd.util.type_utils import not_none
+
+log = get_logger(__name__)
 
 
 @kmd_action
@@ -110,8 +114,15 @@ class WriteNewAction(LLMAction):
             model,
             messages=instructions.as_chat_completion(),
         )
+        python_body = strip_markdown_fence(llm_response)
+        if python_body != llm_response:
+            log.message(
+                "Stripped extraneous Markdown, keeping %s of %s chars",
+                len(python_body),
+                len(llm_response),
+            )
         result_item = instructions_item.derived_copy(
-            type=ItemType.extension, format=Format.python, body=llm_response
+            type=ItemType.extension, format=Format.python, body=python_body
         )
 
         return ActionResult([result_item])

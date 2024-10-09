@@ -57,6 +57,13 @@ def has_body(item: Item) -> bool:
 
 
 @precondition
+def contains_fenced_code(item: Item) -> bool:
+    return bool(
+        item.body and any(line.strip().startswith("```") for line in item.body.splitlines())
+    )
+
+
+@precondition
 def has_text_body(item: Item) -> bool:
     return has_body(item) and item.format in (Format.plaintext, Format.markdown, Format.md_html)
 
