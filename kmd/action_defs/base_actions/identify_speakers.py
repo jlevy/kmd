@@ -4,7 +4,7 @@ from kmd.config.logger import get_logger
 from kmd.errors import ApiResultError, InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.llms.fuzzy_parsing import fuzzy_parse_json
-from kmd.llms.llm_completion import llm_completion
+from kmd.llms.llm_completion import llm_template_completion
 from kmd.model import Item, ItemType, LLM, Message, MessageTemplate, PerItemAction
 from kmd.preconditions.precondition_defs import has_html_body, has_text_body
 from kmd.preconditions.speaker_labels import find_speaker_labels
@@ -48,7 +48,7 @@ class IdentifySpeakers(PerItemAction):
         )
 
         # Perform LLM completion to get the speaker mapping.
-        mapping_str = llm_completion(
+        mapping_str = llm_template_completion(
             model=LLM.gpt_4o_mini,
             system_message=system_message,
             template=identification_template,

@@ -248,9 +248,12 @@ def output_help(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: 
     output(message, *args, text_wrap=text_wrap, color=COLOR_HELP, extra_indent=extra_indent)
 
 
-def output_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+def output_assistance(
+    message: str, *args, model: str = "", text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""
+):
+    model_str = f"({model})" if model else ""
     output(
-        f"\n{EMOJI_ASSISTANT} " + message,
+        f"\n{EMOJI_ASSISTANT}{model_str} " + message,
         *args,
         text_wrap=text_wrap,
         color=COLOR_ASSISTANCE,

@@ -27,8 +27,13 @@ def is_config(item: Item) -> bool:
 
 
 @precondition
-def is_instruction(item: Item) -> bool:
-    return item.type == ItemType.instruction
+def is_chat(item: Item) -> bool:
+    return item.type == ItemType.chat
+
+
+@precondition
+def is_instructions(item: Item) -> bool:
+    return is_chat(item) and has_body(item) and item.format == Format.yaml
 
 
 @precondition

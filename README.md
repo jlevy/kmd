@@ -21,6 +21,9 @@ Complex should be possible.*” —Alan Kay
 
 </div>
 
+*\[⚠️ Pre-release and experimental! [Follow me](https://x.com/ojoshe)] for future updates and please DM me if you have ideas or feedback.\]*
+
+
 ## What is Kmd?
 
 Kmd (“Knowledge comManD line”) is a power tool for practical knowledge tasks.

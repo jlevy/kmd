@@ -22,8 +22,16 @@ def write_item(item: Item, full_path: Path):
     if item.is_binary:
         raise ValueError(f"Binary Items should be external files: {item}")
 
-    formatted_body = normalize_formatting(item.body_text(), item.format)
+    body = normalize_formatting(item.body_text(), item.format)
 
+    # Special case of YAML files that already have a `---`, which is not
+    # necessary since we'll write it ourselves.
+    if body and item.format == Format.yaml:
+        stripped = body.lstrip()
+        if stripped.startswith("---\n"):
+            body = stripped[4:]
+
+    # Detect what style of frontmatter to use so it's compatible with the content.
     if str(item.format) == str(Format.html):
         fmformat = FmFormat.html
     elif str(item.format) == str(Format.python):
@@ -33,7 +41,7 @@ def write_item(item: Item, full_path: Path):
 
     fmf_write(
         full_path,
-        formatted_body,
+        body,
         item.metadata(),
         format=fmformat,
         key_sort=ITEM_FIELD_SORT,

@@ -18,15 +18,15 @@ custom_style = Style.from_dict(
 )
 
 
-def prompt_simple_string(prompt_text: str, prompt_symbol: str = f"{PROMPT_MAIN}") -> str:
+def prompt_simple_string(prompt_text: str = "", prompt_symbol: str = f"{PROMPT_MAIN}") -> str:
     """
     Simple prompt from the user for a simple string.
     """
     session = PromptSession(style=custom_style)
-    user_input = session.prompt(
-        [
-            (COLOR_PROMPT, "\n" + prompt_text.strip() + "\n\n"),
-            (COLOR_PROMPT, prompt_symbol.strip() + " "),
-        ]
-    )
+    messages = []
+    if prompt_text:
+        messages.append((COLOR_PROMPT, "\n" + prompt_text.strip() + "\n\n"))
+    messages.append((COLOR_PROMPT, prompt_symbol.strip() + " "))
+    user_input = session.prompt(messages)
+
     return user_input

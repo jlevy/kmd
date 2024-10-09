@@ -3,7 +3,7 @@ from typing import Optional
 from kmd.config import setup
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
-from kmd.llms.llm_completion import llm_completion
+from kmd.llms.llm_completion import llm_template_completion
 from kmd.model.actions_model import ExecContext
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType, UNTITLED
@@ -32,7 +32,7 @@ def windowed_llm_transform(
             # XXX We normalize the Markdown before parsing as a text doc in particular because we
             # want bulleted list items to be separate paragraphs.
             normalize_markdown(
-                llm_completion(
+                llm_template_completion(
                     model,
                     system_message=system_message,
                     template=template,
@@ -86,7 +86,7 @@ def llm_transform_str(context: ExecContext, input_str: str, check_no_results: bo
             action.model,
         )
 
-        result_str = llm_completion(
+        result_str = llm_template_completion(
             action.model,
             system_message=action.system_message,
             template=action.template,
@@ -105,7 +105,7 @@ def llm_transform_item(context: ExecContext, item: Item) -> Item:
     if not item.body:
         raise InvalidInput(f"LLM actions expect a body: {action.name} on {item}")
 
-    log.info("LLM transform in item: %s", item)
+    log.info("LLM transform on item: %s", item)
 
     result_item = item.derived_copy(type=ItemType.doc, body=None, format=Format.markdown)
 

@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from pydantic.dataclasses import dataclass
+
 from kmd.config.logger import get_logger
 from kmd.config.settings import DOT_DIR
 from kmd.file_storage.persisted_yaml import PersistedYaml
@@ -14,12 +16,24 @@ SETTINGS_DIR = f"{DOT_DIR}/settings"
 
 CACHE_DIR = f"{DOT_DIR}/cache"
 INDEX_DIR = f"{DOT_DIR}/index"
+HISTORY_DIR = f"{DOT_DIR}/history"
 TMP_DIR = f"{DOT_DIR}/tmp"
 METADATA_FILE = f"{DOT_DIR}/metadata.yml"
+HISTORY_FILE = f"{DOT_DIR}/history.yml"
 
 # Store format versioning, to allow warnings or checks as this format evolves.
 # sv1: Initial version.
 STORE_VERSION = "sv1"
+
+
+@dataclass
+class MetadataDirs:
+    archive_dir: Path
+    settings_dir: Path
+    cache_dir: Path
+    index_dir: Path
+    history_dir: Path
+    tmp_dir: Path
 
 
 def initialize_store_dirs(base_dir: Path):
@@ -46,7 +60,16 @@ def initialize_store_dirs(base_dir: Path):
     os.makedirs(cache_dir, exist_ok=True)
     index_dir = base_dir / INDEX_DIR
     os.makedirs(index_dir, exist_ok=True)
+    history_dir = base_dir / HISTORY_DIR
+    os.makedirs(history_dir, exist_ok=True)
     tmp_dir = base_dir / TMP_DIR
     os.makedirs(tmp_dir, exist_ok=True)
 
-    return archive_dir, settings_dir, cache_dir, index_dir, tmp_dir, metadata
+    return MetadataDirs(
+        archive_dir=archive_dir,
+        settings_dir=settings_dir,
+        cache_dir=cache_dir,
+        index_dir=index_dir,
+        history_dir=history_dir,
+        tmp_dir=tmp_dir,
+    )

@@ -1,6 +1,6 @@
 from typing import List
 
-from kmd.llms.llm_completion import llm_completion
+from kmd.llms.llm_completion import llm_template_completion
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.model_settings import DEFAULT_FAST_LLM
 from kmd.text_formatting.markdown_util import as_bullet_points
@@ -12,7 +12,7 @@ def clean_heading(heading: str) -> str:
     """
     Fast LLM call to edit and clean up a heading.
     """
-    return llm_completion(
+    return llm_template_completion(
         DEFAULT_FAST_LLM,
         system_message=Message(
             """
@@ -39,7 +39,7 @@ def clean_heading(heading: str) -> str:
 
 
 def summary_heading(values: List[str]) -> str:
-    return llm_completion(
+    return llm_template_completion(
         DEFAULT_FAST_LLM,
         system_message=Message(
             """

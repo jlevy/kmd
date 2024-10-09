@@ -1,4 +1,5 @@
 from kmd.exec.action_registry import kmd_action
+from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatType
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.model import Action, ActionInput, ActionResult, Format, Item, ItemType, NO_ARGS
 
@@ -8,18 +9,34 @@ class WriteInstructions(Action):
     def __init__(self):
         super().__init__(
             name="write_instructions",
-            description="Write an item with instructions (e.g. for an LLM action that accepts instructions).",
+            description="Write a chat item with system and user instructions.",
             expected_args=NO_ARGS,
             interactive_input=True,
+            cachable=False,
         )
 
     def run(self, items: ActionInput) -> ActionResult:
-        # Prompt for instructions.
-        instructions = prompt_simple_string("Enter the instructions you want to save: ")
-        item = Item(
-            ItemType.instruction,
-            body=instructions,
-            format=Format.markdown,
-        )
+        chat_history = ChatHistory()
 
-        return ActionResult([item])
+        system_instructions = prompt_simple_string(
+            "Enter the system instructions (or enter for none): "
+        )
+        system_instructions = system_instructions.strip()
+        if system_instructions:
+            chat_history.append(ChatMessage(ChatType.system, system_instructions))
+
+        user_instructions = prompt_simple_string("Enter the user instructions: ")
+        user_instructions = user_instructions.strip()
+        if user_instructions:
+            chat_history.append(ChatMessage(ChatType.user, user_instructions))
+
+        if chat_history.messages:
+            item = Item(
+                ItemType.chat,
+                body=chat_history.to_yaml(),
+                format=Format.yaml,
+            )
+
+            return ActionResult([item])
+        else:
+            return ActionResult([])

@@ -1,7 +1,7 @@
 from kmd.exec.action_registry import kmd_action
-from kmd.exec.llm_transforms import llm_transform_item
-from kmd.file_storage.workspaces import current_workspace
+from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatType
 from kmd.help.assistant import assistant_preamble
+from kmd.llms.llm_completion import llm_completion
 from kmd.model import (
     ActionInput,
     ActionResult,
@@ -14,7 +14,9 @@ from kmd.model import (
 )
 from kmd.model.actions_model import ONE_ARG
 from kmd.model.language_models import LLM
-from kmd.preconditions.precondition_defs import is_instruction
+from kmd.model.model_settings import DEFAULT_CAREFUL_LLM
+from kmd.preconditions.precondition_defs import is_instructions
+from kmd.util.type_utils import not_none
 
 
 @kmd_action
@@ -34,32 +36,33 @@ class WriteNewAction(LLMAction):
                 """
                 Write a kmd action according to the following description. Guidelines:
 
-                - Output ONLY the Python code required, without any explanatory text, except for
-                specific and brief comments in the code.
+                - Only provide the Python code verbatim. DO NOT offer any explanatory text,
+                  around the code. Put these within comments!
                 
                 - Do not include Markdown formatting or ``` code blocks.
 
                 - If desired behavior of the code is not clear from the description, add
-                comment placeholders in the code so it can be filled in later.
+                  comment placeholders in the code so it can be filled in later.
 
                 - Subclass Action or in most cases, a subclass of it like CachedItemAction
-                or CachedLLMAction (these two actions are the most common ones, and operate
-                on one item at a time).
+                  or CachedLLMAction (these two actions are the most common ones, and operate
+                  on one item at a time).
 .
                 To illustrate, here is an example of the correct format for an action that
                 strips HTML tags:
 
                 from kmd.config.logger import get_logger
+                from kmd.errors import InvalidInput
                 from kmd.exec.action_registry import kmd_action
-                from kmd.model import CachedDocAction, Format, InvalidInput, Item, ItemType
+                from kmd.model import Format, Item, ItemType, PerItemAction
                 from kmd.preconditions.precondition_defs import has_html_body, has_text_body
-                from kmd.text_formatting.text_formatting import html_to_plaintext
+                from kmd.util.format_utils import html_to_plaintext
 
                 log = get_logger(__name__)
 
 
                 @kmd_action
-                class StripHtml(CachedDocAction):
+                class StripHtml(PerItemAction):
                     def __init__(self):
                         super().__init__(
                             name="strip_html",
@@ -90,21 +93,25 @@ class WriteNewAction(LLMAction):
                 """
             ),
             expected_args=ONE_ARG,
-            precondition=is_instruction,
+            precondition=is_instructions,
         )
 
     def run(self, items: ActionInput) -> ActionResult:
+        instructions_item = items[0]
+        instructions = ChatHistory.from_yaml(not_none(instructions_item.body))
+
         # Give the LLM full context on kmd APIs.
         # But we do this here lazily to prevent circular dependencies.
-        self.system_message = Message(assistant_preamble(skip_api=False, base_only=False))
+        system_message = Message(assistant_preamble(skip_api=False, base_only=False))
+        instructions.messages.insert(0, ChatMessage(ChatType.system, system_message))
 
-        description_item = items[0]
-
-        workspace = current_workspace()
-        workspace.save(description_item)
-
-        result_item = llm_transform_item(self.context(), description_item)
-        result_item.type = ItemType.extension
-        result_item.format = Format.python
+        model = self.model or DEFAULT_CAREFUL_LLM
+        llm_response = llm_completion(
+            model,
+            messages=instructions.as_chat_completion(),
+        )
+        result_item = instructions_item.derived_copy(
+            type=ItemType.extension, format=Format.python, body=llm_response
+        )
 
         return ActionResult([result_item])

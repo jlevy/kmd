@@ -47,7 +47,7 @@ class ItemType(Enum):
     asset = "asset"
     config = "config"
     export = "export"
-    instruction = "instruction"
+    chat = "chat"
     extension = "extension"
 
 

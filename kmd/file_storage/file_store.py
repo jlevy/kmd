@@ -66,21 +66,14 @@ class FileStore:
 
         self._id_index_init()
 
-        (
-            self.archive_dir,
-            self.settings_dir,
-            self.cache_dir,
-            self.index_dir,
-            self.tmp_dir,
-            self.metadata,
-        ) = initialize_store_dirs(self.base_dir)
+        self.dirs = initialize_store_dirs(self.base_dir)
 
-        self.vector_index = WsVectorIndex(self.index_dir)
+        self.vector_index = WsVectorIndex(self.dirs.index_dir)
 
         # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
-        self.selection = PersistedYaml(self.settings_dir / "selection.yml", init_value=[])
+        self.selection = PersistedYaml(self.dirs.settings_dir / "selection.yml", init_value=[])
 
-        self.params = PersistedYaml(self.settings_dir / "params.yml", init_value={})
+        self.params = PersistedYaml(self.dirs.settings_dir / "params.yml", init_value={})
 
         self.end_time = time.time()
 
@@ -414,7 +407,7 @@ class FileStore:
             fmt_path(Path(ARCHIVE_DIR)),
         )
         orig_path = self.base_dir / store_path
-        archive_path = self.archive_dir / store_path
+        archive_path = self.dirs.archive_dir / store_path
         if missing_ok and not orig_path.exists():
             log.message("Item to archive not found so moving on: %s", fmt_path(orig_path))
             return store_path
@@ -431,7 +424,7 @@ class FileStore:
         if commonpath([ARCHIVE_DIR, store_path]) == ARCHIVE_DIR:
             store_path = StorePath(relpath(store_path, ARCHIVE_DIR))
         original_path = self.base_dir / store_path
-        move_file(self.archive_dir / store_path, original_path)
+        move_file(self.dirs.archive_dir / store_path, original_path)
         return StorePath(store_path)
 
     def set_selection(self, selection: List[StorePath]):

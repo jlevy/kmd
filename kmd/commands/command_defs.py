@@ -698,8 +698,8 @@ def clear_archive() -> None:
     Empty the archive to trash.
     """
     ws = current_workspace()
-    trash(ws.archive_dir)
-    os.makedirs(ws.archive_dir, exist_ok=True)
+    trash(ws.dirs.archive_dir)
+    os.makedirs(ws.dirs.archive_dir, exist_ok=True)
 
 
 @kmd_command

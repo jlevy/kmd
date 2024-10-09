@@ -81,7 +81,7 @@ def handle_command_output(res: CommandOutput) -> None:
         output("(saved as $selection)", color=COLOR_HINT)
         output()
 
-    if res.suggest_actions:
+    if res.selection and res.suggest_actions:
         from kmd.commands import command_defs
 
         command_defs.suggest_actions()

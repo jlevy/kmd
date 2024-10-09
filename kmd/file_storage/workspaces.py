@@ -149,7 +149,7 @@ def current_workspace(log_on_change: bool = True) -> FileStore:
 
 def current_tmp_dir() -> Path:
     try:
-        return current_workspace().tmp_dir
+        return current_workspace().dirs.tmp_dir
     except InvalidState:
         return Path(tempfile.gettempdir())
 

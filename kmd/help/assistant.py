@@ -8,7 +8,7 @@ from kmd.config.settings import global_settings
 from kmd.docs import api_docs, assistant_instructions
 from kmd.errors import KmdRuntimeError
 from kmd.file_storage.workspaces import current_workspace_info, get_param_value
-from kmd.llms.llm_completion import llm_completion
+from kmd.llms.llm_completion import llm_template_completion
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_formatting.markdown_normalization import wrap_markdown
@@ -113,7 +113,7 @@ def assistance(input: str, fast: bool = False) -> str:
 
     # TODO: Stream response.
     return wrap_markdown(
-        llm_completion(
+        llm_template_completion(
             model,
             system_message=system_message,
             template=template,

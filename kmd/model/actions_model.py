@@ -169,12 +169,14 @@ class Action(ABC):
         "interactive_input",
     ]
 
-    # Long fields we don't want to include in the summary.
+    # Long or obvious fields we don't want to include in the summary.
     _NON_SUMMARY_FIELDS: ClassVar[List[str]] = [
         "title_template",
         "template",
         "system_message",
         "windowing",
+        "expected_outputs",
+        "output_type",
     ]
 
     def __post_init__(self):

@@ -20,18 +20,22 @@ from kmd.util.strif import abbreviate_str
 log = get_logger(__name__)
 
 
-def _litellm_completion(
-    model: str,
+def llm_completion(
+    model: LLM,
     messages: List[Dict[str, str]],
     response_format: Optional[Union[dict, Type[BaseModel]]] = None,
     **kwargs,
 ) -> str:
+    """
+    Perform an LLM completion with LiteLLM.
+    """
     llm_output = litellm.completion(
-        model,
+        model.value,
         messages=messages,
         response_format=response_format,
         **kwargs,
     )
+
     result = llm_output.choices[0].message.content  # type: ignore
     if not result or not isinstance(result, str):
         raise ApiResultError(f"LLM completion failed: {model}: {llm_output}")
@@ -43,7 +47,7 @@ def _litellm_completion(
 
 
 @log_calls(level="info")
-def llm_completion(
+def llm_template_completion(
     model: LLM,
     system_message: Message,
     template: MessageTemplate,
@@ -77,8 +81,8 @@ def llm_completion(
         ),
     )
 
-    text_output = _litellm_completion(
-        model.value,
+    text_output = llm_completion(
+        model,
         messages=[
             {"role": "system", "content": str(system_message)},
             {"role": "user", "content": user_message},

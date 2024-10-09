@@ -8,7 +8,6 @@ from typing import Any, Callable, List, Optional, TextIO
 
 from ruamel.yaml import YAML
 
-from kmd.model.paths_model import StorePath
 from kmd.util.strif import atomic_output_file
 
 KeySort = Callable[[str], tuple]
@@ -42,7 +41,17 @@ def new_yaml(
 
     yaml.representer.add_representer(dict, represent_dict)
 
+    # Use YAML block style for strings with newlines.
+    def represent_str(dumper, data):
+        style = "|" if "\n" in data else None
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, style=style)
+
+    yaml.representer.add_representer(str, represent_str)
+
     # Our StorePath is just a str.
+    # Lazy import to avoid circular dependency.
+    from kmd.model.paths_model import StorePath
+
     def represent_store_path(dumper, data):
         return dumper.represent_str(str(data))
 
