@@ -19,28 +19,28 @@ Rules:
 
 - An initial `---` is required (to make file type detection easier).
 
-- Any YAML is valid in a block, as long as it contains `message_type`
-  and `content` string fields.
+- Any YAML is valid in a block, as long as it contains `role` and `content`
+ string fields.
 
-- It's recommended but not required that `message_type` be one of the
+- It's recommended but not required that `role` be one of the
   following: "system", "user", "assistant", "command", "output", or "template".
 
-Note this is the same as any YAML frontmatter, but the `message_type`
+Note this is the same as any YAML frontmatter, but the `role`
 field indicates the file is in chat format.
 
 Chat example:
 
 ```
 ---
-message_type: system
+role: system
 content: |
   You are a helpful assistant.
 ---
-message_type: user
+role: user
 content: |
   Hello, how are you?
 ---
-message_type: assistant
+role: assistant
 content: |
   I'm fine, thank you!
 ```
@@ -48,11 +48,11 @@ content: |
 Command example:
 ```
 ---
-message_type: command
+role: command
 content: |
   transcribe_video
 ---
-message_type: output
+role: output
 content: |
   The video has been transcribed.
 output_file: /path/to/video.txt
@@ -61,7 +61,7 @@ output_file: /path/to/video.txt
 Template example:
 ```
 ---
-message_type: template
+role: template
 template_vars: ["name", "body"]
 content: |
   Hello, {name}! Here is your message:
@@ -83,10 +83,11 @@ from kmd.file_formats.yaml_util import custom_key_sort, from_yaml_string, new_ya
 from kmd.util.obj_utils import abbreviate_obj
 
 
-class ChatType(str, Enum):
+class ChatRole(str, Enum):
     """
-    The type of message in a chat. Represents the "role" in LLM APIs but can also represent
-    other types of messages, such as commands or output.
+    The role of a message in a chat. Represents the "role" in LLM APIs but note we slightly
+    abuse this term to also represent other types of messages, such as commands issued
+    by the user, output from the system, or a template that may contain template variables.
     """
 
     system = "system"
@@ -97,37 +98,33 @@ class ChatType(str, Enum):
     template = "template"
 
 
-_custom_key_sort = custom_key_sort(["message_type", "content"])
+_custom_key_sort = custom_key_sort(["role", "content"])
 
 
 @dataclass
 class ChatMessage:
-    message_type: ChatType
+    role: ChatRole
     content: str
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, message_dict: Dict[str, Any]) -> "ChatMessage":
         try:
-            message_type_str = message_dict.pop("message_type")
-            if isinstance(message_type_str, str):
-                message_type = ChatType(message_type_str)
+            role_str = message_dict.pop("role")
+            if isinstance(role_str, str):
+                role = ChatRole(role_str)
             else:
-                message_type = message_type_str
+                role = role_str
             content = message_dict.pop("content")
             metadata = message_dict
 
-            return cls(message_type=message_type, content=content, metadata=metadata)
+            return cls(role=role, content=content, metadata=metadata)
         except LookupError as e:
             raise ValueError("Could not parse chat message") from e
 
     def as_dict(self) -> Dict[str, Any]:
         data = {
-            "message_type": (
-                self.message_type.value
-                if isinstance(self.message_type, Enum)
-                else self.message_type
-            ),
+            "role": (self.role.value if isinstance(self.role, Enum) else self.role),
             "content": self.content,
         }
         data.update(self.metadata)
@@ -139,7 +136,7 @@ class ChatMessage:
 
     def as_chat_completion(self) -> Dict[str, str]:
         return {
-            "role": self.message_type.value,
+            "role": self.role.value,
             "content": self.content,
         }
 
@@ -214,29 +211,29 @@ def test_chat_history_serialization():
 
     yaml_input = dedent(
         """
-        message_type: system
+        role: system
         content: |
           You are a helpful assistant.
         ---
-        message_type: user
+        role: user
         content: |
           Hello, how are you?
         ---
-        message_type: assistant
+        role: assistant
         content: |
           I'm fine, thank you!
         mood: happy
         ---
-        message_type: command
+        role: command
         content: |
           transcribe_video
         ---
-        message_type: output
+        role: output
         content: |
           The video has been transcribed.
         output_file: /path/to/video.txt
         ---
-        message_type: template
+        role: template
         template_vars: ["name", "body"]
         content: |
           Hello, {name}! Here is your message:
@@ -254,33 +251,33 @@ def test_chat_history_serialization():
     print(repr(chat_history.messages[0]))
 
     assert chat_history.messages[0] == ChatMessage(
-        message_type=ChatType.system, content="You are a helpful assistant.\n", metadata={}
+        role=ChatRole.system, content="You are a helpful assistant.\n", metadata={}
     )
 
     for message in chat_history.messages:
-        assert isinstance(message.message_type, ChatType)
+        assert isinstance(message.role, ChatRole)
 
     # Tolerate no initial `---` or an extra final `---`.
     assert chat_history == ChatHistory.from_yaml(yaml_output)
     assert chat_history == ChatHistory.from_yaml("---\n" + yaml_input + "\n---\n")
 
     test_dict = {
-        "message_type": "user",
-        "content": "Testing message_type as string.",
+        "role": "user",
+        "content": "Testing role as string.",
     }
     message_from_string = ChatMessage.from_dict(test_dict)
-    assert message_from_string.message_type == ChatType.user
+    assert message_from_string.role == ChatRole.user
 
     test_dict_enum = {
-        "message_type": ChatType.assistant,
-        "content": "Testing message_type as Enum.",
+        "role": ChatRole.assistant,
+        "content": "Testing role as Enum.",
     }
     message_from_enum = ChatMessage.from_dict(test_dict_enum)
-    assert message_from_enum.message_type == ChatType.assistant
+    assert message_from_enum.role == ChatRole.assistant
 
     # Confirm we use multi-line literals.
     test_long_message = ChatMessage(
-        message_type=ChatType.system,
+        role=ChatRole.system,
         content="\n".join(["line " + str(i) for i in range(10)]),
     )
     print("test_long_message", test_long_message.to_yaml())

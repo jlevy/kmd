@@ -1,5 +1,5 @@
 from kmd.exec.action_registry import kmd_action
-from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatType
+from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.model import Action, ActionInput, ActionResult, Format, Item, ItemType, NO_ARGS
 
@@ -23,12 +23,12 @@ class WriteInstructions(Action):
         )
         system_instructions = system_instructions.strip()
         if system_instructions:
-            chat_history.append(ChatMessage(ChatType.system, system_instructions))
+            chat_history.append(ChatMessage(ChatRole.system, system_instructions))
 
         user_instructions = prompt_simple_string("Enter the user instructions: ")
         user_instructions = user_instructions.strip()
         if user_instructions:
-            chat_history.append(ChatMessage(ChatType.user, user_instructions))
+            chat_history.append(ChatMessage(ChatRole.user, user_instructions))
 
         if chat_history.messages:
             item = Item(

@@ -7,8 +7,8 @@ from slugify import slugify
 
 from kmd.config.logger import get_logger
 from kmd.config.settings import LogLevel
-from kmd.config.text_styles import HRULE_SHORT
 from kmd.errors import ApiResultError
+from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.llms.fuzzy_parsing import is_no_results
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
@@ -98,16 +98,17 @@ def llm_template_completion(
         text_output = ""
 
     if save_objects:
+        messages = ChatHistory(
+            [
+                ChatMessage(ChatRole.system, str(system_message)),
+                ChatMessage(ChatRole.user, user_message),
+                ChatMessage(ChatRole.assistant, text_output),
+            ]
+        )
         log.save_object(
             "LLM response",
             f"llm.{model_slug}",
-            "\n\n".join(
-                [
-                    f"{HRULE_SHORT} System message {HRULE_SHORT}\n\n{str(system_message)}",
-                    f"{HRULE_SHORT} User message {HRULE_SHORT}\n\n{user_message}",
-                    f"{HRULE_SHORT} Response {HRULE_SHORT}\n\n{text_output}",
-                ]
-            ),
+            messages.to_yaml(),
             level=LogLevel.message,
         )
 

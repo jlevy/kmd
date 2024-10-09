@@ -1,5 +1,5 @@
 from kmd.exec.action_registry import kmd_action
-from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatType
+from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.help.assistant import assistant_preamble
 from kmd.llms.llm_completion import llm_completion
 from kmd.model import (
@@ -103,7 +103,7 @@ class WriteNewAction(LLMAction):
         # Give the LLM full context on kmd APIs.
         # But we do this here lazily to prevent circular dependencies.
         system_message = Message(assistant_preamble(skip_api=False, base_only=False))
-        instructions.messages.insert(0, ChatMessage(ChatType.system, system_message))
+        instructions.messages.insert(0, ChatMessage(ChatRole.system, system_message))
 
         model = self.model or DEFAULT_CAREFUL_LLM
         llm_response = llm_completion(

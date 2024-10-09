@@ -1,5 +1,5 @@
 from kmd.exec.action_registry import kmd_action
-from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatType
+from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.llms.llm_completion import llm_completion
 from kmd.model import Action, ActionInput, ActionResult, Format, Item, ItemType, NO_ARGS
@@ -34,7 +34,7 @@ class Chat(Action):
             if not user_message or user_message.lower() == "exit" or user_message.lower() == "quit":
                 break
 
-            chat_history.append(ChatMessage(ChatType.user, user_message))
+            chat_history.append(ChatMessage(ChatRole.user, user_message))
 
             llm_response = llm_completion(
                 model,
@@ -46,7 +46,7 @@ class Chat(Action):
             # TODO: Why does the response have trailing whitespace on lines? Makes the YAML ugly.
             stripped_response = "\n".join(line.rstrip() for line in llm_response.splitlines())
 
-            chat_history.append(ChatMessage(ChatType.assistant, stripped_response))
+            chat_history.append(ChatMessage(ChatRole.assistant, stripped_response))
 
         if chat_history.messages:
             item = Item(

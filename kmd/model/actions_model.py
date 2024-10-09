@@ -277,7 +277,9 @@ class Action(ABC):
 
             # Convert value to the appropriate type.
             if param_name in action_param_names:
-                field_info: Field = next(f for f in self.__dict__.values() if f.name == param_name)
+                field_info: Field = next(
+                    f for f in self.__dataclass_fields__.values() if f.name == param_name
+                )
                 value = instantiate_as_type(value, cast(type, field_info.type))
 
             # Update the action.
