@@ -20,6 +20,7 @@ from kmd.util.strif import abbreviate_str
 log = get_logger(__name__)
 
 
+@log_calls(level="info")
 def llm_completion(
     model: LLM,
     messages: List[Dict[str, str]],
@@ -46,7 +47,6 @@ def llm_completion(
     return result
 
 
-@log_calls(level="info")
 def llm_template_completion(
     model: LLM,
     system_message: Message,

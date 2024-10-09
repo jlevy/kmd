@@ -12,6 +12,7 @@ from kmd.commands.command_results import handle_command_output
 from kmd.config.logger import get_logger
 from kmd.config.setup import setup
 from kmd.config.text_styles import PROMPT_COLOR_NORMAL, PROMPT_COLOR_WARN, PROMPT_MAIN
+from kmd.exec.history import wrap_with_history
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import Action
 from kmd.model.output_model import CommandOutput
@@ -54,8 +55,8 @@ R = TypeVar("R")
 
 def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], None]:
 
-    def command(*args) -> None:
-        retval = func(*args)
+    def command(args: List[str]) -> None:
+        retval = func(args)
 
         res: CommandOutput
         if isinstance(retval, CommandOutput):
@@ -94,6 +95,8 @@ def _load_xonsh_commands():
     set_alias("help", command_defs.help)
     # An extra name just in case `help` doesn't work.
     set_alias("kmd_help", command_defs.help)
+    # A backup for xonsh's built-in history command.
+    set_alias("xhistory", aliases["history"])  # type: ignore  # noqa: F821
 
     # TODO: Doesn't seem to reload modified Python?
     # def reload() -> None:
@@ -106,7 +109,7 @@ def _load_xonsh_commands():
 
     for func in _commands.values():
         kmd_commands[func.__name__] = _wrap_handle_results(
-            wrap_with_exception_printing(wrap_for_shell_args(func))
+            wrap_with_exception_printing(wrap_for_shell_args(wrap_with_history(func)))
         )
 
     update_aliases(kmd_commands)

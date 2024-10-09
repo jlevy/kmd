@@ -19,7 +19,7 @@ INDEX_DIR = f"{DOT_DIR}/index"
 HISTORY_DIR = f"{DOT_DIR}/history"
 TMP_DIR = f"{DOT_DIR}/tmp"
 METADATA_FILE = f"{DOT_DIR}/metadata.yml"
-HISTORY_FILE = f"{DOT_DIR}/history.yml"
+HISTORY_FILE = "shell_history.yml"
 
 # Store format versioning, to allow warnings or checks as this format evolves.
 # sv1: Initial version.
@@ -34,6 +34,10 @@ class MetadataDirs:
     index_dir: Path
     history_dir: Path
     tmp_dir: Path
+
+    @property
+    def shell_history(self) -> Path:
+        return self.history_dir / HISTORY_FILE
 
 
 def initialize_store_dirs(base_dir: Path):

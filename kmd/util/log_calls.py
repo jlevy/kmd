@@ -2,7 +2,7 @@ import functools
 import re
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, cast, Dict, Literal, Optional, TypeVar
+from typing import Any, Callable, cast, Dict, List, Literal, Optional, TypeVar
 
 import regex
 
@@ -50,7 +50,7 @@ def balance_quotes(s: str) -> str:
     """
     Ensure balanced single and double quotes in a string, adding any missing quotes.
     """
-    stack = []
+    stack: List[str] = []
     for char in s:
         if char in ("'", '"'):
             if stack and stack[-1] == char:

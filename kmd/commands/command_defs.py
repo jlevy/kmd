@@ -27,6 +27,7 @@ from kmd.config.text_styles import (
     SPINNER,
 )
 from kmd.errors import InvalidInput, InvalidState
+from kmd.file_formats.chat_format import tail_chat_history
 from kmd.file_formats.frontmatter_format import (
     fmf_read,
     fmf_read_frontmatter,
@@ -227,6 +228,38 @@ def check_tools() -> None:
     output()
     output(tool_check().formatted())
     output()
+
+
+@kmd_command
+def history(max: int = 30, raw: bool = False) -> None:
+    """
+    Show the command history for the current workspace.
+
+    :param max: Show at most the last `max` commands.
+    :param raw: Show raw command history by tailing the history file directly.
+    """
+    # TODO: Customize this by time frame.
+    ws = current_workspace()
+    history_file = ws.dirs.shell_history
+    chat_history = tail_chat_history(history_file, max)
+
+    if raw:
+        tail_file(history_file)
+    else:
+        n = len(chat_history.messages)
+        for i, message in enumerate(chat_history.messages):
+            output("% 4d: %s", i - n, message.content, text_wrap=Wrap.NONE)
+
+
+@kmd_command
+def clear_history() -> None:
+    """
+    Clear the command history for the current workspace. Old history file will be
+    moved to the trash.
+    """
+    ws = current_workspace()
+    history_file = ws.dirs.shell_history
+    trash(history_file)
 
 
 @kmd_command

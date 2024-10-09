@@ -5,13 +5,15 @@ from kmd.config.text_styles import COLOR_ERROR, SPINNER
 
 from kmd.errors import NONFATAL_EXCEPTIONS
 from kmd.exec.action_exec import run_action
+from kmd.exec.history import record_command
 from kmd.file_storage.workspaces import current_workspace
 from kmd.help.command_help import output_action_help
 from kmd.model.actions_model import Action
+from kmd.model.commands_model import Command
 from kmd.model.output_model import CommandOutput
 from kmd.shell_tools.exception_printing import summarize_traceback
 from kmd.shell_tools.option_parsing import parse_shell_args
-from kmd.text_ui.command_output import output, output_separator
+from kmd.text_ui.command_output import output
 from kmd.util.log_calls import log_tallies
 
 log = get_logger(__name__)
@@ -50,7 +52,7 @@ class ShellCallableAction:
             return CommandOutput(exception=e)
         finally:
             log_tallies(if_slower_than=10.0)
-            output_separator()
+            # output_separator()
 
         # The handling of the output can be overridden by the action, but by default just show
         # the selection and suggested actions.
@@ -62,6 +64,8 @@ class ShellCallableAction:
                 show_selection=True,
                 suggest_actions=True,
             )
+
+        record_command(Command.from_obj(self.action, args))
 
         return command_output
 

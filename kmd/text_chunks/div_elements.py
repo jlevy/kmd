@@ -62,21 +62,21 @@ def chunk_text_as_divs(text: str, min_size: int, unit: TextUnit, class_name: str
     if is_div(first_wordtok(text)):
         log.message("Chunking paragraphs using divs.")
         parsed = parse_divs(text)
-        chunks = chunk_children(parsed, min_size, unit)
-        chunk_strs = [chunk.reassemble() for chunk in chunks]
+        div_chunks = chunk_children(parsed, min_size, unit)
+        chunk_strs = [chunk.reassemble() for chunk in div_chunks]
         size_summary = parsed.size_summary(fast=True)
     else:
         log.message("Chunking paragraphs using newlines.")
         doc = TextDoc.from_text(text)
-        chunks = chunk_paras(doc, min_size, unit)
-        chunk_strs = [chunk.reassemble() for chunk in chunks]
+        doc_chunks = chunk_paras(doc, min_size, unit)
+        chunk_strs = [chunk.reassemble() for chunk in doc_chunks]
         size_summary = doc.size_summary()
 
-    div_chunks = [div(class_name, chunk_str) for chunk_str in chunk_strs]
+    result_divs = [div(class_name, chunk_str) for chunk_str in chunk_strs]
 
-    log.message("Added %s div chunks on doc:\n%s", len(div_chunks), size_summary)
+    log.message("Added %s div chunks on doc:\n%s", len(result_divs), size_summary)
 
-    return "\n\n".join(div_chunks)
+    return "\n\n".join(result_divs)
 
 
 ## Tests

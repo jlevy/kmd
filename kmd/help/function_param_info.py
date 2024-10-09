@@ -40,6 +40,6 @@ def annotate_param_info(func: Callable[..., Any]) -> List[Param]:
         # positional arguments are kind of self-evident.
         param_info = _look_up_param_docs(func, kw_params)
 
-        func.__param_info__ = param_info
+        func.__param_info__ = param_info  # type: ignore
 
-    return func.__param_info__
+    return func.__param_info__  # type: ignore

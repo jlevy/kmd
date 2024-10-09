@@ -5,8 +5,8 @@ from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.file_storage.workspaces import current_workspace
 from kmd.lang_tools.clean_headings import clean_heading
+from kmd.media.pdf_output import html_to_pdf
 from kmd.model import Action, ActionInput, ActionResult, FileExt, Format, ItemType, ONE_ARG
-from kmd.pdf.pdf_output import html_to_pdf
 from kmd.preconditions.precondition_defs import has_text_body
 
 log = get_logger(__name__)

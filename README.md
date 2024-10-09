@@ -21,8 +21,9 @@ Complex should be possible.*” —Alan Kay
 
 </div>
 
-*\[⚠️ Pre-release and experimental! [Follow me](https://x.com/ojoshe)] for future updates and please DM me if you have ideas or feedback.\]*
-
+*⚠️ Pre-release and experimental!
+[Follow me](https://x.com/ojoshe) for future updates and please DM me if you have ideas or
+feedback.*
 
 ## What is Kmd?
 
@@ -41,7 +42,8 @@ tools in the right ways.
 
 ## Background
 
-I'd like to give a little motivation for experimenting with Kmd and why I think it's potentially so useful.
+I'd like to give a little motivation for experimenting with Kmd and why I think it's
+potentially so useful.
 But if you want to just try it, jump to [Getting Started](#getting-started)!
 
 The goals of Kmd are:
@@ -238,7 +240,6 @@ These are needed to run:
   display), `libmagic`
 
 Cheat sheets to get these set up, if you're not already:
-
 
 For macOS, I recommend using brew:
 

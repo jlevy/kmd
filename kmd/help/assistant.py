@@ -45,7 +45,11 @@ def _insert_output(func: Callable, name: str) -> str:
 
 
 def assistant_current_state() -> str:
-    from kmd.commands.command_defs import applicable_actions, select  # Avoid circular imports.
+    from kmd.commands.command_defs import (
+        applicable_actions,
+        history,
+        select,
+    )  # Avoid circular imports.
 
     path, is_sandbox = current_workspace_info()
     if path and not is_sandbox:
@@ -54,6 +58,10 @@ def assistant_current_state() -> str:
             CURRENT STATE
 
             Based on the current directory, the current workspace is: {path.name} at {fmt_path(path)}
+
+            The last 5 commands issued by the user are:
+
+            {_insert_output(history, "history")}
 
             The user's current selection is below:
 

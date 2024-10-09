@@ -3,7 +3,6 @@ Launch xonsh with kmd extensions and customizations.
 """
 
 import os
-import re
 import sys
 import time
 from contextlib import redirect_stdout
@@ -26,6 +25,7 @@ from kmd.config.settings import APP_NAME
 from kmd.config.setup import setup
 from kmd.config.text_styles import INPUT_COLOR, SPINNER
 from kmd.help.assistant import assistance
+from kmd.model.commands_model import is_assist_request_str
 from kmd.text_ui.command_output import output, output_assistance
 from kmd.version import get_version
 
@@ -85,17 +85,6 @@ def install_to_xonshrc():
         pass
 
 
-def check_for_assistance_command(line: str) -> Optional[str]:
-    """
-    Is this a query to the assistant?
-    Checks for phrases ending in a ? or a period, or starting with a ?.
-    """
-    line = line.strip()
-    if re.search(r"\b\w+\.$", line) or re.search(r"\b\w+\?$", line) or line.startswith("?"):
-        return line.lstrip("?").strip()
-    return None
-
-
 ## Custom xonsh shell setup
 
 # Base shell can be ReadlineShell or PromptToolkitShell.
@@ -108,11 +97,11 @@ class CustomShell(PromptToolkitShell):  # PromptToolkitShell or ReadlineShell
     """
 
     def default(self, line, raw_line=None):
-        assist_query = check_for_assistance_command(line)
+        assist_query = is_assist_request_str(line)
         if assist_query:
             try:
                 with get_console().status("Thinking…", spinner=SPINNER):
-                    output_assistance(assistance(line))
+                    output_assistance(assistance(assist_query))
             except Exception as e:
                 log.error(f"Sorry, could not get assistance: {e}")
                 log.info(e, exc_info=True)

@@ -153,19 +153,6 @@ class ChatMessage:
         return self.as_str_brief()
 
 
-def append_message(path: Path | str, message: ChatMessage, make_parents: bool = True) -> None:
-    """
-    Append a chat message to a YAML file.
-    """
-    path = Path(path)
-    if make_parents:
-        path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as file:
-        file.write("---\n")
-        file.write(message.to_yaml())
-        file.write("\n")
-
-
 @dataclass
 class ChatHistory:
     messages: List[ChatMessage] = field(default_factory=list)
@@ -201,6 +188,31 @@ class ChatHistory:
 
     def __str__(self) -> str:
         return self.as_str_brief()
+
+
+def append_chat_message(path: Path, message: ChatMessage, make_parents: bool = True) -> None:
+    """
+    Append a chat message to a YAML file.
+    """
+    if make_parents:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as file:
+        file.write("---\n")
+        file.write(message.to_yaml())
+
+
+def tail_chat_history(path: Path, max_records: int) -> ChatHistory:
+    """
+    Show last few results from a chat history file.
+    """
+    with path.open("r", encoding="utf-8") as file:
+        contents = file.read()
+
+    chat_history = ChatHistory.from_yaml(contents)
+    if max_records > 0:
+        chat_history.messages = chat_history.messages[-max_records:]
+
+    return chat_history
 
 
 ## Tests

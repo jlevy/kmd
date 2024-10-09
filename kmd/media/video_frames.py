@@ -62,7 +62,7 @@ def capture_frames(
                 with atomic_output_file(
                     target_path, make_parents=True, suffix="%s." + target_path.suffix
                 ) as tmp_path:
-                    cv2.imwrite(tmp_path, frame)
+                    cv2.imwrite(str(tmp_path), frame)
                 log.message(
                     "Saved captured frame: %s -> %s", fmt_path(video_file), fmt_path(target_path)
                 )
