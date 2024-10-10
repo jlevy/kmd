@@ -76,10 +76,9 @@ The goals of Kmd are:
   Anyone should be able to discover new steps and workflows without waiting on engineers or
   designers.
 
-- **Be self-reflective:** Kmd should understand and be able to enhance itself.
-  If a tool like this can assist humans, it will also augment the power of LLMs to automate
-  and orchestrate complex tasks.
-  Better tools make LLMs smarter, too.
+- **Understand and build on itself:** Kmd can read its own code and docs and use itself.
+  Better languages and scripting tools should make LLMs smarter, by automating and
+  orchestraging complex tasks in ways that are more understandable and less error prone.
 
 ### Why a New Command Line?
 

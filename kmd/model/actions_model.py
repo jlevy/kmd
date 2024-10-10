@@ -71,6 +71,11 @@ class PathOp:
 
 @dataclass
 class ActionResult:
+    """
+    Results from an action, including all items it produced as well as some hints
+    about how to handle the result items.
+    """
+
     items: List[Item]
     """Results from this action. Most often, just a single item."""
 

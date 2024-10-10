@@ -75,7 +75,7 @@ class DiffOp:
         return s
 
     def all_changed(self) -> List[str]:
-        return self.left + self.right
+        return [] if self.action == OpType.EQUAL else self.left + self.right
 
     def __str__(self):
         return

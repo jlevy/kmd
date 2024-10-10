@@ -1,9 +1,15 @@
 from typing import Callable, List, Optional
 
+from kmd.lang_tools.inflection import lemmatize, lemmatized_equal
 from kmd.text_docs.text_diffs import DiffFilter, DiffOp, OpType
-
 from kmd.text_docs.text_doc import TextDoc
-from kmd.text_docs.wordtoks import is_break_or_space, is_tag_close, is_tag_open, is_word
+from kmd.text_docs.wordtoks import (
+    is_break_or_space,
+    is_tag_close,
+    is_tag_open,
+    is_whitespace_or_punct,
+    is_word,
+)
 
 
 class WildcardToken:
@@ -88,7 +94,7 @@ def make_token_sequence_filter(
     return filter_fn
 
 
-def adds_or_removes_whitespace(diff_op: DiffOp) -> bool:
+def changes_whitespace(diff_op: DiffOp) -> bool:
     """
     Only accepts changes to sentence and paragraph breaks and whitespace.
     """
@@ -96,12 +102,58 @@ def adds_or_removes_whitespace(diff_op: DiffOp) -> bool:
     return all(is_break_or_space(tok) for tok in diff_op.all_changed())
 
 
-def adds_or_removes_punct_whitespace(diff_op: DiffOp) -> bool:
+def changes_whitespace_or_punct(diff_op: DiffOp) -> bool:
     """
     Only accepts changes to punctuation and whitespace.
     """
 
-    return all(not is_word(tok) for tok in diff_op.all_changed())
+    return all(is_whitespace_or_punct(tok) for tok in diff_op.all_changed())
+
+
+def no_word_lemma_changes(diff_op: DiffOp) -> bool:
+    """
+    Only accept changes that preserve the lemmatized form of words.
+    """
+    if diff_op.action == OpType.EQUAL:
+        return True
+    elif diff_op.action == OpType.REPLACE:
+        return lemmatized_equal(
+            " ".join(tok for tok in diff_op.left if is_word(tok)),
+            " ".join(tok for tok in diff_op.right if is_word(tok)),
+        )
+    else:
+        return len([tok for tok in diff_op.all_changed() if is_word(tok)]) == 0
+
+
+def removes_words(diff_op: DiffOp) -> bool:
+    """
+    Only accept changes that remove words. Changes to spaces and punctuation are allowed.
+    """
+    if diff_op.action == OpType.DELETE or diff_op.action == OpType.EQUAL:
+        return True
+    elif diff_op.action == OpType.REPLACE or diff_op.action == OpType.INSERT:
+        return all(is_whitespace_or_punct(tok) for tok in set(diff_op.right) - set(diff_op.left))
+    else:
+        return False
+
+
+def removes_word_lemmas(diff_op: DiffOp) -> bool:
+    """
+    Only accept changes that remove words or replace them with their lemmatized forms.
+    Changes to spaces and punctuation are allowed.
+    """
+    if diff_op.action == OpType.DELETE or diff_op.action == OpType.EQUAL:
+        return True
+    elif diff_op.action == OpType.REPLACE or diff_op.action == OpType.INSERT:
+        left_words = [tok for tok in diff_op.left if is_word(tok)]
+        right_words = [tok for tok in diff_op.right if is_word(tok)]
+
+        left_lemmas = [lemmatize(word) for word in left_words]
+        right_lemmas = [lemmatize(word) for word in right_words]
+
+        return set(right_lemmas).issubset(set(left_lemmas))
+    else:
+        return False
 
 
 def adds_headings(diff_op: DiffOp) -> bool:
@@ -139,7 +191,7 @@ def test_filter_br_and_space():
 
     diff = diff_wordtoks(wordtoks1, wordtoks2)
 
-    accepted, rejected = diff.filter(adds_or_removes_whitespace)
+    accepted, rejected = diff.filter(changes_whitespace)
 
     accepted_result = accepted.apply_to(wordtoks1)
     rejected_result = rejected.apply_to(wordtoks1)
@@ -187,3 +239,50 @@ def test_token_sequence_filter_with_predicate():
     assert ignore_whitespace_filter_fn(delete_op) == False  # action is INSERT
     assert ignore_whitespace_filter_fn(replace_op) == False
     assert ignore_whitespace_filter_fn(equal_op) == False
+
+
+def test_no_word_changes_lemmatized():
+    assert no_word_lemma_changes(DiffOp(OpType.INSERT, [], ["the"])) == False
+    assert no_word_lemma_changes(DiffOp(OpType.DELETE, ["the"], [])) == False
+    assert (
+        no_word_lemma_changes(
+            DiffOp(
+                OpType.REPLACE,
+                ["The", "dogs", "were", "running", "fast"],
+                ["The", "dog", "was", "running"],
+            )
+        )
+        == False
+    )
+    assert (
+        no_word_lemma_changes(
+            DiffOp(
+                OpType.REPLACE,
+                ["The", "dogs", "were", "running"],
+                ["The", "dog", "was", "running"],
+            )
+        )
+        == True
+    )
+
+
+def test_removes_words():
+
+    assert removes_words(DiffOp(OpType.DELETE, ["Hello", " "], [])) == True
+    assert removes_words(DiffOp(OpType.REPLACE, ["Hello", " ", "world"], ["world"])) == True
+    assert removes_words(DiffOp(OpType.REPLACE, ["Hello", " ", "world"], ["World"])) == False
+    assert removes_word_lemmas(DiffOp(OpType.REPLACE, ["Hello", " ", "world"], ["World"])) == True
+
+    assert (
+        removes_words(DiffOp(OpType.REPLACE, ["Hello", "*", "world"], ["hello", "*", "world"]))
+        == False
+    )
+    assert (
+        removes_word_lemmas(
+            DiffOp(OpType.REPLACE, ["Hello", "*", "world"], ["hello", "*", "world"])
+        )
+        == True
+    )
+
+    assert removes_words(DiffOp(OpType.DELETE, ["Hello", "world"], [])) == True
+    assert removes_word_lemmas(DiffOp(OpType.DELETE, ["Hello", "world"], [])) == True

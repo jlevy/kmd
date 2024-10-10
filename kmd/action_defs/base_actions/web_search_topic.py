@@ -1,12 +1,13 @@
-from dataclasses import asdict
 import os
+from typing import List
+
 from exa_py import Exa
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
-from kmd.file_formats.yaml_util import to_yaml_string
-from kmd.model import Item, PerItemAction
+from kmd.model import Item
+from kmd.model.actions_model import Action, ActionInput, ActionResult, ONE_ARG
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import ItemType
 
@@ -14,14 +15,16 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class WebSearchTopic(PerItemAction):
+class WebSearchTopic(Action):
     def __init__(self):
         super().__init__(
             name="web_search_topic",
             description="Search the web for information on a topic.",
+            expected_args=ONE_ARG,
         )
 
-    def run_item(self, item: Item) -> Item:
+    def run(self, items: ActionInput) -> ActionResult:
+        item = items[0]
         if not item.body:
             raise InvalidInput("Item must have a body")
 
@@ -36,8 +39,25 @@ class WebSearchTopic(PerItemAction):
         )
         log.message("Got Exa response: %s results", len(response.results))
 
-        return item.derived_copy(
-            type=ItemType.doc,
-            format=Format.yaml,
-            body=to_yaml_string([asdict(r) for r in response.results]),
-        )
+        # yaml_item = item.derived_copy(
+        #     type=ItemType.doc,
+        #     format=Format.yaml,
+        #     body=to_yaml_string([asdict(r) for r in response.results]),
+        # )
+
+        results_items: List[Item] = []
+        for result in response.results:
+            log.message("Result: %s", result.title)
+
+            results_items.append(
+                item.derived_copy(
+                    type=ItemType.doc,
+                    format=Format.markdown,
+                    title=result.title,
+                    created=result.published_date,
+                    thumbnail_url=result.image,
+                    body=result.text,
+                )
+            )
+
+        return ActionResult(items=results_items)

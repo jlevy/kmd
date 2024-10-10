@@ -21,23 +21,35 @@ def fuzzy_match(response: str, sentinel: str, threshold: int = 80) -> bool:
     return bool(response and fuzz.ratio(response, sentinel) > threshold)
 
 
-def strip_markdown_fence(response: str) -> str:
+def strip_markdown_fence(
+    content: str, max_lines_to_strip: int = 15, max_fraction_to_strip: float = 0.2
+) -> str:
     """
-    Remove any extraneous Markdown fenced code block markers wrapping a response.
+    Remove any extraneous Markdown fenced code block markers wrapping a response,
+    provided most of the response is in the fenceded block.
     """
-    response = response.strip()
+    content = content.strip()
     code_block_pattern = r"(?:^|\n)```(?:\w+)?\s*\n(.*?)\n```"
-    match = re.search(code_block_pattern, response, re.DOTALL)
+    match = re.search(code_block_pattern, content, re.DOTALL)
     if match:
-        return match.group(1).strip()
-    return response.strip()
+        stripped = match.group(1).strip()
+    else:
+        stripped = content.strip()
+
+    if (
+        len(stripped) - len(content) <= max(2, len(content) * max_fraction_to_strip)
+        or len(stripped.splitlines()) < max_lines_to_strip
+    ):
+        return stripped
+    else:
+        return stripped
 
 
-def fuzzy_parse_json(response: str):
+def fuzzy_parse_json(content: str):
     """
     Attempt to parse JSON data from a string, after removing any markdown code blocks.
     """
-    json_str = strip_markdown_fence(response)
+    json_str = strip_markdown_fence(content)
 
     # Try to find the first '{' or '[' and the corresponding closing '}' or ']'
     try:

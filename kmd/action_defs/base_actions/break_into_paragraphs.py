@@ -5,7 +5,7 @@ from kmd.model import DEFAULT_FAST_LLM, LLMAction, Message, MessageTemplate
 from kmd.model.items_model import Item
 from kmd.preconditions.precondition_defs import has_speaker_ids
 from kmd.provenance.source_items import find_upstream_item
-from kmd.text_docs.diff_filters import adds_or_removes_whitespace
+from kmd.text_docs.diff_filters import changes_whitespace
 from kmd.text_docs.window_settings import WINDOW_2K_WORDTOKS
 
 log = get_logger(__name__)
@@ -48,7 +48,7 @@ class BreakIntoParagraphs(LLMAction):
                 """
             ),
             windowing=WINDOW_2K_WORDTOKS,
-            diff_filter=adds_or_removes_whitespace,
+            diff_filter=changes_whitespace,
         )
 
     def run_item(self, item: Item) -> Item:

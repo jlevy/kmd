@@ -62,9 +62,9 @@ def llm_transform_str(context: ExecContext, input_str: str, check_no_results: bo
 
     if action.windowing:
         log.message(
-            "Running LLM sliding transform action `%s` with model %s: %s %s",
-            action.name,
+            "Running LLM `%s` sliding transform for action `%s`: %s %s",
             action.model,
+            action.name,
             action.windowing,
             "with filter" if action.diff_filter else "without filter",  # TODO: Give filters names.
         )

@@ -160,7 +160,7 @@ def is_break_or_space(wordtok: str) -> bool:
 
 def is_word(wordtok: str) -> bool:
     """
-    Is this wordtok a word, not punctuation or whitespace?
+    Is this wordtok a word, not punctuation or whitespace or a number?
     """
     return bool(len(wordtok) > 0 and _word_pat.match(wordtok) and not _number_pat.match(wordtok))
 
@@ -170,6 +170,13 @@ def is_number(wordtok: str) -> bool:
     Is this wordtok a number?
     """
     return bool(_number_pat.match(wordtok))
+
+
+def is_whitespace_or_punct(wordtok: str) -> bool:
+    """
+    Is this wordtok whitespace or punctuation?
+    """
+    return bool(not is_word(wordtok) and not is_number(wordtok))
 
 
 @dataclass(frozen=True)
