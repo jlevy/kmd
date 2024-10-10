@@ -15,7 +15,7 @@ from kmd.media.media_tools import reset_media_cache_dir
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
-from kmd.model.params_model import param_lookup, USER_SETTABLE_PARAMS
+from kmd.model.params_model import ParamSettings, USER_SETTABLE_PARAMS
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.util.format_utils import fmt_path
 from kmd.util.url import is_url, Url
@@ -198,6 +198,6 @@ def get_param_value(param_name: str) -> Optional[str]:
     try:
         params = current_workspace().get_params()
     except InvalidState:
-        params = {}
+        params = ParamSettings({})
 
-    return param_lookup(params, param_name, USER_SETTABLE_PARAMS)
+    return params.lookup(param_name, USER_SETTABLE_PARAMS)

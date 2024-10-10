@@ -11,10 +11,11 @@ from kmd.help.command_help import output_action_help
 from kmd.model.actions_model import Action
 from kmd.model.commands_model import Command
 from kmd.model.output_model import CommandOutput
+from kmd.model.params_model import ParamSettings
 from kmd.shell_tools.exception_printing import summarize_traceback
-from kmd.shell_tools.option_parsing import parse_shell_args
 from kmd.text_ui.command_output import output
 from kmd.util.log_calls import log_tallies
+from kmd.util.parse_shell_args import parse_shell_args
 
 log = get_logger(__name__)
 
@@ -36,7 +37,12 @@ class ShellCallableAction:
         # Handle --rerun option at action invocation time.
         rerun = bool(shell_args.kw_args.get("rerun", False))
 
-        self.action = self.action.with_params(shell_args.kw_args, strict=True)
+        log.info("Action shell args: %s", shell_args)
+
+        # Command-line args overwrite any default values.
+        self.action = self.action.with_params(
+            ParamSettings(shell_args.kw_args), strict=True, overwrite=True
+        )
 
         try:
             if not self.action.interactive_input:

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from copy import copy
 from dataclasses import Field
 from enum import Enum
-from typing import Any, cast, ClassVar, Dict, Iterable, List, Optional, Sequence
+from typing import Any, cast, ClassVar, Dict, List, Optional, Sequence
 
 from pydantic.dataclasses import dataclass
 
@@ -13,7 +13,7 @@ from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.operations_model import Operation, Source
 from kmd.model.output_model import CommandOutput
-from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamValues, TextUnit
+from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamSettings, TextUnit
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.text_docs.diff_filters import DiffFilter
@@ -146,7 +146,6 @@ class Action(ABC):
     """Does this action ask for input interactively?"""
 
     # More specific options that apply only to certain types of actions below.
-    # TODO: Might want to move these into an ActionParams class for clarity.
 
     # Transform-specific options:
     windowing: Optional[WindowSettings] = None
@@ -160,14 +159,6 @@ class Action(ABC):
     title_template: Optional[TitleTemplate] = None
     template: Optional[MessageTemplate] = None
     system_message: Optional[Message] = None
-
-    _NON_PARAM_FIELDS: ClassVar[List[str]] = [
-        "name",
-        "description",
-        "precondition",
-        "expected_args",
-        "interactive_input",
-    ]
 
     # Long or obvious fields we don't want to include in the summary.
     _NON_SUMMARY_FIELDS: ClassVar[List[str]] = [
@@ -219,13 +210,9 @@ class Action(ABC):
                 self.precondition.check(item, f"action `{self.name}`")
 
     def param_names(self) -> List[str]:
-        fields: Iterable[Field] = self.__dataclass_fields__.values()
-        return sorted(
-            set([f.name for f in fields if not f.name.startswith("_")])
-            - set(self._NON_PARAM_FIELDS)
-        )
+        return ["model", "language"]  # FIXME: Make settable.
 
-    def params(self) -> List[Param]:
+    def action_params(self) -> List[Param]:
         return [ALL_COMMON_PARAMS.get(name) or Param(name, type=str) for name in self.param_names()]
 
     def param_summary(self) -> Dict[str, str]:
@@ -254,15 +241,22 @@ class Action(ABC):
         )
         return f"Parameters:\n{summary_str}"
 
-    def with_params(self, param_values: ParamValues, strict: bool = False) -> "Action":
+    def with_params(
+        self, params: ParamSettings, strict: bool = False, overwrite: bool = False
+    ) -> "Action":
         """
         Update the action with the given parameters and return a new Action.
+
+        If strict is True, raise an error for unknown parameters, which we want to refuse
+        for params set on the command line, but tolerate for params from workspace etc.
+
+        Unless overwrite is True, do not overwrite existing parameter values.
         """
         new_instance = copy(self)  # Shallow copy.
         action_param_names = self.param_names()
 
-        overrides = []
-        for param_name, value in param_values.items():
+        overrides: List[str] = []
+        for param_name, value_raw in params.items():
             # Sanity checks.
             if param_name not in ALL_COMMON_PARAMS and param_name not in action_param_names:
                 if strict:
@@ -280,12 +274,21 @@ class Action(ABC):
                 field_info: Field = next(
                     f for f in self.__dataclass_fields__.values() if f.name == param_name
                 )
-                value = instantiate_as_type(value, cast(type, field_info.type))
+                value = instantiate_as_type(value_raw, cast(type, field_info.type))
+            else:
+                value = value_raw
 
             # Update the action.
             if param_name in ALL_COMMON_PARAMS and param_name in action_param_names:
-                setattr(new_instance, param_name, value)
-                overrides.append(format_key_value(param_name, value))
+                if hasattr(new_instance, param_name) and not overwrite:
+                    log.info(
+                        "Not overwriting existing parameter: keeping %s instead of %s",
+                        format_key_value(param_name, getattr(new_instance, param_name)),
+                        format_key_value(param_name, value_raw),
+                    )
+                else:
+                    setattr(new_instance, param_name, value)
+                    overrides.append(format_key_value(param_name, value_raw))
 
         if overrides:
             log.message(

@@ -614,7 +614,7 @@ def param(*args: str) -> None:
                 raise InvalidInput(f"Unrecognized value for parameter `{key}`: {value}")
 
         current_params = ws.get_params()
-        new_params = {**current_params, **new_key_vals}
+        new_params = {**current_params.params, **new_key_vals}
 
         deletes = [key for key, value in new_params.items() if value is None]
         new_params = remove_values(new_params, deletes)

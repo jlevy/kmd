@@ -32,7 +32,7 @@ from kmd.model.file_formats_model import (
     parse_file_format,
 )
 from kmd.model.items_model import Item, ItemId, ItemType
-from kmd.model.params_model import ParamValues
+from kmd.model.params_model import ParamSettings
 from kmd.model.paths_model import StorePath
 from kmd.query.vector_index import WsVectorIndex
 from kmd.text_ui.command_output import output
@@ -457,12 +457,12 @@ class FileStore:
         """Set a global parameter for this workspace."""
         self.params.set(action_params)
 
-    def get_params(self) -> ParamValues:
-        """Get any parameters globally set for this workspace."""
+    def get_params(self) -> ParamSettings:
+        """Get any parameters set globally for this workspace."""
         try:
-            return self.params.read()
+            return ParamSettings(self.params.read())
         except OSError:
-            return {}
+            return ParamSettings({})
 
     def log_store_info(self):
         log.message(

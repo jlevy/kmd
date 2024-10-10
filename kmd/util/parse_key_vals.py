@@ -46,8 +46,15 @@ def parse_key_value(
     return key, value
 
 
+def default_value_formatter(value: Any) -> str:
+    if isinstance(value, str):
+        return shell_quote(value)
+    else:
+        return repr(value)
+
+
 def format_key_value(
-    key: str, value: Any, value_formatter: Callable[[Any], str] = shell_quote
+    key: str, value: Any, value_formatter: Callable[[Any], str] = default_value_formatter
 ) -> str:
     """
     Format a key-value pair as a string like `foo=123` or `bar='some value'`.

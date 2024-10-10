@@ -84,7 +84,7 @@ def output_command_function_help(command: CommandFunction, verbose: bool = True)
 def output_action_help(action: Action, verbose: bool = True):
     params = []
     if verbose:
-        params = action.params() + list(RUNTIME_ACTION_PARAMS.values())
+        params = action.action_params() + list(RUNTIME_ACTION_PARAMS.values())
 
     _output_command_help(
         action.name,

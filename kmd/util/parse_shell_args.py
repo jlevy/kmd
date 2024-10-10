@@ -6,6 +6,7 @@ as bash!).
 
 import ast
 import re
+from dataclasses import dataclass
 from typing import Dict, Iterable, List, Tuple
 
 # Same unsafe chars as shlex.quote().
@@ -91,6 +92,21 @@ def format_command_str(command: str, args: Iterable[str], options: Dict[str, str
     return " ".join(filter(bool, [command, args_str, options_str]))
 
 
+def parse_option(key_value_str: str) -> Tuple[str, str | bool]:
+    """
+    Parse a key-value string like `--foo=123` or `--bar="some value"` into a `(key, value)`
+    tuple.
+    """
+    # Allow -foo or --foo.
+    key_value_str = key_value_str.lstrip("-")
+    key, _, value_str = key_value_str.partition("=")
+    key = key.strip().replace("-", "_")
+    value_str = value_str.strip()
+    value = shell_unquote(value_str) if value_str else True
+
+    return key, value
+
+
 def parse_command_str(command_str: str) -> Tuple[str, List[str], Dict[str, str | bool]]:
     """
     Parse a command string into a command name, arguments, and options, using simplified
@@ -114,18 +130,52 @@ def parse_command_str(command_str: str) -> Tuple[str, List[str], Dict[str, str |
     args = []
     options = {}
     for token in tokens[1:]:
-        if token.startswith("--"):
-            if "=" in token:
-                key, value = token[2:].split("=", 1)
-                value = shell_unquote(value)
-                options[key] = value
-            else:
-                options[token[2:]] = True
+        if token.startswith("-"):
+            key, value = parse_option(token.lstrip("-"))
+            options[key] = value
         else:
             arg = shell_unquote(token)
             args.append(arg)
 
     return name, args, options
+
+
+@dataclass(frozen=True)
+class ShellArgs:
+    pos_args: List[str]
+    kw_args: Dict[str, str | bool]
+    show_help: bool = False
+
+
+def parse_shell_args(args: List[str]) -> ShellArgs:
+    """
+    Parse pre-split shell input arguments into positional and keyword arguments,
+    also handling boolean flags and help.
+
+    ["foo", "--opt1", "--opt2='bar baz'"]
+      -> ShellArgs(pos_args=["foo"], kw_args={"opt1": True, "opt2": "bar baz"}, show_help=False)
+
+    ["foo", "--help"]
+      -> ShellArgs(pos_args=["foo"], kw_args={}, show_help=True)
+    """
+    pos_args: List[str] = []
+    kw_args: Dict[str, str | bool] = {}
+    show_help: bool = False
+
+    i = 0
+    while i < len(args):
+        if args[i].startswith("-"):
+            key, value = parse_option(args[i])
+            if key == "help":
+                show_help = True
+            else:
+                kw_args[key] = value
+            i += 1
+        else:
+            pos_args.append(args[i])
+            i += 1
+
+    return ShellArgs(pos_args=pos_args, kw_args=kw_args, show_help=show_help)
 
 
 ## Tests
@@ -192,6 +242,33 @@ def test_parse_and_format_command_str():
     assert args == []
     assert options == {}
 
-    # Test roundtrip with empty command
+    # Test roundtrip with empty command.
     reconstructed = format_command_str(name, args, options)
     assert reconstructed == empty_command
+
+
+def test_parse_shell_args():
+    args = [
+        "pos1",
+        "pos2",
+        "--key1=value1",
+        "--key2",
+        "pos3",
+        "-k3=value3",
+        "--key4='two words'",
+        "--help",
+    ]
+    shell_args = parse_shell_args(args)
+
+    assert shell_args.pos_args == [
+        "pos1",
+        "pos2",
+        "pos3",
+    ]
+    assert shell_args.kw_args == {
+        "key1": "value1",
+        "key2": True,
+        "k3": "value3",
+        "key4": "two words",
+    }
+    assert shell_args.show_help == True

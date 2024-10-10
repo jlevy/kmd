@@ -7,6 +7,8 @@ from kmd.model.constants import LANGUAGE_LIST
 from kmd.model.language_models import LLM_LIST
 from kmd.model.model_settings import DEFAULT_CAREFUL_LLM, DEFAULT_FAST_LLM
 from kmd.text_docs.sizes import TextUnit
+from kmd.util.format_utils import fmt_lines
+from kmd.util.parse_key_vals import format_key_value
 
 
 log = get_logger(__name__)
@@ -15,7 +17,9 @@ log = get_logger(__name__)
 @dataclass(frozen=True)
 class Param:
     """
-    A settable parameter. May be used globally or as an option on a command or action.
+    Describes a settable parameter. This describes the parameter itself (including type and
+    default value) but not its value. May be used globally or as an option to a command or
+    action.
     """
 
     name: str
@@ -23,6 +27,10 @@ class Param:
     valid_values: Optional[List[str]] = None
     default_value: Optional[str] = None
     type: Type = str
+
+    def __post_init__(self):
+        if not self.name or not self.name.replace("_", "").isalnum():
+            raise ValueError(f"Not a valid param name: {repr(self.name)}")
 
     def full_description(self) -> str:
         desc = self.description or ""
@@ -100,43 +108,52 @@ COMMON_ACTION_PARAMS = {
     ),
 }
 
-# Parameters that are available when an action is invoked.
+# Extra parameters that are available when an action is invoked.
 RUNTIME_ACTION_PARAMS = {
     "rerun": Param(
         "rerun",
         "Rerun an action that would otherwise be skipped because the output already exists.",
         type=bool,
     ),
-    # TODO: Implement.
-    # "refetch": Param(
-    #     "refetch",
-    #     "Do not take content from media and web page caches. Re-fetch and update cache instead.",
-    #     type=bool,
-    # ),
 }
 
 USER_SETTABLE_PARAMS = {**GLOBAL_PARAMS, **COMMON_ACTION_PARAMS}
 
 ALL_COMMON_PARAMS = {**GLOBAL_PARAMS, **COMMON_ACTION_PARAMS, **RUNTIME_ACTION_PARAMS}
 
-ParamValues = Dict[str, Any]
 
-
-def param_lookup(params: ParamValues, param_name: str, defaults: Dict[str, Param]) -> Optional[Any]:
+class ParamSettings:
     """
-    Look up a parameter value, falling back to parameter defaults.
+    A set of parameter values. These are in raw string or bool format, since they
+    are persisted that way.
     """
-    value = params.get(param_name)
-    if value is None:
-        param = defaults.get(param_name)
-        if param is None:
-            raise ValueError(f"Parameter not found: {param_name}")
-        value = param.default_value
-    return value
 
+    def __init__(self, params: Optional[Dict[str, str | bool]] = None):
+        self.params = params or {}
 
-# TODO: Consider adding params for:
-# - window settings
-# - source extractor
-# - citation formatter
-# - web cache
+    def items(self):
+        return self.params.items()
+
+    def lookup(self, param_name: str, defaults: Dict[str, Param]) -> Optional[Any]:
+        """
+        Look up a parameter value, falling back to parameter defaults.
+        """
+        value = self.params.get(param_name)
+        if value is None:
+            param = defaults.get(param_name)
+            if param is None:
+                raise ValueError(f"Parameter not found: {param_name}")
+            value = param.default_value
+        return value
+
+    def as_str(self) -> str:
+        if self.items():
+            return fmt_lines([format_key_value(name, value) for name, value in self.items()])
+        else:
+            return fmt_lines(["(no parameters)"])
+
+    def as_str_brief(self):
+        return str(self.params)
+
+    def __str__(self):
+        return self.as_str_brief()

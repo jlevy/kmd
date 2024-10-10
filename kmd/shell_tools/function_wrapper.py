@@ -5,7 +5,7 @@ from kmd.config.logger import get_logger
 from kmd.errors import InvalidCommand
 from kmd.help.command_help import output_command_function_help
 from kmd.shell_tools.function_inspect import FuncParam, inspect_function_params
-from kmd.shell_tools.option_parsing import parse_shell_args
+from kmd.util.parse_shell_args import parse_shell_args
 
 log = get_logger(__name__)
 

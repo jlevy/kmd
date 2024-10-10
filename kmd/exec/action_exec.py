@@ -79,7 +79,7 @@ def run_action(
     ws_params = ws.get_params()
 
     # Update the action with any overridden params.
-    log.info("Parameters from workspace: %s", ws_params)
+    log.info("Parameters from workspace:\n%s", ws_params.as_str())
     if ws_params:
         action = action.with_params(ws_params)
 

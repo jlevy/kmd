@@ -169,7 +169,7 @@ def options_completer(context: CompletionContext) -> CompleterResult:
                 params = annotate_param_info(command)
             elif action:
                 help_text = "Show more help for this action."
-                params = action.params()
+                params = action.action_params()
 
             completions = _param_completions(params, prefix)
 

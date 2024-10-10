@@ -13,11 +13,11 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class FirecrawlPage(PerItemAction):
+class CrawlWebpageText(PerItemAction):
     def __init__(self):
         super().__init__(
-            name="firecrawl_page",
-            description="Crawl a web page using Firecrawl's LLM-powered web crawler and save it in Markdown.",
+            name="crawl_webpage_text",
+            description="Crawl a web page using Firecrawl's web crawler and save it in Markdown.",
             precondition=is_url,
             cachable=False,
         )

@@ -84,8 +84,7 @@ from kmd.model.params_model import (
     COMMON_ACTION_PARAMS,
     GLOBAL_PARAMS,
     Param,
-    param_lookup,
-    ParamValues,
+    ParamSettings,
     RUNTIME_ACTION_PARAMS,
     USER_SETTABLE_PARAMS,
 )
