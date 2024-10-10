@@ -1422,6 +1422,22 @@ files = [
 ]
 
 [[package]]
+name = "exa-py"
+version = "1.4.0"
+description = "Python SDK for Exa API."
+optional = false
+python-versions = "*"
+files = [
+    {file = "exa_py-1.4.0-py3-none-any.whl", hash = "sha256:89e425c44ee8a78e57ca831a2b1c12adfc75be0ac5c1de0c6ab49f91b0c5398b"},
+    {file = "exa_py-1.4.0.tar.gz", hash = "sha256:d31e13ab290203c44f7fe66ae34c9ad3329e0d9fb7a346d96b206e1d0f647eed"},
+]
+
+[package.dependencies]
+openai = ">=1.10.0"
+requests = "*"
+typing-extensions = "*"
+
+[[package]]
 name = "fastapi"
 version = "0.115.0"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
@@ -7194,4 +7210,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "a78d1ed7233212ff7b297e1eee7d9adcdba5a77bd3cf6e039b626d854cc7c83e"
+content-hash = "3fe84c8eb3abd970ed29c6cc21023d1e6f0a53ff4039a95ee6963aac13fe6576"

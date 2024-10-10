@@ -33,7 +33,7 @@ we now have.
 
 Kmd makes it easier to use APIs and tools such as **OpenAI GPT-4o and o1**, **Anthropic
 Claude 3.5**, **Groq Llama 3.1** (and any others via **LiteLLM**), **Deepgram**,
-**Firecrawl**, **LlamaIndex**, **ChromaDB**, and any other Python tools.
+**Firecrawl**, **Exa**, **LlamaIndex**, **ChromaDB**, and other Python tools.
 
 Use commands to transcribe videos, summarize and organize transcripts and notes, write blog
 posts, extract or visualize concepts, check citations, convert notes to PDFs or beautifully
@@ -285,8 +285,8 @@ For Windows or other platforms, see the pyenv and poetry instructions.
 ### API Key Setup
 
 You will need API keys for all services you wish to use.
-Configuring OpenAI, Anthropic, Groq (for Llama 3), Deepgram (for transcriptions) and
-Firecrawl (for web crawling and scraping) are recommended.
+Configuring OpenAI, Anthropic, Groq (for Llama 3), Deepgram (for transcriptions), Firecrawl
+(for web crawling and scraping), and Exa (for web search) are recommended.
 
 These keys should go in the `.env` file in your current directory.
 
