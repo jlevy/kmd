@@ -22,8 +22,8 @@ Complex should be possible.*” —Alan Kay
 </div>
 
 *⚠️ Pre-release and experimental!
-[Follow me](https://x.com/ojoshe) for future updates and please DM me if you have ideas or
-feedback.*
+[Follow me](https://x.com/ojoshe) for future updates and please DM me if you have use cases
+for Kmd or ideas or feedback.*
 
 ## What is Kmd?
 
@@ -44,7 +44,8 @@ tools in the right ways.
 
 I'd like to give a little motivation for experimenting with Kmd and why I think it's
 potentially so useful.
-But if you want to just try it, jump to [Getting Started](#getting-started)!
+But jump ahead to [examples](#examples) to get an idea of what it can do.
+If you just want to try it, jump to [Getting Started](#getting-started)!
 
 The goals of Kmd are:
 
@@ -315,7 +316,19 @@ active (such as using `pyenv`), then:
 
 This does a pip install of the wheel so you can run it as `kmd`.
 
-### Using Kmd
+### Other Ways to Run Kmd
+
+If desired, you can also run Kmd directly from your regular shell, by giving a Kmd shell
+command.
+
+```
+# Transcribe a video and summarize it:
+mkdir myworkspace.kb
+cd myworkspace.kb
+kmd transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
+```
+
+## Examples
 
 Tab completion is your friend!
 Just press tab to get lists of commands and guidance on help from the LLM-based assistant.
@@ -344,7 +357,7 @@ how do I get started with a new workspace?
 workspace fitness
 
 # A short transcription (use this one or pick any video on YouTube):
-transcribe 'https://www.youtube.com/watch?v=KLSRg2s3SSY'
+transcribe https://www.youtube.com/watch?v=KLSRg2s3SSY
 
 # Take a look at the output:
 show
@@ -361,40 +374,58 @@ show
 break_into_paragraphs
 show
 
-# Look at the paragraphs and (by looking at the document this text
-# doc was derived from) infer the timestamps and backfill them, inserting
-# timestamped link to the YouTube video at the end of each paragraph.
+# Look at the paragraphs and (by following the `derived_from` relation
+# this doc up to find the original source) then infer the timestamps
+# and backfill them, inserting timestamped link to the YouTube video
+# at the end of each paragraph.
 backfill_timestamps
 show
 
 # Render it as a PDF:
 create_pdf
 
-# See the PDF:
+# See the PDF.
 show
 
-# See all the files we have created so far:
+# Cool. But it would be nice to have some frame captures from the video.
+are there any actions to get screen captures from the video?
+
+# Oh yep, there is!
+# But we're going to want to run it on the previous doc, not the PDF.
+# Let's see what the files were.
 files
 
-# Browse more detailed system logs (for debugging when necessary):
+# And select that file and confirm it looks like it has timestamps.
+# (Pick the right name, the one with backfill_timestamps in it.)
+select docs/training_for_life_step06_backfill_timestamps.doc.md
+show
+
+# Okay let's try it.
+insert_frame_captures
+
+# Let's look at that as a web page.
+show_as_webpage
+
+# (Note that's a bit of a trick, since that action is running other
+# actions that convert the document into a nicer HTML format.)
+
+# What if something isn't working right?
+# Sometimes we may want to browse more detailed system logs:
 logs
 
 # Note transcription works with multiple speakers, thanks to Deepgram
 # diarization. 
-transcribe 'https://www.youtube.com/watch?v=_8djNYprRDI'
+transcribe https://www.youtube.com/watch?v=_8djNYprRDI
 show
 
 # We can create more advanced commands that combine sequences of actions.
 # This command does everything we just did above: transcribe, format,
 # and include timestamps for each paragraph.
-transcribe_format 'https://www.youtube.com/watch?v=_8djNYprRDI'
+transcribe_format https://www.youtube.com/watch?v=_8djNYprRDI
 
 # Getting a little fancier, this one adds little paragraph annotations and
 # a nicer summary at the top:
-transcribe_annotate_summarize 'https://www.youtube.com/watch?v=_8djNYprRDI'
-
-# Time to see it in a prettier form. Let's look at that as a web page:
-show_as_webpage
+transcribe_annotate_summarize https://www.youtube.com/watch?v=_8djNYprRDI
 
 # A few more possibilities...
 
@@ -420,29 +451,18 @@ graph_view --concepts_only
 
 # We can also list all videos on a channel, saving links to each one as
 # a resource .yml file:
-list_channel 'https://www.youtube.com/@Kboges'
+list_channel https://www.youtube.com/@Kboges
 
 # Look at what we have and transcribe a couple more:
 files resources
 transcribe resources/quality_first.resource.yml resources/why_we_train.resource.yml
 
-# Another important thing to note is you can process a really long document.
+# Another interesting note: you can process a really long document.
 # This one is a 3-hour interview. Kmd uses sliding windows that process a
 # group of paragraphs at a time, then stitches the results back together:
-transcribe_format 'https://www.youtube.com/watch?v=juD99_sPWGU'
+transcribe_format https://www.youtube.com/watch?v=juD99_sPWGU
 
 show_as_webpage
-```
-
-### Other Ways to Run Kmd
-
-You can also run Kmd directly from your regular shell, by giving a Kmd shell command.
-
-```
-# Transcribe a video and summarize it:
-mkdir myworkspace.kb
-cd myworkspace.kb
-kmd transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
 ```
 
 ## Tips for Use with Other Tools
