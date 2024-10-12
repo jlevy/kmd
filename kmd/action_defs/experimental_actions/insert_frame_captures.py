@@ -1,11 +1,13 @@
 from typing import List
 
+from pydantic.dataclasses import dataclass
+
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.file_storage.workspaces import current_workspace
 from kmd.media.video_frames import capture_frames
-from kmd.model import Format, FRAME_CAPTURE, Item, ItemType, MediaType, PerItemAction
+from kmd.model import Format, FRAME_CAPTURE, Item, ItemType, MediaType, PerItemAction, Precondition
 from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
 from kmd.provenance.source_items import find_upstream_resource
 from kmd.provenance.timestamps import TimestampExtractor
@@ -21,15 +23,16 @@ log = get_logger(__name__)
 
 
 @kmd_action
+@dataclass
 class InsertFrameCaptures(PerItemAction):
-    def __init__(self):
-        super().__init__(
-            name="insert_frame_captures",
-            description="""
-              Look for timestamped video links and insert frame captures after each one.
-              """,
-            precondition=is_text_doc & has_timestamps,
-        )
+
+    name: str = "insert_frame_captures"
+
+    description: str = """
+        Look for timestamped video links and insert frame captures after each one.
+        """
+
+    precondition: Precondition = is_text_doc & has_timestamps
 
     def run_item(self, item: Item) -> Item:
         if not item.body:

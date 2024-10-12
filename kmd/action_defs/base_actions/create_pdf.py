@@ -6,7 +6,17 @@ from kmd.exec.action_registry import kmd_action
 from kmd.file_storage.workspaces import current_workspace
 from kmd.lang_tools.clean_headings import clean_heading
 from kmd.media.pdf_output import html_to_pdf
-from kmd.model import Action, ActionInput, ActionResult, FileExt, Format, ItemType, ONE_ARG
+from kmd.model import (
+    Action,
+    ActionInput,
+    ActionResult,
+    ArgCount,
+    FileExt,
+    Format,
+    ItemType,
+    ONE_ARG,
+    Precondition,
+)
 from kmd.preconditions.precondition_defs import has_text_body
 
 log = get_logger(__name__)
@@ -14,13 +24,14 @@ log = get_logger(__name__)
 
 @kmd_action
 class CreatePDF(Action):
-    def __init__(self):
-        super().__init__(
-            name="create_pdf",
-            description="Create a PDF from text or Markdown.",
-            expected_args=ONE_ARG,
-            precondition=has_text_body,
-        )
+
+    name: str = "create_pdf"
+
+    description: str = "Create a PDF from text or Markdown."
+
+    expected_args: ArgCount = ONE_ARG
+
+    precondition: Precondition = has_text_body
 
     def run(self, items: ActionInput) -> ActionResult:
         item = items[0]

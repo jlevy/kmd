@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, ClassVar, Optional
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
@@ -70,6 +70,21 @@ class Precondition:
         for precondition in preconditions[1:]:
             combined = combined | precondition
         return combined
+
+    always: ClassVar["Precondition"]
+    """
+    Precondition that is always true.
+    """
+
+    never: ClassVar["Precondition"]
+    """
+    Precondition that is always false.
+    """
+
+
+Precondition.always = Precondition(lambda item: True, "always")
+
+Precondition.never = Precondition(lambda item: False, "never")
 
 
 def precondition(func: Callable[[Item], bool]) -> Precondition:

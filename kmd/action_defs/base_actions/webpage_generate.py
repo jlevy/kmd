@@ -1,6 +1,17 @@
 from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
-from kmd.model import Action, ActionInput, ActionResult, FileExt, Format, Item, ItemType, ONE_ARG
+from kmd.model import (
+    Action,
+    ActionInput,
+    ActionResult,
+    ArgCount,
+    FileExt,
+    Format,
+    Item,
+    ItemType,
+    ONE_ARG,
+    Precondition,
+)
 from kmd.preconditions.precondition_defs import is_config
 from kmd.web_gen.tabbed_webpage import webpage_generate
 
@@ -9,13 +20,14 @@ log = get_logger(__name__)
 
 @kmd_action
 class WebpageGenerate(Action):
-    def __init__(self):
-        super().__init__(
-            name="webpage_generate",
-            description="Generate a web page from a configured web page item.",
-            expected_args=ONE_ARG,
-            precondition=is_config,
-        )
+
+    name: str = "webpage_generate"
+
+    description: str = "Generate a web page from a configured web page item."
+
+    expected_args: ArgCount = ONE_ARG
+
+    precondition: Precondition = is_config
 
     def run(self, items: ActionInput) -> ActionResult:
         config_item = items[0]

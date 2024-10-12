@@ -1,5 +1,4 @@
-from dataclasses import field
-from typing import List, Optional
+from typing import Iterable, List, Optional, Tuple
 
 from pydantic.dataclasses import dataclass
 
@@ -15,7 +14,7 @@ from kmd.util.type_utils import not_none
 log = get_logger(__name__)
 
 
-def look_up_actions(action_names: List[str]) -> List[Action]:
+def look_up_actions(action_names: Iterable[str]) -> List[Action]:
     from kmd.action_defs import look_up_action
 
     return [look_up_action(action_name) for action_name in action_names]
@@ -27,7 +26,7 @@ class SequenceAction(Action):
     A sequential action that chains the outputs of each action to the inputs of the next.
     """
 
-    action_names: List[str] = field(default_factory=list)
+    action_names: Tuple[str, ...] = ()
 
     def __post_init__(self):
         if not self.action_names or len(self.action_names) <= 1:
@@ -115,8 +114,9 @@ class ComboAction(Action):
     An action that combines the results of other actions.
     """
 
-    action_names: List[str] = field(default_factory=list)
-    combiner: Optional[Combiner] = field(default=None)
+    action_names: Tuple[str, ...] = ()
+
+    combiner: Optional[Combiner] = None
 
     def __post_init__(self):
         if not self.action_names or len(self.action_names) <= 1:

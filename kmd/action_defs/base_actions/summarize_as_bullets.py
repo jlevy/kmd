@@ -1,12 +1,9 @@
-from pydantic.dataclasses import dataclass
-
 from kmd.exec.action_registry import kmd_action
 from kmd.model import LLMAction, Message, MessageTemplate, TitleTemplate
 from kmd.text_docs.window_settings import WINDOW_128_PARA, WindowSettings
 
 
 @kmd_action
-@dataclass
 class SummarizeAsBullets(LLMAction):
 
     name: str = "summarize_as_bullets"

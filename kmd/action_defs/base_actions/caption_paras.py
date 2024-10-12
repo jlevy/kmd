@@ -24,61 +24,62 @@ log = get_logger(__name__)
 
 @kmd_action
 class CaptionParas(LLMAction):
-    def __init__(self):
-        super().__init__(
-            name="caption_paras",
-            description="Caption each paragraph in the text with a very short summary.",
-            system_message=Message(
-                """
-                You are a careful and precise editor.
-                You give exactly the results requested without additional commentary.
-                """
-            ),
-            template=MessageTemplate(
-                """
-                You are a careful and precise editor. You are asked to describe what is said in the following
-                one or two paragraphs, as a sort of summary or caption for the content. Rules:
 
-                - Mention only the most important points. Include all the key topics discussed.
-                
-                - Keep the caption short! Use one or two short, complete sentences. It must be significantly
-                  shorter than the input text.
-                
-                - Write in clean and and direct language.
+    name: str = "caption_paras"
 
-                - Do not mention the text or the author. Simply state the points as presented.
+    description: str = "Caption each paragraph in the text with a very short summary."
 
-                - If the content contains other promotional material or only references information such as
-                  about what will be discussed later, ignore it.
+    system_message: Message = Message(
+        """
+        You are a careful and precise editor.
+        You give exactly the results requested without additional commentary.
+        """
+    )
 
-                - DO NOT INCLUDE any other commentary.
+    template: MessageTemplate = MessageTemplate(
+        """
+        You are a careful and precise editor. You are asked to describe what is said in the following
+        one or two paragraphs, as a sort of summary or caption for the content. Rules:
 
-                - If the input is very short or so unclear you can't summarize it, simply output
-                  "(No results)".
+        - Mention only the most important points. Include all the key topics discussed.
+        
+        - Keep the caption short! Use one or two short, complete sentences. It must be significantly
+            shorter than the input text.
+        
+        - Write in clean and and direct language.
 
-                Sample input text:
+        - Do not mention the text or the author. Simply state the points as presented.
 
-                I think push ups are one of the most underrated exercises out there and they're also one of
-                the exercises that is most frequently performed with poor technique.
-                And I think this is because a lot of people think it's just an easy exercise and they adopt
-                a form that allows them to achieve a rep count that they would expect from an easy exercise,
-                but all that ends up happening is they they do a bunch of poor quality repetitions in order
-                to get a high rep count. So I don't think push ups are particularly easy when they're done well
-                and they're really effective for building just general fitness and muscle in the upper body
-                if you do them properly. So here's how you get the most out of them.
+        - If the content contains other promotional material or only references information such as
+            about what will be discussed later, ignore it.
 
-                Sample output text:
+        - DO NOT INCLUDE any other commentary.
 
-                Push ups are an underrated exercise. They are not easy to do well so are often done poorly.
+        - If the input is very short or so unclear you can't summarize it, simply output
+            "(No results)".
 
-                Input text:
+        Sample input text:
 
-                {body}
+        I think push ups are one of the most underrated exercises out there and they're also one of
+        the exercises that is most frequently performed with poor technique.
+        And I think this is because a lot of people think it's just an easy exercise and they adopt
+        a form that allows them to achieve a rep count that they would expect from an easy exercise,
+        but all that ends up happening is they they do a bunch of poor quality repetitions in order
+        to get a high rep count. So I don't think push ups are particularly easy when they're done well
+        and they're really effective for building just general fitness and muscle in the upper body
+        if you do them properly. So here's how you get the most out of them.
 
-                Output text:
-                """
-            ),
-        )
+        Sample output text:
+
+        Push ups are an underrated exercise. They are not easy to do well so are often done poorly.
+
+        Input text:
+
+        {body}
+
+        Output text:
+        """
+    )
 
     def run_item(self, item: Item) -> Item:
 

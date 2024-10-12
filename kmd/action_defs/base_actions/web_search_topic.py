@@ -7,7 +7,7 @@ from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.model import Item
-from kmd.model.actions_model import Action, ActionInput, ActionResult, ONE_ARG
+from kmd.model.actions_model import Action, ActionInput, ActionResult, ArgCount, ONE_ARG
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import ItemType
 
@@ -16,12 +16,12 @@ log = get_logger(__name__)
 
 @kmd_action
 class WebSearchTopic(Action):
-    def __init__(self):
-        super().__init__(
-            name="web_search_topic",
-            description="Search the web for information on a topic.",
-            expected_args=ONE_ARG,
-        )
+
+    name: str = "web_search_topic"
+
+    description: str = "Search the web for information on a topic."
+
+    expected_args: ArgCount = ONE_ARG
 
     def run(self, items: ActionInput) -> ActionResult:
         item = items[0]

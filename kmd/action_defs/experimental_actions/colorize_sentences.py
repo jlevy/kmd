@@ -1,6 +1,6 @@
 from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
-from kmd.model import Format, Item, ItemType, PerItemAction
+from kmd.model import Format, Item, ItemType, PerItemAction, Precondition
 from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.text_docs.text_doc import TextDoc, TextUnit
 from kmd.text_formatting.html_in_md import html_span
@@ -23,12 +23,12 @@ def color_by_length(count: int) -> str:
 
 @kmd_action
 class ColorizeSentences(PerItemAction):
-    def __init__(self):
-        super().__init__(
-            name="colorize_sentences",
-            description="Color each sentence based on its length.",
-            precondition=is_text_doc,
-        )
+
+    name: str = "colorize_sentences"
+
+    description: str = "Color each sentence based on its length."
+
+    precondition: Precondition = is_text_doc
 
     def run_item(self, item: Item) -> Item:
         if not item.body:

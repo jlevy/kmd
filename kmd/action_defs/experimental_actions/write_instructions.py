@@ -1,19 +1,21 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.form_input.prompt_input import prompt_simple_string
-from kmd.model import Action, ActionInput, ActionResult, Format, Item, ItemType, NO_ARGS
+from kmd.model import Action, ActionInput, ActionResult, ArgCount, Format, Item, ItemType, NO_ARGS
 
 
 @kmd_action
 class WriteInstructions(Action):
-    def __init__(self):
-        super().__init__(
-            name="write_instructions",
-            description="Write a chat item with system and user instructions.",
-            expected_args=NO_ARGS,
-            interactive_input=True,
-            cachable=False,
-        )
+
+    name: str = "write_instructions"
+
+    description: str = "Write a chat item with system and user instructions."
+
+    expected_args: ArgCount = NO_ARGS
+
+    interactive_input: bool = True
+
+    cachable: bool = False
 
     def run(self, items: ActionInput) -> ActionResult:
         chat_history = ChatHistory()

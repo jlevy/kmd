@@ -1,6 +1,8 @@
+from typing import Tuple
+
 from kmd.commands.command_defs import show
 from kmd.exec.action_registry import kmd_action
-from kmd.model.actions_model import ActionInput, ActionResult
+from kmd.model.actions_model import ActionInput, ActionResult, Precondition
 from kmd.model.commands_model import Command
 from kmd.model.compound_actions_model import SequenceAction
 from kmd.model.output_model import CommandOutput
@@ -9,13 +11,14 @@ from kmd.preconditions.precondition_defs import has_text_body, is_html
 
 @kmd_action
 class ShowAsWebpage(SequenceAction):
-    def __init__(self):
-        super().__init__(
-            name="show_as_webpage",
-            action_names=["webpage_config", "webpage_generate"],
-            description="Show text, Markdown, or HTML as a nicely formatted webpage.",
-            precondition=is_html | has_text_body,
-        )
+
+    name: str = "show_as_webpage"
+
+    description: str = "Show text, Markdown, or HTML as a nicely formatted webpage."
+
+    action_names: Tuple[str, ...] = ("webpage_config", "webpage_generate")
+
+    precondition: Precondition = is_html | has_text_body
 
     def run(self, items: ActionInput) -> ActionResult:
         result = super().run(items)

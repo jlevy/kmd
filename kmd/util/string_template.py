@@ -20,10 +20,14 @@ class StringTemplate:
     """
 
     template: str
+
     allowed_fields: List[Union[str, Tuple[str, Optional[Type]]]] = field(
         default_factory=lambda: ["title"]
     )
     """List of allowed field names. If `d` or `f` formats are used, give tuple with the type."""
+
+    strict: bool = False
+    """If True, raise a ValueError if the template is missing an allowed field."""
 
     def __post_init__(self):
         if not isinstance(self.template, str):
@@ -53,7 +57,7 @@ class StringTemplate:
         field_types = self._field_types()
         allowed_keys = field_types.keys()
         unexpected_keys = set(kwargs.keys()) - allowed_keys
-        if unexpected_keys:
+        if self.strict and unexpected_keys:
             raise ValueError(f"Unexpected keyword arguments: {', '.join(unexpected_keys)}")
 
         # Type check the values, if types were provided.

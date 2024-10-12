@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import cast, Optional
 
 from kmd.config import setup
 from kmd.config.logger import get_logger
@@ -8,6 +8,7 @@ from kmd.model.actions_model import ExecContext
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType, UNTITLED
 from kmd.model.language_models import LLM
+from kmd.model.llm_actions_model import LLMAction
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_docs.diff_filters import accept_all, DiffFilter
 from kmd.text_docs.sliding_transforms import filtered_transform, WindowSettings
@@ -50,7 +51,9 @@ def windowed_llm_transform(
 
 
 def llm_transform_str(context: ExecContext, input_str: str, check_no_results: bool = True) -> str:
-    action = context.action
+    assert isinstance(context.action, LLMAction)
+    action = cast(LLMAction, context.action)
+
     if not action.model:
         raise InvalidInput(f"LLM action `{action.name}` is missing a model")
     if not action.system_message:
@@ -60,7 +63,7 @@ def llm_transform_str(context: ExecContext, input_str: str, check_no_results: bo
 
     setup.api_setup()
 
-    if action.windowing:
+    if action.windowing and action.windowing.size:
         log.message(
             "Running LLM `%s` sliding transform for action `%s`: %s %s",
             action.model,

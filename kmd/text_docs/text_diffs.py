@@ -96,6 +96,11 @@ class DiffStats:
 
 DiffFilter = Callable[[DiffOp], bool]
 
+DIFF_FILTER_NONE: DiffFilter = lambda op: True
+"""
+Diff filter that accepts all diff operations.
+"""
+
 
 @dataclass
 class TextDiff:

@@ -48,7 +48,7 @@ def filtered_transform(
     """
     has_filter = diff_filter != accept_all
 
-    if not windowing:
+    if not windowing or not windowing.size:
         transformed_doc = transform_func(doc)
     else:
 

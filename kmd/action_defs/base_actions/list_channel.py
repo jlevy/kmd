@@ -2,7 +2,7 @@ from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.media.media_services import canonicalize_media_url, list_channel_items
-from kmd.model import Action, ActionInput, ActionResult, Item
+from kmd.model import Action, ActionInput, ActionResult, Item, Precondition
 from kmd.preconditions.precondition_defs import is_url
 
 log = get_logger(__name__)
@@ -10,12 +10,13 @@ log = get_logger(__name__)
 
 @kmd_action
 class ListChannel(Action):
-    def __init__(self):
-        super().__init__(
-            name="list_channel",
-            description="Get the URL of every audio or video item in a given media channel (YouTube, Apple Podcasts, etc.).",
-            precondition=is_url,
-        )
+    name: str = "list_channel"
+
+    description: str = (
+        "Get the URL of every audio or video item in a given media channel (YouTube, Apple Podcasts, etc.)."
+    )
+
+    precondition: Precondition = is_url
 
     def run(self, items: ActionInput) -> ActionResult:
         item = items[0]

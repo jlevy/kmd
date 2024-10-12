@@ -7,8 +7,10 @@ from kmd.model import (
     Action,
     ActionInput,
     ActionResult,
+    ArgCount,
     PathOp,
     PathOpType,
+    Precondition,
     StorePath,
     TWO_OR_MORE_ARGS,
 )
@@ -22,15 +24,17 @@ log = get_logger(__name__)
 
 @kmd_action
 class FindNearDuplicates(Action):
-    def __init__(self):
-        super().__init__(
-            name="find_near_duplicates",
-            description="""
-                Look at input items and find near duplicate items using text embeddings, based on title or body.
-                """,
-            expected_args=TWO_OR_MORE_ARGS,
-            precondition=is_concept | is_text_doc,
-        )
+    name: str = "find_near_duplicates"
+
+    description: str = (
+        """
+        Look at input items and find near duplicate items using text embeddings, based on title or body.
+        """
+    )
+
+    expected_args: ArgCount = TWO_OR_MORE_ARGS
+
+    precondition: Precondition = is_concept | is_text_doc
 
     def run(self, items: ActionInput) -> ActionResult:
         keyvals = [(not_none(item.store_path), item.full_text()) for item in items]

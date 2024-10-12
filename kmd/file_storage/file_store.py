@@ -178,6 +178,7 @@ class FileStore:
         Best effort to see if an item with the same identity is already in the store.
         """
         item_id = item.item_id()
+        log.info("Looking for item by id: %s", item_id)
         if not item_id:
             return None
         else:

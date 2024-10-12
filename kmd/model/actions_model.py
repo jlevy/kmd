@@ -16,7 +16,8 @@ from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamList, ParamVal
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.text_docs.diff_filters import DiffFilter
-from kmd.text_docs.window_settings import WindowSettings
+from kmd.text_docs.text_diffs import DIFF_FILTER_NONE
+from kmd.text_docs.window_settings import WINDOW_NONE, WindowSettings
 from kmd.text_ui.command_output import fill_text
 from kmd.util.format_utils import fmt_lines
 from kmd.util.obj_utils import abbreviate_obj
@@ -41,6 +42,7 @@ TWO_OR_MORE_ARGS = ArgCount(2, None)
 TWO_ARGS = ArgCount(2, 2)
 
 
+@dataclass(frozen=True)
 class TitleTemplate(StringTemplate):
     """A template for a title."""
 
@@ -134,7 +136,7 @@ class Action(ABC):
     If True, the action execution may be skipped if the output is already present.
     """
 
-    precondition: Optional[Precondition] = None
+    precondition: Precondition = Precondition.always
     """
     A precondition that must apply to all inputs to this action. Helps select whether
     an action is applicable to an item.
@@ -177,13 +179,13 @@ class Action(ABC):
     # More specific options that apply only to certain types of actions below.
 
     # Transform-specific options:
-    windowing: Optional[WindowSettings] = None
-    diff_filter: Optional[DiffFilter] = None
+    windowing: WindowSettings = WINDOW_NONE
+    diff_filter: DiffFilter = DIFF_FILTER_NONE
 
     # LLM-specific options:
-    title_template: Optional[TitleTemplate] = None
-    template: Optional[MessageTemplate] = None
-    system_message: Optional[Message] = None
+    title_template: TitleTemplate = TitleTemplate("{title}")
+    template: MessageTemplate = MessageTemplate("{body}")
+    system_message: Message = Message("")
 
     def __post_init__(self):
         self.description = fill_text(self.description)

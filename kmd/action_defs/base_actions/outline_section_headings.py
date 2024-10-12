@@ -1,23 +1,25 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model import LLMAction, Message, MessageTemplate, TitleTemplate
-from kmd.text_docs.window_settings import WINDOW_128_PARA
+from kmd.text_docs.window_settings import WINDOW_128_PARA, WindowSettings
 
 
 @kmd_action
 class OutlineSectionHeadings(LLMAction):
-    def __init__(self):
-        super().__init__(
-            name="outline_section_headings",
-            description="Outline a text as a list of section headings.",
-            system_message=Message(
-                """
+    name: str = "outline_section_headings"
+
+    description: str = "Outline a text as a list of section headings."
+
+    system_message: Message = Message(
+        """
                 You are a careful and precise editor.
                 You give exactly the results requested without additional commentary.
-                """
-            ),
-            title_template=TitleTemplate("Outline of {title}"),
-            template=MessageTemplate(
-                """
+        """
+    )
+
+    title_template: TitleTemplate = TitleTemplate("Outline of {title}")
+
+    template: MessageTemplate = MessageTemplate(
+        """
                 Give an outline of everything covered in the following text.
 
                 - Format your response as a list of bullet points in Markdown format.
@@ -45,6 +47,6 @@ class OutlineSectionHeadings(LLMAction):
 
                 Outline:
                 """
-            ),
-            windowing=WINDOW_128_PARA,
-        )
+    )
+
+    windowing: WindowSettings = WINDOW_128_PARA

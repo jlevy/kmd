@@ -1,7 +1,7 @@
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
-from kmd.model import Item, ItemType, PerItemAction
+from kmd.model import Item, ItemType, PerItemAction, Precondition
 from kmd.preconditions.precondition_defs import has_html_body, has_text_body
 from kmd.text_formatting.html_find_tags import html_find_tag
 from kmd.util.string_replace import replace_multiple
@@ -11,16 +11,17 @@ log = get_logger(__name__)
 
 @kmd_action
 class RemoveSpeakerLabels(PerItemAction):
-    def __init__(self):
-        super().__init__(
-            name="remove_speaker_labels",
-            description="""
-            Remove speaker labels (<span data-speaker-id=...>...</span>)
-            from the transcript. Handy when the transcription has added them
-            erroneously.
-            """,
-            precondition=has_html_body | has_text_body,
-        )
+
+    name: str = "remove_speaker_labels"
+
+    description: str = (
+        """
+        Remove speaker labels (<span data-speaker-id=...>...</span>) from the transcript.
+        Handy when the transcription has added them erroneously.
+        """
+    )
+
+    precondition: Precondition = has_html_body | has_text_body
 
     def run_item(self, item: Item) -> Item:
         if not item.body:

@@ -1,5 +1,3 @@
-from pydantic.dataclasses import dataclass
-
 from kmd.exec.action_registry import kmd_action
 from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.form_input.prompt_input import prompt_simple_string
@@ -22,7 +20,6 @@ from kmd.text_ui.command_output import output_assistance, output_response
 
 
 @kmd_action
-@dataclass
 class Chat(Action):
 
     name: str = "chat"

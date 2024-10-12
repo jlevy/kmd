@@ -1,7 +1,7 @@
 from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.model import LLM, LLMAction, Message, MessageTemplate
-from kmd.text_docs.window_settings import WINDOW_256_PARA
+from kmd.text_docs.window_settings import WINDOW_256_PARA, WindowSettings
 
 
 log = get_logger(__name__)
@@ -9,47 +9,49 @@ log = get_logger(__name__)
 
 @kmd_action
 class Proofread(LLMAction):
-    def __init__(self):
-        super().__init__(
-            name="proofread",
-            description="Proofread text, only fixing spelling, punctuation, and grammar.",
-            model=LLM.o1_mini,
-            system_message=Message(
-                """
-                You are a careful and precise editor.
-                You give exactly the results requested without additional commentary.
-                """
-            ),
-            template=MessageTemplate(
-                """
-                Proofread the following text according to these rules:
+    name: str = "proofread"
 
-                - Correct only typos or spelling, grammar, capitalization, or punctuation mistakes.
+    description: str = "Proofread text, only fixing spelling, punctuation, and grammar."
 
-                - Write out only the final corrected text.
+    system_message: Message = Message(
+        """
+        You are a careful and precise editor.
+        You give exactly the results requested without additional commentary.
+        """
+    )
 
-                - Make punctuation and capitalization changes to fit the Chicago Manual of Style.
+    template: MessageTemplate = MessageTemplate(
+        """
+        Proofread the following text according to these rules:
 
-                - If input is a sentence or question without punctuation, be sure to add a period or
-                  question mark at the end, as appropriate.
+        - Correct only typos or spelling, grammar, capitalization, or punctuation mistakes.
 
-                - Do not alter the meaning of any of the text or change the style of writing.
+        - Write out only the final corrected text.
 
-                - Do not capitalize words unless they are proper nouns or at the start of a sentence.
+        - Make punctuation and capitalization changes to fit the Chicago Manual of Style.
 
-                - If unsure about any correction, leave that portion of the text unchanged.
+        - If input is a sentence or question without punctuation, be sure to add a period or
+            question mark at the end, as appropriate.
 
-                - Preserve all Markdown formatting.
+        - Do not alter the meaning of any of the text or change the style of writing.
 
-                - If unsure about how to make a correction, leave that portion of the text unchanged.
-                
-                - ONLY GIVE THE CORRECTED TEXT, with no other commentary. 
-                Original text:
-                
-                {body}
+        - Do not capitalize words unless they are proper nouns or at the start of a sentence.
 
-                Corrected text:
-                """
-            ),
-            windowing=WINDOW_256_PARA,
-        )
+        - If unsure about any correction, leave that portion of the text unchanged.
+
+        - Preserve all Markdown formatting.
+
+        - If unsure about how to make a correction, leave that portion of the text unchanged.
+        
+        - ONLY GIVE THE CORRECTED TEXT, with no other commentary. 
+        Original text:
+        
+        {body}
+
+        Corrected text:
+        """
+    )
+
+    model: LLM = LLM.o1_mini
+
+    windowing: WindowSettings = WINDOW_256_PARA

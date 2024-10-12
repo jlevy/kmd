@@ -1,11 +1,13 @@
 import json
 
+from pydantic.dataclasses import dataclass
+
 from kmd.config.logger import get_logger
 from kmd.errors import ApiResultError, InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.llms.fuzzy_parsing import fuzzy_parse_json
 from kmd.llms.llm_completion import llm_template_completion
-from kmd.model import Item, ItemType, LLM, Message, MessageTemplate, PerItemAction
+from kmd.model import Item, ItemType, LLM, Message, MessageTemplate, PerItemAction, Precondition
 from kmd.preconditions.precondition_defs import has_html_body, has_text_body
 from kmd.preconditions.speaker_labels import find_speaker_labels
 from kmd.text_formatting.html_in_md import html_speaker_id_span
@@ -15,13 +17,15 @@ log = get_logger(__name__)
 
 
 @kmd_action
+@dataclass
 class IdentifySpeakers(PerItemAction):
-    def __init__(self):
-        super().__init__(
-            name="identify_speakers",
-            description="Identify speakers in a transcript and replace placeholders with their names.",
-            precondition=has_text_body | has_html_body,
-        )
+    name: str = "identify_speakers"
+
+    description: str = (
+        "Identify speakers in a transcript and replace placeholders with their names."
+    )
+
+    precondition: Precondition = has_text_body | has_html_body
 
     def run_item(self, item: Item) -> Item:
         if not item.body:

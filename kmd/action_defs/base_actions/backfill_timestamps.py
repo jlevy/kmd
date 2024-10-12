@@ -2,8 +2,6 @@ from dataclasses import field
 from textwrap import indent
 from typing import List
 
-from pydantic.dataclasses import dataclass
-
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, InvalidInput, UnexpectedError
 from kmd.exec.action_registry import kmd_action
@@ -26,7 +24,6 @@ log = get_logger(__name__)
 
 
 @kmd_action
-@dataclass
 class BackfillSourceTimestamps(PerItemAction):
 
     name: str = "backfill_timestamps"

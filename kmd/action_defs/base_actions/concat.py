@@ -4,9 +4,13 @@ from kmd.model import (
     Action,
     ActionInput,
     ActionResult,
+    ArgCount,
     Item,
     ItemType,
     ONE_OR_MORE_ARGS,
+    Param,
+    ParamList,
+    Precondition,
     TitleTemplate,
     UNTITLED,
 )
@@ -18,16 +22,25 @@ log = get_logger(__name__)
 
 @kmd_action
 class Concat(Action):
-    separator = "\n\n"
-    section_template = "## {title}"
 
-    def __init__(self):
-        super().__init__(
-            name="concat",
-            description="Concatenate the given text documents into a single document. Adds titles to each section.",
-            precondition=has_text_body,
-            expected_args=ONE_OR_MORE_ARGS,
-        )
+    name: str = "concat"
+
+    description: str = (
+        "Concatenate the given text documents into a single document. Adds titles to each section."
+    )
+
+    expected_args: ArgCount = ONE_OR_MORE_ARGS
+
+    precondition: Precondition = has_text_body
+
+    params: ParamList = (
+        Param("separator", "Separator string.", default_value="\n\n", type=str),
+        Param("section_template", "Title template.", default_value="## {title}", type=str),
+    )
+
+    separator: str = "\n\n"
+
+    section_template: str = "## {title}"
 
     def run(self, items: ActionInput) -> ActionResult:
         def titled_body(item: Item) -> str:

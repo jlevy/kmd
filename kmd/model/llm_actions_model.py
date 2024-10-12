@@ -1,4 +1,4 @@
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from pydantic.dataclasses import dataclass
 
@@ -30,7 +30,7 @@ class LLMAction(PerItemAction):
 
     model: LLM = DEFAULT_CAREFUL_LLM
 
-    precondition: Optional[Precondition] = is_text_doc
+    precondition: Precondition = is_text_doc
 
     params: ParamList = common_params("model")
 
@@ -59,7 +59,8 @@ class ChunkedLLMAction(LLMAction):
     Base class for LLM actions that operate on chunks that are already marked with divs.
     """
 
-    precondition: Optional[Precondition] = None
+    precondition: Precondition = Precondition.always
+
     chunk_class: str = CHUNK
 
     def __post_init__(self):
