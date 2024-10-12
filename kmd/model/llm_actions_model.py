@@ -11,6 +11,7 @@ from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, UNTITLED
 from kmd.model.language_models import LLM
 from kmd.model.model_settings import DEFAULT_CAREFUL_LLM
+from kmd.model.params_model import common_params, ParamList
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_text_doc
 from kmd.util.task_stack import task_stack
@@ -27,8 +28,11 @@ class LLMAction(PerItemAction):
     Base LLM action that processes each item one at a time.
     """
 
-    model: Optional[LLM] = DEFAULT_CAREFUL_LLM
+    model: LLM = DEFAULT_CAREFUL_LLM
+
     precondition: Optional[Precondition] = is_text_doc
+
+    params: ParamList = common_params("model")
 
     def run(self, items: ActionInput) -> ActionResult:
         log.info("Running LLM action `%s`.", self.name)

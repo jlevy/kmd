@@ -1,19 +1,18 @@
 from abc import ABC, abstractmethod
 from copy import copy
-from dataclasses import Field
+from dataclasses import Field as DataclassField
 from enum import Enum
-from typing import Any, cast, ClassVar, Dict, List, Optional, Sequence
+from typing import Any, cast, Dict, List, Optional, Sequence, TypeVar
 
 from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
-from kmd.errors import InvalidInput
+from kmd.errors import InvalidActionDefinition, InvalidInput
 from kmd.model.items_model import Item, ItemType, UNTITLED
-from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.operations_model import Operation, Source
 from kmd.model.output_model import CommandOutput
-from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamSettings, TextUnit
+from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamList, ParamValues
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.text_docs.diff_filters import DiffFilter
@@ -23,7 +22,6 @@ from kmd.util.format_utils import fmt_lines
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_key_vals import format_key_value
 from kmd.util.string_template import StringTemplate
-from kmd.util.type_utils import instantiate_as_type
 
 log = get_logger(__name__)
 
@@ -110,6 +108,9 @@ class ExecContext:
     """The action being executed."""
 
 
+T = TypeVar("T")
+
+
 @dataclass
 class Action(ABC):
     """
@@ -119,10 +120,14 @@ class Action(ABC):
     """
 
     name: str
-    """The name of the action. Should be in lower_snake_case."""
+    """
+    The name of the action. Should be in lower_snake_case.
+    """
 
     description: str
-    """A description of the action, in a few sentences."""
+    """
+    A description of the action, in a few sentences.
+    """
 
     cachable: bool = True
     """
@@ -130,16 +135,26 @@ class Action(ABC):
     """
 
     precondition: Optional[Precondition] = None
-    """Mainly a sanity check. For simplicity, the precondition must apply to all args."""
+    """
+    A precondition that must apply to all inputs to this action. Helps select whether
+    an action is applicable to an item.
+    """
 
     expected_args: ArgCount = ONE_ARG
-    """The required number of arguments. We use exactly one by default to make it easy to wrap in a ForEachItemAction."""
+    """
+    The expected number of arguments. When an action is run per-item, this should
+    be ONE_ARG.
+    """
 
     output_type: ItemType = ItemType.doc
-    """The type of the output item(s)."""
+    """
+    The type of the output item(s), which for now are all assumed to be of the same type.
+    """
 
     expected_outputs: ArgCount = ONE_ARG
-    """The number of outputs expected from this action."""
+    """
+    The number of outputs expected from this action.
+    """
 
     run_per_item: bool = False
     """
@@ -148,7 +163,16 @@ class Action(ABC):
     """
 
     interactive_input: bool = False
-    """Does this action ask for input interactively?"""
+    """
+    Does this action ask for input interactively?
+    """
+
+    params: ParamList = ()
+    """
+    Parameters relevant to this action, which are settable when the action is invoked.
+    These can be new parameters defined in a subclass, or more commonly, an existing
+    common parameter (like an LLM) that is shared by several actions.
+    """
 
     # More specific options that apply only to certain types of actions below.
 
@@ -157,23 +181,9 @@ class Action(ABC):
     diff_filter: Optional[DiffFilter] = None
 
     # LLM-specific options:
-    model: Optional[LLM] = None
-    language: Optional[str] = None
-    chunk_size: Optional[int] = None
-    chunk_unit: Optional[TextUnit] = None
     title_template: Optional[TitleTemplate] = None
     template: Optional[MessageTemplate] = None
     system_message: Optional[Message] = None
-
-    # Long or obvious fields we don't want to include in the summary.
-    _NON_SUMMARY_FIELDS: ClassVar[List[str]] = [
-        "title_template",
-        "template",
-        "system_message",
-        "windowing",
-        "expected_outputs",
-        "output_type",
-    ]
 
     def __post_init__(self):
         self.description = fill_text(self.description)
@@ -186,6 +196,12 @@ class Action(ABC):
             raise InvalidInput(
                 f"Action `{self.name}` has run_per_item=True but does not expect a single argument: {self.expected_args}"
             )
+
+        for param in self.params:
+            if not hasattr(self, param.name):
+                raise InvalidActionDefinition(
+                    f"Action `{self.name}` has parameter `{param.name}` but no corresponding field defined"
+                )
 
     def validate_args(self, args: Sequence[InputArg]) -> None:
         self.validate_sanity()
@@ -214,15 +230,10 @@ class Action(ABC):
             for item in items:
                 self.precondition.check(item, f"action `{self.name}`")
 
-    def param_names(self) -> List[str]:
-        return ["model", "language"]  # FIXME: Make settable.
-
-    def action_params(self) -> List[Param]:
-        return [ALL_COMMON_PARAMS.get(name) or Param(name, type=str) for name in self.param_names()]
-
-    def param_summary(self) -> Dict[str, str]:
+    def param_value_summary(self) -> Dict[str, str]:
         """
-        Readable, serializable summary of the action's non-default parameters.
+        Readable, serializable summary of the action's non-default parameters, to include in
+        logs or metadata.
         """
 
         def stringify(value: Any) -> str:
@@ -230,27 +241,31 @@ class Action(ABC):
                 return value.name
             return str(value)
 
-        summary_param_names = sorted(set(self.param_names()) - set(self._NON_SUMMARY_FIELDS))
-
         changed_params: Dict[str, Any] = {}
-        for param_name in summary_param_names:
-            if hasattr(self, param_name):
-                value = getattr(self, param_name)
+        for param in self.params:
+            if hasattr(self, param.name):
+                value = getattr(self, param.name)
                 if value:
-                    changed_params[param_name] = stringify(value)
+                    changed_params[param.name] = stringify(value)
         return changed_params
 
-    def param_summary_str(self) -> str:
+    def param_value_summary_str(self) -> str:
         summary_str = fmt_lines(
-            [format_key_value(name, value) for name, value in self.param_summary().items()]
+            [format_key_value(name, value) for name, value in self.param_value_summary().items()]
         )
         return f"Parameters:\n{summary_str}"
 
-    def with_params(
-        self, params: ParamSettings, strict: bool = False, overwrite: bool = False
+    def _field_info(self, param_name: str) -> Optional[DataclassField]:
+        return next((f for f in self.__dataclass_fields__.values() if f.name == param_name), None)
+
+    def _param_info(self, param_name: str) -> Optional[Param]:
+        return next((p for p in self.params if p.name == param_name), None)
+
+    def with_param_values(
+        self, new_values: ParamValues, strict: bool = False, overwrite: bool = False
     ) -> "Action":
         """
-        Update the action with the given parameters and return a new Action.
+        Update the action with the additional parameter values and return a new Action.
 
         If strict is True, raise an error for unknown parameters, which we want to refuse
         for params set on the command line, but tolerate for params from workspace etc.
@@ -258,10 +273,10 @@ class Action(ABC):
         Unless overwrite is True, do not overwrite existing parameter values.
         """
         new_instance = copy(self)  # Shallow copy.
-        action_param_names = self.param_names()
+        action_param_names = [param.name for param in self.params]
 
         overrides: List[str] = []
-        for param_name, value_raw in params.items():
+        for param_name, value_raw in new_values.items():
             # Sanity checks.
             if param_name not in ALL_COMMON_PARAMS and param_name not in action_param_names:
                 if strict:
@@ -270,30 +285,40 @@ class Action(ABC):
                     )
                 else:
                     log.warning(
-                        "Ignoring unknown override param for action `%s`: %s", self.name, param_name
+                        "Ignoring inapplicable override param for action `%s`: %s",
+                        self.name,
+                        param_name,
                     )
                     continue
 
-            # Convert value to the appropriate type.
-            if param_name in action_param_names:
-                field_info: Field = next(
-                    f for f in self.__dataclass_fields__.values() if f.name == param_name
-                )
-                value = instantiate_as_type(value_raw, cast(type, field_info.type))
-            else:
-                value = value_raw
+            param = self._param_info(param_name)
 
-            # Update the action.
-            if param_name in ALL_COMMON_PARAMS and param_name in action_param_names:
-                if hasattr(new_instance, param_name) and not overwrite:
+            # Set the field value on this action if the param applies to this action.
+            if param:
+                # Sanity check that the field type matches the param type.
+                field_info = self._field_info(param_name)
+                if field_info and not issubclass(cast(type, field_info.type), param.type):
+                    log.warning(
+                        "Parameter `%s` has field type %s in action `%s` but expected type %s",
+                        param_name,
+                        field_info.type,
+                        self.name,
+                        param.type,
+                    )
+
+                value = new_values.get(param_name, param.default_value, type=param.type)
+
+                if not hasattr(new_instance, param_name) or overwrite:
+                    setattr(new_instance, param_name, value)
+                    overrides.append(format_key_value(param_name, value_raw))
+                else:
                     log.info(
                         "Not overwriting existing parameter: keeping %s instead of %s",
                         format_key_value(param_name, getattr(new_instance, param_name)),
                         format_key_value(param_name, value_raw),
                     )
-                else:
-                    setattr(new_instance, param_name, value)
-                    overrides.append(format_key_value(param_name, value_raw))
+            else:
+                log.info("Ignoring parameter for action `%s`: `%s`", self.name, param_name)
 
         if overrides:
             log.message(
@@ -372,6 +397,7 @@ class PerItemAction(Action):
     """
 
     expected_args: ArgCount = ONE_ARG
+
     run_per_item: bool = True
 
     def run(self, items: ActionInput) -> ActionResult:

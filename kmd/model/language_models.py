@@ -30,9 +30,6 @@ class LLM(Enum):
         return self.value
 
 
-LLM_LIST = [model.value for model in LLM]
-
-
 class EmbeddingModel(Enum):
     """
     LiteLLM embedding models.

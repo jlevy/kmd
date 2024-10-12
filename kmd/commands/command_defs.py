@@ -611,10 +611,12 @@ def param(*args: str) -> None:
         for key, value in new_key_vals.items():
             param = USER_SETTABLE_PARAMS[key]
             if value and param.valid_values and value not in param.valid_values:
-                raise InvalidInput(f"Unrecognized value for parameter `{key}`: {value}")
+                raise InvalidInput(
+                    f"Unrecognized value for parameter `{key}` (type {param.type.__name__}): `{value}`"
+                )
 
-        current_params = ws.get_params()
-        new_params = {**current_params.params, **new_key_vals}
+        current_vals = ws.get_param_values()
+        new_params = {**current_vals.values, **new_key_vals}
 
         deletes = [key for key, value in new_params.items() if value is None]
         new_params = remove_values(new_params, deletes)
@@ -622,16 +624,16 @@ def param(*args: str) -> None:
 
     output_heading("Available Parameters")
 
-    for ap in USER_SETTABLE_PARAMS.values():
-        output(format_name_and_description(ap.name, ap.full_description()))
+    for param in USER_SETTABLE_PARAMS.values():
+        output(format_name_and_description(param.name, param.full_description))
         output()
 
-    params = ws.get_params()
-    if not params:
+    param_values = ws.get_param_values()
+    if not param_values.values:
         output_status("No parameters are set.")
     else:
         output_heading("Current Parameters")
-        for key, value in params.items():
+        for key, value in param_values.items():
             output(format_key_value(key, value))
         output()
 

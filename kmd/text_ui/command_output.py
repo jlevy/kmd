@@ -65,7 +65,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
         paragraphs = split_paragraphs(text)
         wrapped_paragraphs = []
 
-        for paragraph in paragraphs:
+        for i, paragraph in enumerate(paragraphs):
             if text_wrap == Wrap.WRAP:
                 wrapped_paragraphs.append(
                     text_wrap_fill(
@@ -101,7 +101,8 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
                     text_wrap_fill(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH - len(extra_indent + DEFAULT_INDENT),
-                        initial_indent=extra_indent,
+                        # Hang the first line of the first paragraph. All other paragraphs are indented.
+                        initial_indent=extra_indent + DEFAULT_INDENT if i > 0 else extra_indent,
                         subsequent_indent=extra_indent + DEFAULT_INDENT,
                         replace_whitespace=True,
                     )

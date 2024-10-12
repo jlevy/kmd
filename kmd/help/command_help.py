@@ -39,6 +39,7 @@ def _output_command_help(
         if param_info:
             output()
             output("Options:", extra_indent=DEFAULT_INDENT)
+            output()
             for param in param_info:
 
                 if param.type == bool:
@@ -49,7 +50,7 @@ def _output_command_help(
                 if param.name in docstring.param:
                     param_desc = docstring.param[param.name]
                 elif param.description:
-                    param_desc = param.description
+                    param_desc = param.full_description
                 else:
                     param_desc = ""
 
@@ -61,6 +62,7 @@ def _output_command_help(
                     text_wrap=Wrap.HANGING_INDENT,
                     extra_indent=DEFAULT_INDENT,
                 )
+                output()
 
     if verbose:
         output()
@@ -82,9 +84,9 @@ def output_command_function_help(command: CommandFunction, verbose: bool = True)
 
 
 def output_action_help(action: Action, verbose: bool = True):
-    params = []
+    params: List[Param] = []
     if verbose:
-        params = action.action_params() + list(RUNTIME_ACTION_PARAMS.values())
+        params = list(action.params) + list(RUNTIME_ACTION_PARAMS.values())
 
     _output_command_help(
         action.name,

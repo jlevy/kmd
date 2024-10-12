@@ -11,7 +11,7 @@ from kmd.help.command_help import output_action_help
 from kmd.model.actions_model import Action
 from kmd.model.commands_model import Command
 from kmd.model.output_model import CommandOutput
-from kmd.model.params_model import ParamSettings
+from kmd.model.params_model import ParamValues
 from kmd.shell_tools.exception_printing import summarize_traceback
 from kmd.text_ui.command_output import output
 from kmd.util.log_calls import log_tallies
@@ -40,8 +40,8 @@ class ShellCallableAction:
         log.info("Action shell args: %s", shell_args)
 
         # Command-line args overwrite any default values.
-        self.action = self.action.with_params(
-            ParamSettings(shell_args.kw_args), strict=True, overwrite=True
+        self.action = self.action.with_param_values(
+            ParamValues(shell_args.kw_args), strict=True, overwrite=True
         )
 
         try:

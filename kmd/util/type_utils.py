@@ -1,7 +1,7 @@
 from dataclasses import fields, is_dataclass
 from enum import Enum
 from types import NoneType
-from typing import Any, Dict, get_args, get_origin, Optional, Type, TypeVar, Union
+from typing import Any, Dict, get_args, get_origin, List, Optional, Type, TypeVar, Union
 
 T = TypeVar("T")
 
@@ -72,13 +72,33 @@ def as_dataclass(dict_data: Dict[str, Any], dataclass_type: Type[T]) -> T:
     return dataclass_type(**dataclass_fields)
 
 
-def instantiate_as_type(value: Any, target_type: Type[T]) -> Optional[T]:
+def instantiate_as_type(
+    value: Any, target_type: Type[T], accept_enum_names: bool = True
+) -> Optional[T]:
     """
-    Convert the given value to the specified target type.
-    Handles Optional or Union types by trying each possible type.
+    Simple instantiation of the given value to the specified target type, with a few
+    extra features to handle Optional and Union types by trying each possible type.
+    If `accept_enum_names` is True, enums are checked for by both value and name.
     """
     if value is None:
         return None
+
+    def raise_value_error(failed_types: List[Type]):
+        extra_info = ""
+        allowed_values = []
+        for t in failed_types:
+            if issubclass(t, Enum):
+                if accept_enum_names:
+                    allowed_values.extend([e.name for e in t])
+                else:
+                    allowed_values.extend([e.value for e in t])
+        if allowed_values:
+            allowed_values_str = ", ".join(f"`{v}`" for v in set(allowed_values))
+            extra_info = f" (allowed values: {allowed_values_str})"
+
+        raise ValueError(
+            f"Cannot convert value `{value}` to type {' or '.join(map(str, failed_types))}{extra_info}"
+        )
 
     origin = get_origin(target_type)
     if origin is Union:
@@ -91,18 +111,25 @@ def instantiate_as_type(value: Any, target_type: Type[T]) -> Optional[T]:
                     failed_types.append(arg)
                 continue
 
-        extra_info = ""
-        allowed_values = []
-        for t in failed_types:
-            if issubclass(t, Enum):
-                allowed_values.extend([e.value for e in t])
-
-        if allowed_values:
-            allowed_values_str = ", ".join(f"`{v}`" for v in allowed_values)
-            extra_info = f" (allowed values: {allowed_values_str})"
-
-        raise ValueError(
-            f"Cannot convert value `{value}` to type {' or '.join(map(str, failed_types))}{extra_info}"
-        )
+        if failed_types:
+            raise_value_error(failed_types)
     else:
-        return target_type(value)  # type: ignore
+        if issubclass(target_type, Enum):
+            # Try to instantiate the Enum by value.
+            try:
+                return target_type(value)
+            except ValueError:
+                pass
+            # Try to get Enum member by name.
+            if accept_enum_names:
+                try:
+                    return target_type[value]
+                except KeyError:
+                    pass
+
+            raise_value_error([target_type])
+        else:
+            try:
+                return target_type(value)  # type: ignore
+            except ValueError:
+                raise_value_error([target_type])

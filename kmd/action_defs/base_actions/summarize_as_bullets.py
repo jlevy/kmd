@@ -1,53 +1,59 @@
+from pydantic.dataclasses import dataclass
+
 from kmd.exec.action_registry import kmd_action
 from kmd.model import LLMAction, Message, MessageTemplate, TitleTemplate
-from kmd.text_docs.window_settings import WINDOW_128_PARA
+from kmd.text_docs.window_settings import WINDOW_128_PARA, WindowSettings
 
 
 @kmd_action
+@dataclass
 class SummarizeAsBullets(LLMAction):
-    def __init__(self):
-        super().__init__(
-            name="summarize_as_bullets",
-            description="Summarize text as bullet points.",
-            system_message=Message(
-                """
-                You are a careful and precise editor.
-                You give exactly the results requested without additional commentary.
-                """
-            ),
-            title_template=TitleTemplate("Summary of {title}"),
-            template=MessageTemplate(
-                """
-                Summarize the following text as a list of concise bullet points:
 
-                - Each point should be one sentence long.
+    name: str = "summarize_as_bullets"
 
-                - Format your response as a list of bullet points in Markdown format.
+    description: str = "Summarize text as bullet points."
 
-                - Do NOT use nested bullet points. Give a single list, not a list of lists.
-                
-                - Include all key numbers or facts, without omitting any claims or important details.
-                
-                - Use simple and precise language.
+    system_message: Message = Message(
+        """
+        You are a careful and precise editor.
+        You give exactly the results requested without additional commentary.
+        """
+    )
 
-                - Simply state the facts or claims without referencing the text or the author. For example, if the
-                  text is about cheese being nutritious, you can say "Cheese is nutritious." But do NOT
-                  say "The author says cheese is nutritious" or "According to the text, cheese is nutritious."
+    title_template: TitleTemplate = TitleTemplate("Summary of {title}")
 
-                - It is very important you do not add any details that are not directly stated in the original text.
-                  Do not change any numbers or alter its meaning in any way.
+    template: MessageTemplate = MessageTemplate(
+        """
+        Summarize the following text as a list of concise bullet points:
 
-                - Do NOT give any additional response at the beginning, such as "Here are the concise bullet points".
-                  Simply give the summary.
+        - Each point should be one sentence long.
 
-                - If the input is very short or so unclear you can't summarize it, simply output "(No results)".
+        - Format your response as a list of bullet points in Markdown format.
 
-                Input text:
+        - Do NOT use nested bullet points. Give a single list, not a list of lists.
+        
+        - Include all key numbers or facts, without omitting any claims or important details.
+        
+        - Use simple and precise language.
 
-                {body}
+        - Simply state the facts or claims without referencing the text or the author. For example, if the
+          text is about cheese being nutritious, you can say "Cheese is nutritious." But do NOT
+          say "The author says cheese is nutritious" or "According to the text, cheese is nutritious."
 
-                Bullet points:
-                """
-            ),
-            windowing=WINDOW_128_PARA,
-        )
+        - It is very important you do not add any details that are not directly stated in the original text.
+          Do not change any numbers or alter its meaning in any way.
+
+        - Do NOT give any additional response at the beginning, such as "Here are the concise bullet points".
+          Simply give the summary.
+
+        - If the input is very short or so unclear you can't summarize it, simply output "(No results)".
+
+        Input text:
+
+        {body}
+
+        Bullet points:
+        """
+    )
+
+    windowing: WindowSettings = WINDOW_128_PARA

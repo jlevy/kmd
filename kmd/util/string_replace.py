@@ -24,7 +24,6 @@ def replace_multiple(text: str, replacements: List[Replacement]) -> str:
     """
     Replace multiple substrings in `text` with new strings.
     The replacements are a list of tuples (start_offset, end_offset, new_string).
-
     """
     replacements = sorted(replacements, key=lambda x: x[0])
     chunks = []

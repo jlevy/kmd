@@ -76,12 +76,11 @@ def run_action(
 
     # Get the current workspace params.
     ws = current_workspace()
-    ws_params = ws.get_params()
+    ws_params = ws.get_param_values()
 
-    # Update the action with any overridden params.
+    # Fill in the action with any overridden params.
     log.info("Parameters from workspace:\n%s", ws_params.as_str())
-    if ws_params:
-        action = action.with_params(ws_params)
+    action = action.with_param_values(ws_params, strict=False, overwrite=False)
 
     # Collect args from the provided args or otherwise the current selection.
     args, from_selection = collect_args(*provided_args)
@@ -108,10 +107,10 @@ def run_action(
     # TODO: Also save the parameters/options that were used.
     store_paths = [StorePath(not_none(item.store_path)) for item in input_items if item.store_path]
     inputs = [Input(store_path, ws.hash(store_path)) for store_path in store_paths]
-    operation = Operation(action_name, inputs, action.param_summary())
+    operation = Operation(action_name, inputs, action.param_value_summary())
     log.message("%s Action: `%s`", EMOJI_CALL_BEGIN, operation.command_line(with_options=False))
-    if len(action.param_summary()) > 0:
-        log.message("%s", action.param_summary_str())
+    if len(action.param_value_summary()) > 0:
+        log.message("%s", action.param_value_summary_str())
     log.info("Operation is: %s", operation)
     log.info("Input items are:\n%s", fmt_lines(input_items))
 

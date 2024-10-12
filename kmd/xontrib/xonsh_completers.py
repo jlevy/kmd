@@ -162,14 +162,14 @@ def options_completer(context: CompletionContext) -> CompleterResult:
         if is_option:
             completions = []
             help_text = ""
-            params = []
+            params: List[Param] = []
 
             if command:
                 help_text = "Show more help for this command."
                 params = annotate_param_info(command)
             elif action:
                 help_text = "Show more help for this action."
-                params = action.action_params()
+                params = list(action.params)
 
             completions = _param_completions(params, prefix)
 

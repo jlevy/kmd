@@ -8,7 +8,7 @@ WINDOW_BR = "<!--window-br-->"
 WINDOW_BR_SEP = f"\n{WINDOW_BR}\n"
 
 
-@dataclass
+@dataclass(frozen=True)
 class WindowSettings:
     """
     Size of the sliding window, the shift, and the min overlap required when stitching windows

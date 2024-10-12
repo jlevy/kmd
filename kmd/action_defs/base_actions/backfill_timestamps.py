@@ -1,10 +1,15 @@
+from dataclasses import field
 from textwrap import indent
 from typing import List
+
+from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, InvalidInput, UnexpectedError
 from kmd.exec.action_registry import kmd_action
 from kmd.model import Format, Item, ItemType, PerItemAction
+from kmd.model.params_model import common_param, Param
+from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
 from kmd.provenance.source_items import find_upstream_item, find_upstream_resource
 from kmd.provenance.timestamps import TimestampExtractor
@@ -21,19 +26,24 @@ log = get_logger(__name__)
 
 
 @kmd_action
+@dataclass
 class BackfillSourceTimestamps(PerItemAction):
-    def __init__(self):
-        super().__init__(
-            name="backfill_timestamps",
-            description="""
-              Backfill timestamps from a source document.
-              Seeks through the document this doc is derived from for timestamps and inserts them
-              into the text of the current doc. Source must have similar tokens.
-              """,
-            precondition=is_text_doc & ~has_timestamps,
-            chunk_unit=TextUnit.paragraphs,
-        )
 
+    name: str = "backfill_timestamps"
+
+    description: str = """
+      Backfill timestamps from a source document.
+      Seeks through the document this doc is derived from for timestamps and inserts them
+      into the text of the current doc. Source must have similar tokens.
+      """
+
+    precondition: Precondition = is_text_doc & ~has_timestamps
+
+    params: List[Param] = field(default_factory=lambda: [common_param("chunk_unit")])
+
+    chunk_unit: TextUnit = TextUnit.paragraphs
+
+    def __post_init__(self):
         if self.chunk_unit not in (TextUnit.sentences, TextUnit.paragraphs):
             raise InvalidInput(
                 f"Only support sentences and paragraphs for chunk unit: {self.chunk_unit}"

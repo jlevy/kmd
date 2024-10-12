@@ -2,7 +2,7 @@ import os
 import re
 import tempfile
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Type, TypeVar
 
 from cachetools import cached
 
@@ -15,7 +15,7 @@ from kmd.media.media_tools import reset_media_cache_dir
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
-from kmd.model.params_model import ParamSettings, USER_SETTABLE_PARAMS
+from kmd.model.params_model import ParamValues, USER_SETTABLE_PARAMS
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.util.format_utils import fmt_path
 from kmd.util.url import is_url, Url
@@ -191,13 +191,16 @@ def import_url_to_workspace(url: Url) -> Item:
     return item
 
 
-def get_param_value(param_name: str) -> Optional[str]:
+T = TypeVar("T")
+
+
+def get_param_value(param_name: str, type: Type[T] = str) -> Optional[T]:
     """
     Get a global parameter value, checking if it is set in the current workspace first.
     """
     try:
-        params = current_workspace().get_params()
+        params = current_workspace().get_param_values()
     except InvalidState:
-        params = ParamSettings({})
+        params = ParamValues({})
 
-    return params.lookup(param_name, USER_SETTABLE_PARAMS)
+    return params.get(param_name, type=type, defaults_info=USER_SETTABLE_PARAMS)

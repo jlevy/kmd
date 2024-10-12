@@ -43,6 +43,19 @@ class InvalidInput(SelfExplanatoryError):
     pass
 
 
+class InvalidParam(SelfExplanatoryError):
+    """Raised when a parameter is invalid."""
+
+    def __init__(self, param_name: str):
+        super().__init__(f"Invalid parameter: {repr(param_name)}")
+
+
+class InvalidActionDefinition(SelfExplanatoryError):
+    """Raised when an action definition is invalid."""
+
+    pass
+
+
 class InvalidOutput(SelfExplanatoryError):
     """Raised when an action returns invalid output."""
 

@@ -61,7 +61,7 @@ from kmd.model.items_model import (
     State,
     UNTITLED,
 )
-from kmd.model.language_models import EmbeddingModel, LLM, LLM_LIST
+from kmd.model.language_models import EmbeddingModel, LLM
 from kmd.model.llm_actions_model import ChunkedLLMAction, LLMAction
 from kmd.model.media_model import (
     HeatmapValue,
@@ -82,9 +82,12 @@ from kmd.model.model_settings import DEFAULT_CAREFUL_LLM, DEFAULT_EMBEDDING_MODE
 from kmd.model.params_model import (
     ALL_COMMON_PARAMS,
     COMMON_ACTION_PARAMS,
+    common_param,
+    common_params,
     GLOBAL_PARAMS,
     Param,
-    ParamSettings,
+    ParamList,
+    ParamValues,
     RUNTIME_ACTION_PARAMS,
     USER_SETTABLE_PARAMS,
 )

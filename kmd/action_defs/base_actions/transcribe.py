@@ -1,8 +1,11 @@
+from pydantic.dataclasses import dataclass
+
 from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.file_storage.workspaces import current_workspace
 from kmd.media.media_tools import cache_and_transcribe
-from kmd.model import FileExt, Format, Item, ItemType, PerItemAction
+from kmd.model import common_params, FileExt, Format, Item, ItemType, ParamList, PerItemAction
+from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_audio_resource, is_url, is_video_resource
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.util.url import as_file_url
@@ -11,13 +14,18 @@ log = get_logger(__name__)
 
 
 @kmd_action
+@dataclass
 class Transcribe(PerItemAction):
-    def __init__(self):
-        super().__init__(
-            name="transcribe",
-            description="Download and transcribe audio from a podcast or video.",
-            precondition=is_url | is_audio_resource | is_video_resource,
-        )
+
+    name: str = "transcribe"
+
+    description: str = "Download and transcribe audio from a podcast or video."
+
+    precondition: Precondition = is_url | is_audio_resource | is_video_resource
+
+    params: ParamList = common_params("language")
+
+    language: str = "en"
 
     def run_item(self, item: Item) -> Item:
 
