@@ -1489,13 +1489,13 @@ typing = ["typing-extensions (>=4.12.2)"]
 
 [[package]]
 name = "firecrawl-py"
-version = "1.2.4"
+version = "1.3.1"
 description = "Python SDK for Firecrawl API"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "firecrawl_py-1.2.4-py3-none-any.whl", hash = "sha256:0464992f354f4f7830dc29433dacad127a9cd73e331601c719f811df70bace58"},
-    {file = "firecrawl_py-1.2.4.tar.gz", hash = "sha256:bff3cfbce725739f6d7d7f8975b43be392f17c844f601485f19c2ddcf2b4f8de"},
+    {file = "firecrawl_py-1.3.1-py3-none-any.whl", hash = "sha256:fe8921e75871982defa6566cf7e23805b10ad5fc1288a14f07f688974329d6f8"},
+    {file = "firecrawl_py-1.3.1.tar.gz", hash = "sha256:fa7172f677b9194de26530dfd6cd8290e8187aadda5b6e84b724eca8813845cb"},
 ]
 
 [package.dependencies]
@@ -2524,13 +2524,13 @@ dev = ["Sphinx (>=5.1.1)", "black (==23.12.1)", "build (>=0.10.0)", "coverage (>
 
 [[package]]
 name = "litellm"
-version = "1.48.18"
+version = "1.49.2"
 description = "Library to easily interface with LLM API providers"
 optional = false
 python-versions = "!=2.7.*,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,>=3.8"
 files = [
-    {file = "litellm-1.48.18-py3-none-any.whl", hash = "sha256:8a58a6241ba63bb8bf1214784a8197859196bdc2b4d0dd9402b719928b9f0954"},
-    {file = "litellm-1.48.18.tar.gz", hash = "sha256:c77191c86a306dd706fde9374d74a0b8d936c52be6cf1f61f9cd541124bdb520"},
+    {file = "litellm-1.49.2-py3-none-any.whl", hash = "sha256:fa098963bb95fbe61fe3af24bfd020dd318b5483184ff8bd9c26b7938a47e298"},
+    {file = "litellm-1.49.2.tar.gz", hash = "sha256:f3a493264aae492fc292bb86c88b0c929c0b13267162272183727ce4a99e3859"},
 ]
 
 [package.dependencies]
@@ -2552,13 +2552,13 @@ proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "backoff", "
 
 [[package]]
 name = "llama-index-core"
-version = "0.10.68.post1"
+version = "0.11.17"
 description = "Interface between LLMs and your data"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "llama_index_core-0.10.68.post1-py3-none-any.whl", hash = "sha256:1befe1324f0fa1c3a2cfc1e4d38adb0cd0c3b2948badfb2be826da048a3bdbaf"},
-    {file = "llama_index_core-0.10.68.post1.tar.gz", hash = "sha256:1215106973f2fb7651c10827c27ca3f47c03ccfae3b8653c5476d454d5ba8cd0"},
+    {file = "llama_index_core-0.11.17-py3-none-any.whl", hash = "sha256:d65565b54ea55b2db12f9a1cd5c250b770d7e43d3363137cff431a6116ef069c"},
+    {file = "llama_index_core-0.11.17.tar.gz", hash = "sha256:1143baf8d819e27555bdb142abdf2833d3d37731f270f46fa1e07fc4b97116ae"},
 ]
 
 [package.dependencies]
@@ -2570,11 +2570,10 @@ fsspec = ">=2023.5.0"
 httpx = "*"
 nest-asyncio = ">=1.5.8,<2.0.0"
 networkx = ">=3.0"
-nltk = ">=3.8.1,<3.9 || >3.9"
+nltk = ">3.8.1"
 numpy = "<2.0.0"
-pandas = "*"
 pillow = ">=9.0.0"
-pydantic = "<3.0"
+pydantic = ">=2.7.0,<3.0.0"
 PyYAML = ">=6.0.1"
 requests = ">=2.31.0"
 SQLAlchemy = {version = ">=1.4.49", extras = ["asyncio"]}
@@ -2587,47 +2586,48 @@ wrapt = "*"
 
 [[package]]
 name = "llama-index-embeddings-openai"
-version = "0.1.11"
+version = "0.2.5"
 description = "llama-index embeddings openai integration"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "llama_index_embeddings_openai-0.1.11-py3-none-any.whl", hash = "sha256:e20806fc4baff6b8f5274decf2c1ca7c5c737648e01865475ffada164e32e173"},
-    {file = "llama_index_embeddings_openai-0.1.11.tar.gz", hash = "sha256:6025e229e375201788a9b14d6ebe470329907576cba5f6b7b832c3d68f39db30"},
+    {file = "llama_index_embeddings_openai-0.2.5-py3-none-any.whl", hash = "sha256:823c8311e556349ba19dda408a64a314fa3dafe0e5759709c54d33a0269aa6ba"},
+    {file = "llama_index_embeddings_openai-0.2.5.tar.gz", hash = "sha256:0047dd71d747068645ed728c29312aa91b65bbe4c6142180034c64dfc5c6f6e8"},
 ]
 
 [package.dependencies]
-llama-index-core = ">=0.10.1,<0.11.0"
+llama-index-core = ">=0.11.0,<0.12.0"
+openai = ">=1.1.0"
 
 [[package]]
 name = "llama-index-llms-openai"
-version = "0.1.31"
+version = "0.2.13"
 description = "llama-index llms openai integration"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "llama_index_llms_openai-0.1.31-py3-none-any.whl", hash = "sha256:800815b1b964b7d8dddd0e02a09fb57ac5f2ec6f80db92cd704dae718846023f"},
-    {file = "llama_index_llms_openai-0.1.31.tar.gz", hash = "sha256:c235493f453b92903722054a8dfb1452ea850eac47a68a38bab3b823988d56fe"},
+    {file = "llama_index_llms_openai-0.2.13-py3-none-any.whl", hash = "sha256:1bf909130b0fb656797cd923133ea87828aaee7b3350a6e3d3a2348b4da502d3"},
+    {file = "llama_index_llms_openai-0.2.13.tar.gz", hash = "sha256:d9f2c6112d4844d766d07ad7900fe53d89022f76bbf0911dd4cb0b868329b71e"},
 ]
 
 [package.dependencies]
-llama-index-core = ">=0.10.57,<0.11.0"
+llama-index-core = ">=0.11.7,<0.12.0"
 openai = ">=1.40.0,<2.0.0"
 
 [[package]]
 name = "llama-index-vector-stores-chroma"
-version = "0.1.10"
+version = "0.2.0"
 description = "llama-index vector_stores chroma integration"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "llama_index_vector_stores_chroma-0.1.10-py3-none-any.whl", hash = "sha256:18859272ec8d3ed20bae7e4a9bc18feb4233e8be2a725d33626f283ac41d1475"},
-    {file = "llama_index_vector_stores_chroma-0.1.10.tar.gz", hash = "sha256:97971f7b36461ef37be023b9ceb5531396cc48360d0bdbda51cce1290301cc47"},
+    {file = "llama_index_vector_stores_chroma-0.2.0-py3-none-any.whl", hash = "sha256:3e5bdd037d7c047a12ca5c9776f7d59d2a26f591bb755d924e2e97c3b77e79f8"},
+    {file = "llama_index_vector_stores_chroma-0.2.0.tar.gz", hash = "sha256:9fa7c63605c1e296e179ad5ee504f40a8fec56777caf72f9fa9542bade54d94c"},
 ]
 
 [package.dependencies]
 chromadb = ">=0.4.0,<0.6.0"
-llama-index-core = ">=0.10.1,<0.11.0"
+llama-index-core = ">=0.11.0,<0.12.0"
 
 [[package]]
 name = "lxml"
@@ -3668,13 +3668,13 @@ sympy = "*"
 
 [[package]]
 name = "openai"
-version = "1.51.1"
+version = "1.51.2"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.51.1-py3-none-any.whl", hash = "sha256:035ba637bef7523282b5b8d9f2f5fdc0bb5bc18d52af2bfc7f64e4a7b0a169fb"},
-    {file = "openai-1.51.1.tar.gz", hash = "sha256:a4908d68e0a1f4bcb45cbaf273c5fbdc3a4fa6239bb75128b58b94f7d5411563"},
+    {file = "openai-1.51.2-py3-none-any.whl", hash = "sha256:5c5954711cba931423e471c37ff22ae0fd3892be9b083eee36459865fbbb83fa"},
+    {file = "openai-1.51.2.tar.gz", hash = "sha256:c6a51fac62a1ca9df85a522e462918f6bb6bc51a8897032217e453a0730123a6"},
 ]
 
 [package.dependencies]
@@ -7210,4 +7210,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "3fe84c8eb3abd970ed29c6cc21023d1e6f0a53ff4039a95ee6963aac13fe6576"
+content-hash = "65fd1f9c92938dc03b1216b0e82a51f844a7204bb2db493096ae52c43313d064"

@@ -257,10 +257,10 @@ curl https://pyenv.run | bash
 apt install pipx ffmpeg ripgrep bat libmagic1
 ```
 
-Now install recent Python and Poetry:
+Now install a recent Python and Poetry:
 
 ```shell
-pyenv install
+pyenv install 3.11.10  # Or any later version, like 3.12.6.
 pipx install poetry
 poetry self update  
 ```

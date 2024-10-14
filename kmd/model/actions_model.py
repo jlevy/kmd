@@ -119,6 +119,9 @@ class Action(ABC):
     The base class for Actions, which are arbitrary operations that can be
     performed on Items. Instantiate this or a more specific subclass to create
     an action.
+
+    Note we are careful to use immutable fields as much as possible, so subclassing
+    is straightforward and doesn't require `field(default_factory=...)`.
     """
 
     name: str
