@@ -653,10 +653,11 @@ def settings() -> None:
 
 
 @kmd_command
-def log_level(level_str: Optional[str] = None, console: bool = False, file: bool = False) -> None:
+def log_level(level: Optional[str] = None, console: bool = False, file: bool = False) -> None:
     """
-    Set the log level. Sets both console and file log levels unless specified.
+    Set or show the log level. Applies to both console and file log levels unless specified.
 
+    :param level: The log level to set. If not specified, will show current level.
     :param console: Set console log level only.
     :param file: Set file log level only.
     """
@@ -664,18 +665,18 @@ def log_level(level_str: Optional[str] = None, console: bool = False, file: bool
         console = True
         file = True
 
-    if level_str:
-        level = LogLevel.parse(level_str)
+    if level:
+        level_parsed = LogLevel.parse(level)
         with update_global_settings() as settings:
             if console:
-                settings.console_log_level = level
+                settings.console_log_level = level_parsed
             if file:
-                settings.log_level = level
+                settings.file_log_level = level_parsed
 
         reset_logging()
 
     output()
-    output(format_name_and_description("log_level", global_settings().log_level.name))
+    output(format_name_and_description("file_log_level", global_settings().file_log_level.name))
     output(
         format_name_and_description("console_log_level", global_settings().console_log_level.name)
     )

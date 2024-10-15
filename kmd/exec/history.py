@@ -31,5 +31,6 @@ def wrap_with_history(func: Callable) -> Callable:
 
     wrapper.__name__ = func.__name__
     wrapper.__doc__ = func.__doc__
+    wrapper.__wrapped__ = func.__wrapped__ if hasattr(func, "__wrapped__") else func
 
     return wrapper

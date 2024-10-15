@@ -83,7 +83,7 @@ def logging_setup():
     # Verbose logging to file, important logging to console.
     global _file_handler
     _file_handler = logging.FileHandler(log_file_path())
-    _file_handler.setLevel(global_settings().log_level.value)
+    _file_handler.setLevel(global_settings().file_log_level.value)
     _file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
 
     global _console_handler

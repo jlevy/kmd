@@ -60,11 +60,11 @@ class Settings:
     use_sandbox: bool
     """If not in a workspace, use the sandbox workspace."""
 
-    log_level: LogLevel
-    """The log level for file-based logging."""
-
     console_log_level: LogLevel
     """The log level for console-based logging."""
+
+    file_log_level: LogLevel
+    """The log level for file-based logging."""
 
 
 def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
@@ -96,10 +96,10 @@ _settings = Settings(
     # These default to the global
     media_cache_dir=_global_cache_dir(MEDIA_CACHE_NAME),
     content_cache_dir=_global_cache_dir(CONTENT_CACHE_NAME),
-    debug_assistant=False,
+    debug_assistant=True,
     default_editor="nano",
     use_sandbox=True,
-    log_level=LogLevel.info,
+    file_log_level=LogLevel.info,
     console_log_level=LogLevel.warning,
 )
 

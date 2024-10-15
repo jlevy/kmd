@@ -89,11 +89,13 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
     """
     pos_params, kw_params = inspect_function_params(func)
 
+    wrapped_func = func.__wrapped__ if hasattr(func, "__wrapped__") else func
+
     def wrapped(args: List[str]) -> Optional[R]:
         shell_args = parse_shell_args(args)
 
         if shell_args.show_help:
-            output_command_function_help(func, verbose=True)
+            output_command_function_help(wrapped_func, verbose=True)
             return None
 
         pos_values, keywords_consumed = _map_positional(shell_args.pos_args, pos_params, kw_params)
@@ -117,6 +119,7 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
 
     wrapped.__name__ = func.__name__
     wrapped.__doc__ = func.__doc__
+    wrapped.__wrapped__ = wrapped_func
     return wrapped
 
 

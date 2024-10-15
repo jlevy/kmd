@@ -46,4 +46,5 @@ def wrap_with_exception_printing(func: Callable[..., R]) -> Callable[[List[str]]
 
     command.__name__ = func.__name__
     command.__doc__ = func.__doc__
+    command.__wrapped__ = func.__wrapped__ if hasattr(func, "__wrapped__") else func
     return command
