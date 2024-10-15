@@ -21,14 +21,18 @@ def new_yaml(
     key_sort: Optional[KeySort] = None,
     suppress_vals: Optional[Callable[[Any], bool]] = none_or_empty_dict,
     stringify_unknown: bool = False,
+    typ: str = "safe",
 ) -> YAML:
     """
     Configure a new YAML instance with custom settings.
 
     If just using this for pretty-printing values, can set `stringify_unknown` to avoid
     RepresenterError for unexpected types.
+
+    For input, `typ="safe"` is safest. For output, consider using `typ="rt"` for better
+    control of string formatting (e.g. style of long strings).
     """
-    yaml = YAML(typ="safe")
+    yaml = YAML(typ=typ)
     yaml.default_flow_style = False  # Block style dictionaries.
 
     suppr = suppress_vals or (lambda v: False)
@@ -108,7 +112,7 @@ def to_yaml_string(
     Convert a Python object to a YAML string.
     """
     stream = StringIO()
-    new_yaml(key_sort, stringify_unknown=stringify_unknown).dump(value, stream)
+    new_yaml(key_sort, stringify_unknown=stringify_unknown, typ="rt").dump(value, stream)
     return stream.getvalue()
 
 
@@ -118,7 +122,7 @@ def write_yaml(
     """
     Write a Python object to a YAML stream.
     """
-    new_yaml(key_sort, stringify_unknown=stringify_unknown).dump(value, stream)
+    new_yaml(key_sort, stringify_unknown=stringify_unknown, typ="rt").dump(value, stream)
 
 
 def write_yaml_file(

@@ -40,11 +40,11 @@ posts, extract or visualize concepts, check citations, convert notes to PDFs or 
 formatted HTML, or perform numerous other content-related tasks possible by orchestrating AI
 tools in the right ways.
 
-## Background
+## Motivation
 
 I'd like to give a little motivation for experimenting with Kmd and why I think it's
 potentially so useful.
-But jump ahead to [examples](#examples) to get an idea of what it can do.
+But jump to [examples](#examples) to get an idea of what it can do.
 If you just want to try it, jump to [Getting Started](#getting-started)!
 
 The goals of Kmd are:

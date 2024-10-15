@@ -173,7 +173,7 @@ class ChatHistory:
         return [message.as_chat_completion() for message in self.messages]
 
     def to_yaml(self) -> str:
-        yaml = new_yaml(key_sort=_custom_key_sort)
+        yaml = new_yaml(key_sort=_custom_key_sort, typ="rt")
         stream = StringIO()
         # Include the extra `---` at the front for consistency and to make this file identifiable.
         stream.write("---\n")

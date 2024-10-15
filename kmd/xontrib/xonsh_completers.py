@@ -135,12 +135,12 @@ def help_question_completer(context: CompletionContext) -> CompleterResult:
 def _param_completions(params: List[Param], prefix: str):
     return [
         RichCompletion(
-            param.shell_prefix(),
+            param.shell_prefix,
             description=param.description or "",
             append_space=(param.type == bool),
         )
         for param in params
-        if param.shell_prefix().startswith(prefix)
+        if param.shell_prefix.startswith(prefix)
     ]
 
 

@@ -1,5 +1,6 @@
 from dataclasses import field
 from enum import Enum
+from pathlib import Path
 from typing import Dict, Generic, List, Optional, overload, Tuple, Type, TypeVar
 
 from pydantic.dataclasses import dataclass
@@ -82,6 +83,11 @@ class Param(Generic[T]):
 
         return desc
 
+    @property
+    def is_path(self) -> bool:
+        return issubclass(self.type, Path)
+
+    @property
     def shell_prefix(self) -> str:
         if self.type == bool:
             return f"--{self.name}"
@@ -136,6 +142,15 @@ COMMON_ACTION_PARAMS: Dict[str, Param] = {
         "For actions that support it, the unit for measuring chunk size.",
         default_value=None,
         type=TextUnit,
+    ),
+    "md_template": Param(
+        "md_template",
+        """
+        The markdown template to use for formatting. This is plain Markdown
+        with curly-brace {name} variables for values to insert.
+        """,
+        default_value=None,
+        type=Path,
     ),
 }
 

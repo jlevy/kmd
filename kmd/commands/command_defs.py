@@ -99,8 +99,7 @@ def welcome() -> None:
     """
     Print a welcome message.
     """
-
-    from kmd.docs.topics.welcome import __doc__ as welcome_doc
+    from kmd.docs import welcome
 
     output()
     output(HRULE, color=COLOR_HINT)
@@ -111,7 +110,7 @@ def welcome() -> None:
     output()
     output("Welcome to kmd.\n", color=COLOR_HEADING)
     output()
-    output(not_none(welcome_doc), text_wrap=Wrap.WRAP_FULL)
+    output(str(welcome), text_wrap=Wrap.WRAP_FULL)
     output(HRULE, color=COLOR_HINT)
 
 
@@ -485,25 +484,38 @@ def edit(path: Optional[str] = None, all: bool = False) -> None:
 
 
 @kmd_command
-def save(path: Optional[str] = None, no_frontmatter: bool = False) -> None:
+def save(
+    parent: Optional[str] = None, to: Optional[str] = None, no_frontmatter: bool = False
+) -> None:
     """
     Save the current selection to the given directory (which must exist), or to the
-    current directory if no target given. Output will have YAML frontmatter.
+    current directory if no target given.
+
+    :param parent: The directory to save the files to. If not given, it will be the current directory.
+    :param to: If only one file is selected, a name to save it as. If it exists, it will overwrite (and make a backup).
+    :param no_frontmatter: If true, will not include YAML frontmatter in the output.
     """
     ws = current_workspace()
     store_paths = ws.get_selection()
-    target_dir = Path(path) if path else Path(".")
 
-    if not target_dir.exists():
-        raise InvalidInput(f"Target directory does not exist: {target_dir}")
-
-    for store_path in store_paths:
-        target_path = target_dir / basename(store_path)
+    def copy_file(store_path: StorePath, target_path: Path):
         log.message("Saving: %s -> %s", store_path, target_path)
         copyfile_atomic(ws.base_dir / store_path, target_path, backup_suffix=".bak")
-
         if no_frontmatter:
             fmf_strip_frontmatter(target_path)
+
+    if len(store_paths) == 1 and to:
+        target_path = Path(to)
+        store_path = store_paths[0]
+        copy_file(store_path, target_path)
+    else:
+        target_dir = Path(parent) if parent else Path(".")
+        if not target_dir.exists():
+            raise InvalidInput(f"Target directory does not exist: {target_dir}")
+
+        for store_path in store_paths:
+            target_path = target_dir / basename(store_path)
+            copy_file(store_path, target_path)
 
 
 @kmd_command

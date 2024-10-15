@@ -91,8 +91,10 @@ def install_to_xonshrc():
 from xonsh.ptk_shell.shell import PromptToolkitShell
 
 
-class CustomShell(PromptToolkitShell):  # PromptToolkitShell or ReadlineShell
+class CustomInteractiveShell(PromptToolkitShell):  # PromptToolkitShell or ReadlineShell
     """
+    Our custom version of the interactive xonsh shell.
+
     Note event hooks in xonsh don't let you disable xonsh's processing, so we use a custom shell.
     """
 
@@ -205,7 +207,7 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     """
     import builtins
 
-    # XXX: A hack to get kmd help to work. We just delete the builtin help so
+    # XXX: A hack to get kmd help to replace Python help. We just delete the builtin help so
     # that kmd's help can be used in its place (otherwise builtins override aliases).
     del builtins.help
 
@@ -228,7 +230,7 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     )
     XSH.load(ctx=ctx, execer=execer, inherit_env=True)
     XSH.shell = Shell(execer=execer)  # type: ignore
-    XSH.shell.shell = CustomShell(execer=execer, ctx=ctx)  # type: ignore
+    XSH.shell.shell = CustomInteractiveShell(execer=execer, ctx=ctx)  # type: ignore
 
     is_interactive = False if single_command else True
 

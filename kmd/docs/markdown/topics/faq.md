@@ -1,51 +1,52 @@
-"""
-## FREQUENTLY ASKED QUESTIONS
+## Frequently Asked Questions
 
 ### What is kmd?
 
 Kmd is an extensible command-line power tool for exploring and organizing knowledge.
 
-It integrates the models, APIs, and Python libraries with the flexibility and
-extensibility of a modern command line interface.
+It integrates the models, APIs, and Python libraries with the flexibility and extensibility
+of a modern command line interface.
 
 Use it with GPT4o, Claude 3.5, Deepgram, and other tools to transcribe, translate,
-summarize, organize, edit, and visualize videos, podcasts, and documents into beautifully formatted notes.
+summarize, organize, edit, and visualize videos, podcasts, and documents into beautifully
+formatted notes.
 
-> "Simple should be simple. Complex should be possible."
+> "Simple should be simple.
+> Complex should be possible."
 > — Alan Kay
 
 The philosophy behind kmd is similar to Unix shell tools: simple commands that can be
-combined in flexible and powerful ways. It operates on "items" such as URLs, files, or
-Markdown notes within a workspace directory. These items are processed by a variety
-of actions.
+combined in flexible and powerful ways.
+It operates on "items" such as URLs, files, or Markdown notes within a workspace directory.
+These items are processed by a variety of actions.
 
-For more detailed information, you can run `help` to get background and a list
-of commands and actions.
-
+For more detailed information, you can run `help` to get background and a list of commands
+and actions.
 
 ### How do I get started using kmd?
 
 Run `help` to get an overview.
 
-Or use the kmd assistant to get help. Ask by typing any quesion ending in `?`
-The kmd assistant knows the docs and can answer many questions!
+Or use the kmd assistant to get help.
+Ask by typing any quesion ending in `?` The kmd assistant knows the docs and can answer many
+questions!
 
-Remember there are tab completions on many commands and actions, and that can help
-you get started. You can also try `sugg
+Remember there are tab completions on many commands and actions, and that can help you get
+started.
+You can also try `sugg
 
 Type `?` and press tab to see some frequently asked questions.
 
-
 ### What models are available?
 
-You can use kmd with any APIs or models you like! By default it uses APIs from
-OpenAI, Deepgram, and Anthropic.
-
+You can use kmd with any APIs or models you like!
+By default it uses APIs from OpenAI, Deepgram, and Anthropic.
 
 ### How can I transcribe a YouTube video or podcast?
 
-Here is an example of how to transcribe a YouTube video or podcast, then
-do some summarization and editing of it. (Click or copy/paste these commands.)
+Here is an example of how to transcribe a YouTube video or podcast, then do some
+summarization and editing of it.
+(Click or copy/paste these commands.)
 
 ```shell
 # Set up a workspace to test things out:
@@ -91,4 +92,3 @@ webpage_config
 webpage_generate
 show
 ```
-"""

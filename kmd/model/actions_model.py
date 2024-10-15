@@ -178,6 +178,7 @@ class Action(ABC):
     These can be new parameters defined in a subclass, or more commonly, an existing
     common parameter (like an LLM) that is shared by several actions.
     """
+    # TODO: Consider declaring if parameters are required.
 
     # More specific options that apply only to certain types of actions below.
 

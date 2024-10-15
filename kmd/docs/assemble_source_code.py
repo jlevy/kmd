@@ -2,6 +2,9 @@ import os
 from pathlib import Path
 from typing import List
 
+from cachetools import cached
+from pydantic.dataclasses import dataclass
+
 from kmd.util.format_utils import fmt_path
 
 
@@ -50,15 +53,26 @@ def source_for(*paths: Path) -> str:
     return "\n\n".join(_format_file_or_module(path) for path in paths)
 
 
-model_src = source_for(kmd_base_path / "model")
-"""The source code for the kmd framework model."""
+@dataclass(frozen=True)
+class SourceCode:
+    model_src: str
+    """The source code for the kmd framework model."""
 
-base_action_defs_src = source_for(kmd_base_path / "action_defs" / "base_actions")
-"""The source code for all the base action definitions."""
+    base_action_defs_src: str
+    """The source code for all the base action definitions."""
 
-text_tool_src = source_for(
-    kmd_base_path / "text_formatting",
-    kmd_base_path / "lang_tools",
-    kmd_base_path / "text_docs" / "text_doc.py",
-)
-"""The source code for some generally useful text tools."""
+    text_tool_src: str
+    """The source code for some generally useful text tools."""
+
+
+@cached(cache={})
+def load_sources() -> SourceCode:
+    return SourceCode(
+        model_src=source_for(kmd_base_path / "model"),
+        base_action_defs_src=source_for(kmd_base_path / "action_defs" / "base_actions"),
+        text_tool_src=source_for(
+            kmd_base_path / "text_formatting",
+            kmd_base_path / "lang_tools",
+            kmd_base_path / "text_docs" / "text_doc.py",
+        ),
+    )

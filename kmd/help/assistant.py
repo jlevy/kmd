@@ -27,13 +27,13 @@ def assistant_preamble(skip_api: bool = False, base_only: bool = False) -> str:
 
     return dedent(
         f"""
-        {fill_markdown(not_none(assistant_instructions.__doc__))} 
+        {fill_markdown(str(assistant_instructions))} 
 
 
         {output_as_string(lambda: output_help_page(base_only))}
 
 
-        {"" if skip_api else api_docs.__doc__} 
+        {"" if skip_api else api_docs} 
         """
     )
 
@@ -135,8 +135,6 @@ def assistance(input: str, fast: bool = False) -> str:
     try:
         response_data = json.loads(response.content)
         assistant_response = AssistantResponse.model_validate(response_data)
-
-        print(assistant_response)
 
         return assistant_response.full_str()
     except (ValidationError, json.JSONDecodeError) as e:

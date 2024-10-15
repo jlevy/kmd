@@ -108,9 +108,10 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
 
         if args:
             log.info(
-                "Mapping shell args to function params: %s -> %s -> pos_values=%s, kw_values=%s",
+                "Mapping shell args to function params: %s -> %s -> %s(*%s, **%s)",
                 args,
                 shell_args,
+                func.__name__,
                 pos_values,
                 kw_values,
             )

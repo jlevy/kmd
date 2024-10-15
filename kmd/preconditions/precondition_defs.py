@@ -64,6 +64,11 @@ def contains_fenced_code(item: Item) -> bool:
 
 
 @precondition
+def contains_curly_vars(item: Item) -> bool:
+    return bool(item.body and re.search(r"\{(\w+)\}", item.body))
+
+
+@precondition
 def has_text_body(item: Item) -> bool:
     return has_body(item) and item.format in (Format.plaintext, Format.markdown, Format.md_html)
 
@@ -81,6 +86,11 @@ def is_plaintext(item: Item) -> bool:
 @precondition
 def is_markdown(item: Item) -> bool:
     return has_body(item) and item.format in (Format.markdown, Format.md_html)
+
+
+@precondition
+def is_markdown_template(item: Item) -> bool:
+    return is_markdown(item) and contains_curly_vars(item)
 
 
 @precondition
