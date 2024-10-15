@@ -8,6 +8,7 @@ from kmd.preconditions.precondition_defs import is_text_doc
 
 @kmd_action
 class AddSummaryBullets(ComboAction):
+
     name: str = "add_summary_bullets"
 
     description: str = (

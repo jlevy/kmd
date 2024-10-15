@@ -11,6 +11,7 @@ log = get_logger(__name__)
 
 @kmd_action
 class FetchPageMetadata(PerItemAction):
+
     name: str = "fetch_page_metadata"
 
     description: str = "Fetches a web page for title, description, and thumbnail, if available."

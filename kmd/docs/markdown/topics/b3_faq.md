@@ -1,6 +1,6 @@
 ## Frequently Asked Questions
 
-### What is kmd?
+### What is Kmd?
 
 Kmd is an extensible command-line power tool for exploring and organizing knowledge.
 
@@ -15,7 +15,7 @@ formatted notes.
 > Complex should be possible."
 > — Alan Kay
 
-The philosophy behind kmd is similar to Unix shell tools: simple commands that can be
+The philosophy behind Kmd is similar to Unix shell tools: simple commands that can be
 combined in flexible and powerful ways.
 It operates on "items" such as URLs, files, or Markdown notes within a workspace directory.
 These items are processed by a variety of actions.
@@ -23,12 +23,12 @@ These items are processed by a variety of actions.
 For more detailed information, you can run `help` to get background and a list of commands
 and actions.
 
-### How do I get started using kmd?
+### How do I get started using Kmd?
 
 Run `help` to get an overview.
 
-Or use the kmd assistant to get help.
-Ask by typing any quesion ending in `?` The kmd assistant knows the docs and can answer many
+Or use the Kmd assistant to get help.
+Ask by typing any quesion ending in `?` The Kmd assistant knows the docs and can answer many
 questions!
 
 Remember there are tab completions on many commands and actions, and that can help you get
@@ -39,7 +39,7 @@ Type `?` and press tab to see some frequently asked questions.
 
 ### What models are available?
 
-You can use kmd with any APIs or models you like!
+You can use Kmd with any APIs or models you like!
 By default it uses APIs from OpenAI, Deepgram, and Anthropic.
 
 ### How can I transcribe a YouTube video or podcast?
@@ -86,9 +86,7 @@ webpage_generate
 # And look at it in the browser:
 show
 
-# Combine more actions in a more complex combo action, adding paragraph annotations and concepts:
+# Combine more actions in a more complex combo action, adding paragraph annotations and headings:
 transcribe_annotate_summarize 'https://www.youtube.com/watch?v=XRQnWomofIY'
-webpage_config
-webpage_generate
-show
+show_as_webpage
 ```

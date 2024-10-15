@@ -13,6 +13,7 @@ log = get_logger(__name__)
 
 @kmd_action
 class BreakIntoParagraphs(LLMAction):
+
     name: str = "break_into_paragraphs"
 
     description: str = (

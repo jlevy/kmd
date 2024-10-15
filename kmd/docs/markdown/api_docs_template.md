@@ -1,6 +1,6 @@
 KMD ITEM AND ACTION MODEL
 
-Here is the kmd source code representing the data model of Python classes for items and
+Here is the Kmd source code representing the data model of Python classes for items and
 actions:
 
 {model_src}

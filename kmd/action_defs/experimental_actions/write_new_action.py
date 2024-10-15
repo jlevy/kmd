@@ -27,6 +27,7 @@ log = get_logger(__name__)
 
 @kmd_action
 class WriteNewAction(LLMAction):
+
     name: str = "write_new_action"
 
     description: str = (

@@ -19,6 +19,7 @@ log = get_logger(__name__)
 @kmd_action
 @dataclass
 class IdentifySpeakers(PerItemAction):
+
     name: str = "identify_speakers"
 
     description: str = (

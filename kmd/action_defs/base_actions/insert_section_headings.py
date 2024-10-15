@@ -7,6 +7,7 @@ from kmd.text_docs.window_settings import WINDOW_128_PARA, WindowSettings
 
 @kmd_action
 class InsertSectionHeadings(LLMAction):
+
     name: str = "insert_section_headings"
 
     description: str = "Insert headings into a text as <h2> tags."

@@ -24,6 +24,7 @@ log = get_logger(__name__)
 
 @kmd_action
 class FindNearDuplicates(Action):
+
     name: str = "find_near_duplicates"
 
     description: str = (

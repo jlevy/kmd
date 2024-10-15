@@ -10,6 +10,7 @@ log = get_logger(__name__)
 
 @kmd_action
 class ListChannel(Action):
+
     name: str = "list_channel"
 
     description: str = (

@@ -19,24 +19,24 @@ def _load_markdown(path: str) -> str:
     return topic_file.read_text()
 
 
-@lazyobject
-def welcome() -> str:
-    return _load_markdown("markdown/welcome")
+def _lazy_load(path: str):
+    @lazyobject
+    def content() -> str:
+        return _load_markdown(path)
+
+    return content
 
 
-@lazyobject
-def about_kmd() -> str:
-    return _load_markdown("markdown/topics/about_kmd")
+welcome = _lazy_load("markdown/welcome")
+what_is_kmd = _lazy_load("markdown/topics/a1_what_is_kmd")
+motivation = _lazy_load("markdown/topics/a2_motivation")
+getting_started = _lazy_load("markdown/topics/a3_getting_started")
+tips_for_use_with_other_tools = _lazy_load("markdown/topics/a4_tips_for_use_with_other_tools")
+development = _lazy_load("markdown/topics/a5_development")
 
-
-@lazyobject
-def workspace_and_file_formats() -> str:
-    return _load_markdown("markdown/topics/workspace_and_file_formats")
-
-
-@lazyobject
-def faq() -> str:
-    return _load_markdown("markdown/topics/faq")
+kmd_overview = _lazy_load("markdown/topics/b1_kmd_overview")
+workspace_and_file_formats = _lazy_load("markdown/topics/b2_workspace_and_file_formats")
+faq = _lazy_load("markdown/topics/b3_faq")
 
 
 @lazyobject

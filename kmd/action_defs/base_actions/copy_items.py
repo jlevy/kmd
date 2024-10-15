@@ -10,6 +10,7 @@ log = get_logger(__name__)
 @kmd_action
 @dataclass
 class CopyItems(PerItemAction):
+
     name: str = "copy_items"
 
     description: str = """

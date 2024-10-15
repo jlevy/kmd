@@ -1,6 +1,9 @@
+import re
 from pathlib import Path
 from typing import Dict, List
+
 from kmd.config.logger import get_logger
+from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.model import (
     Action,
@@ -14,8 +17,6 @@ from kmd.model import (
 )
 from kmd.model.params_model import common_params
 from kmd.preconditions.precondition_defs import is_markdown
-import re
-from kmd.errors import InvalidInput
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)

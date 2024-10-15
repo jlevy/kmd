@@ -44,6 +44,7 @@ class Proofread(LLMAction):
         - If unsure about how to make a correction, leave that portion of the text unchanged.
         
         - ONLY GIVE THE CORRECTED TEXT, with no other commentary. 
+
         Original text:
         
         {body}

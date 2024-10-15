@@ -306,7 +306,7 @@ def test_fmf_metadata():
     metadata_md = {"title": "Test Title", "author": "Test Author"}
     fmf_write(file_path_md, content_md, metadata_md)
     result, offset = fmf_read_frontmatter(file_path_md)
-    assert result == """author: Test Author\ntitle: Test Title\n"""
+    assert result == """title: Test Title\nauthor: Test Author\n"""
     assert offset == len(result) + 2 * (len("---") + 1)
 
     # Test a zero-length file.

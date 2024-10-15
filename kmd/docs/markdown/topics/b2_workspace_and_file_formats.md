@@ -1,8 +1,8 @@
 """
 ## Workspace and File Formats
 
-A kmd workspace is simply a directory of files.
-The goal is for a workspace to be easy to use not just with kmd but with other editors or
+A Kmd workspace is simply a directory of files.
+The goal is for a workspace to be easy to use not just with Kmd but with other editors or
 tools, so it's possible to edit, share, or commit files to version control.
 It makes sense to devote a workspace to a single topic, project, or area of research.
 
@@ -20,7 +20,7 @@ File formats and conventions:
   indicates the item type (note, resource, etc.)
   and format (.md, .yml, etc.).
 
-- Many items have metadata attached, giving an item type (see `ItemType` in the kmd item
+- Many items have metadata attached, giving an item type (see `ItemType` in the Kmd item
   model), a format (see `Format`), a title, and other optinal fields like a URL (if the item
   is or is derived from an online URL) and a description.
 

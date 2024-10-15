@@ -1,4 +1,4 @@
-## About Kmd
+## Kmd Overview
 
 Kmd is an extensible command-line tool for exploring and organizing knowledge.
 It includes tasks like editing and summarizing text, transcribing videos, generating PDFs or
@@ -14,13 +14,13 @@ Some slow actions (like downloading and transcribing videos) automatically produ
 outputs (stored in the `kmd_cache` directory) to make things faster.
 
 Kmd is built on top of xonsh, a Python-powered shell language.
-This lets you run all kmd commands, as well as have access to intelligent auto-complete.
+This lets you run all Kmd commands, as well as have access to intelligent auto-complete.
 In xonsh, you also have access to the full power of Python and the shell when needed.
 
-On top of this, kmd understands its own code and APIs and can help you use and even extend
+On top of this, Kmd understands its own code and APIs and can help you use and even extend
 it.
 At any time you can ask a question and have the LLM-based assistant help you in how to use
-kmd.
+Kmd.
 Anything you type that ends in a `?` is sent to the assistant.
 
 ### Items and File Formats
@@ -35,7 +35,7 @@ Within a workspace, files are organized into folders by type, including resource
 configs, and exports.
 Most text items are stored in Markdown format with YAML front matter (the same format used
 by Jekyll or other static site generators), optionaly with some HTML for structure if needed.
-But with kmd you can process or export items in any other format you wish, like a PDF or a
+But with Kmd you can process or export items in any other format you wish, like a PDF or a
 webpage.
 
 All items have a **source path**, which is simply the path of the file relative to the
@@ -58,8 +58,8 @@ information.
 
 ### Commands and Actions
 
-Most things are done in kmd via kmd **commands**, which are built-in operations (like
-listing or selecting files to process), and kmd **actions**, which are an extensible set of
+Most things are done via Kmd **commands**, which are built-in operations (like
+listing or selecting files to process), and Kmd **actions**, which are an extensible set of
 capabilities, like formatting documents, transcribing videos, or any arbitrary use of APIs.
 
 Kmd actions are a set of operations that can operate on one or more items and produce one or
@@ -95,7 +95,6 @@ Kmd makes a few kinds of messy text manipulations easier:
   if it has the same single output), `CachedLLMAction` (if it also is performing an LLM-based
   transform), or `ChunkedLLMAction` (if it will be processing a document broken into
   <div class="chunk"> elements).
-  `
 
 - Sliding window transformations: LLMs can have trouble processing large inputs, not just
   because of context window and because they may make more mistakes when making lots of
@@ -122,6 +121,6 @@ Kmd makes a few kinds of messy text manipulations easier:
   Kmd offers simple tools to subdivide documents into paragraphs and sentences and these can
   be used together with sliding windows to process large documents.
 
-In addition, there are built-in kmd commands that are part of the kmd tool itself.
+In addition, there are built-in Kmd commands that are part of the Kmd tool itself.
 These allow you to list items in the workspace, see or change the current selection, archive
 items, view logs, etc.

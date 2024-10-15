@@ -12,6 +12,7 @@ log = get_logger(__name__)
 
 @kmd_action
 class FindConcepts(LLMAction):
+
     name: str = "find_concepts"
 
     description: str = "Identify the key concepts in a text. Processes each div chunk."

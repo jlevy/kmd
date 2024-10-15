@@ -25,15 +25,15 @@ Complex should be possible.*” —Alan Kay
 [Follow me](https://x.com/ojoshe) for future updates and please DM me if you have use cases
 for Kmd or ideas or feedback.*
 
-{what_is_kmd}
+{a1_what_is_kmd}
 
-{motivation}
+{a2_motivation}
 
-{getting_started}
+{a3_getting_started}
 
-{tips_for_use_with_other_tools}
+{a4_tips_for_use_with_other_tools}
 
-{development}
+{a5_development}
 
 <br/>
 

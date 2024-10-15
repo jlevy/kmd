@@ -61,7 +61,9 @@ class Chat(Action):
             output_assistance("%s", llm_response)
 
             # TODO: Why does the response have trailing whitespace on lines? Makes the YAML ugly.
-            stripped_response = "\n".join(line.rstrip() for line in llm_response.splitlines())
+            stripped_response = "\n".join(
+                line.rstrip() for line in llm_response.content.splitlines()
+            )
 
             chat_history.append(ChatMessage(ChatRole.assistant, stripped_response))
 
