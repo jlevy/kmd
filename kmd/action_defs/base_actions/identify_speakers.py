@@ -57,7 +57,7 @@ class IdentifySpeakers(PerItemAction):
             system_message=system_message,
             template=identification_template,
             input=item.body,
-        )
+        ).content
 
         # Parse the mapping.
         try:

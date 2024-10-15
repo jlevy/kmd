@@ -1,7 +1,9 @@
+import json
 from textwrap import dedent
 from typing import Callable
 
 from cachetools import cached
+from pydantic import ValidationError
 
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings
@@ -9,9 +11,9 @@ from kmd.docs import api_docs, assistant_instructions
 from kmd.errors import KmdRuntimeError
 from kmd.file_storage.workspaces import current_workspace_info, get_param_value
 from kmd.llms.llm_completion import llm_template_completion
+from kmd.model.assistant_model import AssistantResponse
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
-from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
 from kmd.util.format_utils import fmt_path
 from kmd.util.type_utils import not_none
@@ -94,9 +96,11 @@ def assistant_current_state() -> str:
 
 def assistance(input: str, fast: bool = False) -> str:
 
+    # TODO: Stream response.
+
     assistant_model = "assistant_model_fast" if fast else "assistant_model"
 
-    model = LLM(not_none(get_param_value(assistant_model)))
+    model = not_none(get_param_value(assistant_model, type=LLM))
 
     output(f"Getting assistance (model {model})…")
 
@@ -119,13 +123,22 @@ def assistance(input: str, fast: bool = False) -> str:
         """
     )
 
-    # TODO: Stream response.
-    return wrap_markdown(
-        llm_template_completion(
-            model,
-            system_message=system_message,
-            template=template,
-            input=input,
-            save_objects=global_settings().debug_assistant,
-        )
+    response = llm_template_completion(
+        model,
+        system_message=system_message,
+        template=template,
+        input=input,
+        save_objects=global_settings().debug_assistant,
+        response_format=AssistantResponse,
     )
+
+    try:
+        response_data = json.loads(response.content)
+        assistant_response = AssistantResponse.model_validate(response_data)
+
+        print(assistant_response)
+
+        return assistant_response.full_str()
+    except (ValidationError, json.JSONDecodeError) as e:
+        log.error("Error parsing assistant response: %s", e)
+        raise e

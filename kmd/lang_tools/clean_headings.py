@@ -35,7 +35,7 @@ def clean_heading(heading: str) -> str:
         ),
         input=heading,
         save_objects=False,
-    )
+    ).content
 
 
 def summary_heading(values: List[str]) -> str:
@@ -64,4 +64,4 @@ def summary_heading(values: List[str]) -> str:
         ),
         input=as_bullet_points(values),
         save_objects=False,
-    )
+    ).content

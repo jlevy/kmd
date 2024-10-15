@@ -1,8 +1,9 @@
-from textwrap import indent
-from typing import Dict, List, Optional, Type, Union
+from typing import cast, Dict, List, Optional, Type, Union
 
 import litellm
+from litellm.types.utils import Choices, Message as LiteLLMMessage, ModelResponse
 from pydantic import BaseModel
+from pydantic.dataclasses import dataclass
 from slugify import slugify
 
 from kmd.config.logger import get_logger
@@ -20,31 +21,49 @@ from kmd.util.strif import abbreviate_str
 log = get_logger(__name__)
 
 
+@dataclass
+class LLMCompletionResult:
+    message: LiteLLMMessage
+    content: str
+
+
 @log_calls(level="info")
 def llm_completion(
-    model: LLM,
+    model: str | LLM,
     messages: List[Dict[str, str]],
     response_format: Optional[Union[dict, Type[BaseModel]]] = None,
     **kwargs,
-) -> str:
+) -> LLMCompletionResult:
     """
     Perform an LLM completion with LiteLLM.
     """
-    llm_output = litellm.completion(
-        model.value,
-        messages=messages,
-        response_format=response_format,
-        **kwargs,
+    model_name = model if isinstance(model, str) else model.value
+
+    llm_output = cast(
+        ModelResponse,
+        litellm.completion(
+            model_name,
+            messages=messages,
+            response_format=response_format,
+            **kwargs,
+        ),  # type: ignore
     )
 
-    result = llm_output.choices[0].message.content  # type: ignore
-    if not result or not isinstance(result, str):
+    choices = cast(Choices, llm_output.choices[0])
+
+    message = choices.message
+
+    # Just sanity checking and logging.
+    content = choices.message.content
+    if not content or not isinstance(content, str):
         raise ApiResultError(f"LLM completion failed: {model}: {llm_output}")
+
     total_input_len = sum(len(m["content"]) for m in messages)
     log.message(
-        f"LLM completion from {model}: input {total_input_len} chars in {len(messages)} messages, output {len(result)} chars"
+        f"LLM completion from {model}: input {total_input_len} chars in {len(messages)} messages, output {len(content)} chars"
     )
-    return result
+
+    return LLMCompletionResult(message=message, content=content)
 
 
 def llm_template_completion(
@@ -56,7 +75,7 @@ def llm_template_completion(
     check_no_results: bool = True,
     response_format: Optional[Union[dict, Type[BaseModel]]] = None,
     **kwargs,
-) -> str:
+) -> LLMCompletionResult:
     """
     Perform an LLM completion. Input is inserted into the template with a `body` parameter.
     Use this function to interact with the LLMs for consistent logging.
@@ -81,7 +100,7 @@ def llm_template_completion(
         ),
     )
 
-    text_output = llm_completion(
+    result = llm_completion(
         model,
         messages=[
             {"role": "system", "content": str(system_message)},
@@ -91,18 +110,16 @@ def llm_template_completion(
         **kwargs,
     )
 
-    log.info("LLM completion output:\n%s", indent(text_output, "    "))
-
-    if check_no_results and is_no_results(text_output):
-        log.message("No results for LLM transform, will ignore: %r", text_output)
-        text_output = ""
+    if check_no_results and is_no_results(result.content):
+        log.message("No results for LLM transform, will ignore: %r", result.content)
+        result.content = ""
 
     if save_objects:
         messages = ChatHistory(
             [
                 ChatMessage(ChatRole.system, str(system_message)),
                 ChatMessage(ChatRole.user, user_message),
-                ChatMessage(ChatRole.assistant, text_output),
+                ChatMessage(ChatRole.assistant, result.content),
             ]
         )
         log.save_object(
@@ -112,4 +129,4 @@ def llm_template_completion(
             level=LogLevel.message,
         )
 
-    return text_output
+    return result

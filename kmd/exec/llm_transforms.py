@@ -39,7 +39,7 @@ def windowed_llm_transform(
                     template=template,
                     input=input_doc.reassemble(),
                     check_no_results=check_no_results,
-                )
+                ).content
             )
         )
 
@@ -95,7 +95,7 @@ def llm_transform_str(context: ExecContext, input_str: str, check_no_results: bo
             template=action.template,
             input=input_str,
             check_no_results=check_no_results,
-        )
+        ).content
 
     return result_str
 
