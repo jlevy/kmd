@@ -35,7 +35,6 @@ from kmd.file_formats.frontmatter_format import (
     fmf_strip_frontmatter,
 )
 from kmd.file_formats.yaml_util import to_yaml_string
-from kmd.file_storage.file_listings import walk_by_folder
 from kmd.file_storage.file_store import initialize_store_dirs
 from kmd.file_storage.workspaces import (
     check_strict_workspace_name,
@@ -44,6 +43,7 @@ from kmd.file_storage.workspaces import (
     is_workspace_dir,
     resolve_workspace_name,
 )
+from kmd.file_tools.file_walk import walk_by_folder
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.help.assistant import assistance
 from kmd.help.help_page import output_help_page
@@ -1003,9 +1003,15 @@ def search(
 ) -> CommandOutput:
     """
     Search for a string in files at the given paths and return their store paths.
-    Useful to find all docs or resources matching a string or regex.
+    Useful to find all docs or resources matching a string or regex. This wraps
+    ripgrep.
 
-    :param sort: How to sort results. Can be `path` or `score`.
+    Example: Look for all resource files containing the string "youtube.com",
+    sorted by date modified:
+
+    search "youtube.com" resources/ --sort=modified
+
+    :param sort: How to sort results. Can be `path` or `modified` or `created` (as with `rg`).
     :param ignore_case: Ignore case when searching.
     """
     tool_check().require(CmdlineTool.ripgrep)

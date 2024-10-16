@@ -1,9 +1,11 @@
 import html
 import shlex
+from datetime import datetime, timedelta
 from pathlib import Path
 from textwrap import indent
 from typing import Any, Iterable, List
 
+import humanfriendly
 import regex
 
 from kmd.util.strif import abbreviate_str
@@ -132,6 +134,9 @@ def abbreviate_phrase_in_middle(
     return result
 
 
+## Some generic formatters that can safely be used for any paths, phrases, timestamps, etc.
+
+
 def fmt_path(path: str | Path, resolve: bool = True) -> str:
     """
     Format a path or filename for display. This quotes it if it contains whitespace.
@@ -194,6 +199,41 @@ def fmt_words(*words: str | None, sep: str = " ") -> str:
         processed_words.append(word)
 
     return sep.join(processed_words)
+
+
+def fmt_age(since_time: float | timedelta, brief: bool = False) -> str:
+    if brief:
+        agestr = (
+            humanfriendly.format_timespan(since_time, detailed=False, max_units=1)
+            .replace(" seconds", "s")
+            .replace(" second", "s")
+            .replace(" minutes", "m")
+            .replace(" minute", "m")
+            .replace(" hours", "h")
+            .replace(" hour", "h")
+            .replace(" days", "d")
+            .replace(" day", "d")
+            .replace(" weeks", "w")
+            .replace(" week", "w")
+            .replace(" months", "mo")
+            .replace(" month", "mo")
+            .replace(" years", "y")
+            .replace(" year", "y")
+        )
+    else:
+        agestr = humanfriendly.format_timespan(since_time, detailed=False, max_units=2)
+
+    return agestr + " ago"
+
+
+def fmt_time(dt: datetime, now: datetime, iso_time: bool, brief: bool = False) -> str:
+    """
+    Format a datetime for display, either as an age (e.g. "2d ago") or ISO timestamp.
+    """
+    if iso_time:
+        return dt.isoformat().split(".", 1)[0] + "Z"
+    else:
+        return fmt_age(now.timestamp() - dt.timestamp(), brief=brief)
 
 
 ## Tests

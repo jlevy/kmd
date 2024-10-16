@@ -18,11 +18,11 @@ from kmd.errors import (
     UnexpectedError,
     UnrecognizedFileFormat,
 )
-from kmd.file_storage.file_listings import walk_by_folder
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import ARCHIVE_DIR, initialize_store_dirs
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_filename_and_type
+from kmd.file_tools.file_walk import walk_by_folder
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import (
     FileExt,
@@ -36,12 +36,11 @@ from kmd.model.params_model import ParamValues
 from kmd.model.paths_model import StorePath
 from kmd.query.vector_index import WsVectorIndex
 from kmd.text_ui.command_output import output
-from kmd.util.file_utils import move_file
 from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.hash_utils import hash_file
 from kmd.util.log_calls import format_duration
 
-from kmd.util.strif import copyfile_atomic
+from kmd.util.strif import copyfile_atomic, move_file
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import is_url, Url
 

@@ -37,6 +37,7 @@ cydifflib = "^1.1.0"
 marko = "^2.1.2"
 requests = "^2.32.3"
 pydub = "^0.25.1"
+humanfriendly = "^10.0"
 curl-cffi = "^0.7.1"
 # yt-dlp = "^2024.8.6"
 # Temp support for new Apple Podcasts format, until yt-dlp is updated:

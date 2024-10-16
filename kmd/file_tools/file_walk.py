@@ -8,19 +8,18 @@ from kmd.errors import FileNotFound
 from kmd.model.file_formats_model import is_ignored
 from kmd.util.format_utils import fmt_path
 
-# TODO: Options to cap number of files returned per folder and number of folders walked.
-# TODO: Support other sorting options.
 
 log = get_logger(__name__)
 
 
 def walk_by_folder(
-    start_path: Path, relative_to: Path, show_hidden: bool = False
+    start_path: Path, relative_to: Path, show_hidden: bool = False, recursive: bool = True
 ) -> Generator[Tuple[str, List[str]], None, None]:
     """
-    Yields all files in each folder as `(rel_dirname, filenames)` for each directory in
-    the store, where `rel_dirname` is relative to `base_dir`. Handles sorting and skipping
-    hidden files.
+    Simple wrapper around `os.walk`. Yields all files in each folder as
+    `(rel_dirname, filenames)` for each directory within `start_path`, where
+    `rel_dirname` is relative to `relative_to`. Handles sorting by name
+    and skipping hidden files.
     """
 
     start_path = start_path.resolve()
@@ -40,6 +39,10 @@ def walk_by_folder(
 
     # Walk the directory.
     for dirname, dirnames, filenames in os.walk(start_path):
+        # If not recursive, prevent os.walk from descending into subdirectories.
+        if not recursive:
+            dirnames[:] = []
+
         dirnames.sort()
         filenames.sort()
 

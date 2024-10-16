@@ -9,6 +9,7 @@ import hashlib
 import os
 import random
 import re
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -22,6 +23,7 @@ DEV_NULL = open(os.devnull, "wb")
 
 BACKUP_SUFFIX = ".bak"
 TIMESTAMP_VAR = "{timestamp}"
+DEFAULT_BACKUP_SUFFIX = f"{TIMESTAMP_VAR}{BACKUP_SUFFIX}"
 
 _RANDOM = random.SystemRandom()
 _RANDOM.seed()
@@ -57,7 +59,7 @@ def new_timestamped_uid(bits: int = 32) -> str:
     randomness. The advantage of this is it sorts nicely by time, while still being unique.
     Example: 20150912T084555Z-378465-43vtwbx
     """
-    timestamp = re.sub(r"[^\w.]", "", datetime.now().isoformat()).replace(".", "Z-")
+    timestamp = re.sub(r"[^\w.]", "", datetime.now(timezone.utc).isoformat()).replace(".", "Z-")
     return f"{timestamp}-{new_uid(bits)}"
 
 
@@ -165,10 +167,27 @@ def _expand_backup_suffix(backup_suffix: str) -> str:
     )
 
 
-def move_to_backup(path: str | Path, backup_suffix: Optional[str] = BACKUP_SUFFIX):
+# Clear the target of the backup in case it already exists.
+# Note this isn't perfectly atomic, if another thread does a backup
+# to an identical backup directory but this would be very rare.
+def _prepare_for_backup(path: Path, backup_suffix: str) -> Path:
+    if not backup_suffix:
+        raise ValueError("No backup_suffix")
+
+    backup_path = path.with_name(path.name + _expand_backup_suffix(backup_suffix))
+
+    if backup_path.is_symlink():
+        backup_path.unlink()
+    elif backup_path.is_dir():
+        shutil.rmtree(backup_path)
+
+    return backup_path
+
+
+def move_to_backup(path: str | Path, backup_suffix: str = DEFAULT_BACKUP_SUFFIX):
     """
     Move the given file or directory to the same name, with a backup suffix.
-    If backup_suffix not supplied, move it to the extension ".bak".
+    If backup_suffix not supplied, move it to the extension "{timestamp}.bak".
     In backup_suffix, the string "{timestamp}", if present, will be replaced
     by a new_timestamped_uid(), allowing infinite numbers of timestamped backups.
     If backup_suffix is supplied and is None, don't do anything.
@@ -178,16 +197,42 @@ def move_to_backup(path: str | Path, backup_suffix: Optional[str] = BACKUP_SUFFI
     will be clobbered!
     """
     path = Path(path)
-    if backup_suffix and path.exists():
-        backup_path = path.with_name(path.name + _expand_backup_suffix(backup_suffix))
-        # Some messy corner cases need to be handled for existing backups.
-        # TODO: Note if this is a directory, and we do this twice at once, there is a potential race
-        # that could leave one backup inside the other.
-        if backup_path.is_symlink():
-            backup_path.unlink()
-        elif backup_path.is_dir():
-            shutil.rmtree(backup_path)
-        shutil.move(str(path), str(backup_path))
+    backup_path = _prepare_for_backup(path, backup_suffix)
+    shutil.move(str(path), str(backup_path))
+
+
+def copy_to_backup(path: str | Path, backup_suffix: str = DEFAULT_BACKUP_SUFFIX):
+    """
+    Same as `move_to_backup()` but only copies.
+    """
+    path = Path(path)
+    backup_path = _prepare_for_backup(path, backup_suffix)
+    if path.is_dir():
+        copytree_atomic(path, backup_path)
+    else:
+        copyfile_atomic(path, backup_path)
+
+
+def move_file(
+    src_path: Path,
+    dest_path: Path,
+    keep_backup: bool = True,
+    backup_suffix: str = DEFAULT_BACKUP_SUFFIX,
+):
+    """
+    Move file, handling parent directory creation and optionally keeping a backup
+    if the destination file already exists, using `move_to_backup()`.
+    """
+    if not keep_backup and dest_path.exists():
+        raise FileExistsError(f"Destination file already exists: {shlex.quote(str(dest_path))}")
+    if keep_backup and src_path.exists() and dest_path.exists():
+        move_to_backup(str(dest_path), backup_suffix=backup_suffix)
+
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(src_path, dest_path)
+
+    # TODO: If we created a backup, compare file contents and remove the backup if it's
+    # identical, to avoid clutter.
 
 
 def make_parent_dirs(path: str | Path, mode: int = 0o777) -> Path:
@@ -353,23 +398,6 @@ def copytree_atomic(
         copyfile_atomic(
             source_path, dest_path, make_parents=make_parents, backup_suffix=backup_suffix
         )
-
-
-def movefile(
-    source_path: str | Path,
-    dest_path: str | Path,
-    make_parents: bool = False,
-    backup_suffix: Optional[str] = None,
-):
-    """
-    Move file. With a few extra options.
-    """
-    source_path = Path(source_path)
-    dest_path = Path(dest_path)
-    if make_parents:
-        make_parent_dirs(dest_path)
-    move_to_backup(dest_path, backup_suffix=backup_suffix)
-    shutil.move(str(source_path), str(dest_path))
 
 
 def rmtree_or_file(path: str | Path, ignore_errors: bool = False):

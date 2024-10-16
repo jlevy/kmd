@@ -122,12 +122,12 @@ class WriteNewAction(LLMAction):
             model,
             messages=instructions.as_chat_completion(),
         )
-        python_body = strip_markdown_fence(llm_response)
+        python_body = strip_markdown_fence(llm_response.content)
         if python_body != llm_response:
             log.message(
                 "Stripped extraneous Markdown, keeping %s of %s chars",
                 len(python_body),
-                len(llm_response),
+                len(llm_response.content),
             )
         result_item = instructions_item.derived_copy(
             type=ItemType.extension, format=Format.python, body=python_body

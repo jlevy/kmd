@@ -58,20 +58,25 @@ def _map_keyword(kw_args: Mapping[str, str | bool], kw_params: List[FuncParam]) 
     var_kw_values = {}
     var_kw_param = None
 
-    for param in kw_params:
-        if param.is_varargs:
-            var_kw_param = param
-            break
+    # Find the var keyword argument (**kwargs), if any.
+    var_kw_param = next((param for param in kw_params if param.is_varargs), None)
 
+    # Map the keyword arguments to the function parameters.
     for key, value in kw_args.items():
         matching_param = next((param for param in kw_params if param.name == key), None)
         if matching_param:
             matching_param_type = matching_param.type or str
+
+            if isinstance(value, bool) and not issubclass(matching_param_type, bool):
+                raise InvalidCommand(f"Option `--{key}` expects a value")
+            if not isinstance(value, bool) and issubclass(matching_param_type, bool):
+                raise InvalidCommand(f"Option `--{key}` is boolean and does not take a value")
+
             kw_values[key] = matching_param_type(value)  # Convert value to type.
         elif var_kw_param:
             var_kw_values[key] = value
         else:
-            raise InvalidCommand(f"Unknown option: --{key}")
+            raise InvalidCommand(f"Unknown option `--{key}`")
 
     if var_kw_param:
         kw_values.update(var_kw_values)
