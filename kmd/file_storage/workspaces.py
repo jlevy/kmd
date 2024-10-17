@@ -1,6 +1,5 @@
 import os
 import re
-import tempfile
 from pathlib import Path
 from typing import Optional, Tuple, Type, TypeVar
 
@@ -145,13 +144,6 @@ def current_workspace(log_on_change: bool = True) -> FileStore:
         _last_workspace_dir = workspace_dir
 
     return ws
-
-
-def current_tmp_dir() -> Path:
-    try:
-        return current_workspace().dirs.tmp_dir
-    except InvalidState:
-        return Path(tempfile.gettempdir())
 
 
 def import_and_load(locator: InputArg) -> Item:

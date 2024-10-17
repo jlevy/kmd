@@ -142,40 +142,48 @@ def parse_command_str(command_str: str) -> Tuple[str, List[str], Dict[str, str |
 
 @dataclass(frozen=True)
 class ShellArgs:
-    pos_args: List[str]
-    kw_args: Dict[str, str | bool]
+    """
+    Immutable record of parsed command line arguments and options.
+    """
+
+    args: List[str]
+    options: Dict[str, str | bool]
     show_help: bool = False
 
 
-def parse_shell_args(args: List[str]) -> ShellArgs:
+def parse_shell_args(args_and_opts: List[str]) -> ShellArgs:
     """
-    Parse pre-split shell input arguments into positional and keyword arguments,
-    also handling boolean flags and help.
+    Parse pre-split raw shell input arguments into plain args and options
+    (shell arguments starting with `--`).
+
+    All plain args are strings. All options are string values (if they have
+    a value) or boolean flags with a True value (indicating they were
+    present on the command line with no value provided).
 
     ["foo", "--opt1", "--opt2='bar baz'"]
-      -> ShellArgs(pos_args=["foo"], kw_args={"opt1": True, "opt2": "bar baz"}, show_help=False)
+      -> ShellArgs(args=["foo"], options={"opt1": True, "opt2": "bar baz"}, show_help=False)
 
     ["foo", "--help"]
-      -> ShellArgs(pos_args=["foo"], kw_args={}, show_help=True)
+      -> ShellArgs(args=["foo"], options={}, show_help=True)
     """
-    pos_args: List[str] = []
-    kw_args: Dict[str, str | bool] = {}
+    args: List[str] = []
+    options: Dict[str, str | bool] = {}
     show_help: bool = False
 
     i = 0
-    while i < len(args):
-        if args[i].startswith("-"):
-            key, value = parse_option(args[i])
+    while i < len(args_and_opts):
+        if args_and_opts[i].startswith("-"):
+            key, value = parse_option(args_and_opts[i])
             if key == "help":
                 show_help = True
             else:
-                kw_args[key] = value
+                options[key] = value
             i += 1
         else:
-            pos_args.append(args[i])
+            args.append(args_and_opts[i])
             i += 1
 
-    return ShellArgs(pos_args=pos_args, kw_args=kw_args, show_help=show_help)
+    return ShellArgs(args=args, options=options, show_help=show_help)
 
 
 ## Tests
@@ -260,12 +268,12 @@ def test_parse_shell_args():
     ]
     shell_args = parse_shell_args(args)
 
-    assert shell_args.pos_args == [
+    assert shell_args.args == [
         "pos1",
         "pos2",
         "pos3",
     ]
-    assert shell_args.kw_args == {
+    assert shell_args.options == {
         "key1": "value1",
         "key2": True,
         "k3": "value3",

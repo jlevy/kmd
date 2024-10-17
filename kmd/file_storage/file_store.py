@@ -203,7 +203,9 @@ class FileStore:
                 return store_path
         return None
 
-    def find_path_for(self, item: Item) -> Tuple[StorePath, Optional[StorePath]]:
+    def find_path_for(
+        self, item: Item, use_tmp: bool = False
+    ) -> Tuple[StorePath, Optional[StorePath]]:
         """
         Return the store path for an item. If the item already has a `store_path`, we use that.
         Otherwise we need to find the store path or generate a new one.
@@ -214,7 +216,9 @@ class FileStore:
         """
         item_id = item.item_id()
         old_filename = None
-        if item.store_path:
+        if use_tmp:
+            return self._tmp_path_for(item), None
+        elif item.store_path:
             return StorePath(item.store_path), None
         elif item_id in self.id_map:
             # If this item has an identity and we've saved under that id before, use the same store path.
@@ -236,7 +240,19 @@ class FileStore:
 
             return StorePath(store_path), old_store_path
 
-    def save(self, item: Item) -> StorePath:
+    def _tmp_path_for(self, item: Item) -> StorePath:
+        """
+        Find a path for an item in the tmp directory.
+        """
+        if not item.store_path:
+            store_path, _old = self.find_path_for(item, use_tmp=False)
+            return StorePath(self.dirs.tmp_dir / store_path)
+        elif (self.base_dir / item.store_path).is_relative_to(self.dirs.tmp_dir):
+            return StorePath(item.store_path)
+        else:
+            return StorePath(self.dirs.tmp_dir / item.store_path)
+
+    def save(self, item: Item, use_tmp: bool = False) -> StorePath:
         """
         Save the item. Uses the store_path if it's already set or generates a new one.
         Updates item.store_path.
@@ -251,7 +267,7 @@ class FileStore:
             store_path = StorePath(path.relpath(item.external_path, self.base_dir))
         else:
             # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
-            store_path, old_store_path = self.find_path_for(item)
+            store_path, old_store_path = self.find_path_for(item, use_tmp=use_tmp)
             full_path = self.base_dir / store_path
 
             log.info("Saving item to %s: %s", fmt_path(full_path), item)

@@ -6,7 +6,8 @@ from kmd.concepts.embeddings import Embeddings
 from kmd.concepts.text_similarity import find_related_pairs, relate_texts_by_embedding
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
-from kmd.file_storage.workspaces import current_tmp_dir, current_workspace
+from kmd.file_storage.workspaces import current_workspace
+from kmd.model.file_formats_model import Format
 from kmd.model.graph_model import GraphData, Link, Node
 from kmd.model.items_model import Item, ItemRelations, ItemType
 from kmd.shell_tools.native_tools import view_file_native
@@ -25,11 +26,16 @@ def force_graph_generate(title: str, graph: GraphData) -> str:
 def generate_graph_view_html(data: GraphData) -> Path:
     html = force_graph_generate("Knowledge Graph", data)
 
-    html_path = current_tmp_dir() / "graph_view.html"
-    with open(html_path, "w") as f:
-        f.write(html)
+    item = Item(
+        type=ItemType.export,
+        title="Graph View",
+        format=Format.html,
+        body=html,
+    )
+    ws = current_workspace()
+    store_path = ws.save(item, use_tmp=True)
 
-    return html_path
+    return ws.base_dir / store_path
 
 
 def item_as_node_links(item: Item) -> Tuple[Node, List[Link]]:

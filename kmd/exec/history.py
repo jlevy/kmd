@@ -26,9 +26,7 @@ def wrap_with_history(func: Callable) -> Callable:
     """
 
     def wrapper(*args, **kwargs) -> Any:
-        # Skip None values, which are omitted optional params.
-        options = {k: v for k, v in kwargs.items() if v is not None}
-        record_command(Command.from_obj(func, args=args, options=options))
+        record_command(Command.assemble(func, args=args, options=kwargs))
         return func(*args, **kwargs)
 
     wrapper.__name__ = func.__name__

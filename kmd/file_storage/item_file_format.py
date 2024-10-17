@@ -45,6 +45,7 @@ def write_item(item: Item, full_path: Path):
         item.metadata(),
         style=fm_style,
         key_sort=ITEM_FIELD_SORT,
+        make_parents=True,
     )
 
 

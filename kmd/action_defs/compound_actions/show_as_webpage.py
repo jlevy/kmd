@@ -22,5 +22,5 @@ class ShowAsWebpage(SequenceAction):
 
     def run(self, items: ActionInput) -> ActionResult:
         result = super().run(items)
-        result.command_output = CommandOutput(display_command=Command.from_obj(show))
+        result.command_output = CommandOutput(display_command=Command.assemble(show))
         return result

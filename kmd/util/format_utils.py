@@ -1,9 +1,9 @@
 import html
 import shlex
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from textwrap import indent
-from typing import Any, Iterable, List
+from typing import Any, Iterable, List, Optional
 
 import humanfriendly
 import regex
@@ -201,6 +201,14 @@ def fmt_words(*words: str | None, sep: str = " ") -> str:
     return sep.join(processed_words)
 
 
+def fmt_paras(*paras: str | None, sep: str = "\n\n") -> str:
+    """
+    Format text as a list of paragraphs, omitting None or empty paragraphs.
+    """
+    filtered_paras = [para.strip() for para in paras if para is not None]
+    return sep.join(para for para in filtered_paras if para)
+
+
 def fmt_age(since_time: float | timedelta, brief: bool = False) -> str:
     if brief:
         agestr = (
@@ -226,13 +234,17 @@ def fmt_age(since_time: float | timedelta, brief: bool = False) -> str:
     return agestr + " ago"
 
 
-def fmt_time(dt: datetime, now: datetime, iso_time: bool, brief: bool = False) -> str:
+def fmt_time(
+    dt: datetime, iso_time: bool = True, now: Optional[datetime] = None, brief: bool = False
+) -> str:
     """
     Format a datetime for display, either as an age (e.g. "2d ago") or ISO timestamp.
     """
     if iso_time:
         return dt.isoformat().split(".", 1)[0] + "Z"
     else:
+        if not now:
+            now = datetime.now(timezone.utc)
         return fmt_age(now.timestamp() - dt.timestamp(), brief=brief)
 
 

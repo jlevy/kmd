@@ -104,7 +104,7 @@ import os
 import shutil
 from enum import Enum
 from pathlib import Path
-from typing import Any, List, cast, Dict, Optional, Tuple
+from typing import Any, cast, Dict, List, Optional, Tuple
 
 from ruamel.yaml.error import YAMLError
 

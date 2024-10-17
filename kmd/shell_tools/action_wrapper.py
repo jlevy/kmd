@@ -35,19 +35,19 @@ class ShellCallableAction:
             return CommandOutput()
 
         # Handle --rerun option at action invocation time.
-        rerun = bool(shell_args.kw_args.get("rerun", False))
+        rerun = bool(shell_args.options.get("rerun", False))
 
         log.info("Action shell args: %s", shell_args)
 
         # Command-line args overwrite any default values.
         self.action = self.action.with_param_values(
-            ParamValues(shell_args.kw_args), strict=True, overwrite=True
+            ParamValues(shell_args.options), strict=True, overwrite=True
         )
 
         try:
             if not self.action.interactive_input:
                 with get_console().status(f"Running action {self.action.name}…", spinner=SPINNER):
-                    result = run_action(self.action, *shell_args.pos_args, rerun=rerun)
+                    result = run_action(self.action, *shell_args.args, rerun=rerun)
             else:
                 result = run_action(self.action, *args, rerun=rerun)
             # We don't return the result to keep the xonsh shell output clean.
@@ -71,7 +71,7 @@ class ShellCallableAction:
                 suggest_actions=True,
             )
 
-        record_command(Command.from_obj(self.action, args))
+        record_command(Command.assemble(self.action, args))
 
         return command_output
 

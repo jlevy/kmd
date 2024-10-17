@@ -103,13 +103,13 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
             output_command_function_help(wrapped_func, verbose=True)
             return None
 
-        pos_values, keywords_consumed = _map_positional(shell_args.pos_args, pos_params, kw_params)
+        pos_values, keywords_consumed = _map_positional(shell_args.args, pos_params, kw_params)
 
         # If some positional arguments were used as keyword arguments, we need to remove
         # them from the kw_params so they don't get passed twice.
         remaining_kw_params = kw_params[keywords_consumed:]
 
-        kw_values = _map_keyword(shell_args.kw_args, remaining_kw_params)
+        kw_values = _map_keyword(shell_args.options, remaining_kw_params)
 
         if args:
             log.info(
