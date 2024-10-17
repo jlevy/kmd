@@ -3,7 +3,7 @@ from typing import Optional
 
 from kmd.config.logger import get_logger
 from kmd.errors import FileFormatError
-from kmd.file_formats.frontmatter_format import fmf_read, fmf_write, FmFormat
+from kmd.file_formats.frontmatter_format import fmf_read, fmf_write, FmStyle
 from kmd.file_formats.yaml_util import custom_key_sort
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ITEM_FIELDS
@@ -33,17 +33,17 @@ def write_item(item: Item, full_path: Path):
 
     # Detect what style of frontmatter to use so it's compatible with the content.
     if str(item.format) == str(Format.html):
-        fmformat = FmFormat.html
+        fm_style = FmStyle.html
     elif str(item.format) == str(Format.python):
-        fmformat = FmFormat.code
+        fm_style = FmStyle.hash
     else:
-        fmformat = FmFormat.yaml
+        fm_style = FmStyle.yaml
 
     fmf_write(
         full_path,
         body,
         item.metadata(),
-        format=fmformat,
+        style=fm_style,
         key_sort=ITEM_FIELD_SORT,
     )
 

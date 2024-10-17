@@ -1,3 +1,7 @@
+"""
+Layout of the metadata files and directories with the file store.
+"""
+
 import os
 from pathlib import Path
 

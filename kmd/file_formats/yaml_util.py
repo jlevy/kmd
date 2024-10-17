@@ -1,5 +1,5 @@
 """
-YAML file storage.
+YAML file storage. Wraps ruamel.yaml with a few extra features.
 """
 
 import os
@@ -8,7 +8,6 @@ from typing import Any, Callable, List, Optional, TextIO
 
 from ruamel.yaml import YAML
 
-from kmd.util.strif import atomic_output_file
 
 KeySort = Callable[[str], tuple]
 
@@ -129,11 +128,19 @@ def write_yaml_file(
     value: Any, filename: str, key_sort: Optional[KeySort] = None, stringify_unknown: bool = False
 ):
     """
-    Atomic write of the given value to the YAML file.
+    Write the given value to the YAML file, creating it atomically.
     """
-    with atomic_output_file(filename) as f:
-        with open(f, "w") as f:
+    temp_filename = f"{filename}.yml.tmp"  # Same directory with a temporary suffix.
+    try:
+        with open(temp_filename, "w", encoding="utf-8") as f:
             write_yaml(value, f, key_sort, stringify_unknown=stringify_unknown)
+        os.replace(temp_filename, filename)
+    except Exception as e:
+        try:
+            os.remove(temp_filename)
+        except FileNotFoundError:
+            pass
+        raise e
 
 
 ## Tests

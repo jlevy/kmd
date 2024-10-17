@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from os.path import basename, getmtime, getsize
 from pathlib import Path
 from typing import cast, List, Optional, Sequence
@@ -30,7 +30,7 @@ from kmd.errors import InvalidInput, InvalidState
 from kmd.file_formats.chat_format import tail_chat_history
 from kmd.file_formats.frontmatter_format import (
     fmf_read,
-    fmf_read_frontmatter,
+    fmf_read_frontmatter_raw,
     fmf_read_raw,
     fmf_strip_frontmatter,
 )
@@ -81,7 +81,7 @@ from kmd.text_ui.command_output import (
     output_status,
     Wrap,
 )
-from kmd.util.format_utils import fmt_lines, fmt_path
+from kmd.util.format_utils import fmt_lines, fmt_path, fmt_time
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_key_vals import format_key_value, parse_key_value
 from kmd.util.strif import copyfile_atomic
@@ -568,7 +568,7 @@ def file_info(
         output(_dual_format_size(size), text_wrap=Wrap.INDENT_ONLY)
 
         try:
-            _frontmatter_str, offset = fmf_read_frontmatter(input_path)
+            _frontmatter_str, offset = fmf_read_frontmatter_raw(input_path)
             if offset:
                 output(f"frontmatter: {_dual_format_size(offset)}", text_wrap=Wrap.INDENT_ONLY)
         except UnicodeDecodeError:
