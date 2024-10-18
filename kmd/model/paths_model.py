@@ -16,15 +16,14 @@ else:
 
 
 class StorePath(BasePath):
-    def __new__(cls, *args, **kwargs):
-        self = super().__new__(cls, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         if self.is_absolute():
-            raise ValueError(f"Must be a relative path: {self}")
-        return self
+            raise ValueError(f"Must be a relative path: {self!r}")
 
     def __truediv__(self, key):
         if isinstance(key, Path) and key.is_absolute():
-            raise TypeError("Cannot join a StorePath with an absolute Path")
+            raise ValueError(f"Cannot join a StorePath with an absolute Path: {key!r}")
         result = super().__truediv__(key)
         return StorePath(result)
 
@@ -45,7 +44,7 @@ class StorePath(BasePath):
             # Attempt to create a StorePath instance
             return cls(value)
         except Exception as e:
-            raise ValueError(f"Invalid StorePath: {value}") from e
+            raise ValueError(f"Invalid StorePath: {value!r}") from e
 
 
 Locator = Url | StorePath
@@ -71,3 +70,40 @@ def is_store_path(input_arg: InputArg) -> bool:
 
 def as_url_or_path(input: str | Path) -> Path | Url:
     return cast(Url, str(input)) if is_url(str(input)) else cast(Path, input)
+
+
+## Tests
+
+
+def test_store_path():
+    store_path = StorePath("some/relative/path")
+    assert isinstance(store_path, StorePath)
+    assert isinstance(store_path, Path)
+
+    try:
+        StorePath("/absolute/path")
+        assert False
+    except ValueError:
+        pass
+
+    # Path / StorePath
+    combined_path = Path("base/path") / store_path
+    assert isinstance(combined_path, Path)
+    assert combined_path == Path("base/path/some/relative/path")
+
+    # StorePath / relative Path
+    combined_path = StorePath("base/store/path") / Path("some/relative/path")
+    assert isinstance(combined_path, StorePath)
+    assert combined_path == StorePath("base/store/path/some/relative/path")
+
+    # StorePath / absolute Path
+    try:
+        combined_path = store_path / Path("/absolute/path")
+        assert False
+    except ValueError:
+        pass
+
+    # StorePath / StorePath
+    combined_store_path = store_path / StorePath("store/path2")
+    assert isinstance(combined_store_path, StorePath)
+    assert combined_store_path == StorePath("some/relative/path/store/path2")
