@@ -6,7 +6,6 @@ from kmd.config.text_styles import COLOR_ERROR, SPINNER
 from kmd.errors import NONFATAL_EXCEPTIONS
 from kmd.exec.action_exec import run_action
 from kmd.exec.history import record_command
-from kmd.file_storage.workspaces import current_workspace
 from kmd.help.command_help import output_action_help
 from kmd.model.actions_model import Action
 from kmd.model.commands_model import Command
@@ -66,7 +65,6 @@ class ShellCallableAction:
             command_output = result.command_output
         else:
             command_output = CommandOutput(
-                selection=current_workspace().get_selection(),
                 show_selection=True,
                 suggest_actions=True,
             )

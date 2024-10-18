@@ -64,6 +64,9 @@ class SourceCode:
     text_tool_src: str
     """The source code for some generally useful text tools."""
 
+    file_formats_src: str
+    """Documentation and source for common file formats."""
+
 
 @cached(cache={})
 def load_sources() -> SourceCode:
@@ -75,4 +78,5 @@ def load_sources() -> SourceCode:
             kmd_base_path / "lang_tools",
             kmd_base_path / "text_docs" / "text_doc.py",
         ),
+        file_formats_src=source_for(kmd_base_path / "file_formats"),
     )

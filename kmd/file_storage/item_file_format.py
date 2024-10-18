@@ -34,7 +34,7 @@ def write_item(item: Item, full_path: Path):
     # Detect what style of frontmatter to use so it's compatible with the content.
     if str(item.format) == str(Format.html):
         fm_style = FmStyle.html
-    elif str(item.format) == str(Format.python):
+    elif str(item.format) in [str(Format.python), str(Format.csv)]:
         fm_style = FmStyle.hash
     else:
         fm_style = FmStyle.yaml

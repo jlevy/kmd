@@ -1,5 +1,4 @@
 import json
-from textwrap import dedent
 from typing import Callable
 
 from cachetools import cached
@@ -15,26 +14,20 @@ from kmd.model.assistant_model import AssistantResponse
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
-from kmd.util.format_utils import fmt_path
+from kmd.util.format_utils import fmt_paras, fmt_path
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
 
 
 @cached({})
-def assistant_preamble(skip_api: bool = False, base_only: bool = False) -> str:
+def assist_preamble(skip_api: bool = False, base_actions_only: bool = False) -> str:
     from kmd.commands.command_defs import output_help_page  # Avoid circular imports.
 
-    return dedent(
-        f"""
-        {fill_markdown(str(assistant_instructions))} 
-
-
-        {output_as_string(lambda: output_help_page(base_only))}
-
-
-        {"" if skip_api else api_docs} 
-        """
+    return fmt_paras(
+        fill_markdown(str(assistant_instructions)),
+        output_as_string(lambda: output_help_page(base_actions_only)),
+        None if skip_api else api_docs,
     )
 
 
@@ -46,20 +39,21 @@ def _insert_output(func: Callable, name: str) -> str:
         return f"(No {name} available)"
 
 
-def assistant_current_state() -> str:
+def assist_current_state() -> Message:
     from kmd.commands.command_defs import (
         applicable_actions,
         history,
         select,
     )  # Avoid circular imports.
 
-    path, is_sandbox = current_workspace_info()
-    if path and not is_sandbox:
+    ws_dirs, is_sandbox = current_workspace_info()
+    ws_base_dir = ws_dirs.base_dir if ws_dirs else None
+    if ws_base_dir and not is_sandbox:
         current_state_message = Message(
             f"""
             CURRENT STATE
 
-            Based on the current directory, the current workspace is: {path.name} at {fmt_path(path)}
+            Based on the current directory, the current workspace is: {ws_base_dir.name} at {fmt_path(ws_base_dir)}
 
             The last 5 commands issued by the user are:
 
@@ -94,6 +88,17 @@ def assistant_current_state() -> str:
     return current_state_message
 
 
+def assist_system_message(skip_api: bool = False) -> Message:
+    return Message(
+        f"""
+        {assist_preamble(skip_api=skip_api)}
+
+        {assist_current_state()}
+        """
+        # TODO: Include selection history, command history, any other info about files in the workspace.
+    )
+
+
 def assistance(input: str, fast: bool = False) -> str:
 
     # TODO: Stream response.
@@ -104,14 +109,7 @@ def assistance(input: str, fast: bool = False) -> str:
 
     output(f"Getting assistance (model {model})…")
 
-    system_message = Message(
-        f"""
-        {assistant_preamble(skip_api=fast)}
-
-        {assistant_current_state()}
-        """
-        # TODO: Include selection history, command history, any other info about the workspace.
-    )
+    system_message = assist_system_message(skip_api=fast)
 
     template = MessageTemplate(
         """

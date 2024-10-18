@@ -32,7 +32,7 @@ def join_suffix(base_slug: str, full_suffix: str) -> str:
     return f"{base_slug}.{full_suffix.lstrip('.')}"
 
 
-def parse_filename_and_type(filename: str) -> Tuple[str, ItemType, FileExt]:
+def parse_filename_and_type(filename: str | Path) -> Tuple[str, ItemType, FileExt]:
     """
     Parse a filename, confirm it's a recognized file extension. If the filename
     has a type in it, confirm it's a recognized type. Otherwise consider it a
@@ -40,6 +40,7 @@ def parse_filename_and_type(filename: str) -> Tuple[str, ItemType, FileExt]:
     """
     # Python files can have only one dot (like file.py) but others should have a type
     # (like file.resource.yml).
+    filename = str(filename)
     if filename.endswith(".py"):
         dirname, name, _, ext = split_filename(filename, require_type_ext=False)
         item_type = ItemType.extension.value

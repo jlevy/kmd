@@ -6,10 +6,9 @@ from typing import Optional, Tuple, Type, TypeVar
 from cachetools import cached
 
 from kmd.config.logger import get_logger, reset_logging
-from kmd.config.settings import CONTENT_CACHE_NAME, MEDIA_CACHE_NAME
 from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
-from kmd.file_storage.metadata_dirs import CACHE_DIR, METADATA_FILE
+from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.media.media_tools import reset_media_cache_dir
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format
@@ -35,7 +34,8 @@ def check_strict_workspace_name(ws_name: str):
 
 
 def is_workspace_dir(path: Path) -> bool:
-    return (path.is_dir() and str(path).endswith(KB_SUFFIX)) or (path / METADATA_FILE).is_file()
+    dirs = MetadataDirs(path)
+    return (path.is_dir() and str(path).endswith(KB_SUFFIX)) or dirs.is_initialized()
 
 
 def resolve_workspace_name(name: str | Path) -> Tuple[str, Path]:
@@ -96,7 +96,7 @@ def sandbox_dir() -> Path:
     return kb_path
 
 
-def current_workspace_info() -> Tuple[Optional[Path], bool]:
+def current_workspace_info() -> Tuple[Optional[MetadataDirs], bool]:
     """
     Get the name of the current workspace (name.kb) or sandbox, or None if not in a workspace
     and sandbox is not being used.
@@ -109,7 +109,7 @@ def current_workspace_info() -> Tuple[Optional[Path], bool]:
         is_sandbox = not dir
         if is_sandbox:
             dir = sandbox_dir()
-    return dir, is_sandbox
+    return MetadataDirs(dir) if dir else None, is_sandbox
 
 
 # Cache the file store per directory, since it takes a little while to load.
@@ -126,22 +126,22 @@ def current_workspace(log_on_change: bool = True) -> FileStore:
     Get the current workspace. Also updates logging and cache directories to be within that
     workspace, if it has changed.
     """
-    workspace_dir, is_sandbox = current_workspace_info()
-    if not workspace_dir:
+    ws_dirs, is_sandbox = current_workspace_info()
+    if not ws_dirs:
         raise InvalidState(
             f"No workspace found in `{fmt_path(Path('.').absolute())}`.\n"
             "Create one with the `workspace` command."
         )
 
-    reset_logging(workspace_dir)
-    reset_media_cache_dir(workspace_dir / CACHE_DIR / MEDIA_CACHE_NAME)
-    reset_content_cache_dir(workspace_dir / CACHE_DIR / CONTENT_CACHE_NAME)
-    ws = _get_file_store(workspace_dir, is_sandbox)
+    reset_logging(ws_dirs.base_dir)
+    reset_media_cache_dir(ws_dirs.media_cache_dir)
+    reset_content_cache_dir(ws_dirs.content_cache_dir)
+    ws = _get_file_store(ws_dirs.base_dir, is_sandbox)
 
     global _last_workspace_dir
-    if log_on_change and _last_workspace_dir != workspace_dir:
+    if log_on_change and _last_workspace_dir != ws_dirs.base_dir:
         ws.log_store_info()
-        _last_workspace_dir = workspace_dir
+        _last_workspace_dir = ws_dirs.base_dir
 
     return ws
 

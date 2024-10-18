@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Dict, Generator, List, Optional, Tuple
 
 from kmd.config.logger import get_logger, log_file_path
-from kmd.config.settings import global_settings
 from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
 
 from kmd.errors import (
@@ -19,7 +18,7 @@ from kmd.errors import (
     UnrecognizedFileFormat,
 )
 from kmd.file_storage.item_file_format import read_item, write_item
-from kmd.file_storage.metadata_dirs import ARCHIVE_DIR, initialize_store_dirs
+from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_filename_and_type
 from kmd.file_tools.file_walk import walk_by_folder
@@ -65,14 +64,14 @@ class FileStore:
 
         self._id_index_init()
 
-        self.dirs = initialize_store_dirs(self.base_dir)
+        self.dirs = MetadataDirs(self.base_dir)
+        self.dirs.initialize()
 
-        self.vector_index = WsVectorIndex(self.dirs.index_dir)
+        self.vector_index = WsVectorIndex(self.base_dir / self.dirs.index_dir)
 
         # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
-        self.selection = PersistedYaml(self.dirs.settings_dir / "selection.yml", init_value=[])
-
-        self.params = PersistedYaml(self.dirs.settings_dir / "params.yml", init_value={})
+        self.selection = PersistedYaml(self.base_dir / self.dirs.selection_yml, init_value=[])
+        self.params = PersistedYaml(self.base_dir / self.dirs.params_yml, init_value={})
 
         self.end_time = time.time()
 
@@ -204,7 +203,7 @@ class FileStore:
         return None
 
     def find_path_for(
-        self, item: Item, use_tmp: bool = False
+        self, item: Item, as_tmp: bool = False
     ) -> Tuple[StorePath, Optional[StorePath]]:
         """
         Return the store path for an item. If the item already has a `store_path`, we use that.
@@ -216,7 +215,7 @@ class FileStore:
         """
         item_id = item.item_id()
         old_filename = None
-        if use_tmp:
+        if as_tmp:
             return self._tmp_path_for(item), None
         elif item.store_path:
             return StorePath(item.store_path), None
@@ -245,14 +244,14 @@ class FileStore:
         Find a path for an item in the tmp directory.
         """
         if not item.store_path:
-            store_path, _old = self.find_path_for(item, use_tmp=False)
+            store_path, _old = self.find_path_for(item, as_tmp=False)
             return StorePath(self.dirs.tmp_dir / store_path)
         elif (self.base_dir / item.store_path).is_relative_to(self.dirs.tmp_dir):
             return StorePath(item.store_path)
         else:
             return StorePath(self.dirs.tmp_dir / item.store_path)
 
-    def save(self, item: Item, use_tmp: bool = False) -> StorePath:
+    def save(self, item: Item, as_tmp: bool = False) -> StorePath:
         """
         Save the item. Uses the store_path if it's already set or generates a new one.
         Updates item.store_path.
@@ -267,7 +266,7 @@ class FileStore:
             store_path = StorePath(path.relpath(item.external_path, self.base_dir))
         else:
             # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
-            store_path, old_store_path = self.find_path_for(item, use_tmp=use_tmp)
+            store_path, old_store_path = self.find_path_for(item, as_tmp=as_tmp)
             full_path = self.base_dir / store_path
 
             log.info("Saving item to %s: %s", fmt_path(full_path), item)
@@ -275,9 +274,9 @@ class FileStore:
             # If we're overwriting an existing file, archive it first.
             if full_path.exists():
                 try:
-                    self.archive(store_path)
+                    self.archive(store_path, quiet=True)
                 except Exception as e:
-                    log.error("Error archiving existing file: %s", e)
+                    log.info("Exception archiving existing file: %s", e)
 
             # Now save the new item.
             try:
@@ -309,7 +308,7 @@ class FileStore:
                     store_path = old_store_path
 
         # Update in-memory store_path only after successful save.
-        item.store_path = store_path
+        item.store_path = str(store_path)
         self._id_index_item(store_path)
 
         log.message("%s Saved item: %s", EMOJI_SUCCESS, fmt_path(store_path))
@@ -335,7 +334,7 @@ class FileStore:
                 external_path=str(self.base_dir / store_path),
                 format=format,
                 file_ext=file_ext,
-                store_path=store_path,
+                store_path=str(store_path),
             )
 
     def hash(self, store_path: StorePath) -> str:
@@ -413,15 +412,18 @@ class FileStore:
             self._id_index_item(new_store_path)
         # TODO: Update metadata of all relations that point to this path too.
 
-    def archive(self, store_path: StorePath, missing_ok: bool = False) -> StorePath:
+    def archive(
+        self, store_path: StorePath, missing_ok: bool = False, quiet: bool = False
+    ) -> StorePath:
         """
         Archive the item by moving it into the archive directory.
         """
-        log.message(
-            "Archiving item: %s -> %s/",
-            fmt_path(store_path),
-            fmt_path(Path(ARCHIVE_DIR)),
-        )
+        if not quiet:
+            log.message(
+                "Archiving item: %s -> %s/",
+                fmt_path(store_path),
+                fmt_path(self.dirs.archive_dir),
+            )
         orig_path = self.base_dir / store_path
         archive_path = self.dirs.archive_dir / store_path
         if missing_ok and not orig_path.exists():
@@ -429,7 +431,7 @@ class FileStore:
             return store_path
         move_file(orig_path, archive_path)
         self._remove_references([store_path])
-        return StorePath(join(ARCHIVE_DIR, store_path))
+        return self.dirs.archive_dir / store_path
 
     def unarchive(self, store_path: StorePath):
         """
@@ -437,8 +439,8 @@ class FileStore:
         Path may be with or without the archive dir prefix.
         """
         log.info("Unarchiving item: %s", fmt_path(store_path))
-        if commonpath([ARCHIVE_DIR, store_path]) == ARCHIVE_DIR:
-            store_path = StorePath(relpath(store_path, ARCHIVE_DIR))
+        if commonpath([self.dirs.archive_dir, store_path]) == self.dirs.archive_dir:
+            store_path = StorePath(relpath(store_path, self.dirs.archive_dir))
         original_path = self.base_dir / store_path
         move_file(self.dirs.archive_dir / store_path, original_path)
         return StorePath(store_path)
@@ -487,8 +489,8 @@ class FileStore:
             len(self.uniquifier),
         )
         log.message("Logging to: %s", fmt_path(log_file_path().absolute()))
-        log.message("Media cache: %s", global_settings().media_cache_dir)
-        log.message("Content cache: %s", global_settings().content_cache_dir)
+        log.message("Media cache: %s", fmt_path(self.base_dir / self.dirs.media_cache_dir))
+        log.message("Content cache: %s", fmt_path(self.base_dir / self.dirs.content_cache_dir))
 
         if self.is_sandbox:
             output()

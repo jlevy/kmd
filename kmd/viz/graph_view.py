@@ -33,7 +33,7 @@ def generate_graph_view_html(data: GraphData) -> Path:
         body=html,
     )
     ws = current_workspace()
-    store_path = ws.save(item, use_tmp=True)
+    store_path = ws.save(item, as_tmp=True)
 
     return ws.base_dir / store_path
 

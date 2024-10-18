@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
 from os.path import basename, getmtime, getsize
 from pathlib import Path
 from typing import cast, List, Optional, Sequence
@@ -35,28 +35,28 @@ from kmd.file_formats.frontmatter_format import (
     fmf_strip_frontmatter,
 )
 from kmd.file_formats.yaml_util import to_yaml_string
-from kmd.file_storage.file_store import initialize_store_dirs
+from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_storage.workspaces import (
     check_strict_workspace_name,
     current_workspace,
     current_workspace_info,
-    is_workspace_dir,
     resolve_workspace_name,
 )
 from kmd.file_tools.file_walk import walk_by_folder
 from kmd.form_input.prompt_input import prompt_simple_string
-from kmd.help.assistant import assistance
+from kmd.help.assistant import assist_system_message, assistance
 from kmd.help.help_page import output_help_page
 from kmd.lang_tools.inflection import plural
 from kmd.media import media_tools
 from kmd.model.file_formats_model import (
     detect_file_format,
     detect_mime_type,
+    Format,
     is_ignored,
     join_filename,
     split_filename,
 )
-from kmd.model.items_model import ItemType
+from kmd.model.items_model import Item, ItemType
 from kmd.model.output_model import CommandOutput
 from kmd.model.params_model import USER_SETTABLE_PARAMS
 from kmd.model.paths_model import as_url_or_path, StorePath
@@ -81,7 +81,7 @@ from kmd.text_ui.command_output import (
     output_status,
     Wrap,
 )
-from kmd.util.format_utils import fmt_lines, fmt_path, fmt_time
+from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_key_vals import format_key_value, parse_key_value
 from kmd.util.strif import copyfile_atomic
@@ -219,6 +219,28 @@ def assist(input: Optional[str] = None) -> None:
 
 
 @kmd_command
+def assistant_system_message(skip_api: bool = False) -> CommandOutput:
+    """
+    Print the assistant system message.
+    """
+
+    item = Item(
+        type=ItemType.export,
+        title="Assistant System Message",
+        format=Format.markdown,
+        body=assist_system_message(skip_api=skip_api),
+    )
+    ws = current_workspace()
+    store_path = ws.save(item, as_tmp=True)
+
+    log.message("Saved assistant system message to %s", store_path)
+
+    select(store_path)
+
+    return CommandOutput(show_selection=True)
+
+
+@kmd_command
 def check_tools() -> None:
     """
     Check that all tools are installed.
@@ -239,7 +261,7 @@ def history(max: int = 30, raw: bool = False) -> None:
     """
     # TODO: Customize this by time frame.
     ws = current_workspace()
-    history_file = ws.dirs.shell_history
+    history_file = ws.base_dir / ws.dirs.shell_history_yml
     chat_history = tail_chat_history(history_file, max)
 
     if raw:
@@ -257,7 +279,7 @@ def clear_history() -> None:
     moved to the trash.
     """
     ws = current_workspace()
-    history_file = ws.dirs.shell_history
+    history_file = ws.base_dir / ws.dirs.shell_history_yml
     trash(history_file)
 
 
@@ -267,11 +289,12 @@ def init(path: Optional[str] = None) -> None:
     Initialize a new workspace at the given path.
     """
     dir = Path(path) if path else Path(".")
-    if is_workspace_dir(dir):
-        raise InvalidInput("Workspace already exists: %s", dir)
+    dirs = MetadataDirs(dir)
+    if dirs.is_initialized():
+        raise InvalidInput("Workspace already exists: %s", fmt_path(dir))
     if not dir.exists():
         dir.mkdir()
-    initialize_store_dirs(dir)
+    dirs.initialize()
 
     current_workspace(log_on_change=False).log_store_info()
 
@@ -322,11 +345,8 @@ def select(*paths: str, stdin: bool = False) -> CommandOutput:
     if paths:
         store_paths = [StorePath(path) for path in paths]
         ws.set_selection(store_paths)
-        selection = store_paths
-    else:
-        selection = ws.get_selection()
 
-    return CommandOutput(selection=selection, show_selection=True)
+    return CommandOutput(show_selection=True)
 
 
 @kmd_command
@@ -746,8 +766,9 @@ def clear_archive() -> None:
     Empty the archive to trash.
     """
     ws = current_workspace()
-    trash(ws.dirs.archive_dir)
-    os.makedirs(ws.dirs.archive_dir, exist_ok=True)
+    archive_dir = ws.base_dir / ws.dirs.archive_dir
+    trash(archive_dir)
+    os.makedirs(archive_dir, exist_ok=True)
 
 
 @kmd_command
@@ -941,8 +962,9 @@ def files(
     else:
         paths_to_show = [Path(path) for path in paths]
 
-    base_dir, is_sandbox = current_workspace_info()
-    relative_to = base_dir if base_dir and not is_sandbox else Path(".")
+    ws_dirs, is_sandbox = current_workspace_info()
+    ws_base_dir = ws_dirs.base_dir if ws_dirs else None
+    relative_to = ws_base_dir if ws_base_dir and not is_sandbox else Path(".")
 
     total_folders, total_files = 0, 0
 

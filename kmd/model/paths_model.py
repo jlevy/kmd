@@ -1,34 +1,51 @@
-from pathlib import Path
-from typing import cast, Type
+import sys
+from pathlib import Path, PosixPath, WindowsPath
+from typing import cast
 
-from pydantic import constr, ValidationInfo
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import core_schema
 
-from kmd.errors import InvalidInput
-from kmd.util.format_utils import fmt_path
 from kmd.util.url import is_url, Url
 
 
-def validate_relative_path(value: str) -> str:
-    if not value or value.startswith("/") or Path(value).is_absolute():
-        raise InvalidInput(f"Must be a relative path: {fmt_path(value)}")
-    return value
+# Determine the base class for StorePath based on the operating system
+if sys.platform == "win32":
+    BasePath = WindowsPath
+else:
+    BasePath = PosixPath
 
 
-RelativePath: Type[str] = constr(strip_whitespace=True)
+class StorePath(BasePath):
+    def __new__(cls, *args, **kwargs):
+        self = super().__new__(cls, *args, **kwargs)
+        if self.is_absolute():
+            raise ValueError(f"Must be a relative path: {self}")
+        return self
 
-
-class StorePath(RelativePath):
-    """
-    A relative path of an item in the file store.
-    """
+    def __truediv__(self, key):
+        if isinstance(key, Path) and key.is_absolute():
+            raise TypeError("Cannot join a StorePath with an absolute Path")
+        result = super().__truediv__(key)
+        return StorePath(result)
 
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(cls, source_type, handler: GetCoreSchemaHandler):
+        # Use the handler to get the schema for the base Path type
+        path_schema = handler(BasePath)
+        return core_schema.no_info_after_validator_function(
+            cls.validate,
+            path_schema,
+        )
 
     @classmethod
-    def validate(cls, value: str, info: ValidationInfo) -> str:
-        return validate_relative_path(value)
+    def validate(cls, value):
+        if isinstance(value, cls):
+            return value
+        try:
+            # Attempt to create a StorePath instance
+            return cls(value)
+        except Exception as e:
+            raise ValueError(f"Invalid StorePath: {value}") from e
 
 
 Locator = Url | StorePath

@@ -107,7 +107,7 @@ def func_and_module_name(func: Callable):
 def log_calls(
     level: LogLevelStr = "info",
     show_args: bool = True,
-    show_return: bool = False,
+    show_return: bool = True,
     if_slower_than: float = 0.0,
     truncate_length: Optional[int] = DEFAULT_TRUNCATE,
     repr_func: Callable = friendly_str,

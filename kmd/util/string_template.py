@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, Optional, Sequence, Tuple, Type, Union
 
 
 @dataclass(frozen=True)
@@ -21,7 +21,7 @@ class StringTemplate:
 
     template: str
 
-    allowed_fields: List[Union[str, Tuple[str, Optional[Type]]]] = field(
+    allowed_fields: Sequence[Union[str, Tuple[str, Optional[Type]]]] = field(
         default_factory=lambda: ["title"]
     )
     """List of allowed field names. If `d` or `f` formats are used, give tuple with the type."""

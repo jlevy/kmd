@@ -15,7 +15,7 @@ import rich
 from rich.markdown import Markdown
 from rich.text import Text
 
-from kmd.config.logger import get_console
+from kmd.config.logger import get_console, get_logger
 from kmd.config.text_styles import (
     COLOR_ASSISTANCE,
     COLOR_HEADING,
@@ -144,16 +144,31 @@ def format_paragraphs(*paragraphs: str | Text):
 # Allow output stream to be redirected if desired.
 _output_context = threading.local()
 _output_context.stream = None
+_output_context.rich_console = True
 
 
 @contextmanager
 def redirect_output(new_output):
     old_output = getattr(_output_context, "stream", sys.stdout)
     _output_context.stream = new_output
+    _output_context.rich_console = False
     try:
         yield
     finally:
         _output_context.stream = old_output
+        _output_context.rich_console = True
+
+
+@contextmanager
+def console_pager():
+    """
+    Use Rich pager but only if applicable.
+    """
+    if _output_context.rich_console:
+        with get_console().pager(styles=True):
+            yield
+    else:
+        yield
 
 
 def output_as_string(func: Callable, *args: Any, **kwargs: Any) -> str:
@@ -199,9 +214,12 @@ def output(
         rprint()
 
 
-def output_markdown(doc_str: str, extra_indent: str = "", use_rich_markdown: bool = True):
+log = get_logger(__name__)
+
+
+def output_markdown(doc_str: str, extra_indent: str = "", rich_markdown_display: bool = True):
     doc = fill_markdown(doc_str)
-    if use_rich_markdown:
+    if rich_markdown_display and _output_context.rich_console:
         doc = Markdown(doc, justify="left")
 
     output(doc, text_wrap=Wrap.NONE, extra_indent=extra_indent)

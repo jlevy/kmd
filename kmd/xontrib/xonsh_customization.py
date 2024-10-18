@@ -65,7 +65,9 @@ def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], None]:
             res = CommandOutput(retval)
 
         set_env("result", res.result)
-        set_env("selection", res.selection)
+
+        selection = current_workspace().get_selection()
+        set_env("selection", selection)
 
         handle_command_output(res)
 
@@ -176,8 +178,8 @@ def _post_initialize():
 def _kmd_xonsh_prompt():
     from kmd.file_storage.workspaces import current_workspace_info
 
-    path, is_sandbox = current_workspace_info()
-    name = path.name if path else None
+    ws_dirs, is_sandbox = current_workspace_info()
+    name = ws_dirs.base_dir.name if ws_dirs else None
     workspace_str = (
         f"{{{PROMPT_COLOR_NORMAL}}}" + name
         if name and not is_sandbox

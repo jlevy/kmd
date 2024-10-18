@@ -6,6 +6,7 @@ from pathlib import Path
 
 from kmd.docs.assemble_source_code import load_sources, SourceCode
 from kmd.util.lazyobject import lazyobject
+from kmd.util.string_template import StringTemplate
 
 
 def _load_markdown(path: str) -> str:
@@ -48,11 +49,9 @@ def source_code() -> SourceCode:
 def api_docs() -> str:
     template_str = _load_markdown("markdown/api_docs_template")
     global source_code
-    return template_str.format(
-        model_src=source_code.model_src,
-        base_action_defs_src=source_code.base_action_defs_src,
-        text_tool_src=source_code.text_tool_src,
-    )
+    template_vars = list(source_code.__dict__.keys())
+    template = StringTemplate(template_str, template_vars)
+    return template.format(**source_code.__dict__)
 
 
 @lazyobject
