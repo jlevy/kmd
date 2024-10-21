@@ -187,6 +187,8 @@ def _prepare_for_backup(path: Path, backup_suffix: str) -> Path:
 def move_to_backup(path: str | Path, backup_suffix: str = DEFAULT_BACKUP_SUFFIX):
     """
     Move the given file or directory to the same name, with a backup suffix.
+    If the path doesn't exist, do nothing.
+
     If backup_suffix not supplied, move it to the extension "{timestamp}.bak".
     In backup_suffix, the string "{timestamp}", if present, will be replaced
     by a new_timestamped_uid(), allowing infinite numbers of timestamped backups.
@@ -197,8 +199,14 @@ def move_to_backup(path: str | Path, backup_suffix: str = DEFAULT_BACKUP_SUFFIX)
     will be clobbered!
     """
     path = Path(path)
+    if not path.exists():
+        return
+
     backup_path = _prepare_for_backup(path, backup_suffix)
-    shutil.move(str(path), str(backup_path))
+    try:
+        shutil.move(str(path), str(backup_path))
+    except FileNotFoundError:
+        pass
 
 
 def copy_to_backup(path: str | Path, backup_suffix: str = DEFAULT_BACKUP_SUFFIX):
@@ -225,7 +233,7 @@ def move_file(
     """
     if not keep_backup and dest_path.exists():
         raise FileExistsError(f"Destination file already exists: {shlex.quote(str(dest_path))}")
-    if keep_backup and src_path.exists() and dest_path.exists():
+    if keep_backup and src_path.exists():
         move_to_backup(str(dest_path), backup_suffix=backup_suffix)
 
     dest_path.parent.mkdir(parents=True, exist_ok=True)

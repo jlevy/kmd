@@ -593,19 +593,22 @@ def save(
     parent: Optional[str] = None, to: Optional[str] = None, no_frontmatter: bool = False
 ) -> None:
     """
-    Save the current selection to the given directory (which must exist), or to the
-    current directory if no target given.
+    Save the current selection to the given directory, or to the current directory if no
+    target given.
 
-    :param parent: The directory to save the files to. If not given, it will be the current directory.
-    :param to: If only one file is selected, a name to save it as. If it exists, it will overwrite (and make a backup).
+    :param parent: The directory to save the files to. If not given, it will be the
+        current directory.
+    :param to: If only one file is selected, a name to save it as. If it exists, it will
+        overwrite (and make a backup).
     :param no_frontmatter: If true, will not include YAML frontmatter in the output.
     """
     ws = current_workspace()
     store_paths = ws.get_selection()
 
     def copy_file(store_path: StorePath, target_path: Path):
-        log.message("Saving: %s -> %s", store_path, target_path)
-        copyfile_atomic(ws.base_dir / store_path, target_path, backup_suffix=".bak")
+        path = ws.base_dir / store_path
+        log.message("Saving: %s -> %s", fmt_path(path), fmt_path(target_path))
+        copyfile_atomic(path, target_path, backup_suffix=".bak", make_parents=True)
         if no_frontmatter:
             fmf_strip_frontmatter(target_path)
 
@@ -631,7 +634,7 @@ def strip_frontmatter(*paths: str) -> None:
     input_paths = _assemble_paths(*paths)
 
     for path in input_paths:
-        log.message("Stripping frontmatter from: %s", path)
+        log.message("Stripping frontmatter from: %s", fmt_path(path))
         fmf_strip_frontmatter(path)
 
 
@@ -653,7 +656,7 @@ def file_info(
     mime type.
 
     :param slow: Normally uses a fast, approximate method to count sentences.
-    This enables slower Spacy sentence segmentation.
+        This enables slower Spacy sentence segmentation.
     :param size_summary: Only show size summary (words, sentences, paragraphs for a text document).
     :param mime_type: Only show detected mime type.
     """
