@@ -82,6 +82,16 @@ COLOR_COMMAND_TEXT = "bold default"
 
 COLOR_ACTION_TEXT = "bold default"
 
+COLOR_SIZE1 = "bright_black"
+
+COLOR_SIZE2 = "blue"
+
+COLOR_SIZE3 = "cyan"
+
+COLOR_SIZE4 = "bright_green"
+
+COLOR_SIZE5 = "yellow"
+
 
 ## Formatting
 
@@ -157,23 +167,34 @@ class KmdHighlighter(RegexHighlighter):
         r'(?P<attrib_name>[\w_-]{1,50})=(?P<attrib_value>"?[\w_]+"?)?',
         r"(?P<brace>[][{}()])",
         _combine_regex(
+            # Quantities and times:
+            r"\b(?P<age_min_sec>[0-9.,]+ ?(s|sec|m|min) ago)\b",
+            r"\b(?P<age_hr>[0-9.,]+ ?(?:h|hr|hrs|hour|hours) ago)\b",
+            r"\b(?P<age_day>[0-9.,]+ ?(?:d|day|days) ago)\b",
+            r"\b(?P<age_week>[0-9.,]+ ?(?:w|week|weeks) ago)\b",
+            r"\b(?P<age_year>[0-9.,]+ ?(?:y|year|years) ago)\b",
+            r"\b(?P<size_b>(?<!\w)[0-9.,]+ ?(B|Bytes|bytes))\b",
+            r"\b(?P<size_k>(?<!\w)[0-9.,]+ ?(K|KB|kb))\b",
+            r"\b(?P<size_m>(?<!\w)[0-9.,]+ ?(M|MB|mb)\b)",
+            r"\b(?P<size_gtp>(?<!\w)[0-9.,]+ ?(G|GB|gb|T|TB|tb|P|PB|pb))\b",
+            r"\b(?P<part_count>\w+ \d+ of \d+(?!\-\w))\b",
+            r"\b(?P<duration>(?<!\w)\-?[0-9]+\.?[0-9]*(ms|s)\b(?!\-\w))\b",
+        ),
+        _combine_regex(
+            # A subset of the repr-style highlights:
             r"(?P<ipv4>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
-            # Disabling ipv6 and EUI as these as they can have false positives.
-            # r"(?P<ipv6>([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})",
-            # r"(?P<eui64>(?:[0-9A-Fa-f]{1,2}-){7}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{1,2}:){7}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{4}\.){3}[0-9A-Fa-f]{4})",
-            # r"(?P<eui48>(?:[0-9A-Fa-f]{1,2}-){5}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{1,2}:){5}[0-9A-Fa-f]{1,2}|(?:[0-9A-Fa-f]{4}\.){2}[0-9A-Fa-f]{4})",
             r"(?P<uuid>[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})",
             r"(?P<call>[\w.]*?)\(",
             r"\b(?P<bool_true>True)\b|\b(?P<bool_false>False)\b|\b(?P<none>None)\b",
             r"(?P<ellipsis>(\.\.\.|…))",
-            r"(?P<part_count>\w+ \d+ of \d+(?!\-\w))",
-            # r"(?P<number_complex>(?<!\w)(?:\-?[0-9]+\.?[0-9]*(?:e[-+]?\d+?)?)(?:[-+](?:[0-9]+\.?[0-9]*(?:e[-+]?\d+)?))?j)",
             # r"(?P<number>(?<!\w)\-?[0-9]+\.?[0-9]*(e[-+]?\d+?)?\b(?!\-\w)|0x[0-9a-fA-F]*)",
-            r"(?P<duration>(?<!\w)\-?[0-9]+\.?[0-9]*(ms|s)\b(?!\-\w))",
             r"(?P<path>\B(/[-\w._+]+)*\/)(?P<filename>[-\w._+]*)?",
+            # r"(?P<relpath>\B([\w._+][-\w._+]*)*(/\w[-\w._+]*)+)*\.(html|htm|pdf|yaml|yml|md|txt)",
             r"(?<![\\\w])(?P<str>b?'''.*?(?<!\\)'''|b?'.*?(?<!\\)'|b?\"\"\".*?(?<!\\)\"\"\"|b?\".*?(?<!\\)\")",
             r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
             r"(?P<code_span>`[^`\n]+`)",
+        ),
+        _combine_regex(
             # Task stack in logs:
             f"(?P<task_stack_header>{TASK_STACK_HEADER})",
             f"(?P<task_stack>{EMOJI_TASK}.*)",
@@ -188,11 +209,6 @@ class KmdHighlighter(RegexHighlighter):
             f"(?P<hrule>{HRULE})",
         ),
     ]
-
-    # TODO: Recognize file sizes, "5 days ago" etc, relative paths.
-    # r"(?P<time_ago>(?<!\w)[0-9]+ \w+ ago\b)"
-    # r"(?P<file_size>(?<!\w)[0-9]+ ?([kKmMgGtTpP]B|Bytes|bytes)\b)",
-    # r"(?P<relpath>\B([\w._+][-\w._+]*)*(/\w[-\w._+]*)+)*\.(html|htm|pdf|yaml|yml|md|txt)",
 
 
 RICH_STYLES = {
@@ -231,6 +247,15 @@ RICH_STYLES = {
     "kmd.uuid": Style(color=COLOR_LITERAL, bold=False),
     "kmd.call": Style(italic=True),
     "kmd.path": Style(color=COLOR_PATH),
+    "kmd.age_min_sec": Style(color=COLOR_SIZE5),
+    "kmd.age_hr": Style(color=COLOR_SIZE4),
+    "kmd.age_day": Style(color=COLOR_SIZE3),
+    "kmd.age_week": Style(color=COLOR_SIZE2),
+    "kmd.age_year": Style(color=COLOR_SIZE1),
+    "kmd.size_b": Style(color=COLOR_SIZE1),
+    "kmd.size_k": Style(color=COLOR_SIZE2),
+    "kmd.size_m": Style(color=COLOR_SIZE3),
+    "kmd.size_gtp": Style(color=COLOR_SIZE4),
     "kmd.filename": Style(color=COLOR_VALUE),
     "kmd.task_stack_header": Style(color=COLOR_TASK, italic=True),
     "kmd.task_stack": Style(color=COLOR_TASK, italic=True),

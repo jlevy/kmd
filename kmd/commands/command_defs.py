@@ -1048,13 +1048,14 @@ def files(
 
     For a quick, paged overview of all files in a big directory, use `files --pager`.
 
-    :param brief: Same as `--head=20 --groupby=parent --pager`.
+    :param brief: Gives an overview of the most recently modified files in each directory.
+        Same as `--head=20 --sort=created --reverse --groupby=parent --pager`.
     :param pager: Use the pager when displaying the output.
     :param all: Include usually ignored (hidden) files.
     :param head: Limit the first number of items displayed per group (if groupby is used)
-      or in total. 0 means show all.
+        or in total. 0 means show all.
     :param save: Save the listing as a CSV file item.
-    :param sort: Sort by 'size', 'accessed', 'created', or 'modified'.
+    :param sort: Sort by 'filename','size', 'accessed', 'created', or 'modified'.
     :param reverse: Reverse the sorting order.
     :param since: Filter files modified since a given time (e.g., '1 day', '2 hours').
     :param groupby: Group results by 'parent' or 'suffix'.
@@ -1073,6 +1074,9 @@ def files(
             head = 20
         if groupby is None:
             groupby = GroupByOption.parent
+        if sort is None:
+            sort = SortOption.created
+            reverse = True
         pager = True
 
     since_seconds = parse_since(since) if since else 0.0
@@ -1105,7 +1109,13 @@ def files(
     df = file_listing.as_dataframe()
 
     if sort:
-        df.sort_values(by=sort.value, ascending=not reverse, inplace=True)
+        # Determine the primary and secondary sort columns.
+        primary_sort = sort.value
+        secondary_sort = "filename" if primary_sort != "filename" else "created"
+
+        df.sort_values(
+            by=[primary_sort, secondary_sort], ascending=[not reverse, True], inplace=True
+        )
 
     files_matching = len(df)
     log.info(f"Total files collected: {files_matching}")

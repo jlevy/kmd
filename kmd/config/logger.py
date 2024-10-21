@@ -5,6 +5,7 @@ from logging import ERROR, Formatter, INFO
 from pathlib import Path
 from typing import Any, Optional
 
+from cachetools import cached
 from rich import reconfigure
 from rich.console import Console
 from rich.logging import RichHandler
@@ -47,9 +48,14 @@ def log_objects_dir() -> Path:
     return log_dir() / LOG_OBJECTS_NAME
 
 
+@cached(cache={})
+def get_highlighter():
+    return KmdHighlighter()
+
+
 # Rich console theme setup.
 _custom_theme = Theme(RICH_STYLES)
-_console = Console(theme=_custom_theme)
+_console = Console(theme=_custom_theme, highlighter=get_highlighter())
 reconfigure(theme=_custom_theme)
 
 
@@ -93,7 +99,7 @@ def logging_setup():
         show_time=False,
         show_path=False,
         show_level=False,
-        highlighter=KmdHighlighter(),
+        highlighter=get_highlighter(),
         markup=True,
     )
     _console_handler.setFormatter(Formatter("%(message)s"))

@@ -22,6 +22,9 @@ poetry run lint
 
 # Upgrade packages:
 poetry up
+
+# Update this README:
+source devtools/generate_readme.xsh
 ```
 
 A few debugging tips when finding issues:

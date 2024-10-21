@@ -197,6 +197,7 @@ def rprint(*args, width: Optional[int] = None, **kwargs):
     if stream:
         rich.print(*args, **kwargs, file=stream)
     else:
+        global console
         console.print(*args, width=width, **kwargs)
 
 
@@ -239,7 +240,7 @@ def output_markdown(doc_str: str, extra_indent: str = "", rich_markdown_display:
     if rich_markdown_display and _output_context.rich_console:
         doc = Markdown(doc, justify="left")
 
-    output(doc, text_wrap=Wrap.NONE, extra_indent=extra_indent)
+    output(doc, extra_indent=extra_indent)
 
 
 def output_separator():
@@ -280,7 +281,7 @@ def output_result(
     )
 
 
-def output_help(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+def output_help(message: str, *args, text_wrap: Wrap = Wrap.WRAP, extra_indent: str = ""):
     output(message, *args, text_wrap=text_wrap, color=COLOR_HELP, extra_indent=extra_indent)
 
 

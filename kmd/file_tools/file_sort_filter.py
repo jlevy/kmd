@@ -16,6 +16,7 @@ log = get_logger(__name__)
 
 
 class SortOption(str, Enum):
+    filename = "filename"
     size = "size"
     accessed = "accessed"
     created = "created"
@@ -36,7 +37,7 @@ class FileType(str, Enum):
 class FileInfo:
     path: str
     relative_path: str
-    name: str
+    filename: str
     suffix: str
     parent: str
     size: int
@@ -51,13 +52,13 @@ def get_file_info(file_path: Path, base_path: Path) -> FileInfo:
     return FileInfo(
         path=str(file_path.resolve()),
         relative_path=str(file_path.relative_to(base_path)),
-        name=file_path.name,
+        filename=file_path.name,
         suffix=file_path.suffix,
         parent=str(file_path.parent.relative_to(base_path)),
         size=stat.st_size,
-        accessed=datetime.fromtimestamp(stat.st_atime),
-        created=datetime.fromtimestamp(stat.st_ctime),
-        modified=datetime.fromtimestamp(stat.st_mtime),
+        accessed=datetime.fromtimestamp(stat.st_atime, tz=timezone.utc),
+        created=datetime.fromtimestamp(stat.st_ctime, tz=timezone.utc),
+        modified=datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc),
         type=FileType.dir if file_path.is_dir() else FileType.file,
     )
 

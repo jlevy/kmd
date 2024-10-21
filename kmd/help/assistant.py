@@ -46,9 +46,9 @@ def _insert_output(func: Callable, name: str) -> str:
 def assist_current_state() -> Message:
     from kmd.commands.command_defs import (
         applicable_actions,
+        files,
         history,
         select,
-        files,
     )  # Avoid circular imports.
 
     ws_dirs, is_sandbox = current_workspace_info()
