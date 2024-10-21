@@ -33,10 +33,14 @@ def assist_preamble(skip_api: bool = False, base_actions_only: bool = False) -> 
 
 def _insert_output(func: Callable, name: str) -> str:
     try:
-        return output_as_string(func)
+        output = output_as_string(func)
     except (KmdRuntimeError, ValueError) as e:
         log.info("Skipping assistant input for %s: %s", name, e)
-        return f"(No {name} available)"
+        output = f"(No {name} available)"
+
+    log.info("Including %s lines of output to assistant for %s", output.count("\n"), name)
+
+    return f"(output from command`{name}`:)\n\n{output}"
 
 
 def assist_current_state() -> Message:
@@ -44,47 +48,51 @@ def assist_current_state() -> Message:
         applicable_actions,
         history,
         select,
+        files,
     )  # Avoid circular imports.
 
     ws_dirs, is_sandbox = current_workspace_info()
     ws_base_dir = ws_dirs.base_dir if ws_dirs else None
+
     if ws_base_dir and not is_sandbox:
-        current_state_message = Message(
-            f"""
-            CURRENT STATE
-
-            Based on the current directory, the current workspace is: {ws_base_dir.name} at {fmt_path(ws_base_dir)}
-
-            The last 5 commands issued by the user are:
-
-            {_insert_output(history, "history")}
-
-            The user's current selection is below:
-
-            {_insert_output(select, "selection")}
-
-            The actions with preconditions that match this selection, so are available to run on the
-            current selection, are below:
-
-            {_insert_output(applicable_actions, "applicable actions")}
-            """
-        )
+        ws_info = f"Based on the current directory, the current workspace is: {ws_base_dir.name} at {fmt_path(ws_base_dir)}"
     else:
         if is_sandbox:
             about_ws = "You are currently using the global sandbox workspace."
         else:
             about_ws = "The current directory is not a workspace."
-        current_state_message = Message(
-            f"""
-            CURRENT STATE
-
-            {about_ws}
-            Create or switch to a workspace with the `workspace` command.
-            For example:
-
-            - `workspace my_new_workspace`.
-            """
+        ws_info = (
+            f"{about_ws}. Create or switch to a workspace with the `workspace` command."
+            "For example: `workspace my_new_workspace`."
         )
+
+    log.info("Assistant current workspace state: %s", ws_info)
+
+    current_state_message = Message(
+        f"""
+        CURRENT STATE
+
+        {ws_info}
+
+        The last few commands issued by the user are:
+
+        {_insert_output(lambda: history(max=30), "history")}
+
+        The user's current selection is below:
+
+        {_insert_output(select, "selection")}
+
+        The actions with preconditions that match this selection, so are available to run on the
+        current selection, are below:
+
+        {_insert_output(applicable_actions, "applicable_actions")}
+
+        And here is an overview of the files in the current directory:
+
+        {_insert_output(lambda: files(brief=True), "files --brief")}
+        """
+    )
+
     return current_state_message
 
 
