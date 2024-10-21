@@ -169,11 +169,11 @@ def redirect_output(new_output):
 
 
 @contextmanager
-def console_pager():
+def console_pager(use_pager: Optional[bool] = None):
     """
-    Use Rich pager but only if applicable.
+    Use Rich pager if requested, or detect if it's applicable.
     """
-    if _output_context.rich_console:
+    if _output_context.rich_console and use_pager is not False:
         with get_console().pager(styles=True):
             yield
     else:

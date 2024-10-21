@@ -37,7 +37,7 @@ In short, in spite of AI tools accelerating software, we are, as always, waiting
 developers, product managers, designers, and entrepreneurs to design and ship solutions for
 us.
 
-### Why Do We Need an AI-native Command Line?
+### Why Do We Need an AI-Native Command Line?
 
 So what does all this have to do with the command line?
 

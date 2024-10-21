@@ -147,7 +147,7 @@ def getting_started() -> None:
     """
     Show help on getting started with Kmd.
     """
-    from kmd.docs import getting_started, motivation
+    from kmd.docs import getting_started
 
     with console_pager():
         output_markdown(getting_started)
@@ -638,7 +638,7 @@ def strip_frontmatter(*paths: str) -> None:
 def _dual_format_size(size: int):
     readable_size_str = ""
     if size > 1000000:
-        readable_size = naturalsize(size).replace("Bytes", "B")
+        readable_size = naturalsize(size, gnu=True)
         readable_size_str += f" ({readable_size})"
     return f"{size} bytes{readable_size_str}"
 
@@ -1031,6 +1031,8 @@ def query(query_str: str) -> None:
 @kmd_command
 def files(
     *paths: str,
+    brief: bool = False,
+    pager: bool = False,
     all: bool = False,
     head: int = 0,
     save: bool = False,
@@ -1041,9 +1043,14 @@ def files(
     iso_time: bool = False,
 ) -> CommandOutput:
     """
-    List files or folders in the current directory or specified paths.
+    List files or folders in the current directory or specified paths. Lists recursively
+    by default.
 
-    :param all: Include hidden files.
+    For a quick, paged overview of all files in a big directory, use `files --pager`.
+
+    :param brief: Same as `--head=20 --groupby=parent --pager`.
+    :param pager: Use the pager when displaying the output.
+    :param all: Include usually ignored (hidden) files.
     :param head: Limit the first number of items displayed per group (if groupby is used)
       or in total. 0 means show all.
     :param save: Save the listing as a CSV file item.
@@ -1051,13 +1058,22 @@ def files(
     :param reverse: Reverse the sorting order.
     :param since: Filter files modified since a given time (e.g., '1 day', '2 hours').
     :param groupby: Group results by 'parent' or 'suffix'.
-    :param recursive: List files recursively.
     :param iso_time: Show time in ISO format (default is human-readable age).
     """
+
+    # TODO: Consider adding a --flat or --depth option.
+
     if len(paths) == 0:
         paths_to_show = [Path(".")]
     else:
         paths_to_show = [Path(path) for path in paths]
+
+    if brief:
+        if head == 0:
+            head = 20
+        if groupby is None:
+            groupby = GroupByOption.parent
+        pager = True
 
     since_seconds = parse_since(since) if since else 0.0
 
@@ -1122,64 +1138,65 @@ def files(
     format_str = "%8s  %12s  %s"
     indent = " " * (8 + 12 + 4)
 
-    for group_name, group_df in grouped:
-        if group_name:
-            output(f"\n{group_name} ({len(group_df)} files)", color=COLOR_EMPH)
+    with console_pager(use_pager=pager):
+        for group_name, group_df in grouped:
+            if group_name:
+                output(f"\n{group_name} ({len(group_df)} files)", color=COLOR_EMPH)
 
-        if head:
-            display_df = group_df.head(head)
-        else:
-            display_df = group_df
+            if head:
+                display_df = group_df.head(head)
+            else:
+                display_df = group_df
 
-        for idx, row in display_df.iterrows():
-            # gnu is briefer, uses B instead of Bytes.
-            file_size = naturalsize(row["size"], gnu=True)
-            file_mod_time = fmt_time(row["modified"], iso_time, now=now, brief=True)
+            for idx, row in display_df.iterrows():
+                # gnu is briefer, uses B instead of Bytes.
+                file_size = naturalsize(row["size"], gnu=True)
+                file_mod_time = fmt_time(row["modified"], iso_time, now=now, brief=True)
 
-            display_name = fmt_path(row["relative_path"])
+                display_name = fmt_path(row["relative_path"])
+                output(
+                    format_str,
+                    file_size,
+                    file_mod_time,
+                    display_name,
+                    text_wrap=Wrap.NONE,
+                )
+                total_displayed += 1
+                total_displayed_size += row["size"]
+
+            # Indicate if items are omitted.
+            if groupby and head and len(group_df) > head:
+                output(
+                    f"{indent}… {len(group_df) - head} more files not shown",
+                    text_wrap=Wrap.NONE,
+                )
+
+        if not groupby and head and files_matching > head:
             output(
-                format_str,
-                file_size,
-                file_mod_time,
-                display_name,
+                f"{indent}… {files_matching - head} more files not shown",
                 text_wrap=Wrap.NONE,
             )
-            total_displayed += 1
-            total_displayed_size += row["size"]
 
-        # Indicate if items are omitted.
-        if groupby and head and len(group_df) > head:
+        output()
+        output(
+            f"{total_displayed} files ({naturalsize(total_displayed_size)}) shown",
+            color=COLOR_EMPH,
+        )
+        if file_listing.files_total > file_listing.files_matching > total_displayed:
             output(
-                f"{indent}… {len(group_df) - head} more files not displayed",
-                text_wrap=Wrap.NONE,
+                f"of {file_listing.files_matching} files ({naturalsize(file_listing.size_matching)}) matching criteria",
+                color=COLOR_EMPH,
             )
-
-    if not groupby and head and files_matching > head:
-        output(
-            f"{indent}… {files_matching - head} more files not displayed",
-            text_wrap=Wrap.NONE,
-        )
-
-    output()
-    output(
-        f"{total_displayed} files ({naturalsize(total_displayed_size)}) shown",
-        color=COLOR_EMPH,
-    )
-    if file_listing.files_total > file_listing.files_matching > total_displayed:
-        output(
-            f"of {file_listing.files_matching} files ({naturalsize(file_listing.size_matching)}) matching criteria",
-            color=COLOR_EMPH,
-        )
-    if file_listing.files_total > total_displayed:
-        output(
-            f"from {file_listing.files_total} total files ({naturalsize(file_listing.size_total)})",
-            color=COLOR_EMPH,
-        )
-    if file_listing.files_ignored or file_listing.dirs_ignored:
-        output(
-            f"with {file_listing.files_ignored + file_listing.dirs_ignored} paths ignored",
-            color=COLOR_EMPH,
-        )
+        if file_listing.files_total > total_displayed:
+            output(
+                f"from {file_listing.files_total} total files ({naturalsize(file_listing.size_total)})",
+                color=COLOR_EMPH,
+            )
+        if file_listing.files_ignored or file_listing.dirs_ignored:
+            output(
+                f"with {file_listing.files_ignored + file_listing.dirs_ignored} paths ignored",
+                color=COLOR_EMPH,
+            )
 
     return CommandOutput()
 
