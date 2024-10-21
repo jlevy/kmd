@@ -21,7 +21,7 @@ from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_filename_and_type
-from kmd.file_tools.file_walk import walk_by_folder
+from kmd.file_tools.file_walk import IgnoreFilter, walk_by_dir
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import (
     FileExt,
@@ -505,17 +505,16 @@ class FileStore:
     def walk_items(
         self,
         store_path: Optional[StorePath] = None,
-        show_hidden: bool = False,
+        ignore: Optional[IgnoreFilter] = is_ignored,
         show_unknown_formats: bool = False,
     ) -> Generator[StorePath, None, None]:
         """
         Yields StorePaths of items in a folder or the entire store.
         """
         start_path = self.base_dir / store_path if store_path else self.base_dir
-        for store_dirname, filenames in walk_by_folder(
-            start_path, relative_to=self.base_dir, show_hidden=show_hidden
-        ):
-            for filename in filenames:
+        for flist in walk_by_dir(start_path, relative_to=self.base_dir, ignore=ignore):
+            store_dirname = flist.parent_dir
+            for filename in flist.filenames:
                 path = self.base_dir / store_dirname / filename
                 if show_unknown_formats or known_file_format(path):
                     yield StorePath(join(store_dirname, filename))

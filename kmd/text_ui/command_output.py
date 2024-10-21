@@ -114,6 +114,7 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
 
 
 def fill_markdown(doc_str: str):
+    doc_str = str(doc_str)  # Convenience for lazy objects.
     return normalize_markdown(dedent(doc_str).strip(), line_wrapper=wrap_lines_to_width)
 
 
@@ -203,6 +204,10 @@ def output(
 ):
     if extra_newlines:
         rprint()
+
+    if not isinstance(message, (Text, Markdown)):
+        message = str(message)
+
     if isinstance(message, str):
         text = message % args if args else message
         filled_text = fill_text(transform(text), text_wrap, extra_indent)
@@ -218,7 +223,7 @@ log = get_logger(__name__)
 
 
 def output_markdown(doc_str: str, extra_indent: str = "", rich_markdown_display: bool = True):
-    doc = fill_markdown(doc_str)
+    doc = fill_markdown(str(doc_str))
     if rich_markdown_display and _output_context.rich_console:
         doc = Markdown(doc, justify="left")
 

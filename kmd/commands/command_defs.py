@@ -1,11 +1,11 @@
 import os
 import sys
-from datetime import datetime
-from os.path import basename, getmtime, getsize
+from datetime import datetime, timezone
+from os.path import basename
 from pathlib import Path
 from typing import cast, List, Optional, Sequence
 
-from humanize import naturalsize, naturaltime
+from humanize import naturalsize
 from rich import get_console
 from rich.text import Text
 
@@ -39,13 +39,12 @@ from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_storage.workspaces import (
     check_strict_workspace_name,
     current_workspace,
-    current_workspace_info,
     resolve_workspace_name,
 )
-from kmd.file_tools.file_walk import walk_by_folder
+from kmd.file_tools.file_sort_filter import collect_files, GroupByOption, parse_since, SortOption
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.help.assistant import assist_system_message, assistance
-from kmd.help.help_page import output_help_page
+from kmd.help.help_page import output_see_also
 from kmd.lang_tools.inflection import plural
 from kmd.media import media_tools
 from kmd.model.file_formats_model import (
@@ -69,19 +68,22 @@ from kmd.shell_tools.native_tools import (
     terminal_show_image,
     tool_check,
     view_file_native,
+    ViewMode,
 )
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.text_formatting.doc_formatting import normalize_text_file
 from kmd.text_ui.command_output import (
+    console_pager,
     format_name_and_description,
     output,
     output_assistance,
     output_heading,
+    output_markdown,
     output_response,
     output_status,
     Wrap,
 )
-from kmd.util.format_utils import fmt_lines, fmt_path
+from kmd.util.format_utils import fmt_lines, fmt_path, fmt_time
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_key_vals import format_key_value, parse_key_value
 from kmd.util.strif import copyfile_atomic
@@ -117,11 +119,87 @@ def welcome() -> None:
 @kmd_command
 def help() -> None:
     """
-    Show the kmd main help page.
+    Show the Kmd main help page.
     """
     # TODO: Take an argument to show help for a specific command or action.
 
-    output_help_page()
+    from kmd.help.help_page import output_help_page
+
+    with console_pager():
+        output_help_page()
+
+
+@kmd_command
+def why_kmd() -> None:
+    """
+    Show help on why Kmd was created.
+    """
+    from kmd.docs import motivation, what_is_kmd
+
+    with console_pager():
+        output_markdown(what_is_kmd)
+        output_markdown(motivation)
+        output_see_also(["help", "getting_started", "faq", "commands", "actions"])
+
+
+@kmd_command
+def getting_started() -> None:
+    """
+    Show help on getting started with Kmd.
+    """
+    from kmd.docs import getting_started, motivation, what_is_kmd
+
+    with console_pager():
+        output_markdown(what_is_kmd)
+        output_markdown(motivation)
+        output_markdown(getting_started)
+        output_see_also(
+            [
+                "What can I do with Kmd?",
+                "What are the most important Kmd commands?",
+                "commands",
+                "actions",
+                "check_tools",
+                "faq",
+            ]
+        )
+
+
+@kmd_command
+def faq() -> None:
+    """
+    Show the Kmd FAQ.
+    """
+    from kmd.docs import faq
+
+    with console_pager():
+        output_markdown(faq)
+
+        output_see_also(["help", "commands", "actions"])
+
+
+@kmd_command
+def commands() -> None:
+    """
+    Show help on all Kmd commands.
+    """
+    from kmd.help.help_page import output_builtin_commands_help
+
+    with console_pager():
+        output_builtin_commands_help()
+        output_see_also(["actions", "help", "faq", "What are the most important Kmd commands?"])
+
+
+@kmd_command
+def actions() -> None:
+    """
+    Show help on the full list of currently loaded actions.
+    """
+    from kmd.help.help_page import output_actions_help
+
+    with console_pager():
+        output_actions_help()
+        output_see_also(["commands", "help", "faq", "What are the most important Kmd commands?"])
 
 
 @kmd_command
@@ -408,7 +486,9 @@ def _check_store_paths(paths: Sequence[StorePath | Path]) -> List[StorePath]:
 
 
 @kmd_command
-def show(path: Optional[str] = None, console: bool = False, browser: bool = False) -> None:
+def show(
+    path: Optional[str] = None, console: bool = False, native: bool = False, browser: bool = False
+) -> None:
     """
     Show the contents of a file if one is given, or the first file if multiple files
     are selected. Will try to use native apps or web browser to display the file if
@@ -418,8 +498,14 @@ def show(path: Optional[str] = None, console: bool = False, browser: bool = Fals
     highlighting and git diffs.
 
     :param console: Force display to console (not browser or native apps).
-    :param browser: Force display to browser (not console or native apps).
+    :param native: Force display with a native app (depending on your system configuration).
+    :param browser: Force display with your default web browser.
     """
+    view_mode = (
+        ViewMode.console
+        if console
+        else ViewMode.browser if browser else ViewMode.native if native else ViewMode.auto
+    )
     try:
         input_paths = _assemble_paths(path)
         input_path = input_paths[0]
@@ -437,13 +523,13 @@ def show(path: Optional[str] = None, console: bool = False, browser: bool = Fals
                     log.info("Had trouble showing thumbnail image (will skip): %s", e)
                     output(f"[Image: {item.thumbnail_url}]", color=COLOR_HINT)
 
-            view_file_native(ws.base_dir / input_path, use_console=console, use_browser=browser)
+            view_file_native(ws.base_dir / input_path, view_mode=view_mode)
         else:
-            view_file_native(input_path, use_console=console, use_browser=browser)
+            view_file_native(input_path, view_mode=view_mode)
     except (InvalidInput, InvalidState):
         if path:
             # If path is absolute or we couldbn't get a selection, just show the file.
-            view_file_native(path, use_console=console, use_browser=browser)
+            view_file_native(path, view_mode=view_mode)
         else:
             raise InvalidInput("No selection")
 
@@ -543,9 +629,9 @@ def strip_frontmatter(*paths: str) -> None:
     """
     Strip the frontmatter from the given files.
     """
-    if not paths:
-        raise InvalidInput("Provide one or more paths")
-    for path in paths:
+    input_paths = _assemble_paths(*paths)
+
+    for path in input_paths:
         log.message("Stripping frontmatter from: %s", path)
         fmf_strip_frontmatter(path)
 
@@ -947,76 +1033,156 @@ def query(query_str: str) -> None:
 def files(
     *paths: str,
     all: bool = False,
-    summary: Optional[bool] = False,
-    iso_time: Optional[bool] = False,
-) -> None:
+    head: int = 0,
+    save: bool = False,
+    sort: Optional[SortOption] = None,
+    reverse: bool = False,
+    since: Optional[str] = None,
+    groupby: Optional[GroupByOption] = None,
+    iso_time: bool = False,
+) -> CommandOutput:
     """
-    List files or folders in the current directory. Shows the full current workspace if
-    no path is provided.
+    List files or folders in the current directory or specified paths.
 
-    :param summary: Show only summary of number of files in each folder.
-    :param iso_time: Show time in ISO format.
+    :param all: Include hidden files.
+    :param head: Limit the first number of items displayed per group (if groupby is used)
+      or in total. 0 means show all.
+    :param save: Save the listing as a CSV file item.
+    :param sort: Sort by 'size', 'accessed', 'created', or 'modified'.
+    :param reverse: Reverse the sorting order.
+    :param since: Filter files modified since a given time (e.g., '1 day', '2 hours').
+    :param groupby: Group results by 'parent' or 'suffix'.
+    :param recursive: List files recursively.
+    :param iso_time: Show time in ISO format (default is human-readable age).
     """
     if len(paths) == 0:
         paths_to_show = [Path(".")]
     else:
         paths_to_show = [Path(path) for path in paths]
 
-    ws_dirs, is_sandbox = current_workspace_info()
-    ws_base_dir = ws_dirs.base_dir if ws_dirs else None
-    relative_to = ws_base_dir if ws_base_dir and not is_sandbox else Path(".")
+    since_seconds = parse_since(since) if since else 0.0
 
-    total_folders, total_files = 0, 0
+    # Determine whether to show hidden files for this path.
+    ignore = None if all else is_ignored
+    for path in paths_to_show:
+        if not all and path and is_ignored(path.name):
+            log.warning(
+                "Requested path is on default ignore list so disabling ignore: %s",
+                fmt_path(path),
+            )
+            ignore = None
+            break
+
+    # Collect all the files.
+    file_listing = collect_files(
+        start_paths=paths_to_show,
+        recursive=True,
+        ignore=ignore,
+        since_seconds=since_seconds,
+    )
+
+    log.info("Collected %s files.", file_listing.files_total)
+
+    if not file_listing.files:
+        output("No files found.")
+        return CommandOutput()
+
+    df = file_listing.as_dataframe()
+
+    if sort:
+        df.sort_values(by=sort.value, ascending=not reverse, inplace=True)
+
+    files_matching = len(df)
+    log.info(f"Total files collected: {files_matching}")
+
+    if groupby:
+        grouped = df.groupby(groupby.value)
+    else:
+        grouped = [(None, df)]
+
+    if save:
+        item = Item(
+            type=ItemType.export,
+            title="File Listing",
+            description=f"Files in {', '.join(fmt_path(p) for p in paths_to_show)}",
+            format=Format.csv,
+            body=df.to_csv(index=False),
+        )
+        ws = current_workspace()
+        store_path = ws.save(item, as_tmp=True)
+        log.message("File listing saved to: %s", fmt_path(store_path))
+
+        select(store_path)
+
+        return CommandOutput(show_selection=True)
+
+    total_displayed = 0
+    total_displayed_size = 0
+    now = datetime.now(timezone.utc)
+
+    format_str = "%8s  %12s  %s"
+    indent = " " * (8 + 12 + 4)
+
+    for group_name, group_df in grouped:
+        if group_name:
+            output(f"\n{group_name} ({len(group_df)} files)", color=COLOR_EMPH)
+
+        if head:
+            display_df = group_df.head(head)
+        else:
+            display_df = group_df
+
+        for idx, row in display_df.iterrows():
+            # gnu is briefer, uses B instead of Bytes.
+            file_size = naturalsize(row["size"], gnu=True)
+            file_mod_time = fmt_time(row["modified"], iso_time, now=now, brief=True)
+
+            display_name = fmt_path(row["relative_path"])
+            output(
+                format_str,
+                file_size,
+                file_mod_time,
+                display_name,
+                text_wrap=Wrap.NONE,
+            )
+            total_displayed += 1
+            total_displayed_size += row["size"]
+
+        # Indicate if items are omitted.
+        if groupby and head and len(group_df) > head:
+            output(
+                f"{indent}… {len(group_df) - head} more files not displayed",
+                text_wrap=Wrap.NONE,
+            )
+
+    if not groupby and head and files_matching > head:
+        output(
+            f"{indent}… {files_matching - head} more files not displayed",
+            text_wrap=Wrap.NONE,
+        )
 
     output()
+    output(
+        f"{total_displayed} files ({naturalsize(total_displayed_size)}) shown",
+        color=COLOR_EMPH,
+    )
+    if file_listing.files_total > file_listing.files_matching > total_displayed:
+        output(
+            f"of {file_listing.files_matching} files ({naturalsize(file_listing.size_matching)}) matching criteria",
+            color=COLOR_EMPH,
+        )
+    if file_listing.files_total > total_displayed:
+        output(
+            f"from {file_listing.files_total} total files ({naturalsize(file_listing.size_total)})",
+            color=COLOR_EMPH,
+        )
+    if file_listing.files_ignored or file_listing.dirs_ignored:
+        output(
+            f"with {file_listing.files_ignored + file_listing.dirs_ignored} paths ignored",
+            color=COLOR_EMPH,
+        )
 
-    for path in paths_to_show:
-        # If we're explicitly looking in a hidden directory, show hidden files.
-        show_hidden = all or (path is not None and is_ignored(path))
-
-        for dirname, filenames in walk_by_folder(path, relative_to, show_hidden):
-            # Show tally for this directory.
-            nfiles = len(filenames)
-            if nfiles > 0:
-                output(f"\n{fmt_path(dirname)} - {nfiles} files", color=COLOR_EMPH)
-
-            for filename in filenames:
-                full_path = os.path.join(dirname, filename)
-
-                # Now show all the files in that directory.
-                if not summary:
-                    file_size = naturalsize(getsize(full_path)).replace("Bytes", "B")
-
-                    if not iso_time:
-                        file_mod_time = (
-                            naturaltime(datetime.fromtimestamp(getmtime(full_path)))
-                            .replace("second", "sec")
-                            .replace("minute", "min")
-                        )
-                    else:
-                        file_mod_time = (
-                            datetime.fromtimestamp(getmtime(full_path)).isoformat().split(".", 1)[0]
-                        )
-
-                    parent_dir = basename(dirname)
-                    display_name = f"{parent_dir}/{filename}" if parent_dir != "." else filename
-                    display_name = fmt_path(display_name)
-
-                    # TODO: Option to show size summary. Indicate if body is empty.
-                    output(
-                        "  %8s  %12s  %s",
-                        file_size,
-                        file_mod_time,
-                        display_name,
-                        text_wrap=Wrap.NONE,
-                    )
-
-            output()
-
-            total_folders += 1
-            total_files += nfiles
-
-        output(f"\n{total_files} items total in {total_files} folders", color=COLOR_EMPH)
+    return CommandOutput()
 
 
 @kmd_command

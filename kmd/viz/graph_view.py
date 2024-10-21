@@ -10,7 +10,7 @@ from kmd.file_storage.workspaces import current_workspace
 from kmd.model.file_formats_model import Format
 from kmd.model.graph_model import GraphData, Link, Node
 from kmd.model.items_model import Item, ItemRelations, ItemType
-from kmd.shell_tools.native_tools import view_file_native
+from kmd.shell_tools.native_tools import view_file_native, ViewMode
 from kmd.util.format_utils import fmt_path
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
@@ -129,7 +129,7 @@ def assemble_workspace_graph(
 
 def open_graph_view(graph: GraphData):
     html_path = generate_graph_view_html(graph)
-    view_file_native(html_path, use_console=False)
+    view_file_native(html_path, view_mode=ViewMode.browser)
 
 
 ## Tests

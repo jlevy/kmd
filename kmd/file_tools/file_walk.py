@@ -1,25 +1,43 @@
 import os
+from dataclasses import dataclass
 from os.path import abspath, relpath
 from pathlib import Path
-from typing import Generator, List, Tuple
+from typing import Callable, Generator, List, Optional
 
 from kmd.config.logger import get_logger
 from kmd.errors import FileNotFound
-from kmd.model.file_formats_model import is_ignored
 from kmd.util.format_utils import fmt_path
 
 
 log = get_logger(__name__)
 
 
-def walk_by_folder(
-    start_path: Path, relative_to: Path, show_hidden: bool = False, recursive: bool = True
-) -> Generator[Tuple[str, List[str]], None, None]:
+@dataclass(frozen=True)
+class FileList:
     """
-    Simple wrapper around `os.walk`. Yields all files in each folder as
-    `(rel_dirname, filenames)` for each directory within `start_path`, where
-    `rel_dirname` is relative to `relative_to`. Handles sorting by name
-    and skipping hidden files.
+    A flat list of files in a directory.
+    """
+
+    parent_dir: str
+    filenames: List[str]
+    files_ignored: int
+    dirs_ignored: int
+
+
+IgnoreFilter = Callable[[str | Path], bool]
+
+
+def walk_by_dir(
+    start_path: Path,
+    relative_to: Path,
+    recursive: bool = True,
+    ignore: Optional[IgnoreFilter] = None,
+) -> Generator[FileList, None, None]:
+    """
+    Simple wrapper around `os.walk`. Yields all files in each folder as a
+    `FileList`. Filenames are relative to `parent_dir`, which is relative to
+    `relative_to`. Handles sorting by name and skipping ignored files and
+    directories based on the `ignore` filter.
     """
 
     start_path = start_path.resolve()
@@ -33,11 +51,13 @@ def walk_by_folder(
 
     # Special case of a single file.
     if start_path.is_file():
-        rel_dirname = relpath(start_path.parent, relative_to) if relative_to else start_path.parent
-        yield rel_dirname, [start_path.name]
+        parent_dir = relpath(start_path.parent, relative_to) if relative_to else start_path.parent
+        yield FileList(parent_dir, [start_path.name], 0, 0)
         return
 
     # Walk the directory.
+    dirs_ignored = 0
+    files_ignored = 0
     for dirname, dirnames, filenames in os.walk(start_path):
         # If not recursive, prevent os.walk from descending into subdirectories.
         if not recursive:
@@ -47,14 +67,17 @@ def walk_by_folder(
         filenames.sort()
 
         # Filter out ignored directories.
-        if not show_hidden:
-            dirnames[:] = [d for d in dirnames if not is_ignored(d)]
+        if ignore:
+            prev_len = len(dirnames)
+            dirnames[:] = [d for d in dirnames if not ignore(d)]
+            dirs_ignored = prev_len - len(dirnames)
 
         # Filter out ignored files.
         filtered_filenames = filenames
-        if not show_hidden:
-            filtered_filenames = [f for f in filenames if not is_ignored(f)]
+        if ignore:
+            filtered_filenames = [f for f in filenames if not ignore(f)]
+            files_ignored = len(filenames) - len(filtered_filenames)
 
         if filtered_filenames:
-            rel_dirname = relpath(abspath(dirname), relative_to) if relative_to else dirname
-            yield rel_dirname, filtered_filenames
+            parent_dir = relpath(abspath(dirname), relative_to) if relative_to else dirname
+            yield FileList(parent_dir, filtered_filenames, files_ignored, dirs_ignored)

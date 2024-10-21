@@ -188,6 +188,7 @@ def _terminal_show_image_kitty(filename: str | Path):
 def terminal_show_image(filename: str | Path):
     """
     Try to display an image in the terminal, using kitty or sixel.
+    Raise `SetupError` if not supported.
     """
     if _terminal_is_kitty():
         _terminal_show_image_kitty(filename)
@@ -220,51 +221,76 @@ def terminal_link(url: str, text: str, id: str = "") -> str:
         return text
 
 
-def view_file_native(file_or_url: str | Path, use_console: bool = False, use_browser: bool = False):
+class ViewMode(Enum):
+    auto = "auto"
+    console = "console"
+    browser = "browser"
+    native = "native"
+    terminal_image = "terminal_image"
+
+
+def _detect_view_mode(file_or_url: str) -> ViewMode:
+    # As a heuristic, we use the browser for URLs and for local files that are
+    # clearly full HTML pages (since HTML fragments are fine on console).
+    if is_url(file_or_url):
+        return ViewMode.browser
+
+    path = Path(file_or_url)
+    if path.is_file():  # File or symlink.
+        content = read_partial_text(path)
+        if content and is_full_html_page(content):
+            return ViewMode.browser
+
+        mime_type = detect_mime_type(path)
+        ext = parse_file_ext(path)
+        is_text = (ext and ext.is_text()) or mime_type and mime_type.startswith("text")
+
+        if is_text or (mime_type and mime_type.startswith("text")):
+            return ViewMode.console
+
+        if mime_type and mime_type.startswith("image"):
+            return ViewMode.terminal_image
+
+        return ViewMode.native
+    elif path.is_dir():
+        return ViewMode.native
+    else:
+        raise FileNotFound(fmt_path(file_or_url))
+
+
+def view_file_native(
+    file_or_url: str | Path,
+    view_mode: ViewMode = ViewMode.auto,
+):
     """
-    Open a file or URL in the user's preferred native application, falling back
-    to pagination in console. For images, first tries terminal-based image display.
+    Open a file or URL in the console or a native app. If `view_mode` is auto,
+    automaticallyd determine whether to use console, web browser, or the user's
+    preferred native application. For images, also tries terminal-based image
+    display.
     """
     file_or_url = str(file_or_url)
-    path = None
     if not is_url(file_or_url):
         path = Path(file_or_url)
         if not path.exists():
-            raise FileNotFound(fmt_path(file_or_url))
+            raise FileNotFound(fmt_path(path))
 
-    # As a heuristic, we use the browser for URLs and for local files that are
-    # clearly full HTML pages (since HTML fragments are fine on console).
-    if not use_console and is_url(file_or_url):
-        use_browser = True
-    elif path:
-        content = read_partial_text(path)
-        if content and is_full_html_page(content):
-            use_browser = True
+    if view_mode == ViewMode.auto:
+        view_mode = _detect_view_mode(file_or_url)
 
-    if not use_console and use_browser:
+    if view_mode == ViewMode.browser:
         url = file_or_url if is_url(file_or_url) else as_file_url(file_or_url)
         log.message("Opening URL in browser: %s", url)
         webbrowser.open(url)
-    elif os.path.isfile(file_or_url):
-        file = file_or_url
-        mime_type = detect_mime_type(file)
-        file_size, min_lines = file_size_check(file)
-        ext = parse_file_ext(file)
-        is_text = (ext and ext.is_text()) or mime_type and mime_type.startswith("text")
-
-        if use_console or is_text or (mime_type and mime_type.startswith("text")):
-            view_file_console(file, use_pager=min_lines > 40 or file_size > 20 * 1024)
-        elif mime_type and mime_type.startswith("image"):
-            try:
-                terminal_show_image(file)
-            except SetupError:
-                native_open(file)
-        else:
-            native_open(file)
-    elif os.path.isdir(file_or_url):
+    elif view_mode == ViewMode.console:
+        file_size, min_lines = file_size_check(path)
+        view_file_console(path, use_pager=min_lines > 40 or file_size > 20 * 1024)
+    elif view_mode == ViewMode.terminal_image:
+        try:
+            terminal_show_image(path)
+        except SetupError:
+            native_open(path)
+    elif view_mode == ViewMode.native:
         native_open(file_or_url)
-    else:
-        raise FileNotFound(fmt_path(file_or_url))
 
 
 def tail_file(filename: str | Path):

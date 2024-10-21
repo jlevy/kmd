@@ -11,9 +11,9 @@ log = get_logger(__name__)
 
 
 @kmd_action
-class CrawlWebpageText(PerItemAction):
+class CrawlWebpage(PerItemAction):
 
-    name: str = "crawl_webpage_text"
+    name: str = "crawl_webpage"
 
     description: str = "Crawl a web page using Firecrawl's web crawler and save it in Markdown."
 
