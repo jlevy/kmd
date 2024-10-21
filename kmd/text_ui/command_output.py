@@ -29,7 +29,11 @@ from kmd.config.text_styles import (
     EMOJI_ASSISTANT,
     HRULE,
 )
-from kmd.text_formatting.markdown_normalization import normalize_markdown, wrap_lines_to_width
+from kmd.text_formatting.markdown_normalization import (
+    DEFAULT_WRAP_WIDTH,
+    normalize_markdown,
+    wrap_lines_to_width,
+)
 from kmd.text_formatting.text_wrapping import text_wrap_fill
 from kmd.util.format_utils import DEFAULT_INDENT, split_paragraphs
 
@@ -54,6 +58,10 @@ class Wrap(Enum):
 
     HANGING_INDENT = "hanging_indent"
     """Wrap with hanging indent (indented except for the first line)."""
+
+    @property
+    def should_wrap(self) -> bool:
+        return self in [Wrap.WRAP, Wrap.WRAP_FULL, Wrap.WRAP_INDENT, Wrap.HANGING_INDENT]
 
 
 def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
@@ -182,14 +190,14 @@ def output_as_string(func: Callable, *args: Any, **kwargs: Any) -> str:
     return buffer.getvalue()
 
 
-def rprint(*args, **kwargs):
+def rprint(*args, width: Optional[int] = None, **kwargs):
     """Print to global console, unless output stream is redirected."""
 
     stream = getattr(_output_context, "stream", None)
     if stream:
         rich.print(*args, **kwargs, file=stream)
     else:
-        console.print(*args, **kwargs)
+        console.print(*args, width=width, **kwargs)
 
 
 def output(
@@ -201,9 +209,13 @@ def output(
     extra_indent: str = "",
     extra_newlines: bool = False,
     end="\n",
+    width: Optional[int] = DEFAULT_WRAP_WIDTH,
 ):
     if extra_newlines:
         rprint()
+
+    if not text_wrap.should_wrap:
+        width = None
 
     if not isinstance(message, (Text, Markdown)):
         message = str(message)
@@ -211,10 +223,10 @@ def output(
     if isinstance(message, str):
         text = message % args if args else message
         filled_text = fill_text(transform(text), text_wrap, extra_indent)
-        rprint(Text(filled_text, color) if color else filled_text, end=end)
+        rprint(Text(filled_text, color) if color else filled_text, end=end, width=width)
     else:
         rprint(extra_indent, end="")
-        rprint(message, end=end)
+        rprint(message, end=end, width=width)
     if extra_newlines:
         rprint()
 

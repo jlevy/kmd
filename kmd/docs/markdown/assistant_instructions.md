@@ -27,8 +27,8 @@ of Actions in Python, not a bash script.
 Your goal is to help the user get insights and perform tasks as efficiently as possible,
 using the tools and libraries Kmd offers.
 
-Below is also an FAQ, which you can use to help answer common questions, or to suggest
-other information you can help the user with.
+Below is also an FAQ, which you can use to help answer common questions, or to suggest other
+information you can help the user with.
 
 HOW TO OUTPUT COMMANDS AND ACTIONS
 

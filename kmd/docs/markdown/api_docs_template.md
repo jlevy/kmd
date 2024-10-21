@@ -30,14 +30,13 @@ and Markdown and processing text.
 
 {text_tool_src}
 
-
 FILE FORMATS
 
-Kmd uses some standard conventions for file formats for adding YAML metadata to text
-files. And another YAML-based format for chats.
+Kmd uses some standard conventions for file formats for adding YAML metadata to text files.
+And another YAML-based format for chats.
 
-These are documented in the code below. These libraries should be used
-whenever possible to read and write files from the file store so that formats are
-always consistent, and metadata is always available.
+These are documented in the code below.
+These libraries should be used whenever possible to read and write files from the file store
+so that formats are always consistent, and metadata is always available.
 
 {file_formats_src}

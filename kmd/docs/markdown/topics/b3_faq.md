@@ -174,3 +174,11 @@ show
 transcribe_annotate_summarize 'https://www.youtube.com/watch?v=XRQnWomofIY'
 show_as_webpage
 ```
+
+### Is Kmd mature?
+
+No. Not at all.
+:) It's the result of a few weeks of coding and experimentation, and it's very much in
+progress.
+Please help me make it better by sharing your ideas and feedback!
+(Easiest to DM at `twitter.com/ojoshe`. Other contact info at `github.com/jlevy`.)

@@ -1,13 +1,90 @@
-
-
-## Motivation
+## The Philosophy of Kmd
 
 I'd like to give a little motivation for experimenting with Kmd and why I think it's
 potentially so useful.
 But jump to [examples](#examples) to get an idea of what it can do.
 If you just want to try it, jump to [Getting Started](#getting-started)!
 
-The goals of Kmd are:
+## Why Apps Can't Solve All Your Problems
+
+AI has radically changed the way we use software.
+With LLMs and other generative AI models, we've seen big improvements in two areas:
+
+1. Powerful general-purpose new AI tools (ChatGPT, Perplexity, etc.)
+
+2. AI-powered features within specific SaaS tools that are built for the problem you want to
+   solve, like Notion, Figma, Descript, etc.
+
+While we have these powerful cloud apps, we all know numerous situations where our problems
+aren't easily solved or automated with ChatGPT interface, Notion, Google Docs, Slack, Excel,
+and Zapier.
+
+If you want to use any of the newest AI models and APIs for something not supported by an
+existing tool, you generally have to design and build it yourself—in Python and/or a
+full-stack web app.
+
+We are told AI is replacing developers, and it's true tools Cursor can help you write code
+much faster.
+But building apps that are good enough people will pay them is hard.
+And we can't all drop what we're doing and build new apps.
+
+It has long been a rule that once products become widely successful, the curse of
+[Conway's Law](https://en.wikipedia.org/wiki/Conway%27s_law) and the complexity of full-stack
+apps means many companies won't add many of the specific features you want, or at best are
+likely to do it slowly.
+
+In short, in spite of AI tools accelerating software, we are, as always, waiting for
+developers, product managers, designers, and entrepreneurs to design and ship solutions for
+us.
+
+### Why Do We Need an AI-native Command Line?
+
+So what does all this have to do with the command line?
+
+Well, the classic Unix-style command line has been the Swiss Army knife for savvy developers
+for decades.
+(The still widely-used bash shell was released 35 years ago!)
+
+Like many developers, I love the terminal (I even wrote a popular
+[guide on it](https://github.com/jlevy/the-art-of-command-line), with millions of readers).
+
+A fraction of developers do a lot in a terminal, but among most normal people, the command
+line has pretty bad reputation.
+This is actually fair.
+Command-line shells generally still suffer from three big issues:
+
+- Old and arcane commands, full of obscure behaviors that relatively few people remember
+
+- A text-based interface many find confusing or ugly
+
+- No easy, “native” support for modern tools, apps, and APIs (especially LLMs—and using
+  `curl` to call OpenAI APIs doesn't count!)
+
+Even worse, command lines haven't gotten much better.
+Few companies make money shipping new command-line tooling.
+(In the last few years this has slowly starting to change with tools like nushell, fish, and
+Warp.)
+
+Nonetheless, for all its faults, there is a uniquely powerful thing about the command line:
+With a command line, you can do complex things that were never planned by an app developer, a
+designer, or an enterpreneur building a product.
+
+*You* know your problems better than anyone else.
+Any tool that lets you solve complex problems yourself, without waiting for engineers and
+designers, can radically improve your productivity.
+
+I think it's time to revisit this idea.
+
+In a post-LLM world, it should be possible to do more things without so much time and effort
+spent (even with the help of LLMs) on coding and UI/UX design.
+
+If we have an idea for a script or a feature or a workflow, we should not have to spend
+weeks or months to iterate on web or mobile app design and full-stack engineering just to see
+how well it works.
+
+### The Goals of Kmd
+
+That brings us to the principles behind building a new, AI-native shell:
 
 - **Make simple tasks simple:** Doing a simple thing (like transcribing a video or
   proofreading a document) should be as easy as running a single command (not clicking
@@ -21,13 +98,15 @@ The goals of Kmd are:
   You shouldn't need to be a programmer to use any task—but any task should be extensible
   with arbitrary code (written by you and an LLM) when needed.
 
-- **Augment human skills and judgement:** Some agent-style tools aim for pure automation.
+- **Augment human skills and judgement:** Many AI agent efforts aim for pure automation.
   But even with powerful LLMs and tools, full automation is rare.
   Invariably, the best results come from human review wherever it's needed—experimenting
   with different models and prompts, looking at what works, focusing expert human attention
   in the right places.
   The most flexible tools augment, not replace, your ability to review and manipulate
   information.
+  It should help both very technical users, like developers, as well as less technical but
+  sophisticated users who aren't traditional programmers.
 
 - **Accelerate discovery of the workflows that work best:** We have so many powerful APIs,
   models, libraries, and tools now—but the real bottleneck is in discovering and then
@@ -40,46 +119,15 @@ The goals of Kmd are:
   Better languages and scripting tools should make LLMs smarter, by automating and
   orchestraging complex tasks in ways that are more understandable and less error prone.
 
-### Why a New Command Line?
+### Key Features
+
+Kmd is an experimental attempt at building the tool I've wanted for a long time, using a
+command line as a starting point, and with an initial focus on content-related tasks.
 
 It may be better to call Kmd a “shell” since it is actually evolving into more than a
 command line.
 It's more like a first step toward an item-based information operating system—an alternate,
 more flexible UX and information architecture for tasks that manipulate content.
-
-The classic Unix-style command line has been the Swiss Army knife for savvy developers for
-decades.
-(The still widely used bash shell was released 35 years ago!)
-
-Like many developers, I love the terminal (I even wrote a popular
-[guide on it](https://github.com/jlevy/the-art-of-command-line), with millions of readers).
-But the command line has limitations.
-We've seen improvements to terminals and shells, but they generally still suffer from three
-big issues:
-
-- Arcane commands and a confusing interface mean relatively few people feel comfortable
-  using the command line
-
-- No easy, “native” support for modern APIs and apps, especially LLMs (`curl` doesn't
-  count!)
-
-- For legacy reasons, it's sadly hard to improve these problems
-
-On the other hand, we have wonderful and powerful cloud apps, but we all know the
-limitations of the ChatGPT interface, Notion, Google Docs, Slack, Excel, and Zapier.
-Unfortunately, as each of these products has become more successful, the curse of
-[Conway's Law](https://en.wikipedia.org/wiki/Conway%27s_law) and the complexity of full-stack
-apps means they won't add many of the specific features you want, or at best will do it
-slowly.
-
-If we have an idea for a new feature or workflow, we should not have to spend weeks or
-months to iterate on web or mobile app design and full-stack engineering just to see how well
-it works.
-In a post-LLM world, it should be possible to do more things without so much time and effort
-spent (even with the help of LLMs) on coding and UI/UX design.
-
-Kmd is an experimental attempt at building the tool I've wanted for a long time, using a
-command line as a starting point, and with an initial focus on content-related tasks.
 
 I hope it becomes the tool you need when you don't know what tool you need.
 
@@ -93,17 +141,22 @@ Some key elements:
 - **Content is just files:** We run tasks on local files that are in readable, transparent
   file formats compatible with other tools (Markdown, YAML, HTML, PDFs).
 
-- **Maintain context:** The framework helps you keep files organized into a simple
-  workspace, which is just a directory that has additional caches, logs, and metadata.
+- **The shell maintains context:** The framework helps you keep files organized into a
+  simple workspace, which is just a directory that has additional caches, logs, and metadata.
   This not only helps you, but means an AI assistant can have full context.
 
-- **Allow interactive and incremental experimentation:** Try each step to test things work,
+- **Everything starts out interactive and incremental:** Try each step to test things work,
   then combine them in novel, exploratory ways, all interactively from the shell prompt, so
   it's easy to pick up where you leave off whenever a step goes wrong.
   This means **idempotent operations** and **caching slow operations** (like downloading
   media files or transcribing a video).
 
-- **Intelligent and extensible:** Kmd understands itself.
+- **Scripting is possible:** Although you want to try tasks interactively, you also want
+  automation to be possible.
+  If everything is a command, it's not hard to build scripts that then repeatably do very
+  complex things.
+
+- **Intelligent and extensible:** Most importantly, Kmd understands itself.
   It reads its own code and docs to give you assistance, including at writing new Kmd
   actions.
 
@@ -121,6 +174,7 @@ No. Not at all.
 :) It's the result of a few weeks of coding and experimentation, and it's very much in
 progress.
 Please help me make it better by sharing your ideas and feedback!
+(Easiest to DM at `twitter.com/ojoshe`. Other contact info at `github.com/jlevy`.)
 
 ### What is Included?
 
@@ -174,4 +228,3 @@ Please help me make it better by sharing your ideas and feedback!
   - tools for detecting file types and automatic, readable file naming conventions
 
   - media handling of videos and audio, including downloading and transcribing videos
-

@@ -58,8 +58,8 @@ information.
 
 ### Commands and Actions
 
-Most things are done via Kmd **commands**, which are built-in operations (like
-listing or selecting files to process), and Kmd **actions**, which are an extensible set of
+Most things are done via Kmd **commands**, which are built-in operations (like listing or
+selecting files to process), and Kmd **actions**, which are an extensible set of
 capabilities, like formatting documents, transcribing videos, or any arbitrary use of APIs.
 
 Kmd actions are a set of operations that can operate on one or more items and produce one or

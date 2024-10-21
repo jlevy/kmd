@@ -112,7 +112,7 @@ def welcome() -> None:
     output()
     output("Welcome to kmd.\n", color=COLOR_HEADING)
     output()
-    output(str(welcome), text_wrap=Wrap.WRAP_FULL)
+    output(welcome, text_wrap=Wrap.WRAP_FULL)
     output(HRULE, color=COLOR_HINT)
 
 
@@ -147,14 +147,13 @@ def getting_started() -> None:
     """
     Show help on getting started with Kmd.
     """
-    from kmd.docs import getting_started, motivation, what_is_kmd
+    from kmd.docs import getting_started, motivation
 
     with console_pager():
-        output_markdown(what_is_kmd)
-        output_markdown(motivation)
         output_markdown(getting_started)
         output_see_also(
             [
+                "What is Kmd?",
                 "What can I do with Kmd?",
                 "What are the most important Kmd commands?",
                 "commands",

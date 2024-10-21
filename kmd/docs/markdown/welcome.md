@@ -6,4 +6,4 @@ You may also simply ask a question about Kmd or what you want to do.
 Type any question (ending in ?) on the command line to invoke the Kmd assistant.
 Press `?` to get suggested questions.
 
-Try: `what is Kmd?` or `how can I transcribe a YouTube video?`
+Try: `What is Kmd?`, `How can I transcribe a YouTube video?`, `getting_started`

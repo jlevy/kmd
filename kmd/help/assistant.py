@@ -22,7 +22,7 @@ log = get_logger(__name__)
 
 @cached({})
 def assist_preamble(skip_api: bool = False, base_actions_only: bool = False) -> str:
-    from kmd.commands.command_defs import output_help_page  # Avoid circular imports.
+    from kmd.help.help_page import output_help_page  # Avoid circular imports.
 
     return fmt_paras(
         fill_markdown(str(assistant_instructions)),

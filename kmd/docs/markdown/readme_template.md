@@ -27,7 +27,7 @@ for Kmd or ideas or feedback.*
 
 {a1_what_is_kmd}
 
-{a2_motivation}
+{a2_philosophy_of_kmd}
 
 {a3_getting_started}
 

@@ -30,7 +30,7 @@ def _lazy_load(path: str):
 
 welcome = _lazy_load("markdown/welcome")
 what_is_kmd = _lazy_load("markdown/topics/a1_what_is_kmd")
-motivation = _lazy_load("markdown/topics/a2_motivation")
+motivation = _lazy_load("markdown/topics/a2_philosophy_of_kmd")
 getting_started = _lazy_load("markdown/topics/a3_getting_started")
 tips_for_use_with_other_tools = _lazy_load("markdown/topics/a4_tips_for_use_with_other_tools")
 development = _lazy_load("markdown/topics/a5_development")

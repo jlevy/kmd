@@ -409,6 +409,7 @@ def detect_file_format(path: str | Path) -> Optional[Format]:
 
     # First, try by filename.
     ext = parse_file_ext(path)
+    fmt = None
     if ext:
         fmt = Format.guess_by_file_ext(ext)
 
