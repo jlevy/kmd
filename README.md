@@ -58,15 +58,15 @@ With LLMs and other generative AI models, we've seen big improvements in two are
    solve, like Notion, Figma, Descript, etc.
 
 While we have these powerful cloud apps, we all know numerous situations where our problems
-aren't easily solved or automated with ChatGPT interface, Notion, Google Docs, Slack, Excel,
-and Zapier.
+aren't easily solved or automated with the usual tools like the ChatGPT interface, Notion,
+Google Docs, Slack, Excel, and Zapier.
 
 If you want to use any of the newest AI models and APIs for something not supported by an
 existing tool, you generally have to design and build it yourself—in Python and/or a
 full-stack web app.
 
-We are told AI is replacing developers, and it's true tools Cursor can help you write code
-much faster.
+We are told how AI is replacing developers—and it's true tools like GitHub Copilot and
+Cursor can help you write code much faster.
 But building apps that are good enough people will pay them is hard.
 And we can't all drop what we're doing and build new apps.
 
@@ -75,9 +75,9 @@ It has long been a rule that once products become widely successful, the curse o
 apps means many companies won't add many of the specific features you want, or at best are
 likely to do it slowly.
 
-In short, in spite of AI tools accelerating software, we are, as always, waiting for
-developers, product managers, designers, and entrepreneurs to design and ship solutions for
-us.
+In short, in spite of AI tools accelerating software, certain things don't change: we are
+waiting for developers, product managers, designers, and entrepreneurs to design and ship
+solutions for us.
 
 ### Why Do We Need an AI-Native Command Line?
 
@@ -85,14 +85,15 @@ So what does all this have to do with the command line?
 
 Well, the classic Unix-style command line has been the Swiss Army knife for savvy developers
 for decades.
-(The still widely-used bash shell was released 35 years ago!)
+(The bash shell, still used widely, was released 35 years ago!)
 
 Like many developers, I love the terminal (I even wrote a popular
 [guide on it](https://github.com/jlevy/the-art-of-command-line), with millions of readers).
 
-A fraction of developers do a lot in a terminal, but among most normal people, the command
-line has pretty bad reputation.
-This is actually fair.
+A fraction of developers do a lot in a terminal because it is the most efficient way to
+solve many problems.
+But among most normal people, the command line has pretty bad reputation.
+This is a fair criticism.
 Command-line shells generally still suffer from three big issues:
 
 - Old and arcane commands, full of obscure behaviors that relatively few people remember
@@ -115,7 +116,7 @@ designer, or an enterpreneur building a product.
 Any tool that lets you solve complex problems yourself, without waiting for engineers and
 designers, can radically improve your productivity.
 
-I think it's time to revisit this idea.
+I think it's a good time to revisit this idea.
 
 In a post-LLM world, it should be possible to do more things without so much time and effort
 spent (even with the help of LLMs) on coding and UI/UX design.
@@ -128,38 +129,41 @@ how well it works.
 
 That brings us to the principles behind building a new, AI-native shell:
 
-- **Make simple tasks simple:** Doing a simple thing (like transcribing a video or
-  proofreading a document) should be as easy as running a single command (not clicking
-  through a dozen menus).
-  We should be able to tell someone how to do something simply by telling them a command,
-  instead of sharing a complex prompt or a tutorial video on how to use several apps.
+1. **Make simple tasks simple:** Doing a simple thing (like transcribing a video or
+   proofreading a document) should be as easy as running a single command (not clicking
+   through a dozen menus).
+   We should be able to tell someone how to do something simply by telling them the command,
+   instead of sharing a complex prompt or a tutorial video on how to use several apps.
 
-- **Make complex tasks possible:** Highly complex tasks and workflows should be easy to
-  assemble (and rerun if they need to be automated) by adding new primitive actions and
-  combining primitive actions into more complex workflows.
-  You shouldn't need to be a programmer to use any task—but any task should be extensible
-  with arbitrary code (written by you and an LLM) when needed.
+2. **Make complex tasks possible:** Highly complex tasks and workflows should be easy to
+   assemble (and rerun if they need to be automated) by adding new primitive actions and
+   combining primitive actions into more complex workflows.
+   You shouldn't need to be a programmer to use any task—but any task should be extensible
+   with arbitrary code (written by you and an LLM) when needed.
 
-- **Augment human skills and judgement:** Many AI agent efforts aim for pure automation.
-  But even with powerful LLMs and tools, full automation is rare.
-  Invariably, the best results come from human review wherever it's needed—experimenting
-  with different models and prompts, looking at what works, focusing expert human attention
-  in the right places.
-  The most flexible tools augment, not replace, your ability to review and manipulate
-  information.
-  It should help both very technical users, like developers, as well as less technical but
-  sophisticated users who aren't traditional programmers.
+3. **Augment human skills and judgement:** Many AI agent efforts aim for pure automation.
+   But even with powerful LLMs and tools, full automation is rare.
+   Invariably, the best results come from human review wherever it's needed—experimenting
+   with different models and prompts, looking at what works, focusing expert human attention
+   in the right places.
+   The most flexible tools augment, not replace, your ability to review and manipulate
+   information.
+   It should help both very technical users, like developers, as well as less technical but
+   sophisticated users who aren't traditional programmers.
 
-- **Accelerate discovery of the workflows that work best:** We have so many powerful APIs,
-  models, libraries, and tools now—but the real bottleneck is in discovering and then
-  orchestrating the right workflows with the right inputs, models, prompts, and human
-  assistance.
-  Anyone should be able to discover new steps and workflows without waiting on engineers or
-  designers.
+4. **Accelerate discovery of the workflows that work best:** We have so many powerful APIs,
+   models, libraries, and tools now—but the real bottleneck is in discovering and then
+   orchestrating the right workflows with the right inputs, models, prompts, and human
+   assistance.
+   Anyone should be able to discover new steps and workflows without waiting on engineers or
+   designers.
 
-- **Understand and build on itself:** Kmd can read its own code and docs and use itself.
-  Better languages and scripting tools should make LLMs smarter, by automating and
-  orchestraging complex tasks in ways that are more understandable and less error prone.
+5. **Understand and build on itself:** A truly AI-native programming environment should
+   improve itself!
+   Kmd can read its own code and docs, assist you with its own commands, and write new Kmd
+   actions.
+   Better languages and scripting tools can in fact make LLMs smarter, because it allows
+   them to solve problems in ways that are simpler and less error prone.
 
 ### Key Features
 
@@ -187,16 +191,17 @@ Some key elements:
   simple workspace, which is just a directory that has additional caches, logs, and metadata.
   This not only helps you, but means an AI assistant can have full context.
 
-- **Everything starts out interactive and incremental:** Try each step to test things work,
-  then combine them in novel, exploratory ways, all interactively from the shell prompt, so
-  it's easy to pick up where you leave off whenever a step goes wrong.
-  This means **idempotent operations** and **caching slow operations** (like downloading
-  media files or transcribing a video).
+- **Work interactively and incrementally:** Try each step to test things work, then combine
+  them in novel, exploratory ways, all interactively from the shell prompt.
+  It's easy to pick up where you left off whenever a step goes wrong.
+  To help with this, Kmd defaults to having **idempotent operations** and **caching slow
+  operations** (like downloading media files or transcribing a video).
 
-- **Scripting is possible:** Although you want to try tasks interactively, you also want
-  automation to be possible.
-  If everything is a command, it's not hard to build scripts that then repeatably do very
-  complex things.
+- **Automate and script when ready:** Although you want to try tasks interactively, you also
+  want there to be a path from initial interactive work to partialy or fully automated
+  scripts.
+  When every atomic task is a command, it's much easier to assemble more complex scripts
+  that repeatably do very complex things.
 
 - **Intelligent and extensible:** Most importantly, Kmd understands itself.
   It reads its own code and docs to give you assistance, including at writing new Kmd
@@ -216,7 +221,8 @@ No. Not at all.
 :) It's the result of a few weeks of coding and experimentation, and it's very much in
 progress.
 Please help me make it better by sharing your ideas and feedback!
-(Easiest to DM at `twitter.com/ojoshe`. Other contact info at `github.com/jlevy`.)
+It's easiest to DM me at [twitter.com/ojoshe](https://x.com/ojoshe).
+My contact info is at [github.com/jlevy](https://github.com/jlevy).
 
 ### What is Included?
 
@@ -626,6 +632,9 @@ poetry run lint
 
 # Upgrade packages:
 poetry up
+
+# Update this README:
+source devtools/generate_readme.xsh
 ```
 
 A few debugging tips when finding issues:
