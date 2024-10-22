@@ -205,6 +205,9 @@ def get_log_file_stream():
 
 
 def reset_logging(log_root: Optional[Path] = None):
+    """
+    Reset the logging root, if it has changed.
+    """
     global _log_lock
     with _log_lock:
         global _log_root

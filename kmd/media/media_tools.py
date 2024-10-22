@@ -15,6 +15,9 @@ _media_cache = MediaCache(global_settings().media_cache_dir)
 
 
 def reset_media_cache_dir(path: Path):
+    """
+    Reset the current media cache directory, if it has changed.
+    """
     with update_global_settings() as settings:
         current_cache_dir = settings.media_cache_dir
 

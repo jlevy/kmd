@@ -1,12 +1,12 @@
 import sys
 from pathlib import Path, PosixPath, WindowsPath
-from typing import cast
+from typing import cast, Optional, Tuple, Union
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
+from kmd.util.format_utils import fmt_path
 from kmd.util.url import is_url, Url
-
 
 # Determine the base class for StorePath based on the operating system
 if sys.platform == "win32":
@@ -15,17 +15,134 @@ else:
     BasePath = PosixPath
 
 
-class StorePath(BasePath):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.is_absolute():
-            raise ValueError(f"Must be a relative path: {self!r}")
+class StorePathError(ValueError):
+    """
+    An error related to a StorePath.
+    """
 
-    def __truediv__(self, key):
-        if isinstance(key, Path) and key.is_absolute():
-            raise ValueError(f"Cannot join a StorePath with an absolute Path: {key!r}")
-        result = super().__truediv__(key)
-        return StorePath(result)
+
+class InvalidStorePath(StorePathError):
+    """
+    Input was not a valid StorePath.
+    """
+
+
+class StorePath(BasePath):
+    """
+    A StorePath is a relative Path within a given scope (a directory we call a
+    store) with the addition of some additional syntactic conveniences for parsing
+    and displaying.
+
+    Canonical form:
+    The canonical form is `@folder1/folder2/filename.ext`.
+    This indicates a file with the full path
+    `folder1/folder2/filename.ext` within the current store.
+
+    Alternative forms:
+    - Regular relative paths like `folder1/folder2/filename.ext` are parsed as `@folder1/folder2/filename.ext`.
+    - Paths starting with `@/` like `@/folder1/folder2/filename.ext` are also parsed as `@folder1/folder2/filename.ext`.
+
+    Optional store names:
+    - To reference files with an explicit store name: `@~store_name/folder1/folder2/filename.ext`.
+    - Store names must be alphanumeric [a-zA-Z0-9_].
+
+    Paths containing spaces can be enclosed in single quotes:
+    - `@'folder 1/folder 2/filename.ext'`
+    - `@'~store_name/file with spaces.txt'`
+
+    Restrictions:
+    - Empty or "." paths are not allowed.
+    - `~store_name/` and `~store_name` are not valid StorePaths.
+    - Absolute paths like `/home/user/file.ext` are not allowed.
+    """
+
+    store_name: Optional[str] = None
+
+    def __new__(cls, value: Union[str, Path, "StorePath"], store_name: Optional[str] = None):
+        """
+        Create a new `StorePath` instance from a string representation as a relative path or in
+        a standard format like `@folder/filename` or `@~store_name/folder/filename`.
+        """
+        if isinstance(value, StorePath):
+            path = Path(*value.parts)
+            self = super().__new__(cls, path)
+            self.store_name = store_name if store_name is not None else value.store_name
+        else:
+            path, parsed_store_name = cls.parse(value)
+            self = super().__new__(cls, path)
+            self.store_name = store_name if store_name is not None else parsed_store_name
+
+        # XXX Ugly but not sure of a simpler way to initialize ourselves as a Path in __new__.
+        self._raw_paths = path._raw_paths  # type: ignore
+        self._load_parts()  # type: ignore
+
+        return self
+
+    def __init__(self, value: Union[Path, str, "StorePath"], store_name: Optional[str] = None):
+        pass
+
+    @staticmethod
+    def parse(value: str | Path) -> Tuple[Path, Optional[str]]:
+        """
+        Parse a string representation of the store path into a Path and store name
+        (if any). The input should be a relative Path or a string representation
+        that is a valid store path.
+        """
+        if not isinstance(value, (str, Path)):
+            raise InvalidStorePath(f"Unexpected type for store path: {type(value)}: {value!r}")
+        if isinstance(value, str) and is_url(value):
+            raise InvalidStorePath(f"Expected a store path but got a URL: {value!r}")
+
+        path = Path(value)
+        if path.is_absolute():
+            raise InvalidStorePath(f"Absolute store paths are not allowed: {value!r}")
+        if path == Path("."):
+            raise InvalidStorePath(f"Invalid store path: {value!r}")
+        rest = str(value)
+        if rest.startswith("@"):
+            rest = rest[1:]
+        if rest.startswith("'"):
+            # Path is enclosed in single quotes
+            if rest.endswith("'"):
+                quoted_path = rest[1:-1]
+                rest = quoted_path
+            else:
+                raise InvalidStorePath(f"Unclosed single quote in store path: {value!r}")
+        if rest.startswith("~"):
+            # Store name is specified.
+            rest = rest[1:]
+            # Split rest into store_name and path.
+            if "/" in rest:
+                store_name, path_str = rest.split("/", 1)
+            else:
+                raise InvalidStorePath(f"Invalid store path: {value!r}")
+            if (
+                not path_str.strip()
+                or path_str.strip().startswith("/")
+                or not store_name.isidentifier()
+            ):
+                raise InvalidStorePath(f"Invalid store path: {value!r}")
+        else:
+            store_name = None
+            path_str = rest
+            if path_str.startswith("/"):
+                path_str = path_str[1:]
+
+        return Path(path_str), store_name
+
+    def __truediv__(self, key: Union[str, Path, "StorePath"]) -> "StorePath":
+        if isinstance(key, Path):
+            if key.is_absolute():
+                raise StorePathError(f"Cannot join a StorePath with an absolute Path: {str(key)!r}")
+            if isinstance(key, StorePath) and self.store_name != key.store_name:
+                raise StorePathError(
+                    f"Cannot join paths from different stores: {self!r} and {str(key)!r}"
+                )
+            key_parts = key.parts
+        else:
+            key_parts = (str(key),)
+        new_parts = self.parts + key_parts
+        return self.__class__(Path(*new_parts), store_name=self.store_name)
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source_type, handler: GetCoreSchemaHandler):
@@ -37,21 +154,33 @@ class StorePath(BasePath):
         )
 
     @classmethod
-    def validate(cls, value):
-        if isinstance(value, cls):
-            return value
-        try:
-            # Attempt to create a StorePath instance
-            return cls(value)
-        except Exception as e:
-            raise ValueError(f"Invalid StorePath: {value!r}") from e
+    def validate(cls, value: Union[str, Path, "StorePath"]) -> "StorePath":
+        return StorePath(value)
+
+    def __str__(self) -> str:
+        path_str = super().__str__()
+        if self.store_name:
+            return f"@~{self.store_name}/{path_str}"
+        else:
+            return f"@{path_str}"
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({str(self)!r})"
+
+    def __eq__(self, other):
+        if isinstance(other, StorePath):
+            return super().__eq__(other) and self.store_name == other.store_name
+        else:
+            return False
+
+    def __hash__(self):
+        return hash((super().__str__(), self.store_name))
 
 
 Locator = Url | StorePath
 """
 A reference to an external resource or an item in the store.
 """
-
 
 InputArg = Locator | Path | str
 """
@@ -76,34 +205,161 @@ def as_url_or_path(input: str | Path) -> Path | Url:
 
 
 def test_store_path():
-    store_path = StorePath("some/relative/path")
-    assert isinstance(store_path, StorePath)
-    assert isinstance(store_path, Path)
+    # Test creation with relative path
+    sp1 = StorePath("some/relative/path")
+    sp2 = StorePath("@some/relative/path")
+    sp3 = StorePath("@/some/relative/path")
+    assert isinstance(sp1, StorePath)
+    assert isinstance(sp1, Path)
+    assert sp1.store_name is None
+    assert str(sp1) == "@some/relative/path"
+    assert sp1 == sp2
+    assert sp1 == sp3
 
+    # Test equality
+    sp1 = StorePath("@path/to/file")
+    sp2 = StorePath("path/to/file")
+    sp3 = StorePath("path/to/file", store_name="store1")
+    sp4 = StorePath("path/to/file", store_name="store1")
+    assert sp1 == sp2
+    assert sp3 == sp4
+    assert sp1 != sp3
+
+    # Test hash
+    s = set()
+    s.add(sp1)
+    s.add(sp3)
+    assert len(s) == 2
+    s.add(sp2)
+    assert len(s) == 2  # sp1 and sp2 are equal
+
+    # Test that __str__, __repr__, and fmt_path don't raise an exception
+    print([str(sp1), str(sp2), str(sp3), str(sp4)])
+    print([repr(sp1), repr(sp2), repr(sp3), repr(sp4)])
+    print(fmt_path(StorePath("store/path1")))
+    print(repr(Path(StorePath("store/path1"))))
+
+    # Test some invalid store paths
     try:
         StorePath("/absolute/path")
         assert False
-    except ValueError:
-        pass
+    except InvalidStorePath as e:
+        assert str(e) == "Absolute store paths are not allowed: '/absolute/path'"
+    try:
+        StorePath(".")
+        assert False
+    except InvalidStorePath as e:
+        assert str(e) == "Invalid store path: '.'"
+    try:
+        StorePath("")
+        assert False
+    except InvalidStorePath as e:
+        assert str(e) == "Invalid store path: ''"
+
+    try:
+        StorePath("https://example.com")
+        assert False
+    except InvalidStorePath as e:
+        assert str(e) == "Expected a store path but got a URL: 'https://example.com'"
+
+    # Test with store name
+    sp_with_store = StorePath("@~mystore/folder/file.txt")
+    assert isinstance(sp_with_store, StorePath)
+    assert sp_with_store.store_name == "mystore"
+    assert str(sp_with_store) == "@~mystore/folder/file.txt"
+
+    # Test parsing '@folder/file.txt'
+    sp2 = StorePath("@folder/file.txt")
+    assert sp2.store_name is None
+    assert str(sp2) == "@folder/file.txt"
+
+    # Test parsing '@/folder/file.txt'
+    sp3 = StorePath("@/folder/file.txt")
+    assert sp3.store_name is None
+    assert str(sp3) == "@folder/file.txt"  # Leading '/' is removed
+
+    # Test parsing '@~/folder/file.txt' (invalid, missing store name)
+    try:
+        StorePath("@~/folder/file.txt")
+        assert False
+    except InvalidStorePath as e:
+        assert str(e) == "Invalid store path: '@~/folder/file.txt'"
+
+    # Test invalid store name
+    try:
+        StorePath("@~store-name/folder/file.txt")  # 'store-name' with hyphen is invalid
+        assert False
+    except InvalidStorePath as e:
+        assert str(e) == "Invalid store path: '@~store-name/folder/file.txt'"
+
+    # Test that '~store_name/' and '~store_name' are invalid
+    try:
+        StorePath("~store_name/")
+        assert False
+    except InvalidStorePath as e:
+        assert str(e) == "Invalid store path: '~store_name/'"
+
+    try:
+        StorePath("~store_name")
+        assert False
+    except InvalidStorePath as e:
+        assert str(e) == "Invalid store path: '~store_name'"
+
+    # Test that '@~store_name' is invalid
+    try:
+        StorePath("@~store_name")
+        assert False
+    except InvalidStorePath as e:
+        assert str(e) == "Invalid store path: '@~store_name'"
+
+    # Test paths with spaces enclosed in single quotes
+    sp_spaces = StorePath("@'folder 1/folder 2/filename.ext'")
+    assert isinstance(sp_spaces, StorePath)
+    assert sp_spaces.store_name is None
+    assert str(sp_spaces) == "@folder 1/folder 2/filename.ext"
+
+    sp_spaces2 = StorePath("@'/folder 1/folder 2/filename.ext'")
+    assert sp_spaces == sp_spaces2
+
+    sp_spaces3 = StorePath("@'~store_name/file with spaces.txt'")
+    assert sp_spaces3.store_name == "store_name"
+    assert str(sp_spaces3) == "@~store_name/file with spaces.txt"
+
+    # Test unclosed single quote
+    try:
+        StorePath("@'folder/filename.ext")
+        assert False
+    except InvalidStorePath as e:
+        assert str(e) == 'Unclosed single quote in store path: "@\'folder/filename.ext"'
+    try:
+        StorePath("@'folder/filename.ext' extra")
+        assert False
+    except InvalidStorePath as e:
+        assert str(e) == "Unclosed single quote in store path: \"@'folder/filename.ext' extra\""
 
     # Path / StorePath
-    combined_path = Path("base/path") / store_path
-    assert isinstance(combined_path, Path)
-    assert combined_path == Path("base/path/some/relative/path")
+    combined = Path("base/path") / StorePath("@some/relative/path")
+    assert isinstance(combined, Path)
+    assert combined == Path("base/path/some/relative/path")
 
     # StorePath / relative Path
-    combined_path = StorePath("base/store/path") / Path("some/relative/path")
-    assert isinstance(combined_path, StorePath)
-    assert combined_path == StorePath("base/store/path/some/relative/path")
+    combined = StorePath("base/store/path") / Path("some/relative/path")
+    assert isinstance(combined, StorePath)
+    assert combined == StorePath("base/store/path/some/relative/path")
+    assert combined.store_name is None
 
     # StorePath / absolute Path
     try:
-        combined_path = store_path / Path("/absolute/path")
+        combined = sp1 / Path("/absolute/path")
         assert False
-    except ValueError:
-        pass
+    except StorePathError as e:
+        assert str(e) == "Cannot join a StorePath with an absolute Path: '/absolute/path'"
 
     # StorePath / StorePath
-    combined_store_path = store_path / StorePath("store/path2")
-    assert isinstance(combined_store_path, StorePath)
-    assert combined_store_path == StorePath("some/relative/path/store/path2")
+    combined = StorePath("store/path1") / StorePath("store/path2")
+    assert isinstance(combined, StorePath)
+    assert combined == StorePath("store/path1/store/path2")
+    assert combined.store_name is None
+
+    # Instantiating Paths
+    assert Path(StorePath("store/path1")).resolve() == Path("store/path1").resolve()

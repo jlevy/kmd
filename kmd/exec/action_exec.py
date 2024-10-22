@@ -32,6 +32,7 @@ def collect_args(*args: str) -> Tuple[List[InputArg], bool]:
     if not args:
         try:
             selection_args = current_workspace().get_selection()
+            # TODO: Resolve any store paths in the selection.
             return cast(List[InputArg], selection_args), True
         except InvalidState:
             return [], False

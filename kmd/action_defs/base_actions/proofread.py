@@ -28,18 +28,16 @@ class Proofread(LLMAction):
 
         - Write out only the final corrected text.
 
+        - Preserve all Markdown formatting.
+
         - Make punctuation and capitalization changes to fit the Chicago Manual of Style.
+          (For example, make sure we do not capitalize words unless they are proper nouns or
+          at the start of a sentence.)
 
         - If input is a sentence or question without punctuation, be sure to add a period or
-            question mark at the end, as appropriate.
+          question mark at the end, as appropriate.
 
         - Do not alter the meaning of any of the text or change the style of writing.
-
-        - Do not capitalize words unless they are proper nouns or at the start of a sentence.
-
-        - If unsure about any correction, leave that portion of the text unchanged.
-
-        - Preserve all Markdown formatting.
 
         - If unsure about how to make a correction, leave that portion of the text unchanged.
         

@@ -450,11 +450,16 @@ def unselect(*paths: str) -> None:
 
 
 def _resolve_path_arg(path_str: str) -> Path | StorePath:
+    """
+    Resolve a path argument to a Path or StorePath, if it is within the current workspace.
+    """
     path = Path(path_str)
-    if path.is_absolute() or path.exists():
+    if path.is_absolute():
         return path
+    elif store_path := current_workspace().resolve_to_store_path(path):
+        return store_path
     else:
-        return StorePath(path_str)
+        return path
 
 
 def _assemble_paths(*paths: Optional[str]) -> List[StorePath | Path]:

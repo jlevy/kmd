@@ -55,7 +55,7 @@ class FileStore:
 
     def __init__(self, base_dir: Path, is_sandbox: bool):
         self.start_time = time.time()
-        self.base_dir = base_dir
+        self.base_dir = base_dir.resolve()
         self.is_sandbox = is_sandbox
 
         # TODO: Move this to its own IdentifierIndex class, and make it exactly mirror disk state.
@@ -74,6 +74,15 @@ class FileStore:
         self.params = PersistedYaml(self.base_dir / self.dirs.params_yml, init_value={})
 
         self.end_time = time.time()
+
+    def resolve_to_store_path(self, path: Path) -> Optional[StorePath]:
+        """
+        Return a StorePath if the given path is within the store, otherwise None.
+        """
+        if path.resolve().is_relative_to(self.base_dir):
+            return StorePath(path.relative_to(self.base_dir))
+        else:
+            return None
 
     def _id_index_init(self):
         num_dups = 0
