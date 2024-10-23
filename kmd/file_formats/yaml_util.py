@@ -4,12 +4,11 @@ YAML file storage. Wraps ruamel.yaml with a few extra features.
 
 import os
 from io import StringIO
-from typing import Any, Callable, List, Optional, TextIO
+from typing import Any, Callable, Optional, TextIO
 
 from ruamel.yaml import YAML
 
-
-KeySort = Callable[[str], tuple]
+KeySort = Callable[[str], Any]
 
 
 def none_or_empty_dict(val: Any) -> bool:
@@ -73,22 +72,6 @@ def new_yaml(
     return yaml
 
 
-def custom_key_sort(priority_keys: List[str]) -> KeySort:
-    """
-    Custom sort function that prioritizes the specific keys in a certain order, followed
-    by all the other keys in natural order.
-    """
-
-    def sort_func(key):
-        try:
-            i = priority_keys.index(key)
-            return (i, key)
-        except ValueError:
-            return (float("inf"), key)
-
-    return sort_func
-
-
 def from_yaml_string(yaml_string: str) -> Any:
     """
     Read a YAML string into a Python object.
@@ -111,7 +94,7 @@ def to_yaml_string(
     Convert a Python object to a YAML string.
     """
     stream = StringIO()
-    new_yaml(key_sort, stringify_unknown=stringify_unknown, typ="rt").dump(value, stream)
+    new_yaml(key_sort=key_sort, stringify_unknown=stringify_unknown, typ="rt").dump(value, stream)
     return stream.getvalue()
 
 
@@ -121,7 +104,7 @@ def write_yaml(
     """
     Write a Python object to a YAML stream.
     """
-    new_yaml(key_sort, stringify_unknown=stringify_unknown, typ="rt").dump(value, stream)
+    new_yaml(key_sort=key_sort, stringify_unknown=stringify_unknown, typ="rt").dump(value, stream)
 
 
 def write_yaml_file(
@@ -153,9 +136,11 @@ def test_write_yaml_file_with_custom_key_sort():
     data = {"title": "Test Title", "author": "Test Author", "date": "2022-01-01"}
 
     priority_keys = ["date", "title"]
-    key_sort = custom_key_sort(priority_keys)
 
-    write_yaml_file(data, file_path, key_sort=key_sort)
+    def priority_sort(key: str):
+        return (priority_keys.index(key) if key in priority_keys else float("inf"), key)
+
+    write_yaml_file(data, file_path, key_sort=priority_sort)
 
     read_data = read_yaml_file(file_path)
 

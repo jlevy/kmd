@@ -4,8 +4,10 @@ from typing import cast, Optional, Tuple, Union
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
+import regex
 
 from kmd.util.format_utils import fmt_path
+from kmd.util.parse_shell_args import shell_quote
 from kmd.util.url import is_url, Url
 
 # Determine the base class for StorePath based on the operating system
@@ -27,6 +29,9 @@ class InvalidStorePath(StorePathError):
     """
 
 
+_valid_store_name_re = regex.compile(r"^[\p{L}\p{N}_\.]+$", regex.UNICODE)
+
+
 class StorePath(BasePath):
     """
     A StorePath is a relative Path within a given scope (a directory we call a
@@ -40,20 +45,20 @@ class StorePath(BasePath):
 
     Alternative forms:
     - Regular relative paths like `folder1/folder2/filename.ext` are parsed as `@folder1/folder2/filename.ext`.
-    - Paths starting with `@/` like `@/folder1/folder2/filename.ext` are also parsed as `@folder1/folder2/filename.ext`.
+    - Paths starting like `@/folder1/folder2/filename.ext` are also parsed as `@folder1/folder2/filename.ext`.
 
     Optional store names:
     - To reference files with an explicit store name: `@~store_name/folder1/folder2/filename.ext`.
-    - Store names must be alphanumeric [a-zA-Z0-9_].
+    - Store names must be alphanumeric (letters, digits, `_`, `.`).
 
     Paths containing spaces can be enclosed in single quotes:
     - `@'folder 1/folder 2/filename.ext'`
     - `@'~store_name/file with spaces.txt'`
 
     Restrictions:
+    - Absolute paths like `/home/user/file.ext` are not allowed.
     - Empty or "." paths are not allowed.
     - `~store_name/` and `~store_name` are not valid StorePaths.
-    - Absolute paths like `/home/user/file.ext` are not allowed.
     """
 
     store_name: Optional[str] = None
@@ -117,9 +122,10 @@ class StorePath(BasePath):
             else:
                 raise InvalidStorePath(f"Invalid store path: {value!r}")
             if (
-                not path_str.strip()
+                not store_name.strip()
+                or not path_str.strip()
                 or path_str.strip().startswith("/")
-                or not store_name.isidentifier()
+                or not _valid_store_name_re.match(store_name)
             ):
                 raise InvalidStorePath(f"Invalid store path: {value!r}")
         else:
@@ -157,12 +163,22 @@ class StorePath(BasePath):
     def validate(cls, value: Union[str, Path, "StorePath"]) -> "StorePath":
         return StorePath(value)
 
-    def __str__(self) -> str:
-        path_str = super().__str__()
+    def display_str(self) -> str:
+        """
+        String representation of the path with the `@` prefix and store name (if any)
+        in canonical form.
+        """
+        path_str = str(self)
         if self.store_name:
-            return f"@~{self.store_name}/{path_str}"
+            return "@" + shell_quote(f"~{self.store_name}/{path_str}")
         else:
-            return f"@{path_str}"
+            return "@" + shell_quote(path_str)
+
+    def __str__(self) -> str:
+        """
+        The default str representation remains compatible with Path.
+        """
+        return super().__str__()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({str(self)!r})"
@@ -212,7 +228,8 @@ def test_store_path():
     assert isinstance(sp1, StorePath)
     assert isinstance(sp1, Path)
     assert sp1.store_name is None
-    assert str(sp1) == "@some/relative/path"
+    assert str(sp1) == "some/relative/path"
+    assert sp1.display_str() == "@some/relative/path"
     assert sp1 == sp2
     assert sp1 == sp3
 
@@ -266,17 +283,20 @@ def test_store_path():
     sp_with_store = StorePath("@~mystore/folder/file.txt")
     assert isinstance(sp_with_store, StorePath)
     assert sp_with_store.store_name == "mystore"
-    assert str(sp_with_store) == "@~mystore/folder/file.txt"
+    assert str(sp_with_store) == "folder/file.txt"
+    assert sp_with_store.display_str() == "@~mystore/folder/file.txt"
 
     # Test parsing '@folder/file.txt'
     sp2 = StorePath("@folder/file.txt")
     assert sp2.store_name is None
-    assert str(sp2) == "@folder/file.txt"
+    assert str(sp2) == "folder/file.txt"
+    assert sp2.display_str() == "@folder/file.txt"
 
     # Test parsing '@/folder/file.txt'
     sp3 = StorePath("@/folder/file.txt")
     assert sp3.store_name is None
-    assert str(sp3) == "@folder/file.txt"  # Leading '/' is removed
+    assert str(sp3) == "folder/file.txt"  # Leading '/' is removed
+    assert sp3.display_str() == "@folder/file.txt"
 
     # Test parsing '@~/folder/file.txt' (invalid, missing store name)
     try:
@@ -316,14 +336,16 @@ def test_store_path():
     sp_spaces = StorePath("@'folder 1/folder 2/filename.ext'")
     assert isinstance(sp_spaces, StorePath)
     assert sp_spaces.store_name is None
-    assert str(sp_spaces) == "@folder 1/folder 2/filename.ext"
+    assert str(sp_spaces) == "folder 1/folder 2/filename.ext"
+    assert sp_spaces.display_str() == "@'folder 1/folder 2/filename.ext'"
 
     sp_spaces2 = StorePath("@'/folder 1/folder 2/filename.ext'")
     assert sp_spaces == sp_spaces2
 
     sp_spaces3 = StorePath("@'~store_name/file with spaces.txt'")
     assert sp_spaces3.store_name == "store_name"
-    assert str(sp_spaces3) == "@~store_name/file with spaces.txt"
+    assert str(sp_spaces3) == "file with spaces.txt"
+    assert sp_spaces3.display_str() == "@'~store_name/file with spaces.txt'"
 
     # Test unclosed single quote
     try:

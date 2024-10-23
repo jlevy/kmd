@@ -92,6 +92,8 @@ COLOR_SIZE4 = "bright_green"
 
 COLOR_SIZE5 = "yellow"
 
+COLOR_SIZE6 = "bright_red"
+
 
 ## Formatting
 
@@ -168,7 +170,8 @@ class KmdHighlighter(RegexHighlighter):
         r"(?P<brace>[][{}()])",
         _combine_regex(
             # Quantities and times:
-            r"\b(?P<age_min_sec>[0-9.,]+ ?(s|sec|m|min) ago)\b",
+            r"\b(?P<age_sec>[0-9.,]+ ?(s|sec) ago)\b",
+            r"\b(?P<age_min>[0-9.,]+ ?(m|min) ago)\b",
             r"\b(?P<age_hr>[0-9.,]+ ?(?:h|hr|hrs|hour|hours) ago)\b",
             r"\b(?P<age_day>[0-9.,]+ ?(?:d|day|days) ago)\b",
             r"\b(?P<age_week>[0-9.,]+ ?(?:w|week|weeks) ago)\b",
@@ -247,7 +250,8 @@ RICH_STYLES = {
     "kmd.uuid": Style(color=COLOR_LITERAL, bold=False),
     "kmd.call": Style(italic=True),
     "kmd.path": Style(color=COLOR_PATH),
-    "kmd.age_min_sec": Style(color=COLOR_SIZE5),
+    "kmd.age_sec": Style(color=COLOR_SIZE6),
+    "kmd.age_min": Style(color=COLOR_SIZE5),
     "kmd.age_hr": Style(color=COLOR_SIZE4),
     "kmd.age_day": Style(color=COLOR_SIZE3),
     "kmd.age_week": Style(color=COLOR_SIZE2),

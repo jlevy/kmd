@@ -4,12 +4,12 @@ from typing import Optional
 from kmd.config.logger import get_logger
 from kmd.errors import FileFormatError
 from kmd.file_formats.frontmatter_format import fmf_read, fmf_write, FmStyle
-from kmd.file_formats.yaml_util import custom_key_sort
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ITEM_FIELDS
 from kmd.model.operations_model import OPERATION_FIELDS
 from kmd.text_formatting.doc_formatting import normalize_formatting
 from kmd.util.format_utils import fmt_path
+from kmd.util.sort_utils import custom_key_sort
 
 log = get_logger(__name__)
 
@@ -39,6 +39,9 @@ def write_item(item: Item, full_path: Path):
     else:
         fm_style = FmStyle.yaml
 
+    log.debug(
+        "Writing item to %s: body length %s, metadata %s", full_path, len(body), item.metadata()
+    )
     fmf_write(
         full_path,
         body,
@@ -52,6 +55,7 @@ def write_item(item: Item, full_path: Path):
 def read_item(full_path: Path, base_dir: Optional[Path]) -> Item:
     store_path = str(full_path.relative_to(base_dir)) if base_dir else None
     body, metadata = fmf_read(full_path)
+    log.debug("Read item from %s: body length %s, metadata %s", full_path, len(body), metadata)
     if not metadata:
         raise FileFormatError(f"No metadata found in file: {fmt_path(full_path)}")
 

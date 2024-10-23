@@ -9,21 +9,21 @@ import re
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Tuple
 
-# Same unsafe chars as shlex.quote().
-_shell_unsafe_re = re.compile(r"[^\w@%+=:,./-]", re.ASCII)
+# Same unsafe chars as shlex.quote(), but also allowing `~`.
+_shell_unsafe_re = re.compile(r"[^\w@%+=:,./~-]", re.ASCII)
 
 
 def shell_quote(arg: str) -> str:
     """
     Quote a string for shell usage, if needed, using simplified shell conventions
     compatible with Python and xonsh. This means simple text words without spaces
-    are left unquoted. Prefers double quotes in cases where either could work.
+    are left unquoted. Prefers single quotes in cases where either could work.
     """
     has_unsafe = _shell_unsafe_re.search(arg)
     if arg and not has_unsafe:
         return arg
-    elif '"' not in arg:
-        return f'"{arg}"'
+    elif "'" not in arg:
+        return f"'{arg}'"
     else:
         return repr(arg)
 
@@ -233,7 +233,7 @@ def test_parse_and_format_command_str():
     assert reconstructed == command_str
 
     # Test with quoted arguments and option values.
-    complex_command = 'complex "quoted arg" --option="quoted value" --flag "spaced arg"'
+    complex_command = "complex 'quoted arg' --option='quoted value' --flag 'spaced arg'"
     name, args, options = parse_command_str(complex_command)
     assert name == "complex"
     assert args == ["quoted arg", "spaced arg"]
@@ -241,7 +241,7 @@ def test_parse_and_format_command_str():
 
     # Test roundtrip with complex command.
     reconstructed = format_command_str(name, args, options)
-    assert reconstructed == 'complex "quoted arg" "spaced arg" --option="quoted value" --flag'
+    assert reconstructed == "complex 'quoted arg' 'spaced arg' --option='quoted value' --flag"
 
     # Test with empty arguments and options.
     empty_command = "empty_cmd"

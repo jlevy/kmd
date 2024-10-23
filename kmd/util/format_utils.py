@@ -210,6 +210,12 @@ def fmt_paras(*paras: str | None, sep: str = "\n\n") -> str:
 
 
 def fmt_age(since_time: float | timedelta, brief: bool = False) -> str:
+    """
+    Format a time span as an age, e.g. "2d ago".
+    """
+    since_time = humanfriendly.coerce_seconds(since_time)
+    # Don't log fractions of a second (humanfriendly does this by default).
+    since_time = round(since_time)
     if brief:
         agestr = (
             humanfriendly.format_timespan(since_time, detailed=False, max_units=1)

@@ -32,7 +32,7 @@ class Transcribe(PerItemAction):
         if item.url:
             url = item.url
         else:
-            url = as_file_url(current_workspace().resolve_path(item))
+            url = as_file_url(current_workspace().path_for(item))
 
         transcription = cache_and_transcribe(url, language=self.language)
 

@@ -1,10 +1,10 @@
 import operator
 from dataclasses import asdict, is_dataclass
 from enum import Enum
-from typing import Any, Callable, Collection, Iterable, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 from kmd.util.log_calls import quote_if_needed
-
+from kmd.util.sort_utils import custom_key_sort
 from kmd.util.strif import abbreviate_str
 
 
@@ -65,26 +65,53 @@ def is_not_none(value: Any) -> bool:
     return value is not None
 
 
+KeyFilter = Callable[[Any], int] | Dict[Any, int]
+"""
+A dict or callable that returns the max allowed length of the key,
+or 0 to allow any length, or None to omit the key. The Dict can also
+implicitly indicate a priority for sorting the keys.
+"""
+
+
 def _format_kvs(
     items: Iterable[Tuple[Any, Any]],
     field_max_len: int,
-    key_filter: Optional[Callable[[Any], bool] | Collection[Any]] = None,
+    key_filter: Optional[KeyFilter] = None,
     value_filter: Callable[[Any], bool] = is_not_none,
 ) -> str:
-    if key_filter is not None:
-        if callable(key_filter):
-            items = ((k, v) for k, v in items if key_filter(k))
-        else:
-            items = ((k, v) for k, v in items if k in key_filter)
-    abbreviated_items = {k: abbreviate_obj(v, field_max_len) for k, v in items if value_filter(v)}
-    return ", ".join(f"{k}={v}" for k, v in abbreviated_items.items())
+    filtered_items: List[Tuple[Any, Any]] = []
+    for k, v in items:
+        if key_filter is not None:
+            if callable(key_filter):
+                max_len = key_filter(k)
+            else:
+                max_len = key_filter.get(k, None)
+            if max_len is None:
+                continue
+            field_max_len = max_len
+        if value_filter(v):
+            filtered_items.append(
+                (
+                    k,
+                    abbreviate_obj(
+                        v, field_max_len, key_filter=key_filter, value_filter=value_filter
+                    ),
+                )
+            )
+
+    # Sort the filtered items to match key_filter, if it is a dict.
+    if isinstance(key_filter, dict):
+        prioritize_keys = custom_key_sort(list(key_filter.keys()))
+        filtered_items.sort(key=lambda x: prioritize_keys(x[0]))
+
+    return ", ".join(f"{k}={v}" for k, v in filtered_items)
 
 
 def abbreviate_obj(
     value: Any,
     field_max_len: int = 64,
     list_max_len: int = 32,
-    key_filter: Optional[Callable[[Any], bool] | Collection[Any]] = None,
+    key_filter: Optional[KeyFilter] = None,
     value_filter: Callable[[Any], bool] = is_not_none,
     visited: Optional[Set[Any]] = None,
 ) -> str:
@@ -92,6 +119,9 @@ def abbreviate_obj(
     Helper to print an abbreviated string version of an object. Not a parsable format.
     Useful for abbreviating dicts or for __str__() on dataclasses. Abbreviate long
     fields for readability, omit None values, and omit quotes when possible.
+
+    Also allows custom truncation or omission of keys, as well as sort priority, using
+    the `key_filter` parameter.
     """
     if visited is None:
         visited = set()

@@ -43,6 +43,12 @@ class InvalidInput(SelfExplanatoryError):
     pass
 
 
+class MissingInput(InvalidInput):
+    """Raised when an expected input is missing."""
+
+    pass
+
+
 class InvalidParam(SelfExplanatoryError):
     """Raised when a parameter is invalid."""
 

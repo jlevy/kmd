@@ -34,9 +34,9 @@ def join_suffix(base_slug: str, full_suffix: str) -> str:
 
 def parse_filename_and_type(filename: str | Path) -> Tuple[str, ItemType, FileExt]:
     """
-    Parse a filename, confirm it's a recognized file extension. If the filename
-    has a type in it, confirm it's a recognized type. Otherwise consider it a
-    resource.
+    Parse a filename according to naming convetions for the file store, i.e.
+    `folder/name.type.ext`.
+    Raises `InvalidFilename` if the filename does not have both a type and an extension.
     """
     # Python files can have only one dot (like file.py) but others should have a type
     # (like file.resource.yml).
@@ -47,9 +47,15 @@ def parse_filename_and_type(filename: str | Path) -> Tuple[str, ItemType, FileEx
     else:
         dirname, name, item_type, ext = split_filename(filename, require_type_ext=False)
 
+    if not item_type:
+        raise InvalidFilename(
+            f"Filename has no type (of the form `filename.type.ext`): {fmt_path(filename)}"
+        )
+    if not ext:
+        raise InvalidFilename(f"Filename has no extension: {fmt_path(filename)}")
     try:
-        if not item_type:
-            item_type = ItemType.resource.value
         return name, ItemType[item_type], FileExt[ext]
     except KeyError as e:
-        raise InvalidFilename(f"Unknown type or extension for file: {fmt_path(filename)}: {e}")
+        raise InvalidFilename(
+            f"Unknown type or extension for file: item_type={item_type}, ext={ext}, filename={fmt_path(filename)}"
+        ) from e

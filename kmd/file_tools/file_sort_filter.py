@@ -100,6 +100,7 @@ def collect_files(
     recursive=False,
     ignore: Optional[IgnoreFilter] = None,
     since_seconds: float = 0.0,
+    base_path: Optional[Path] = None,
 ) -> FileListing:
     files_info = []
 
@@ -121,19 +122,19 @@ def collect_files(
     size_total = 0
     size_matching = 0
 
-    for path in start_paths:
-        base_path = path if path.is_dir() else path.parent
+    if not base_path:
+        base_path = Path(".")
 
-        relative_to = base_path if base_path.exists() else Path(".")
+    for path in start_paths:
 
         dirs_ignored = 0
         files_ignored = 0
 
-        log.info("Walking folder: %s", fmt_path(path))
+        log.debug("Walking folder: %s", fmt_path(path))
 
         try:
             for flist in walk_by_dir(
-                path, relative_to=relative_to, ignore=ignore, recursive=recursive
+                path, relative_to=base_path, ignore=ignore, recursive=recursive
             ):
 
                 log.debug("Walking folder: %s: %s", fmt_path(flist.parent_dir), flist.filenames)

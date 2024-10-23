@@ -77,6 +77,6 @@ def test_key_value_parsing_and_formatting():
     assert parse_key_value("foo=") == ("foo", None)
 
     assert format_key_value("foo", "123") == "foo=123"
-    assert format_key_value("bar", "some value") == 'bar="some value"'
+    assert format_key_value("bar", "some value") == "bar='some value'"
     assert format_key_value("foo", None) == "foo="
-    assert format_key_value("foo", "") == 'foo=""'
+    assert format_key_value("foo", "") == "foo=''"

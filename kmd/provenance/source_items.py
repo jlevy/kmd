@@ -8,11 +8,13 @@ from kmd.model.paths_model import StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_resource
 from kmd.util.format_utils import fmt_lines, fmt_path
+from kmd.util.log_calls import log_calls
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
 
 
+@log_calls()
 def find_upstream_item(
     item: Item,
     precondition: Precondition,
@@ -48,6 +50,11 @@ def find_upstream_item(
 
     workspace = current_workspace()
 
+    log.info(
+        "Finding items upstream of %s:\n%s",
+        item.as_str_brief(),
+        fmt_lines(item.relations.derived_from),
+    )
     source_items = [workspace.load(StorePath(loc)) for loc in item.relations.derived_from]
 
     for source_item in source_items:

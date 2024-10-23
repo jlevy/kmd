@@ -79,8 +79,9 @@ from typing import Any, Dict, List
 
 from pydantic.dataclasses import dataclass
 
-from kmd.file_formats.yaml_util import custom_key_sort, from_yaml_string, new_yaml, to_yaml_string
+from kmd.file_formats.yaml_util import from_yaml_string, new_yaml, to_yaml_string
 from kmd.util.obj_utils import abbreviate_obj
+from kmd.util.sort_utils import custom_key_sort
 
 
 class ChatRole(str, Enum):

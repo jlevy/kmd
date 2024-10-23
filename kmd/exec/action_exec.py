@@ -1,11 +1,12 @@
 import time
 from dataclasses import replace
-from typing import cast, List, Optional, Tuple
+from typing import List, Optional
 
 from kmd.action_defs import look_up_action
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
-from kmd.errors import ContentError, InvalidInput, InvalidOutput, InvalidState, NONFATAL_EXCEPTIONS
+from kmd.errors import ContentError, InvalidInput, InvalidOutput, NONFATAL_EXCEPTIONS
+from kmd.exec.resolve_args import assemble_action_args
 from kmd.exec.system_actions import fetch_page_metadata, FETCH_PAGE_METADATA_NAME
 from kmd.file_storage.workspaces import current_workspace, import_and_load
 from kmd.lang_tools.inflection import plural
@@ -20,24 +21,12 @@ from kmd.model.actions_model import (
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
-from kmd.model.paths_model import InputArg, StorePath
+from kmd.model.paths_model import StorePath
 from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
-
-
-def collect_args(*args: str) -> Tuple[List[InputArg], bool]:
-    if not args:
-        try:
-            selection_args = current_workspace().get_selection()
-            # TODO: Resolve any store paths in the selection.
-            return cast(List[InputArg], selection_args), True
-        except InvalidState:
-            return [], False
-    else:
-        return list(args), False
 
 
 def fetch_url_items(item: Item) -> Item:
@@ -84,7 +73,7 @@ def run_action(
     action = action.with_param_values(ws_params, strict=False, overwrite=False)
 
     # Collect args from the provided args or otherwise the current selection.
-    args, from_selection = collect_args(*provided_args)
+    args, from_selection = assemble_action_args(*provided_args)
 
     # As a special case for convenience, if the action expects no args, ignore any pre-selected inputs.
     if action.expected_args == NO_ARGS and from_selection:

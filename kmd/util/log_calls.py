@@ -43,7 +43,7 @@ def friendly_str(arg: Any) -> str:
     return quote_if_needed(arg) if isinstance(arg, str) else str(arg)
 
 
-DEFAULT_TRUNCATE = 100
+DEFAULT_TRUNCATE = 200
 
 
 def balance_quotes(s: str) -> str:

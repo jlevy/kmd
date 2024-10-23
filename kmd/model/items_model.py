@@ -19,7 +19,7 @@ from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import FileExt, Format
 from kmd.model.media_model import MediaMetadata
 from kmd.model.operations_model import OperationSummary, Source
-from kmd.model.paths_model import Locator
+from kmd.model.paths_model import Locator, StorePath
 from kmd.text_formatting.markdown_util import markdown_to_html
 from kmd.util.format_utils import (
     abbreviate_on_words,
@@ -243,7 +243,7 @@ class Item:
                 "Skipping unexpected metadata on item: %s: %s", info_prefix, unexpected_metadata
             )
 
-        return cls(
+        result = cls(
             type=type_,
             state=state,
             format=format,
@@ -255,6 +255,7 @@ class Item:
             **other_metadata,
             store_path=store_path,
         )
+        return result
 
     @classmethod
     def from_media_metadata(cls, media_metadata: MediaMetadata) -> "Item":
@@ -321,11 +322,13 @@ class Item:
                 return v
 
         # Convert enums and dataclasses to serializable forms.
+        log.info("Item metadata before serialization: %s", item_dict)
         item_dict = {
             k: serialize(v)
             for k, v in item_dict.items()
             if v is not None and k not in self.NON_METADATA_FIELDS
         }
+        log.info("Item metadata after serialization: %s", item_dict)
 
         # Sometimes it's also better to serialize datetimes as strings.
         if datetime_as_str:
@@ -565,11 +568,11 @@ class Item:
         return abbreviate_obj(
             self,
             key_filter={
-                "store_path",
-                "type",
-                "title",
-                "url",
-                "external_path",
+                "store_path": 0,
+                "type": 64,
+                "title": 64,
+                "url": 64,
+                "external_path": 64,
             },
         )
 
@@ -577,15 +580,15 @@ class Item:
         return abbreviate_obj(
             self,
             key_filter={
-                "store_path",
-                "external_path",
-                "type",
-                "state",
-                "title",
-                "url",
-                "format",
-                "created_at",
-                "body",
+                "store_path": 0,
+                "external_path": 64,
+                "type": 64,
+                "state": 64,
+                "title": 64,
+                "url": 64,
+                "format": 64,
+                "created_at": 64,
+                "body": 64,
             },
         )
 
@@ -596,3 +599,11 @@ class Item:
 # Some reflection magic so the order of the YAML metadata for an item will match
 # the order of the fields here.
 ITEM_FIELDS = [f.name for f in Item.__dataclass_fields__.values()]
+
+
+## Tests
+
+# FIXME:
+# def test_item_metadata_serialization():
+#     ir = ItemRelations(derived_from=[StorePath("docs/filename.doc.md")])
+#     assert asdict(ir) == {"derived_from": ["docs/filename.doc.md"]}

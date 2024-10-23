@@ -176,5 +176,6 @@ class ComboAction(Action):
             len(items),
             combined_result,
         )
+        log.debug("Combined result metadata: %s", combined_result.metadata())
 
         return ActionResult([combined_result])

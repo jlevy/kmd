@@ -37,7 +37,7 @@ from kmd.query.vector_index import WsVectorIndex
 from kmd.text_ui.command_output import output
 from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.hash_utils import hash_file
-from kmd.util.log_calls import format_duration
+from kmd.util.log_calls import format_duration, log_calls
 
 from kmd.util.strif import copyfile_atomic, move_file
 from kmd.util.uniquifier import Uniquifier
@@ -56,6 +56,7 @@ class FileStore:
     def __init__(self, base_dir: Path, is_sandbox: bool):
         self.start_time = time.time()
         self.base_dir = base_dir.resolve()
+        self.name = self.base_dir.name
         self.is_sandbox = is_sandbox
 
         # TODO: Move this to its own IdentifierIndex class, and make it exactly mirror disk state.
@@ -75,14 +76,8 @@ class FileStore:
 
         self.end_time = time.time()
 
-    def resolve_to_store_path(self, path: Path) -> Optional[StorePath]:
-        """
-        Return a StorePath if the given path is within the store, otherwise None.
-        """
-        if path.resolve().is_relative_to(self.base_dir):
-            return StorePath(path.relative_to(self.base_dir))
-        else:
-            return None
+    def __str__(self):
+        return f"FileStore(~{self.name})"
 
     def _id_index_init(self):
         num_dups = 0
@@ -174,7 +169,17 @@ class FileStore:
     def exists(self, store_path: StorePath) -> bool:
         return (self.base_dir / store_path).exists()
 
-    def resolve_path(self, item: Item) -> Path:
+    def resolve_path(self, path: Path) -> Optional[StorePath]:
+        """
+        Return a StorePath if the given path is within the store, otherwise None.
+        """
+        resolved = path.resolve()
+        if resolved.is_relative_to(self.base_dir):
+            return StorePath(resolved.relative_to(self.base_dir))
+        else:
+            return None
+
+    def path_for(self, item: Item) -> Path:
         if not item.store_path:
             log.error("Item has no store path: %s", item)
             raise UnexpectedError("Cannot resolve item without store path")
@@ -260,6 +265,7 @@ class FileStore:
         else:
             return StorePath(self.dirs.tmp_dir / item.store_path)
 
+    @log_calls()
     def save(self, item: Item, as_tmp: bool = False) -> StorePath:
         """
         Save the item. Uses the store_path if it's already set or generates a new one.
@@ -323,6 +329,7 @@ class FileStore:
         log.message("%s Saved item: %s", EMOJI_SUCCESS, fmt_path(store_path))
         return store_path
 
+    @log_calls()
     def load(self, store_path: StorePath) -> Item:
         """
         Load item at the given path.
@@ -332,6 +339,9 @@ class FileStore:
             # This is a known text format or a YAML file, so we can read the whole thing.
             return read_item(self.base_dir / store_path, self.base_dir)
         else:
+            log.debug(
+                "Not a text file so loading item with external path: %s", fmt_path(store_path)
+            )
             # This is an exsting file (such as media or docs) so we just return the metadata.
             format = Format.guess_by_file_ext(file_ext)
             if not format:

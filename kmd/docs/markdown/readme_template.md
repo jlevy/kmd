@@ -8,7 +8,7 @@
 
 <b><i>The Knowledge Command Line</i></b>
 
-<b>An intelligent, extensible shell for knowledge tasks.</b>
+<b>An AI-native command line for modern workflows.</b>
 
 ⛭
 

@@ -3,7 +3,7 @@ import sys
 from datetime import datetime, timezone
 from os.path import basename
 from pathlib import Path
-from typing import cast, List, Optional, Sequence
+from typing import cast, List, Optional
 
 from humanize import naturalsize
 from rich import get_console
@@ -27,6 +27,7 @@ from kmd.config.text_styles import (
     SPINNER,
 )
 from kmd.errors import InvalidInput, InvalidState
+from kmd.exec.resolve_args import assemble_path_args, assemble_store_path_args
 from kmd.file_formats.chat_format import tail_chat_history
 from kmd.file_formats.frontmatter_format import (
     fmf_read,
@@ -449,46 +450,6 @@ def unselect(*paths: str) -> None:
         )
 
 
-def _resolve_path_arg(path_str: str) -> Path | StorePath:
-    """
-    Resolve a path argument to a Path or StorePath, if it is within the current workspace.
-    """
-    path = Path(path_str)
-    if path.is_absolute():
-        return path
-    elif store_path := current_workspace().resolve_to_store_path(path):
-        return store_path
-    else:
-        return path
-
-
-def _assemble_paths(*paths: Optional[str]) -> List[StorePath | Path]:
-    """
-    Assemble store paths from the current workspace, or the current selection if
-    no paths are given.
-    """
-
-    out_paths = [_resolve_path_arg(path) for path in paths if path]
-    if not out_paths:
-        ws = current_workspace()
-        out_paths = ws.get_selection()
-        if not out_paths:
-            raise InvalidInput("No selection")
-    return cast(List[StorePath | Path], out_paths)
-
-
-# TODO: Get more commands to work on files outside the workspace by importing them first.
-def _check_store_paths(paths: Sequence[StorePath | Path]) -> List[StorePath]:
-    """
-    Check that all paths are store paths.
-    """
-    ws = current_workspace()
-    for path in paths:
-        if not ws.exists(StorePath(path)):
-            raise InvalidInput(f"Store path not found: {path}")
-    return [StorePath(str(path)) for path in paths]
-
-
 @kmd_command
 def show(
     path: Optional[str] = None, console: bool = False, native: bool = False, browser: bool = False
@@ -511,7 +472,7 @@ def show(
         else ViewMode.browser if browser else ViewMode.native if native else ViewMode.auto
     )
     try:
-        input_paths = _assemble_paths(path)
+        input_paths = assemble_path_args(path)
         input_path = input_paths[0]
 
         if isinstance(input_path, StorePath):
@@ -548,7 +509,7 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
     """
     import pyperclip
 
-    input_paths = _assemble_paths(path)
+    input_paths = assemble_path_args(path)
     input_path = input_paths[0]
 
     format = detect_file_format(input_path)
@@ -586,7 +547,7 @@ def edit(path: Optional[str] = None, all: bool = False) -> None:
 
     :param all: Normally edits only the first file given. This passes all files to the editor.
     """
-    input_paths = _assemble_paths(path)
+    input_paths = assemble_path_args(path)
     if not all:
         input_paths = [input_paths[0]]
 
@@ -636,7 +597,7 @@ def strip_frontmatter(*paths: str) -> None:
     """
     Strip the frontmatter from the given files.
     """
-    input_paths = _assemble_paths(*paths)
+    input_paths = assemble_path_args(*paths)
 
     for path in input_paths:
         log.message("Stripping frontmatter from: %s", fmt_path(path))
@@ -668,7 +629,7 @@ def file_info(
     if not size_summary and not format:
         size_summary = format = True
 
-    input_paths = _assemble_paths(*paths)
+    input_paths = assemble_path_args(*paths)
     output()
     for input_path in input_paths:
         output(f"{fmt_path(input_path)}:", color=COLOR_EMPH)
@@ -703,9 +664,10 @@ def file_info(
 @kmd_command
 def relations(*paths: str) -> None:
     """
-    Show the relations for the current selection.
+    Show the relations for the current selection, including items that are upstream,
+    like the items this item is derived from.
     """
-    input_paths = _assemble_paths(*paths)
+    input_paths = assemble_path_args(*paths)
 
     output()
     for input_path in input_paths:
@@ -832,7 +794,7 @@ def archive(*paths: str) -> None:
     """
     Archive the items at the given path, or the current selection.
     """
-    store_paths = _check_store_paths(_assemble_paths(*paths))
+    store_paths = assemble_store_path_args(*paths)
     ws = current_workspace()
     for store_path in store_paths:
         ws.archive(store_path)
@@ -892,7 +854,7 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
     :param brief: Show only action names. Otherwise show actions and descriptions.
     :param all: Include actions with no preconditions.
     """
-    store_paths = _check_store_paths(_assemble_paths(*paths))
+    store_paths = assemble_store_path_args(*paths)
     ws = current_workspace()
 
     actions = load_all_actions(base_only=False).values()
@@ -962,7 +924,7 @@ def index(*paths: str) -> None:
     """
     Index the items at the given path, or the current selection.
     """
-    store_paths = _check_store_paths(_assemble_paths(*paths))
+    store_paths = assemble_store_path_args(*paths)
     ws = current_workspace()
 
     ws.vector_index.index_items([ws.load(store_path) for store_path in store_paths])
@@ -975,7 +937,7 @@ def unindex(*paths: str) -> None:
     """
     Unarchive the items at the given paths.
     """
-    store_paths = _check_store_paths(_assemble_paths(*paths))
+    store_paths = assemble_store_path_args(*paths)
     ws = current_workspace()
     ws.vector_index.unindex_items([ws.load(store_path) for store_path in store_paths])
 
@@ -1040,6 +1002,7 @@ def query(query_str: str) -> None:
 def files(
     *paths: str,
     brief: bool = False,
+    recent: bool = False,
     pager: bool = False,
     all: bool = False,
     head: int = 0,
@@ -1057,7 +1020,9 @@ def files(
     For a quick, paged overview of all files in a big directory, use `files --pager`.
 
     :param brief: Gives an overview of the most recently modified files in each directory.
-        Same as `--head=20 --sort=created --reverse --groupby=parent --pager`.
+        Same as `--head=20 --groupby=parent`.
+    :param recent: Like `--brief`, but shows the most recently modified files in each directory.
+        Same as `--head=20 --sort=modified --reverse --groupby=parent`.
     :param pager: Use the pager when displaying the output.
     :param all: Include usually ignored (hidden) files.
     :param head: Limit the first number of items displayed per group (if groupby is used)
@@ -1077,15 +1042,15 @@ def files(
     else:
         paths_to_show = [Path(path) for path in paths]
 
-    if brief:
+    if brief or recent:
         if head == 0:
             head = 20
         if groupby is None:
             groupby = GroupByOption.parent
+    if recent:
         if sort is None:
-            sort = SortOption.created
+            sort = SortOption.modified
             reverse = True
-        pager = True
 
     since_seconds = parse_since(since) if since else 0.0
 
@@ -1188,14 +1153,16 @@ def files(
                     f"{indent}… {len(group_df) - head} more files not shown",
                     text_wrap=Wrap.NONE,
                 )
-
+            else:
+                output()
         if not groupby and head and files_matching > head:
             output(
                 f"{indent}… {files_matching - head} more files not shown",
                 text_wrap=Wrap.NONE,
             )
+        else:
+            output()
 
-        output()
         output(
             f"{total_displayed} files ({naturalsize(total_displayed_size)}) shown",
             color=COLOR_EMPH,
@@ -1289,7 +1256,7 @@ def normalize(*paths: str) -> None:
     # TODO: Make a version of this that works outside the workspace on Markdown files,
     # (or another verion just called `format` that does this).
     ws = current_workspace()
-    store_paths = _check_store_paths(_assemble_paths(*paths))
+    store_paths = assemble_store_path_args(*paths)
 
     canon_paths = []
     for store_path in store_paths:
