@@ -1,14 +1,15 @@
 import sys
 from pathlib import Path, PosixPath, WindowsPath
-from typing import cast, Optional, Tuple, Union
+from typing import Any, cast, Optional, Tuple, Union
 
+import regex
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
-import regex
 
 from kmd.util.format_utils import fmt_path
 from kmd.util.parse_shell_args import shell_quote
 from kmd.util.url import is_url, Url
+
 
 # Determine the base class for StorePath based on the operating system
 if sys.platform == "win32":
@@ -63,27 +64,48 @@ class StorePath(BasePath):
 
     store_name: Optional[str] = None
 
-    def __new__(cls, value: Union[str, Path, "StorePath"], store_name: Optional[str] = None):
+    def __new__(
+        cls,
+        value: Union[str, Path],
+        *more_parts: Union[str, Path],
+        store_name: Optional[str] = None,
+    ):
         """
         Create a new `StorePath` instance from a string representation as a relative path or in
         a standard format like `@folder/filename` or `@~store_name/folder/filename`.
         """
-        if isinstance(value, StorePath):
-            path = Path(*value.parts)
-            self = super().__new__(cls, path)
-            self.store_name = store_name if store_name is not None else value.store_name
-        else:
-            path, parsed_store_name = cls.parse(value)
-            self = super().__new__(cls, path)
-            self.store_name = store_name if store_name is not None else parsed_store_name
 
-        # XXX Ugly but not sure of a simpler way to initialize ourselves as a Path in __new__.
+        # Parse a non-StorePath value
+        # Pull out the store name from the first value.
+        if isinstance(value, StorePath):
+            parsed_path = value
+            if not store_name:
+                store_name = value.store_name
+        else:
+            parsed_path, parsed_store_name = cls.parse(value)
+            if not store_name:
+                store_name = parsed_store_name
+
+        # Construct the path from all parts. This is important because this __new__ may
+        # be called with same args as Path, e.g. from deepcopy, with several parts.
+        path = Path(parsed_path, *more_parts)
+
+        self = super().__new__(cls, *path.parts)
+        self.store_name = store_name
+
+        # XXX Ugly but not sure of a simpler way to initialize ourselves
+        # exactly like a Path in __new__.
         self._raw_paths = path._raw_paths  # type: ignore
         self._load_parts()  # type: ignore
 
         return self
 
-    def __init__(self, value: Union[Path, str, "StorePath"], store_name: Optional[str] = None):
+    def __init__(
+        self,
+        value: Union[str, Path],
+        *rest: Union[str, Path],
+        store_name: Optional[str] = None,
+    ):
         pass
 
     @staticmethod
@@ -151,8 +173,10 @@ class StorePath(BasePath):
         return self.__class__(Path(*new_parts), store_name=self.store_name)
 
     @classmethod
-    def __get_pydantic_core_schema__(cls, source_type, handler: GetCoreSchemaHandler):
-        # Use the handler to get the schema for the base Path type
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        # Use the handler to get the schema for the base Path type.
         path_schema = handler(BasePath)
         return core_schema.no_info_after_validator_function(
             cls.validate,
@@ -161,7 +185,9 @@ class StorePath(BasePath):
 
     @classmethod
     def validate(cls, value: Union[str, Path, "StorePath"]) -> "StorePath":
-        return StorePath(value)
+        if isinstance(value, StorePath):
+            return value
+        return cls(value)
 
     def display_str(self) -> str:
         """

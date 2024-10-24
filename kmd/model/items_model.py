@@ -603,7 +603,8 @@ ITEM_FIELDS = [f.name for f in Item.__dataclass_fields__.values()]
 
 ## Tests
 
-# FIXME:
-# def test_item_metadata_serialization():
-#     ir = ItemRelations(derived_from=[StorePath("docs/filename.doc.md")])
-#     assert asdict(ir) == {"derived_from": ["docs/filename.doc.md"]}
+
+def test_item_metadata_serialization():
+    # Important to confirm StorePath is serialized like a Path.
+    ir = ItemRelations(derived_from=[StorePath("docs/filename.doc.md")])
+    assert asdict(ir) == {"derived_from": [StorePath("docs/filename.doc.md")]}
