@@ -118,10 +118,7 @@ def _get_file_store(base_dir: Path, is_sandbox: bool) -> FileStore:
     return FileStore(base_dir, is_sandbox)
 
 
-_last_workspace_dir = None
-
-
-def current_workspace(log_on_change: bool = True) -> FileStore:
+def current_workspace(silent: bool = False) -> FileStore:
     """
     Get the current workspace. Also updates logging and cache directories to be within that
     workspace, if it has changed.
@@ -139,9 +136,9 @@ def current_workspace(log_on_change: bool = True) -> FileStore:
     ws = _get_file_store(ws_dirs.base_dir, is_sandbox)
 
     global _last_workspace_dir
-    if log_on_change and _last_workspace_dir != ws_dirs.base_dir:
-        ws.log_store_info()
-        _last_workspace_dir = ws_dirs.base_dir
+
+    if not silent:
+        ws.log_store_info(once=True)
 
     return ws
 

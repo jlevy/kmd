@@ -76,6 +76,8 @@ class FileStore:
 
         self.end_time = time.time()
 
+        self.info_logged = False
+
     def __str__(self):
         return f"FileStore(~{self.name})"
 
@@ -501,7 +503,11 @@ class FileStore:
         except OSError:
             return ParamValues({})
 
-    def log_store_info(self):
+    def log_store_info(self, once: bool = False):
+        if once and self.info_logged:
+            return
+        self.info_logged = True
+
         log.message(
             "Using workspace: %s (%s items)",
             path.abspath(self.base_dir),

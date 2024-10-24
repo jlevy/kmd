@@ -6,7 +6,7 @@ from kmd.model.commands_model import Command
 
 
 def record_command(command: Command | str):
-    ws = current_workspace()
+    ws = current_workspace(silent=True)
     history_file = ws.base_dir / ws.dirs.shell_history_yml
     if isinstance(command, str):
         command_str = command

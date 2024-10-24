@@ -374,7 +374,7 @@ def init(path: Optional[str] = None) -> None:
         dir.mkdir()
     dirs.initialize()
 
-    current_workspace(log_on_change=False).log_store_info()
+    current_workspace(silent=True).log_store_info()
 
 
 @kmd_command
@@ -394,7 +394,7 @@ def workspace(workspace_name: Optional[str] = None) -> None:
         os.chdir(ws_path)
         output_status(f"Changed to workspace: {ws_name} ({ws_path})")
 
-    current_workspace(log_on_change=False).log_store_info()
+    current_workspace(silent=True).log_store_info()
 
 
 @kmd_command

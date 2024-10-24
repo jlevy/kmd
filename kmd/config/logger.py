@@ -102,6 +102,7 @@ def logging_setup():
         highlighter=get_highlighter(),
         markup=True,
     )
+    _console_handler.setLevel(global_settings().console_log_level.value)
     _console_handler.setFormatter(Formatter("%(message)s"))
 
     # Manually adjust logging for a few packages, removing previous verbose default handlers.
