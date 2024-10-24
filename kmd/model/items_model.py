@@ -8,12 +8,12 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
+from frontmatter_format import from_yaml_string
 from pydantic.dataclasses import dataclass
 from slugify import slugify
 
 from kmd.config.logger import get_logger
 from kmd.errors import FileFormatError
-from kmd.file_formats.yaml_util import from_yaml_string
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import FileExt, Format

@@ -2,10 +2,11 @@ import os
 from dataclasses import asdict, dataclass
 from typing import List, Optional
 
+from frontmatter_format import read_yaml_file, to_yaml_string, write_yaml_file
+
 from kmd.config import colors
 from kmd.config.logger import get_logger
 from kmd.errors import NoMatch
-from kmd.file_formats.yaml_util import read_yaml_file, to_yaml_string, write_yaml_file
 from kmd.file_storage.workspaces import current_workspace
 from kmd.lang_tools.clean_headings import clean_heading, summary_heading
 from kmd.model.file_formats_model import Format

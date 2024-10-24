@@ -3,6 +3,7 @@ from pathlib import Path, PosixPath, WindowsPath
 from typing import Any, cast, Optional, Tuple, Union
 
 import regex
+from frontmatter_format import add_default_yaml_representer
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
@@ -241,6 +242,13 @@ def is_store_path(input_arg: InputArg) -> bool:
 
 def as_url_or_path(input: str | Path) -> Path | Url:
     return cast(Url, str(input)) if is_url(str(input)) else cast(Path, input)
+
+
+def _represent_store_path(dumper: Any, data: StorePath) -> Any:
+    return dumper.represent_str(str(data))
+
+
+add_default_yaml_representer(StorePath, _represent_store_path)
 
 
 ## Tests

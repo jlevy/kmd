@@ -30,17 +30,31 @@ def _normalize_html_comments(text: str, break_str: str = "\n\n") -> str:
     """
     Put HTML comments as standalone paragraphs.
     """
+
+    # Small hack to avoid changing frontmatter format, for the rare corner
+    # case where Markdown contains HTML-style frontmatter.
+    def not_frontmatter(text: str) -> bool:
+        return "<!---" not in text
+
     # TODO: Probably want do this for <div>s too.
-    return _ensure_surrounding_breaks(text, [("<!--", "-->")], break_str=break_str)
+    return _ensure_surrounding_breaks(
+        text, [("<!--", "-->")], break_str=break_str, filter=not_frontmatter
+    )
 
 
 def _ensure_surrounding_breaks(
-    html: str, tag_pairs: List[Tuple[str, str]], break_str: str = "\n\n"
+    html: str,
+    tag_pairs: List[Tuple[str, str]],
+    filter: Callable[[str], bool] = lambda _: True,
+    break_str: str = "\n\n",
 ) -> str:
     for start_tag, end_tag in tag_pairs:
         pattern = re.compile(rf"(\s*{re.escape(start_tag)}.*?{re.escape(end_tag)}\s*)", re.DOTALL)
 
-        def replacer(match):
+        def replacer(match: re.Match[str]) -> str:
+            if not filter(match.group(0)):
+                return match.group(0)
+
             content = match.group(1).strip()
             before = after = break_str
 

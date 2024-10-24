@@ -1609,6 +1609,20 @@ unicode = ["unicodedata2 (>=15.1.0)"]
 woff = ["brotli (>=1.0.1)", "brotlicffi (>=0.8.0)", "zopfli (>=0.1.4)"]
 
 [[package]]
+name = "frontmatter-format"
+version = "0.1.3"
+description = "A format for YAML frontmatter on any file."
+optional = false
+python-versions = "<4.0,>=3.10"
+files = [
+    {file = "frontmatter_format-0.1.3-py3-none-any.whl", hash = "sha256:15f971ba1a20717751360255976672048298e846a187320fa55acf17c11ed780"},
+    {file = "frontmatter_format-0.1.3.tar.gz", hash = "sha256:8eeacb0c99637e2f2f5a55c5aa46d0f7ac0200adaa9273f45deb46cb7c559d84"},
+]
+
+[package.dependencies]
+ruamel-yaml = ">=0.18.6,<0.19.0"
+
+[[package]]
 name = "frozenlist"
 version = "1.4.1"
 description = "A list-like structure which implements collections.abc.MutableSequence"
@@ -7227,4 +7241,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "16221355d088ba33603ac19151001f562f6bdf96d756693fb18f4939730181b0"
+content-hash = "a33aa9e2f5f3d65f8263cf13140cf4c218040e854077fc571d1220a0e788d69f"

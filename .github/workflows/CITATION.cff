@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+title: "Kmd: An AI-native command line for modern workflows"
+message: >-
+  If you use this software, please cite it using the metadata from this file.
+type: software
+authors:
+  - family-names: Levy
+    given-names: Joshua
+repository-code: "https://github.com/jlevy/kmd"
+date-released: 2024-10-21
+url: "https://kmd.run/"
+abstract: >-
+  Kmd (“Knowledge comManD line”) is a power tool for practical knowledge tasks.
+  Use commands to transcribe videos, summarize and organize transcripts and notes,
+  write blog posts, extract or visualize concepts, check citations, convert notes
+  to PDFs or beautifully formatted HTML, or perform numerous other content-related
+  tasks possible by orchestrating AI tools in the right ways.
+license: MIT

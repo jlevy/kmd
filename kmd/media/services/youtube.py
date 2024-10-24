@@ -3,10 +3,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 
+from frontmatter_format import to_yaml_string
+
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_WARN
 from kmd.errors import ApiResultError, InvalidInput
-from kmd.file_formats.yaml_util import to_yaml_string
 from kmd.media.yt_dlp_tools import parse_date, ydl_download_media, ydl_extract_info
 from kmd.model.media_model import (
     HeatmapValue,
