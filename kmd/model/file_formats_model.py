@@ -403,7 +403,7 @@ def detect_mime_type(filename: str | Path) -> Optional[str]:
 
 def detect_file_format(path: str | Path) -> Optional[Format]:
     """
-    Get file format based on file extenion and file content (libmagic and heuristics).
+    Get file format based on file extension and file content (libmagic and heuristics).
     """
     path = Path(path)
 

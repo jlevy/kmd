@@ -227,7 +227,7 @@ find_near_duplicates
 # In my case I see one near duplicate, which I'll archive:
 archive
 
-# And for fun now let's vizualize them in 3d (proof of concept, this could
+# And for fun now let's visualize them in 3d (proof of concept, this could
 # get a lot better):
 graph_view --concepts_only
 

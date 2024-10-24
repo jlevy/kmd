@@ -19,7 +19,7 @@ log = get_logger(__name__)
 transcribe_audio = deepgram_transcribe_audio
 
 
-# For simplicity we assume all audio is coverted to mp3.
+# For simplicity we assume all audio is converted to mp3.
 SUFFIX_MP3 = ".full.mp3"
 SUFFIX_MP4 = ".full.mp4"
 SUFFIX_16KMP3 = ".16k.mp3"

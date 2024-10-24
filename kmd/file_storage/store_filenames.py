@@ -34,7 +34,7 @@ def join_suffix(base_slug: str, full_suffix: str) -> str:
 
 def parse_filename_and_type(filename: str | Path) -> Tuple[str, ItemType, FileExt]:
     """
-    Parse a filename according to naming convetions for the file store, i.e.
+    Parse a filename according to naming conventions for the file store, i.e.
     `folder/name.type.ext`.
     Raises `InvalidFilename` if the filename does not have both a type and an extension.
     """

@@ -17,7 +17,7 @@ class BreakIntoParagraphs(LLMAction):
     name: str = "break_into_paragraphs"
 
     description: str = (
-        "Reformat text as paragraphs. Perserves all text exactly except for whitspace changes."
+        "Reformat text as paragraphs. Preserves all text exactly except for whitespace changes."
     )
 
     system_message: Message = Message(

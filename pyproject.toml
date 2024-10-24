@@ -65,6 +65,7 @@ pytest = "^8.3.3"
 ruff = "^0.4.10"
 usort = "^1.0.8.post1"
 mypy = "^1.11.2"
+codespell = "^2.3.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -102,6 +103,11 @@ ignore = ["E402", "E731", "E712"]
 disable_error_code = [
     "import-untyped",
 ]
+
+[tool.codespell]
+ignore-words-list = "iTerm,Numbe"
+# skip = "foo.py,bar.py"
+
 
 [tool.pytest.ini_options]
 python_files = ["*.py"]

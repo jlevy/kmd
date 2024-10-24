@@ -20,6 +20,7 @@ def main():
 
     errcount = 0
     paths = ["kmd", "tests"]
+    errcount += _run(["codespell", "--write-changes", *paths])
     errcount += _run(["usort", "format", *paths])
     errcount += _run(["ruff", "check", "--fix", *paths])
     errcount += _run(["black", *paths])

@@ -21,7 +21,7 @@ File formats and conventions:
   and format (.md, .yml, etc.).
 
 - Many items have metadata attached, giving an item type (see `ItemType` in the Kmd item
-  model), a format (see `Format`), a title, and other optinal fields like a URL (if the item
+  model), a format (see `Format`), a title, and other optional fields like a URL (if the item
   is or is derived from an online URL) and a description.
 
 - Text items are stored in Markdown format with YAML front matter to hold the metadata, in

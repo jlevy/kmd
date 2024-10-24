@@ -1254,7 +1254,7 @@ def normalize(*paths: str) -> None:
     to our conventions.
     """
     # TODO: Make a version of this that works outside the workspace on Markdown files,
-    # (or another verion just called `format` that does this).
+    # (or another version just called `format` that does this).
     ws = current_workspace()
     store_paths = assemble_store_path_args(*paths)
 

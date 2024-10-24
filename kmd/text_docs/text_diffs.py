@@ -157,7 +157,7 @@ class TextDiff:
                 accepted_ops.append(op)
                 rejected_ops.append(op)
             else:
-                # We accapt or reject the DiffOp as a whole, not token by token, since token by
+                # We accept or reject the DiffOp as a whole, not token by token, since token by
                 # token would give odd results, like deleting words but leaving whitespace.
                 if accept_fn(op):
                     accepted_ops.append(op)

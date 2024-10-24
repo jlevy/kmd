@@ -28,7 +28,7 @@ and actions.
 Run `help` to get an overview.
 
 Or use the Kmd assistant to get help.
-Ask by typing any quesion ending in `?` The Kmd assistant knows the docs and can answer many
+Ask by typing any question ending in `?` The Kmd assistant knows the docs and can answer many
 questions!
 
 Remember there are tab completions on many commands and actions, and that can help you get
@@ -43,7 +43,7 @@ See also: `What are the most important Kmd commands?`
 
 Kmd has quite a few basic commands that are easier to use than usual shell commands.
 You can always run `help` for a full list, or run any command with the `--help` option to
-see more about hte command.
+see more about the command.
 
 A few of the most important commands for managing files and work are these:
 
@@ -72,7 +72,7 @@ A few of the most important commands for managing files and work are these:
 
 - `history` to see recent commands you've run.
 
-- `add_resource` to add a resoure such as a URL or a file to your local workspace.
+- `add_resource` to add a resource such as a URL or a file to your local workspace.
 
 The set of actions that do specific useful things is much longer, but a few to be aware of
 include:

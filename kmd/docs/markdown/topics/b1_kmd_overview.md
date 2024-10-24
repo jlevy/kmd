@@ -34,7 +34,7 @@ By convention, workspace directories should have a `.kb` suffix, such as `fitnes
 Within a workspace, files are organized into folders by type, including resources, notes,
 configs, and exports.
 Most text items are stored in Markdown format with YAML front matter (the same format used
-by Jekyll or other static site generators), optionaly with some HTML for structure if needed.
+by Jekyll or other static site generators), optionally with some HTML for structure if needed.
 But with Kmd you can process or export items in any other format you wish, like a PDF or a
 webpage.
 

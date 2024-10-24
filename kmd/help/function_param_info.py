@@ -28,8 +28,8 @@ def _look_up_param_docs(func: Callable[..., Any], kw_params: List[FuncParam]) ->
 
 def annotate_param_info(func: Callable[..., Any]) -> List[Param]:
     """
-    Inspect the types on the positional and keyword paramaters for a function, as well as docs for
-    them. Matching param info based on matching names in the global paramater docs as well. Also
+    Inspect the types on the positional and keyword parameters for a function, as well as docs for
+    them. Matching param info based on matching names in the global parameter docs as well. Also
     look at docstrings with parameter info. Cache the result on the function's `__param_info__`
     attribute.
     """

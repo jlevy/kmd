@@ -23,7 +23,7 @@ class TranscribeAnnotateSummarize(SequenceAction):
         "insert_frame_captures",
     )
 
-    cachable: bool = True
+    cacheable: bool = True
 
     precondition: Precondition = is_url | is_audio_resource | is_video_resource
 

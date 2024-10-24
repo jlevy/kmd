@@ -30,7 +30,7 @@ class Chat(Action):
 
     interactive_input: bool = True
 
-    cachable: bool = False
+    cacheable: bool = False
 
     params: ParamList = common_params("model")
 

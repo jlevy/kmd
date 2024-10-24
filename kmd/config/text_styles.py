@@ -160,7 +160,7 @@ from rich.style import Style
 
 class KmdHighlighter(RegexHighlighter):
     """
-    Highlighter based on the repr highighter with additions.
+    Highlighter based on the repr highlighter with additions.
     """
 
     base_style = "kmd."

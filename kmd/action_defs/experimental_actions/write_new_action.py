@@ -37,7 +37,7 @@ class WriteNewAction(LLMAction):
         """
     )
 
-    cachable: bool = False
+    cacheable: bool = False
 
     model: LLM = LLM.o1_preview
 

@@ -23,7 +23,7 @@ class TranscribeFormat(SequenceAction):
         "insert_section_headings",
     )
 
-    cachable: bool = True
+    cacheable: bool = True
 
     precondition: Precondition = is_url | is_audio_resource | is_video_resource
 

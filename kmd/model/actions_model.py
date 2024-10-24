@@ -134,7 +134,7 @@ class Action(ABC):
     A description of the action, in a few sentences.
     """
 
-    cachable: bool = True
+    cacheable: bool = True
     """
     If True, the action execution may be skipped if the output is already present.
     """
@@ -363,16 +363,16 @@ class Action(ABC):
         determine the title and types for the output items and check if they were already
         generated before running slow or expensive actions.
 
-        For now, this only applies to actions with a single output, if self.cachable is True.
+        For now, this only applies to actions with a single output, if self.cacheable is True.
         """
         log.info(
-            "Preassemble check for `%s` is %s (%s with cachable=%s)",
+            "Preassemble check for `%s` is %s (%s with cacheable=%s)",
             self.name,
-            self.cachable and self.expected_outputs == ONE_ARG,
+            self.cacheable and self.expected_outputs == ONE_ARG,
             self.expected_outputs,
-            self.cachable,
+            self.cacheable,
         )
-        if self.cachable and self.expected_outputs == ONE_ARG:
+        if self.cacheable and self.expected_outputs == ONE_ARG:
             return ActionResult(
                 [self._preassemble_one(operation, items, output_num=0, type=self.output_type)]
             )

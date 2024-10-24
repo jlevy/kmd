@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 @dataclass
 class TextNode:
     """
-    A node in parsed structured text, with refernce offsets into the original text.
+    A node in parsed structured text, with reference offsets into the original text.
     Useful for parsing Markdown broken into div tags.
     """
 

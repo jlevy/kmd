@@ -15,7 +15,7 @@ class WriteInstructions(Action):
 
     interactive_input: bool = True
 
-    cachable: bool = False
+    cacheable: bool = False
 
     def run(self, items: ActionInput) -> ActionResult:
         chat_history = ChatHistory()

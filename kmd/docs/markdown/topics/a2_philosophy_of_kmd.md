@@ -156,7 +156,7 @@ Some key elements:
   operations** (like downloading media files or transcribing a video).
 
 - **Automate and script when ready:** Although you want to try tasks interactively, you also
-  want there to be a path from initial interactive work to partialy or fully automated
+  want there to be a path from initial interactive work to partially or fully automated
   scripts.
   When every atomic task is a command, it's much easier to assemble more complex scripts
   that repeatably do very complex things.

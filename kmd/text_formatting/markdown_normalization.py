@@ -408,7 +408,7 @@ more code
 ```
 
 
-Intented code:
+Indented code:
 
     more code here
 
@@ -506,7 +506,7 @@ def hello_world():
 more code
 ```
 
-Intented code:
+Indented code:
 
 ```
 more code here

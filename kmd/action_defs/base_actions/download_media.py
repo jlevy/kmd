@@ -19,7 +19,7 @@ class DownloadMedia(PerItemAction):
 
     precondition: Precondition = is_url
 
-    cachable: bool = False
+    cacheable: bool = False
 
     def run_item(self, item: Item) -> Item:
         if not item.url:

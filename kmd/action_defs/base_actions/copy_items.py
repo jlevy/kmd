@@ -17,7 +17,7 @@ class CopyItems(PerItemAction):
         Identity action that copies the input items with no changes. Useful in combo actions.
         """
 
-    cachable: bool = False
+    cacheable: bool = False
 
     def run_item(self, item: Item) -> Item:
         return item

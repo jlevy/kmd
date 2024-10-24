@@ -10,7 +10,7 @@ log = get_logger(__name__)
 
 def flatten_dict(d: Dict[str, Any], parent_key: str = "", sep: str = ".") -> Dict[str, str]:
     """
-    Flatten a dict with nexted structure to a single level.
+    Flatten a dict with nested structure to a single level.
     """
     items: List[tuple[str, str]] = []
     for k, v in d.items():

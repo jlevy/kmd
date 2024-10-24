@@ -273,7 +273,7 @@ class FileStore:
         Save the item. Uses the store_path if it's already set or generates a new one.
         Updates item.store_path.
         """
-        # If external file already exists within the workspace, the file is alrady saved (without metadata).
+        # If external file already exists within the workspace, the file is already saved (without metadata).
         if (
             item.external_path
             and path.exists(item.external_path)
@@ -344,7 +344,7 @@ class FileStore:
             log.debug(
                 "Not a text file so loading item with external path: %s", fmt_path(store_path)
             )
-            # This is an exsting file (such as media or docs) so we just return the metadata.
+            # This is an existing file (such as media or docs) so we just return the metadata.
             format = Format.guess_by_file_ext(file_ext)
             if not format:
                 raise UnrecognizedFileFormat(
@@ -412,7 +412,7 @@ class FileStore:
                 store_path = self.save(new_item)
             else:
                 # Binary files we just copy over as-is, preserving the name.
-                # We know the extension is recoginized.
+                # We know the extension is recognized.
                 store_path = StorePath(folder_for_type(ItemType.resource) / basename(path_str))
                 if self.exists(store_path):
                     raise FileExists(f"Resource already in store: {fmt_path(store_path)}")

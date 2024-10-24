@@ -11,7 +11,7 @@ many kinds of files in a way that is broadly compatible with programming
 languages, browsers, editors, Markdown parsers, and other tools.
 
 Frontmatter format is a generalization of the common format for frontmatter
-used by Jekyll and other CMSs for Markdown files. In that foramt, frontmatter
+used by Jekyll and other CMSs for Markdown files. In that format, frontmatter
 is enclosed in `---` delimiters.
 
 Frontmatter format is a way to add metadata as frontmatter on any file.
@@ -83,7 +83,7 @@ Rust, SQL, etc.). This prefix is stripped during parsing.
 
 It is recommended to use a prefix with a trailing space (such as `# `)
 but a bare prefix without the trailing space is also allowed. Other
-whitespace is perserved (before parsing with YAML).
+whitespace is preserved (before parsing with YAML).
 
 There is no restriction on the content of the file after the frontmatter.
 It may even contain other content in frontmatter format, but this will
