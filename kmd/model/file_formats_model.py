@@ -8,7 +8,6 @@ import magic
 
 from kmd.errors import InvalidFilename
 from kmd.model.media_model import MediaType
-from kmd.util.format_utils import fmt_path
 from kmd.util.url import is_file_url, parse_file_url, Url
 
 
@@ -294,41 +293,6 @@ def join_filename(dirname: str | Path, name: str, item_type: Optional[str], ext:
 
     parts = cast(List[str], filter(bool, [name, item_type, ext]))
     return Path(dirname) / ".".join(parts)
-
-
-def parse_file_format(path: str | Path) -> Tuple[str, Format, FileExt]:
-    """
-    Parse a file path into its name, format, and extension, raising exceptions if they
-    are not recognized.
-    """
-    path_str = str(path)
-    try:
-        _dirname, name, _item_type, ext_str = split_filename(path_str)
-        file_ext = FileExt(ext_str)
-    except ValueError:
-        raise InvalidFilename(
-            f"Unknown extension for file: {path_str} (recognized file extensions are {', '.join(FileExt.__members__.keys())})"
-        )
-    format = Format.guess_by_file_ext(file_ext)
-    if not format:
-        raise InvalidFilename(
-            f"Unknown format for file (check the file ext?): {fmt_path(path_str)}"
-        )
-
-    # TODO: For yaml file resources, look at the format in the metadata.
-
-    return name, format, file_ext
-
-
-def known_file_format(path: str | Path) -> Optional[Format]:
-    """
-    Is this a recognized file format?
-    """
-    try:
-        _name, format, _ext = parse_file_format(path)
-        return format
-    except InvalidFilename:
-        return None
 
 
 _hidden_file_pattern = re.compile(r"\.[^.]+")

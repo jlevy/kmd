@@ -7,7 +7,8 @@ from urllib.parse import urlparse
 
 from kmd.config.logger import get_log_file_stream, get_logger
 from kmd.errors import FileNotFound, InvalidInput
-from kmd.model.file_formats_model import FileExt, parse_file_format
+from kmd.file_storage.store_filenames import parse_item_filename
+from kmd.model.file_formats_model import FileExt
 from kmd.model.media_model import MediaMetadata, MediaService, MediaType, MediaUrlType
 from kmd.shell_tools.native_tools import CmdlineTool, tool_check
 from kmd.util.format_utils import fmt_path
@@ -53,7 +54,7 @@ class LocalFileMedia(MediaService):
     def canonicalize_and_type(self, url: Url) -> Tuple[Optional[Url], Optional[MediaUrlType]]:
         path = self._parse_file_url(url)
         if path:
-            name, format, file_ext = parse_file_format(path)
+            name, _item_type, format, file_ext = parse_item_filename(path)
             if format.is_audio():
                 return url, MediaUrlType.audio
             elif format.is_video():
@@ -76,7 +77,7 @@ class LocalFileMedia(MediaService):
         if not path:
             raise InvalidInput(f"Not a local file URL: {url}")
 
-        _name, format, file_ext = parse_file_format(path)
+        _name, _item_type, format, file_ext = parse_item_filename(path)
         os.makedirs(target_dir, exist_ok=True)
 
         if format.is_audio():
@@ -148,7 +149,7 @@ class LocalFileMedia(MediaService):
         if not path:
             raise InvalidInput(f"Not a local file URL: {url}")
 
-        name, _format, _file_ext = parse_file_format(path)
+        name, _item_type, _format, file_ext = parse_item_filename(path)
         return MediaMetadata(
             title=name,
             url=url,

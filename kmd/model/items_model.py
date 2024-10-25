@@ -15,7 +15,6 @@ from slugify import slugify
 from kmd.config.logger import get_logger
 from kmd.errors import FileFormatError
 from kmd.model.canon_concept import canonicalize_concept
-from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import FileExt, Format
 from kmd.model.media_model import MediaMetadata
 from kmd.model.operations_model import OperationSummary, Source
@@ -92,6 +91,8 @@ class ItemId:
 
     @classmethod
     def for_item(cls, item: "Item") -> Optional["ItemId"]:
+        from kmd.model.canon_url import canonicalize_url
+
         item_id = None
         if item.type == ItemType.resource and item.format == Format.url and item.url:
             item_id = ItemId(item.type, IdType.url, canonicalize_url(item.url))

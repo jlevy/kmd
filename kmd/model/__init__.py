@@ -47,7 +47,6 @@ from kmd.model.file_formats_model import (
     Format,
     is_ignored,
     parse_file_ext,
-    parse_file_format,
     split_filename,
 )
 from kmd.model.graph_model import GraphData, Link, Node

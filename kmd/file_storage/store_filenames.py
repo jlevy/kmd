@@ -1,11 +1,11 @@
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 
 from kmd.config.logger import get_logger
 
 from kmd.errors import InvalidFilename
 from kmd.lang_tools.inflection import plural
-from kmd.model.file_formats_model import FileExt, split_filename
+from kmd.model.file_formats_model import FileExt, Format, split_filename
 from kmd.model.items_model import ItemType
 from kmd.util.format_utils import fmt_path
 
@@ -32,30 +32,31 @@ def join_suffix(base_slug: str, full_suffix: str) -> str:
     return f"{base_slug}.{full_suffix.lstrip('.')}"
 
 
-def parse_filename_and_type(filename: str | Path) -> Tuple[str, ItemType, FileExt]:
+def parse_item_filename(path: str | Path) -> Tuple[str, Optional[ItemType], Format, FileExt]:
     """
-    Parse a filename according to naming conventions for the file store, i.e.
-    `folder/name.type.ext`.
-    Raises `InvalidFilename` if the filename does not have both a type and an extension.
+    Parse a store file path into its name, format, and extension. Raises `InvalidFilename`
+    if the file extension is not recognized. Returns None for the item type if not
+    present or not recognized.
     """
-    # Python files can have only one dot (like file.py) but others should have a type
-    # (like file.resource.yml).
-    filename = str(filename)
-    if filename.endswith(".py"):
-        dirname, name, _, ext = split_filename(filename, require_type_ext=False)
-        item_type = ItemType.extension.value
-    else:
-        dirname, name, item_type, ext = split_filename(filename, require_type_ext=False)
-
-    if not item_type:
+    path_str = str(path)
+    _dirname, name, item_type_str, ext_str = split_filename(path_str)
+    file_ext = FileExt.parse(ext_str)
+    if not file_ext:
         raise InvalidFilename(
-            f"Filename has no type (of the form `filename.type.ext`): {fmt_path(filename)}"
+            f"Unknown extension for file: {path_str} (recognized file extensions are {', '.join(FileExt.__members__.keys())})"
         )
-    if not ext:
-        raise InvalidFilename(f"Filename has no extension: {fmt_path(filename)}")
-    try:
-        return name, ItemType[item_type], FileExt[ext]
-    except KeyError as e:
+    format = Format.guess_by_file_ext(file_ext)
+    if not format:
         raise InvalidFilename(
-            f"Unknown type or extension for file: item_type={item_type}, ext={ext}, filename={fmt_path(filename)}"
-        ) from e
+            f"Unknown format for file (check the file ext?): {fmt_path(path_str)}"
+        )
+
+    # TODO: For yaml file resources, look at the format in the metadata.
+
+    item_type = None
+    if item_type_str:
+        try:
+            item_type = ItemType(item_type_str)
+        except ValueError:
+            pass
+    return name, item_type, format, file_ext

@@ -20,16 +20,10 @@ from kmd.errors import (
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_storage.persisted_yaml import PersistedYaml
-from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_filename_and_type
+from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_item_filename
 from kmd.file_tools.file_walk import IgnoreFilter, walk_by_dir
 from kmd.model.canon_url import canonicalize_url
-from kmd.model.file_formats_model import (
-    FileExt,
-    Format,
-    is_ignored,
-    known_file_format,
-    parse_file_format,
-)
+from kmd.model.file_formats_model import FileExt, Format, is_ignored
 from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.params_model import ParamValues
 from kmd.model.paths_model import StorePath
@@ -103,11 +97,12 @@ class FileStore:
         Update metadata index with a new item.
         """
         try:
-            name, item_type, file_ext = parse_filename_and_type(store_path)
+            name, item_type, format, file_ext = parse_item_filename(store_path)
         except InvalidFilename:
             log.debug("Skipping file with invalid name: %s", fmt_path(store_path))
             return None
-        self.uniquifier.add(name, join_suffix(item_type.name, file_ext.name))
+        full_suffix = join_suffix(item_type.name, file_ext.name) if item_type else file_ext.name
+        self.uniquifier.add(name, full_suffix)
 
         dup_path = None
 
@@ -336,7 +331,7 @@ class FileStore:
         """
         Load item at the given path.
         """
-        _name, item_type, file_ext = parse_filename_and_type(store_path)
+        _name, item_type, format, file_ext = parse_item_filename(store_path)
         if FileExt.is_text(file_ext):
             # This is a known text format or a YAML file, so we can read the whole thing.
             return read_item(self.base_dir / store_path, self.base_dir)
@@ -350,6 +345,8 @@ class FileStore:
                 raise UnrecognizedFileFormat(
                     f"Unknown file extension: {file_ext}: {fmt_path(store_path)}"
                 )
+            if not item_type:
+                item_type = ItemType.resource
             return Item(
                 type=item_type,
                 external_path=str(self.base_dir / store_path),
@@ -396,7 +393,7 @@ class FileStore:
                 raise FileNotFound(f"File not found: {fmt_path(path_str)}")
 
             # It's a string or Path presumably outside the store, so copy it in.
-            name, format, file_ext = parse_file_format(path)
+            name, _item_type, format, file_ext = parse_item_filename(path)
             if format.is_text():
                 # Text files we copy into canonical store format.
                 with open(path_str, "r") as file:
@@ -531,7 +528,6 @@ class FileStore:
         self,
         store_path: Optional[StorePath] = None,
         ignore: Optional[IgnoreFilter] = is_ignored,
-        show_unknown_formats: bool = False,
     ) -> Generator[StorePath, None, None]:
         """
         Yields StorePaths of items in a folder or the entire store.
@@ -540,9 +536,7 @@ class FileStore:
         for flist in walk_by_dir(start_path, relative_to=self.base_dir, ignore=ignore):
             store_dirname = flist.parent_dir
             for filename in flist.filenames:
-                path = self.base_dir / store_dirname / filename
-                if show_unknown_formats or known_file_format(path):
-                    yield StorePath(join(store_dirname, filename))
+                yield StorePath(join(store_dirname, filename))
 
     def normalize(self, store_path: StorePath) -> StorePath:
         """
