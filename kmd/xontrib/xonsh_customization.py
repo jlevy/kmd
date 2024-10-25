@@ -20,7 +20,7 @@ from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
 from kmd.text_ui.command_output import output
-from kmd.version import get_version
+from kmd.version import get_version_name
 
 
 setup()  # Call to config logging before anything else.
@@ -206,4 +206,4 @@ def customize_xonsh():
 
     _shell_setup()
 
-    log.info("kmd %s loaded", get_version())
+    log.info("kmd %s loaded", get_version_name())

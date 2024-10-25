@@ -90,7 +90,7 @@ from kmd.util.parse_key_vals import format_key_value, parse_key_value
 from kmd.util.strif import copyfile_atomic
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
-from kmd.version import get_version
+from kmd.version import get_version_name
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 from kmd.web_content import file_cache_tools
 
@@ -106,7 +106,7 @@ def welcome() -> None:
 
     output()
     output(HRULE, color=COLOR_HINT)
-    version = "v%s" % get_version()
+    version = get_version_name()
     padding = " " * (len(HRULE) - len(LOGO) - len(version))
     output(Text(LOGO, style=COLOR_LOGO) + Text(padding + version, style=COLOR_HINT))
     output(HRULE, color=COLOR_HINT)
@@ -1306,7 +1306,7 @@ def version() -> None:
     """
     Show the version of kmd.
     """
-    output("kmd %s", get_version())
+    output("kmd %s", get_version_name())
 
 
 # TODO:

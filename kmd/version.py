@@ -21,7 +21,7 @@ def get_git_hash() -> str:
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         print(f"Warning: Could not read git hash: {e}")
-        return "unknown"
+        raise e
 
 
 def get_version():
@@ -35,5 +35,9 @@ def get_version():
         return metadata.version("kmd")
 
 
+def get_version_name():
+    return f"v{get_version()}"
+
+
 if __name__ == "__main__":
-    print(get_version())
+    print(get_version_name())

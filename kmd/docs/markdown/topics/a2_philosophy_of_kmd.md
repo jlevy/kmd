@@ -85,85 +85,96 @@ how well it works.
 
 ### The Goals of Kmd
 
-That brings us to the principles behind building a new, AI-native shell:
-
-1. **Make simple tasks simple:** Doing a simple thing (like transcribing a video or
-   proofreading a document) should be as easy as running a single command (not clicking
-   through a dozen menus).
-   We should be able to tell someone how to do something simply by telling them the command,
-   instead of sharing a complex prompt or a tutorial video on how to use several apps.
-
-2. **Make complex tasks possible:** Highly complex tasks and workflows should be easy to
-   assemble (and rerun if they need to be automated) by adding new primitive actions and
-   combining primitive actions into more complex workflows.
-   You shouldn't need to be a programmer to use any task—but any task should be extensible
-   with arbitrary code (written by you and an LLM) when needed.
-
-3. **Augment human skills and judgement:** Many AI agent efforts aim for pure automation.
-   But even with powerful LLMs and tools, full automation is rare.
-   Invariably, the best results come from human review wherever it's needed—experimenting
-   with different models and prompts, looking at what works, focusing expert human attention
-   in the right places.
-   The most flexible tools augment, not replace, your ability to review and manipulate
-   information.
-   It should help both very technical users, like developers, as well as less technical but
-   sophisticated users who aren't traditional programmers.
-
-4. **Accelerate discovery of the workflows that work best:** We have so many powerful APIs,
-   models, libraries, and tools now—but the real bottleneck is in discovering and then
-   orchestrating the right workflows with the right inputs, models, prompts, and human
-   assistance.
-   Anyone should be able to discover new steps and workflows without waiting on engineers or
-   designers.
-
-5. **Understand and build on itself:** A truly AI-native programming environment should
-   improve itself!
-   Kmd can read its own code and docs, assist you with its own commands, and write new Kmd
-   actions.
-   Better languages and scripting tools can in fact make LLMs smarter, because it allows
-   them to solve problems in ways that are simpler and less error prone.
-
-### Key Features
-
 Kmd is an experimental attempt at building the tool I've wanted for a long time, using a
 command line as a starting point, and with an initial focus on content-related tasks.
 
-It may be better to call Kmd a “shell” since it is actually evolving into more than a
-command line.
-It's more like a first step toward an item-based information operating system—an alternate,
-more flexible UX and information architecture for tasks that manipulate content.
+That brings us to the goals behind building a new, AI-native shell.
 
-I hope it becomes the tool you need when you don't know what tool you need.
+- **Make simple tasks simple:** Doing a simple thing (like transcribing a video or
+  proofreading a document) should be as easy as running a single command (not clicking
+  through a dozen menus).
+  We should be able to tell someone how to do something simply by telling them the command,
+  instead of sharing a complex prompt or a tutorial video on how to use several apps.
 
-Some key elements:
+- **Make complex tasks possible:** Highly complex tasks and workflows should be easy to
+  assemble (and rerun if they need to be automated) by adding new primitive actions and
+  combining primitive actions into more complex workflows.
+  You shouldn't need to be a programmer to use any task—but any task should be extensible
+  with arbitrary code (written by you and an LLM) when needed.
 
-- **Operations are simple commands:** Simple tasks run in a simple way, without the need to
-  adopt a whole framework.
-  This includes working with APIs and cloud-based tools as easily as you work with local
-  files.
+- **Augment human skills and judgement:** Many AI agent efforts aim for pure automation.
+  But even with powerful LLMs and tools, full automation is rare.
+  Invariably, the best results come from human review wherever it's needed—experimenting
+  with different models and prompts, looking at what works, focusing expert human attention
+  in the right places.
+  The most flexible tools augment, not replace, your ability to review and manipulate
+  information.
+  It should help both very technical users, like developers, as well as less technical but
+  sophisticated users who aren't traditional programmers.
 
-- **Content is just files:** We run tasks on local files that are in readable, transparent
-  file formats compatible with other tools (Markdown, YAML, HTML, PDFs).
+- **Accelerate discovery of the workflows that work best:** We have so many powerful APIs,
+  models, libraries, and tools now—but the real bottleneck is in discovering and then
+  orchestrating the right workflows with the right inputs, models, prompts, and human
+  assistance.
+  Anyone should be able to discover new steps and workflows without waiting on engineers or
+  designers.
 
-- **The shell maintains context:** The framework helps you keep files organized into a
-  simple workspace, which is just a directory that has additional caches, logs, and metadata.
-  This not only helps you, but means an AI assistant can have full context.
-
-- **Work interactively and incrementally:** Try each step to test things work, then combine
-  them in novel, exploratory ways, all interactively from the shell prompt.
-  It's easy to pick up where you left off whenever a step goes wrong.
-  To help with this, Kmd defaults to having **idempotent operations** and **caching slow
-  operations** (like downloading media files or transcribing a video).
-
-- **Automate and script when ready:** Although you want to try tasks interactively, you also
-  want there to be a path from initial interactive work to partially or fully automated
-  scripts.
-  When every atomic task is a command, it's much easier to assemble more complex scripts
-  that repeatably do very complex things.
-
-- **Intelligent and extensible:** Most importantly, Kmd understands itself.
-  It reads its own code and docs to give you assistance, including at writing new Kmd
+- **Understand and build on itself:** A truly AI-native programming environment should
+  improve itself!
+  Kmd can read its own code and docs, assist you with its own commands, and write new Kmd
   actions.
+  Better languages and scripting tools can in fact make LLMs smarter, because it allows them
+  to solve problems in ways that are simpler and less error prone.
+
+### Design Principles
+
+This boils down to a few specific design choices:
+
+1. Solve problems with simple commands that can be recombined in complex ways (like the old
+   Unix model)
+
+2. Support any APIs or tools, including local and cloud-based LLMs and other generative AI
+   tools (basically anything available in Python)
+
+3. Allow incremental and interactive work via a shell that maintains context (keep files
+   organized in a simple workspace folder, and include content, metadata, current settings
+   and selections, caches, history, and logs all in one place)
+
+4. Support automation and scripting when desired (an interactive history should be
+   automatable)
+
+5. Use local files whenever possible (not tied to a particular SaaS provider)
+
+6. Use simple and transparent file formats (especially text files like Markdown, YAML, and
+   HTML, with intuitive filenames names, so you can edit content with any editors or external
+   tools; avoid opaque formats, sprawling JSON, or data stored in the cloud and accessible
+   only from an app)
+
+7. Keep content human reviewable, diff-able, and editable at any stage of a workflow (don't
+   just assume automation will work; expect it not to and plan for workflows to understand
+   failures, fix them, and resume; use formats that make diffs as easy and clear as possible)
+
+8. Maintain metadata on files, so you always know where each piece of content comes from
+   (and keep this close to the content, as YAML frontmatter)
+
+9. Make operations idempotent (resuming a task or workflow or restarting after a failure
+   should be as simple as running again)
+
+10. Cache slow or costly operations (track dependencies and content hashes and know when
+    things need to rerun, like a makefile)
+
+11. Docs, code, and examples should be self-explanatory (so an LLM assistant should be able
+    to help you use and enhance the tool itself)
+
+12. Make it easy and LLMs to add and dynamically use new commands (an AI-native programming
+    environment should enhance itself!)
+
+Kmd may evolve into more than a command line.
+It's more like a first step toward an item-based information operating system—an alternate,
+more flexible UX and information architecture for knowledge workflows.
+It could be the tool you need when you don't know what tool you need.
+
+### Credits
 
 All of this is only possible by relying on a wide variety of powerful libraries, especially
 [LiteLLM](https://github.com/BerriAI/litellm), [yt-dlp](https://github.com/yt-dlp/yt-dlp),
@@ -189,10 +200,8 @@ My contact info is at [github.com/jlevy](https://github.com/jlevy).
 
 - Tab auto-completion and help on almost everything
 
-- A
-  [generalized frontmatter format](https://github.com/jlevy/frontmatter-format),
-  that for YAML metadata
-  on Markdown, HTML, Python, and other text files
+- A [generalized frontmatter format](https://github.com/jlevy/frontmatter-format), that for
+  YAML metadata on Markdown, HTML, Python, and other text files
 
 - A [data model](https://github.com/jlevy/kmd/tree/main/kmd/model) that includes items such
   as documents, resources, concepts, etc., all stored as files within a workspace of files,
