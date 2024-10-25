@@ -2,7 +2,7 @@
 name = "kmd"
 # Keep this a dev version, as the dynamic versioning plugin is used for actual release versions:
 version = "0.0.0.dev"
-description = "A command line for knowledge exploration."
+description = "An AI-native command line for modern workflows"
 authors = ["Joshua Levy <joshua@cal.berkeley.edu>"]
 readme = "README.md"
 

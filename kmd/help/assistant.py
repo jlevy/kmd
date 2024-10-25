@@ -15,6 +15,7 @@ from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_ui.command_output import fill_markdown, output, output_as_string
 from kmd.util.format_utils import fmt_paras, fmt_path
+from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
@@ -128,6 +129,9 @@ def assistance(input: str, fast: bool = False) -> str:
         Give your response:
         """
     )
+
+    input = shell_unquote(input)
+    log.info("User request to assistant: %s", input)
 
     response = llm_template_completion(
         model,

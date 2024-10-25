@@ -2,6 +2,9 @@ import threading
 import time
 from typing import Any, Callable, Dict, List, TypeVar
 
+from prompt_toolkit.application import get_app
+from prompt_toolkit.filters import Condition
+from prompt_toolkit.key_binding import KeyBindings, merge_key_bindings
 from xonsh.completers.completer import add_one_completer
 
 from kmd.action_defs import reload_all_actions
@@ -188,8 +191,60 @@ def _kmd_xonsh_prompt():
     return f"{workspace_str} {{{PROMPT_COLOR_NORMAL}}}{PROMPT_MAIN}{{RESET}} "
 
 
+def _add_key_bindings() -> None:
+
+    custom_bindings = KeyBindings()
+
+    @custom_bindings.add(" ")
+    def _(event):
+        """
+        Map two spaces to `? ` to invoke an assistant question.
+        """
+        buf = event.app.current_buffer
+        if buf.text == " ":
+            buf.delete_before_cursor(2)
+            buf.insert_text("? ")
+        else:
+            buf.insert_text(" ")
+
+    @Condition
+    def is_unquoted_assitant_request():
+        app = get_app()
+        buf = app.current_buffer
+        text = buf.text.strip()
+        return (
+            buf.name == "DEFAULT_BUFFER"
+            and text.startswith("?")
+            and not (text.startswith('? "') or text.startswith("? '"))
+        )
+
+    @custom_bindings.add("enter", filter=is_unquoted_assitant_request)
+    def _(event):
+        """
+        Automatically add quotes around assistant questions, so there are not
+        syntax errors if the command line contains unclosed quotes etc.
+        """
+
+        buf = event.app.current_buffer
+        text = buf.text.strip()
+
+        # Wrap everything after '?' in quotes, preserving existing whitespace
+        question_text = text[1:].strip()
+        buf.delete_before_cursor(len(buf.text))
+        buf.insert_text(f"? {repr(question_text)}")
+
+        buf.validate_and_handle()
+
+    existing_bindings = __xonsh__.shell.shell.prompter.app.key_bindings  # type: ignore  # noqa: F821
+    merged_bindings = merge_key_bindings([existing_bindings, custom_bindings])
+    __xonsh__.shell.shell.prompter.app.key_bindings = merged_bindings  # type: ignore  # noqa: F821
+
+    log.info("Added custom %s key bindings.", len(merged_bindings.bindings))
+
+
 def _shell_setup():
     set_env("PROMPT", _kmd_xonsh_prompt)
+    _add_key_bindings()
 
 
 def customize_xonsh():
@@ -204,6 +259,7 @@ def customize_xonsh():
 
     _post_initialize()
 
-    _shell_setup()
+    if _is_interactive:
+        _shell_setup()
 
     log.info("kmd %s loaded", get_version_name())
