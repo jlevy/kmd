@@ -28,6 +28,7 @@ esac
 set -x
 
 # Do build.
+poetry self add "poetry-dynamic-versioning[plugin]"
 poetry build
 
 set +x

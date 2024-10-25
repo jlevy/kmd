@@ -190,9 +190,9 @@ My contact info is at [github.com/jlevy](https://github.com/jlevy).
 - Tab auto-completion and help on almost everything
 
 - A
-  [generalized frontmatter format](https://github.com/jlevy/kmd/blob/main/kmd/file_formats/frontmatter_format.py),
-  a simple format for Markdown, HTML, Python, and other text files that allows YAML metadata
-  on any text file
+  [generalized frontmatter format](https://github.com/jlevy/frontmatter-format),
+  that for YAML metadata
+  on Markdown, HTML, Python, and other text files
 
 - A [data model](https://github.com/jlevy/kmd/tree/main/kmd/model) that includes items such
   as documents, resources, concepts, etc., all stored as files within a workspace of files,

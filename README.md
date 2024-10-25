@@ -8,7 +8,7 @@
 
 <b><i>The Knowledge Command Line</i></b>
 
-<b>An intelligent, extensible shell for knowledge tasks.</b>
+<b>An AI-native command line for modern workflows.</b>
 
 ⛭
 
@@ -198,7 +198,7 @@ Some key elements:
   operations** (like downloading media files or transcribing a video).
 
 - **Automate and script when ready:** Although you want to try tasks interactively, you also
-  want there to be a path from initial interactive work to partialy or fully automated
+  want there to be a path from initial interactive work to partially or fully automated
   scripts.
   When every atomic task is a command, it's much easier to assemble more complex scripts
   that repeatably do very complex things.
@@ -231,10 +231,8 @@ My contact info is at [github.com/jlevy](https://github.com/jlevy).
 
 - Tab auto-completion and help on almost everything
 
-- A
-  [generalized frontmatter format](https://github.com/jlevy/kmd/blob/main/kmd/file_formats/frontmatter_format.py),
-  a simple format for Markdown, HTML, Python, and other text files that allows YAML metadata
-  on any text file
+- A [generalized frontmatter format](https://github.com/jlevy/frontmatter-format), that for
+  YAML metadata on Markdown, HTML, Python, and other text files
 
 - A [data model](https://github.com/jlevy/kmd/tree/main/kmd/model) that includes items such
   as documents, resources, concepts, etc., all stored as files within a workspace of files,
@@ -324,7 +322,7 @@ Now install a recent Python and Poetry:
 ```shell
 pyenv install 3.11.10  # Or any later version, like 3.12.6.
 pipx install poetry
-poetry self update  
+poetry self add "poetry-dynamic-versioning[plugin]"  # Helps build versioning.
 ```
 
 For Windows or other platforms, see the pyenv and poetry instructions.
@@ -374,6 +372,9 @@ active (such as using `pyenv`), then:
 ```shell
 ./install_local.sh
 ```
+
+If you encounter installation issues, you can also try `./install_local.sh
+--force-reinstall`.
 
 This does a pip install of the wheel so you can run it as `kmd`.
 
@@ -506,7 +507,7 @@ find_near_duplicates
 # In my case I see one near duplicate, which I'll archive:
 archive
 
-# And for fun now let's vizualize them in 3d (proof of concept, this could
+# And for fun now let's visualize them in 3d (proof of concept, this could
 # get a lot better):
 graph_view --concepts_only
 

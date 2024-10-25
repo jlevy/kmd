@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-frontmatter-format = "^0.1.3"
+frontmatter-format = "^0.1.4"
 regex = "^2024.9.11"
 cachetools = "^5.5.0"
 assertpy = "^1.1"
@@ -74,7 +74,7 @@ build-backend = "poetry.core.masonry.api"
 # Auto-generated version in build, based on tag or commit.
 # https://sam.hooke.me/note/2023/08/poetry-automatically-generated-package-version-from-git-commit/
 [tool.poetry-dynamic-versioning]
-enable = false
+enable = true
 vcs = "git"
 pattern  = "^v?(?P<base>\\d+\\.\\d+\\.\\d+)(-?((?P<stage>[a-zA-Z]+)\\.?(?P<revision>\\d+)?))?"
 format-jinja = """

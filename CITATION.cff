@@ -7,7 +7,7 @@ authors:
   - family-names: Levy
     given-names: Joshua
 repository-code: "https://github.com/jlevy/kmd"
-date-released: 2024-10-21
+date-released: 2024-10-25
 url: "https://kmd.run/"
 abstract: >-
   Kmd (“Knowledge comManD line”) is a power tool for practical knowledge tasks.

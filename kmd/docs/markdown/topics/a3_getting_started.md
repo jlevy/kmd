@@ -45,7 +45,7 @@ Now install a recent Python and Poetry:
 ```shell
 pyenv install 3.11.10  # Or any later version, like 3.12.6.
 pipx install poetry
-poetry self update  
+poetry self add "poetry-dynamic-versioning[plugin]"  # Helps build versioning.
 ```
 
 For Windows or other platforms, see the pyenv and poetry instructions.
@@ -95,6 +95,8 @@ active (such as using `pyenv`), then:
 ```shell
 ./install_local.sh
 ```
+
+If you encounter installation issues, you can also try `./install_local.sh --force-reinstall`.
 
 This does a pip install of the wheel so you can run it as `kmd`.
 
