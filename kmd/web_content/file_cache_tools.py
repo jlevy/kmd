@@ -66,6 +66,7 @@ def cache_resource(item: Item) -> Dict[MediaType, Path]:
     if not is_resource(item):
         raise ValueError(f"Item is not a resource: {item}")
 
+    result: Dict[MediaType, Path] = {}
     if item.url:
         if is_media_url(item.url):
             result = cache_media(item.url)

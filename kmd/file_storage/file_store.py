@@ -97,7 +97,7 @@ class FileStore:
         Update metadata index with a new item.
         """
         try:
-            name, item_type, format, file_ext = parse_item_filename(store_path)
+            name, item_type, _format, file_ext = parse_item_filename(store_path)
         except InvalidFilename:
             log.debug("Skipping file with invalid name: %s", fmt_path(store_path))
             return None
@@ -340,15 +340,12 @@ class FileStore:
                 "Not a text file so loading item with external path: %s", fmt_path(store_path)
             )
             # This is an existing file (such as media or docs) so we just return the metadata.
-            format = Format.guess_by_file_ext(file_ext)
             if not format:
                 raise UnrecognizedFileFormat(
                     f"Unknown file extension: {file_ext}: {fmt_path(store_path)}"
                 )
-            if not item_type:
-                item_type = ItemType.resource
             return Item(
-                type=item_type,
+                type=item_type or ItemType.resource,  # Default to resource if not specified.
                 external_path=str(self.base_dir / store_path),
                 format=format,
                 file_ext=file_ext,
@@ -394,8 +391,9 @@ class FileStore:
 
             # It's a string or Path presumably outside the store, so copy it in.
             name, _item_type, format, file_ext = parse_item_filename(path)
-            if format.is_text():
+            if format and format.is_text():
                 # Text files we copy into canonical store format.
+                # Note YAML files can be various formats so we don't handle them here.
                 with open(path_str, "r") as file:
                     body = file.read()
 
@@ -408,7 +406,7 @@ class FileStore:
                 )
                 store_path = self.save(new_item)
             else:
-                # Binary files we just copy over as-is, preserving the name.
+                # YAML or binary files we just copy over as-is, preserving the name.
                 # We know the extension is recognized.
                 store_path = StorePath(folder_for_type(ItemType.resource) / basename(path_str))
                 if self.exists(store_path):

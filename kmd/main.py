@@ -88,7 +88,8 @@ def install_to_xonshrc():
 ## Custom xonsh shell setup
 
 # Base shell can be ReadlineShell or PromptToolkitShell.
-from xonsh.ptk_shell.shell import PromptToolkitShell
+# from xonsh.shells.readline_shell import ReadlineShell
+from xonsh.shells.ptk_shell import PromptToolkitShell
 
 
 class CustomInteractiveShell(PromptToolkitShell):  # PromptToolkitShell or ReadlineShell

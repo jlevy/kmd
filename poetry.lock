@@ -1072,21 +1072,21 @@ test = ["flake8", "isort", "pytest"]
 
 [[package]]
 name = "curl-cffi"
-version = "0.7.2"
+version = "0.7.3"
 description = "libcurl ffi bindings for Python, with impersonation support."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "curl_cffi-0.7.2-cp38-abi3-macosx_10_9_x86_64.whl", hash = "sha256:3756d31635f62004cc3b2280f9001b03294eacb58b4017f27cc2b645b2251880"},
-    {file = "curl_cffi-0.7.2-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:3ec154c1f516364d9c52e6045be78724fc3eef711b6721cc855d32f1ad6a69c5"},
-    {file = "curl_cffi-0.7.2-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:24b084e5b0046c76a58902c2b985bdb2638d9b16af130b33b521a4c6d59792d6"},
-    {file = "curl_cffi-0.7.2-cp38-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:2caa3cd83ec2cb3ad5729311184324b03db181a0f1ca6a3abd25ba9319562396"},
-    {file = "curl_cffi-0.7.2-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ea2ebed4ff052fcd7417cfd20fdab9415eb47ea06ca0c31896971a1c768c9bf3"},
-    {file = "curl_cffi-0.7.2-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:3ca68890e839b35134e063d7c57684e14a6bca5f68948f8a689e64569abe5a40"},
-    {file = "curl_cffi-0.7.2-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:afa1230a4833246f45deb404b13676ac29c37476ec94bae0005dbde85f96be35"},
-    {file = "curl_cffi-0.7.2-cp38-abi3-win32.whl", hash = "sha256:a4f58b83eab8a77f788444e347a0b4c877cf327ecb60299b5fa01e5c73b294ee"},
-    {file = "curl_cffi-0.7.2-cp38-abi3-win_amd64.whl", hash = "sha256:83f22b65fddbc46d330e49bd0a44f73112d3f0a10378e8b31d5123df9db9fc72"},
-    {file = "curl_cffi-0.7.2.tar.gz", hash = "sha256:4671f367671038b14ea2c25f49e27402686c602d0d640ac7d484ac5c1f66b538"},
+    {file = "curl_cffi-0.7.3-cp38-abi3-macosx_10_9_x86_64.whl", hash = "sha256:890f1b0e1454977ff6bd388d29eb1eafb76bb8ef63d3c8b7539aafd4808a6cec"},
+    {file = "curl_cffi-0.7.3-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:b5520bcf6284417e66c82728512e344b50bc0e9d8bd7949923b30558746b49a3"},
+    {file = "curl_cffi-0.7.3-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:43367efb8d48e9997cf7591084ed7529409ad98bb67e284ae152f2a15e4ee68e"},
+    {file = "curl_cffi-0.7.3-cp38-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ec6718bc5151b3e0ecc35aaf40078a39cc239405182c63fc95933eb7bff572dd"},
+    {file = "curl_cffi-0.7.3-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9a90bfd0bcc7bf0f30ef6de6f4e612ea1bdc238a48928845532109a0273f6275"},
+    {file = "curl_cffi-0.7.3-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:3f9373ce27b20e65fb1e6cbea6e4411edca1f3b4440be68090b262eece728544"},
+    {file = "curl_cffi-0.7.3-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:a357d3da6aa8ccd41f1e6e422b9ff09ad4cc99b23b8f6299998cbfee6e690f01"},
+    {file = "curl_cffi-0.7.3-cp38-abi3-win32.whl", hash = "sha256:fe01be42c27667353028ee06802cc32e3936496e645a39175db4cf7bea45bb10"},
+    {file = "curl_cffi-0.7.3-cp38-abi3-win_amd64.whl", hash = "sha256:39e195a13b95bd7e4a1e8eb7804807b4504c462f6886fde01dfe4b7552fd965e"},
+    {file = "curl_cffi-0.7.3.tar.gz", hash = "sha256:901012e21af899bdf1278fd9fcee5aad6931ed56e1f5a620ffa90220c9e79f10"},
 ]
 
 [package.dependencies]
@@ -1257,13 +1257,13 @@ typing-inspect = ">=0.4.0,<1"
 
 [[package]]
 name = "deepgram-sdk"
-version = "3.7.3"
+version = "3.7.5"
 description = "The official Python SDK for the Deepgram automated speech recognition platform."
 optional = false
 python-versions = "*"
 files = [
-    {file = "deepgram_sdk-3.7.3-py3-none-any.whl", hash = "sha256:889d6dd2e2f947a52ff24fa909b24d2880d15b207fbcb089c88efce64852a8ac"},
-    {file = "deepgram_sdk-3.7.3.tar.gz", hash = "sha256:80ca1505ba6d3d72e61da895ad6ef869013f93fdb4e18069252c3f35e58a44e1"},
+    {file = "deepgram_sdk-3.7.5-py3-none-any.whl", hash = "sha256:1bb60b267347c098a4497cc1c273a60b1a2d6271c0bf2527b6e6ae8fc38466e9"},
+    {file = "deepgram_sdk-3.7.5.tar.gz", hash = "sha256:db7b8bd18e3e6fad3ff394fa172e9158efe31c267131052bc0f48ab1e8bdfadc"},
 ]
 
 [package.dependencies]
@@ -1506,13 +1506,13 @@ typing = ["typing-extensions (>=4.12.2)"]
 
 [[package]]
 name = "firecrawl-py"
-version = "1.3.1"
+version = "1.4.0"
 description = "Python SDK for Firecrawl API"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "firecrawl_py-1.3.1-py3-none-any.whl", hash = "sha256:fe8921e75871982defa6566cf7e23805b10ad5fc1288a14f07f688974329d6f8"},
-    {file = "firecrawl_py-1.3.1.tar.gz", hash = "sha256:fa7172f677b9194de26530dfd6cd8290e8187aadda5b6e84b724eca8813845cb"},
+    {file = "firecrawl_py-1.4.0-py3-none-any.whl", hash = "sha256:df788edc195d806ea9d23fe4e22d96df9874ed75800928916b3a55bef9a2fd23"},
+    {file = "firecrawl_py-1.4.0.tar.gz", hash = "sha256:21c436e0fdf2ea08ceadc519b080ad584e0515507f88d5588c24b7538bcbebf8"},
 ]
 
 [package.dependencies]
@@ -2583,13 +2583,13 @@ proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "backoff", "
 
 [[package]]
 name = "llama-index-core"
-version = "0.11.19"
+version = "0.11.20"
 description = "Interface between LLMs and your data"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "llama_index_core-0.11.19-py3-none-any.whl", hash = "sha256:9cde85085dcd4beb66b69b1922f07acdf39f2da4b17c32b4265a7c0ab641d3ae"},
-    {file = "llama_index_core-0.11.19.tar.gz", hash = "sha256:5304f9744328cfae60cd1f652d7b4f1ae635da4a34239599cff0d600c4634c49"},
+    {file = "llama_index_core-0.11.20-py3-none-any.whl", hash = "sha256:e84daf45e90e4b5d9e135baf40ab9853a1c3169a1076af6d58739d098e70adb1"},
+    {file = "llama_index_core-0.11.20.tar.gz", hash = "sha256:6b5eaaf4be5030808b9ba953e8f7aead7ba495b8e72ba0a81dfc7dda96be416f"},
 ]
 
 [package.dependencies]
@@ -6979,16 +6979,16 @@ test = ["pytest"]
 
 [[package]]
 name = "xonsh"
-version = "0.17.0"
-description = "Python-powered, cross-platform, Unix-gazing shell"
+version = "0.18.3"
+description = "Python-powered shell. Full-featured and cross-platform."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "xonsh-0.17.0-py310-none-any.whl", hash = "sha256:d2d1091ef5643dfe80e06fef081ee0bb10518135ed2103b11cd5fedc558fadbc"},
-    {file = "xonsh-0.17.0-py311-none-any.whl", hash = "sha256:9056cb71babdbc27f32194fcd63266d1a1dfab3acd5b91e2a0a7284573328a70"},
-    {file = "xonsh-0.17.0-py312-none-any.whl", hash = "sha256:a0e1f181fabd1fa9d322054677ab7e7cbd258d155d70ccff49529a6d9f9c50c3"},
-    {file = "xonsh-0.17.0-py39-none-any.whl", hash = "sha256:02dd4263fbddb25ad693e3f1ae8652dd9476c6530deb276a76e5909e2dceb06e"},
-    {file = "xonsh-0.17.0.tar.gz", hash = "sha256:299be7f25f8dfb21d9a62756154f408674809025ed7871b03f70d9507987509e"},
+    {file = "xonsh-0.18.3-py310-none-any.whl", hash = "sha256:2b371e5e984481c46a2bd65412762971ad35005988102ffbbc5ed2e0361c89ec"},
+    {file = "xonsh-0.18.3-py311-none-any.whl", hash = "sha256:f02b2869b4801e7c6b8c22ade4b5e39ed31652b97b7426b607dfd59109414b0d"},
+    {file = "xonsh-0.18.3-py312-none-any.whl", hash = "sha256:4d4e8a3cec130ed77056c5e703f00ed922d9da00685de10e30391f445bd50e9a"},
+    {file = "xonsh-0.18.3-py39-none-any.whl", hash = "sha256:43340cdea9b04e114dd4e36b974a4bdbaeb3761cfe2073a05005d66457fcafb4"},
+    {file = "xonsh-0.18.3.tar.gz", hash = "sha256:e57630d3f7e77e083618751402bf486bef51d2c42ed2abf3e0f4db388a50795f"},
 ]
 
 [package.dependencies]
@@ -7241,4 +7241,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "a33aa9e2f5f3d65f8263cf13140cf4c218040e854077fc571d1220a0e788d69f"
+content-hash = "0b0dfdc2782f31c2bd2e5b9a35606d9b366e64e280763a5517a4c24916efdb4f"

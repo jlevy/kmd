@@ -55,9 +55,9 @@ class LocalFileMedia(MediaService):
         path = self._parse_file_url(url)
         if path:
             name, _item_type, format, file_ext = parse_item_filename(path)
-            if format.is_audio():
+            if format and format.is_audio():
                 return url, MediaUrlType.audio
-            elif format.is_video():
+            elif format and format.is_video():
                 return url, MediaUrlType.video
             else:
                 raise InvalidInput(f"Unsupported file format: {format}")
@@ -80,7 +80,7 @@ class LocalFileMedia(MediaService):
         _name, _item_type, format, file_ext = parse_item_filename(path)
         os.makedirs(target_dir, exist_ok=True)
 
-        if format.is_audio():
+        if format and format.is_audio():
             target_path = target_dir / (path.stem + ".mp3")
             if file_ext == FileExt.mp3:
                 log.message(
@@ -95,7 +95,7 @@ class LocalFileMedia(MediaService):
 
                 _run_ffmpeg(["ffmpeg", "-i", str(path), "-f", "mp3", str(target_path)])
             return {MediaType.audio: target_path}
-        elif format.is_video():
+        elif format and format.is_video():
             video_target_path = target_dir / (path.stem + ".mp4")
             audio_target_path = target_dir / (path.stem + ".mp3")
 

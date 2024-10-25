@@ -7,7 +7,6 @@ from kmd.errors import InvalidFilename
 from kmd.lang_tools.inflection import plural
 from kmd.model.file_formats_model import FileExt, Format, split_filename
 from kmd.model.items_model import ItemType
-from kmd.util.format_utils import fmt_path
 
 log = get_logger(__name__)
 
@@ -32,11 +31,13 @@ def join_suffix(base_slug: str, full_suffix: str) -> str:
     return f"{base_slug}.{full_suffix.lstrip('.')}"
 
 
-def parse_item_filename(path: str | Path) -> Tuple[str, Optional[ItemType], Format, FileExt]:
+def parse_item_filename(
+    path: str | Path,
+) -> Tuple[str, Optional[ItemType], Optional[Format], FileExt]:
     """
-    Parse a store file path into its name, format, and extension. Raises `InvalidFilename`
-    if the file extension is not recognized. Returns None for the item type if not
-    present or not recognized.
+    Parse a store file path into its name, format, and extension. Returns None for
+    format or item type if not recognized. Raises `InvalidFilename` if the file extension
+    is not recognized, since we expect all store files to have a recognized extension.
     """
     path_str = str(path)
     _dirname, name, item_type_str, ext_str = split_filename(path_str)
@@ -46,10 +47,6 @@ def parse_item_filename(path: str | Path) -> Tuple[str, Optional[ItemType], Form
             f"Unknown extension for file: {path_str} (recognized file extensions are {', '.join(FileExt.__members__.keys())})"
         )
     format = Format.guess_by_file_ext(file_ext)
-    if not format:
-        raise InvalidFilename(
-            f"Unknown format for file (check the file ext?): {fmt_path(path_str)}"
-        )
 
     # TODO: For yaml file resources, look at the format in the metadata.
 

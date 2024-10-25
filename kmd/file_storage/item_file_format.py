@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from frontmatter_format import fmf_read, fmf_write, FmStyle
 
@@ -53,11 +52,16 @@ def write_item(item: Item, full_path: Path):
     )
 
 
-def read_item(full_path: Path, base_dir: Optional[Path]) -> Item:
-    store_path = str(full_path.relative_to(base_dir)) if base_dir else None
+def read_item(full_path: Path, base_dir: Path) -> Item:
     body, metadata = fmf_read(full_path)
     log.debug("Read item from %s: body length %s, metadata %s", full_path, len(body), metadata)
     if not metadata:
         raise FileFormatError(f"No metadata found in file: {fmt_path(full_path)}")
 
-    return Item.from_dict(metadata, body=body, store_path=store_path)
+    try:
+        store_path = str(full_path.relative_to(base_dir))
+        external_path = None
+    except ValueError:
+        store_path = None
+        external_path = str(full_path)
+    return Item.from_dict(metadata, body=body, store_path=store_path, external_path=external_path)
