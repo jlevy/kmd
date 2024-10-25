@@ -18,7 +18,7 @@ from xonsh.main import events, postmain, premain
 from xonsh.shell import Shell
 from xonsh.xontribs import xontribs_load
 
-from kmd.commands.command_defs import help
+from kmd.commands.help_commands import help
 from kmd.config.lazy_imports import import_start_time
 from kmd.config.logger import get_console, get_logger
 from kmd.config.settings import APP_NAME

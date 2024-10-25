@@ -3,6 +3,7 @@ from typing import Iterable, List, Tuple
 from xonsh.completers.completer import RichCompletion
 from xonsh.completers.tools import CompleterResult, CompletionContext, contextual_completer
 
+from kmd.commands.help_commands import HELP_COMMANDS
 from kmd.config.text_styles import COLOR_ACTION_TEXT, COLOR_COMMAND_TEXT, EMOJI_TASK
 from kmd.docs.faq_headings import faq_headings
 from kmd.errors import InvalidState
@@ -127,9 +128,12 @@ def help_question_completer(context: CompletionContext) -> CompleterResult:
             arg_index == 1 and command.args[0].value == "?"
         ):
             query = prefix.lstrip("? ")
-            questions = faq_headings()
-
-            return {RichCompletion(question) for question in _completion_match(query, questions)}
+            questions = ["? " + question for question in faq_headings()]
+            possible_completions = questions + HELP_COMMANDS
+            return {
+                RichCompletion(question, display=question.lstrip("? "))
+                for question in _completion_match(query, possible_completions)
+            }
 
 
 def _param_completions(params: List[Param], prefix: str):

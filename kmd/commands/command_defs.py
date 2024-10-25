@@ -14,7 +14,6 @@ from frontmatter_format import (
 )
 from humanize import naturalsize
 from rich import get_console
-from rich.text import Text
 
 from kmd.action_defs import load_all_actions
 from kmd.commands.command_registry import kmd_command
@@ -22,14 +21,10 @@ from kmd.config.logger import get_logger, log_file_path, log_objects_dir, reset_
 from kmd.config.settings import global_settings, LogLevel, update_global_settings
 from kmd.config.text_styles import (
     COLOR_EMPH,
-    COLOR_HEADING,
     COLOR_HINT,
-    COLOR_LOGO,
     COLOR_STATUS,
     EMOJI_TRUE,
     EMOJI_WARN,
-    HRULE,
-    LOGO,
     PROMPT_ASSIST,
     SPINNER,
 )
@@ -45,7 +40,6 @@ from kmd.file_storage.workspaces import (
 from kmd.file_tools.file_sort_filter import collect_files, GroupByOption, parse_since, SortOption
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.help.assistant import assist_system_message, assistance
-from kmd.help.help_page import output_see_also
 from kmd.lang_tools.inflection import plural
 from kmd.media import media_tools
 from kmd.model.file_formats_model import (
@@ -79,7 +73,6 @@ from kmd.text_ui.command_output import (
     output,
     output_assistance,
     output_heading,
-    output_markdown,
     output_response,
     output_status,
     Wrap,
@@ -95,111 +88,6 @@ from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 from kmd.web_content import file_cache_tools
 
 log = get_logger(__name__)
-
-
-@kmd_command
-def welcome() -> None:
-    """
-    Print a welcome message.
-    """
-    from kmd.docs import welcome
-
-    output()
-    output(HRULE, color=COLOR_HINT)
-    version = get_version_name()
-    padding = " " * (len(HRULE) - len(LOGO) - len(version))
-    output(Text(LOGO, style=COLOR_LOGO) + Text(padding + version, style=COLOR_HINT))
-    output(HRULE, color=COLOR_HINT)
-    output()
-    output("Welcome to kmd.\n", color=COLOR_HEADING)
-    output()
-    output(welcome, text_wrap=Wrap.WRAP_FULL)
-    output(HRULE, color=COLOR_HINT)
-
-
-@kmd_command
-def help() -> None:
-    """
-    Show the Kmd main help page.
-    """
-    # TODO: Take an argument to show help for a specific command or action.
-
-    from kmd.help.help_page import output_help_page
-
-    with console_pager():
-        output_help_page()
-
-
-@kmd_command
-def why_kmd() -> None:
-    """
-    Show help on why Kmd was created.
-    """
-    from kmd.docs import motivation, what_is_kmd
-
-    with console_pager():
-        output_markdown(what_is_kmd)
-        output_markdown(motivation)
-        output_see_also(["help", "getting_started", "faq", "commands", "actions"])
-
-
-@kmd_command
-def getting_started() -> None:
-    """
-    Show help on getting started with Kmd.
-    """
-    from kmd.docs import getting_started
-
-    with console_pager():
-        output_markdown(getting_started)
-        output_see_also(
-            [
-                "What is Kmd?",
-                "What can I do with Kmd?",
-                "What are the most important Kmd commands?",
-                "commands",
-                "actions",
-                "check_tools",
-                "faq",
-            ]
-        )
-
-
-@kmd_command
-def faq() -> None:
-    """
-    Show the Kmd FAQ.
-    """
-    from kmd.docs import faq
-
-    with console_pager():
-        output_markdown(faq)
-
-        output_see_also(["help", "commands", "actions"])
-
-
-@kmd_command
-def commands() -> None:
-    """
-    Show help on all Kmd commands.
-    """
-    from kmd.help.help_page import output_builtin_commands_help
-
-    with console_pager():
-        output_builtin_commands_help()
-        output_see_also(["actions", "help", "faq", "What are the most important Kmd commands?"])
-
-
-@kmd_command
-def actions() -> None:
-    """
-    Show help on the full list of currently loaded actions.
-    """
-    from kmd.help.help_page import output_actions_help
-
-    with console_pager():
-        output_actions_help()
-        output_see_also(["commands", "help", "faq", "What are the most important Kmd commands?"])
 
 
 @kmd_command

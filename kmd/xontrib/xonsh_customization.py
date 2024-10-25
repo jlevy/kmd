@@ -8,8 +8,7 @@ from prompt_toolkit.key_binding import KeyBindings, merge_key_bindings
 from xonsh.completers.completer import add_one_completer
 
 from kmd.action_defs import reload_all_actions
-from kmd.commands import command_defs
-from kmd.commands.command_defs import welcome
+from kmd.commands import help_commands
 from kmd.commands.command_registry import all_commands
 from kmd.commands.command_results import handle_command_output
 from kmd.config.logger import get_logger
@@ -97,9 +96,9 @@ def _load_xonsh_commands():
 
     # Override the default Python help command.
     # builtin.help must not be loaded or this won't work.
-    set_alias("help", command_defs.help)
+    set_alias("help", help_commands.help)
     # An extra name just in case `help` doesn't work.
-    set_alias("kmd_help", command_defs.help)
+    set_alias("kmd_help", help_commands.help)
     # A backup for xonsh's built-in history command.
     set_alias("xhistory", aliases["history"])  # type: ignore  # noqa: F821
 
@@ -253,7 +252,7 @@ def customize_xonsh():
     """
 
     if _is_interactive:
-        welcome()  # Do first since init could take a few seconds.
+        help_commands.welcome()  # Do first since init could take a few seconds.
 
     _initialize()
 
