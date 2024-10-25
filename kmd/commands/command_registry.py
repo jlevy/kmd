@@ -17,10 +17,19 @@ def kmd_command(func: CommandFunction) -> CommandFunction:
     return func
 
 
+def register_all_commands() -> None:
+    """
+    Ensure all commands are registered and imported.
+    """
+    import kmd.commands.command_defs  # noqa: F401
+    import kmd.commands.help_commands  # noqa: F401
+
+
 def all_commands() -> Dict[str, CommandFunction]:
     """
     All commands, sorted by name.
     """
+    register_all_commands()
     return dict(sorted(_commands.items()))
 
 

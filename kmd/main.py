@@ -18,7 +18,6 @@ from xonsh.main import events, postmain, premain
 from xonsh.shell import Shell
 from xonsh.xontribs import xontribs_load
 
-from kmd.commands.help_commands import help
 from kmd.config.lazy_imports import import_start_time
 from kmd.config.logger import get_console, get_logger
 from kmd.config.settings import APP_NAME
@@ -271,9 +270,11 @@ def run_shell(single_command: Optional[str] = None):
 
 
 def print_help():
+    from kmd.commands import help_commands
+
     output = StringIO()
     with redirect_stdout(output):
-        help()
+        help_commands.help()
     print(output.getvalue())
 
 
