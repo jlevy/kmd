@@ -52,6 +52,8 @@ class FileStore:
         self.base_dir = base_dir.resolve()
         self.name = self.base_dir.name
         self.is_sandbox = is_sandbox
+        self.info_logged = False
+        self.warnings: List[str] = []
 
         # TODO: Move this to its own IdentifierIndex class, and make it exactly mirror disk state.
         self.uniquifier = Uniquifier()
@@ -70,8 +72,6 @@ class FileStore:
 
         self.end_time = time.time()
 
-        self.info_logged = False
-
     def __str__(self):
         return f"FileStore(~{self.name})"
 
@@ -87,9 +87,8 @@ class FileStore:
                         num_dups += 1
 
         if num_dups > 0:
-            log.warning(
-                "Found %s duplicate items in store. See `logs` for details.",
-                num_dups,
+            self.warnings.append(
+                f"Found {num_dups} duplicate items in store. See `logs` for details."
             )
 
     def _id_index_item(self, store_path: StorePath) -> Optional[StorePath]:
@@ -511,6 +510,8 @@ class FileStore:
         log.message("Logging to: %s", fmt_path(log_file_path().absolute()))
         log.message("Media cache: %s", fmt_path(self.base_dir / self.dirs.media_cache_dir))
         log.message("Content cache: %s", fmt_path(self.base_dir / self.dirs.content_cache_dir))
+        for warning in self.warnings:
+            log.warning("%s", warning)
 
         if self.is_sandbox:
             output()

@@ -1,5 +1,6 @@
 import threading
 import time
+from pathlib import Path
 from typing import Any, Callable, Dict, List, TypeVar
 
 from xonsh.completers.completer import add_one_completer
@@ -175,16 +176,29 @@ def _post_initialize():
 
 
 def _kmd_xonsh_prompt():
-    from kmd.file_storage.workspaces import current_workspace_info
+    # Could do this faster with current_workspace_info() but actually it's nicer to load
+    # and log info about the whole workspace after a cd so we do that.
+    ws = current_workspace()
+    ws_name = ws.base_dir.name
+    is_sandbox = ws.is_sandbox
 
-    ws_dirs, is_sandbox = current_workspace_info()
-    name = ws_dirs.base_dir.name if ws_dirs else None
+    # Workspace name, colored differently if sandbox.
     workspace_str = (
-        f"{{{PROMPT_COLOR_NORMAL}}}" + name
-        if name and not is_sandbox
+        f"{{{PROMPT_COLOR_NORMAL}}}" + ws_name
+        if ws_name and not is_sandbox
         else f"{{{PROMPT_COLOR_WARN}}}(sandbox)"
     )
-    return f"{workspace_str} {{{PROMPT_COLOR_NORMAL}}}{PROMPT_MAIN}{{RESET}} "
+
+    # Add current directory to workspace name if necessary to clarify.
+    cwd = Path(".").resolve()
+    if cwd.is_relative_to(ws.base_dir):
+        rel_cwd = cwd.relative_to(ws.base_dir)
+        if rel_cwd != Path("."):
+            workspace_str = f"{workspace_str}/{rel_cwd}"
+    elif cwd.name != ws_name:
+        workspace_str = f"{workspace_str} {cwd.name}"
+
+    return f"\n{workspace_str} {{{PROMPT_COLOR_NORMAL}}}{PROMPT_MAIN}{{RESET}} "
 
 
 def _shell_setup():
