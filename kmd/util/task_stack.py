@@ -131,7 +131,7 @@ class TaskStack:
 
     @property
     def _output(self):
-        from kmd.text_ui.command_output import output
+        from kmd.shell.shell_output import output
 
         return output
 

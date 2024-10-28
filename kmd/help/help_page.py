@@ -14,7 +14,7 @@ from kmd.docs import (
     workspace_and_file_formats,
 )
 from kmd.help.command_help import output_action_help, output_command_function_help
-from kmd.text_ui.command_output import output, output_heading, output_markdown, Wrap
+from kmd.shell.shell_output import output, output_heading, output_markdown, Wrap
 
 log = get_logger(__name__)
 

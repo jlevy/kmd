@@ -13,7 +13,7 @@ from kmd.llms.llm_completion import llm_template_completion
 from kmd.model.assistant_model import AssistantResponse
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
-from kmd.text_ui.command_output import fill_markdown, output, output_as_string
+from kmd.shell.shell_output import fill_markdown, output, output_as_string
 from kmd.util.format_utils import fmt_paras, fmt_path
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none

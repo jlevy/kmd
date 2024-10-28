@@ -28,7 +28,7 @@ from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.params_model import ParamValues
 from kmd.model.paths_model import StorePath
 from kmd.query.vector_index import WsVectorIndex
-from kmd.text_ui.command_output import output
+from kmd.shell.shell_output import output
 from kmd.util.format_utils import fmt_lines, fmt_path
 from kmd.util.hash_utils import hash_file
 from kmd.util.log_calls import format_duration, log_calls

@@ -15,10 +15,10 @@ from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamList, ParamVal
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.model.shell_model import ShellResult
+from kmd.shell.shell_output import fill_text
 from kmd.text_docs.diff_filters import DiffFilter
 from kmd.text_docs.text_diffs import DIFF_FILTER_NONE
 from kmd.text_docs.window_settings import WINDOW_NONE, WindowSettings
-from kmd.text_ui.command_output import fill_text
 from kmd.util.format_utils import fmt_lines
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.parse_key_vals import format_key_value

@@ -25,7 +25,7 @@ from kmd.config.setup import setup
 from kmd.config.text_styles import INPUT_COLOR, SPINNER
 from kmd.help.assistant import assistance
 from kmd.model.commands_model import is_assist_request_str
-from kmd.text_ui.command_output import output, output_assistance
+from kmd.shell.shell_output import output, output_assistance
 from kmd.version import get_version
 
 

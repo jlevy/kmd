@@ -11,8 +11,8 @@ from kmd.model.actions_model import Action
 from kmd.model.commands_model import Command
 from kmd.model.params_model import ParamValues
 from kmd.model.shell_model import ShellResult
+from kmd.shell.shell_output import output
 from kmd.shell_tools.exception_printing import summarize_traceback
-from kmd.text_ui.command_output import output
 from kmd.util.log_calls import log_tallies
 from kmd.util.parse_shell_args import parse_shell_args
 

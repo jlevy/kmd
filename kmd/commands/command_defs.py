@@ -56,6 +56,16 @@ from kmd.model.paths_model import as_url_or_path, fmt_shell_path, fmt_store_path
 from kmd.model.shell_model import ShellResult
 from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths
+from kmd.shell.shell_output import (
+    console_pager,
+    format_name_and_description,
+    output,
+    output_assistance,
+    output_heading,
+    output_response,
+    output_status,
+    Wrap,
+)
 from kmd.shell_tools.native_tools import (
     CmdlineTool,
     edit_files,
@@ -67,16 +77,6 @@ from kmd.shell_tools.native_tools import (
 )
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.text_formatting.doc_formatting import normalize_text_file
-from kmd.text_ui.command_output import (
-    console_pager,
-    format_name_and_description,
-    output,
-    output_assistance,
-    output_heading,
-    output_response,
-    output_status,
-    Wrap,
-)
 from kmd.util.format_utils import fmt_lines, fmt_time
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_key_vals import format_key_value, parse_key_value

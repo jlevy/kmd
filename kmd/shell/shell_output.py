@@ -1,5 +1,5 @@
 """
-Output methods. These are for user interaction, not logging.
+Output to the shell UI. These are for user interaction, not logging.
 """
 
 import sys

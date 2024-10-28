@@ -4,7 +4,7 @@ from kmd.commands.command_registry import kmd_command
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import COLOR_HEADING, COLOR_HINT, COLOR_LOGO, HRULE, LOGO
 from kmd.help.help_page import output_see_also
-from kmd.text_ui.command_output import console_pager, output, output_markdown, Wrap
+from kmd.shell.shell_output import console_pager, output, output_markdown, Wrap
 from kmd.version import get_version_name
 
 log = get_logger(__name__)

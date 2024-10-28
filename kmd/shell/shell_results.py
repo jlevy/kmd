@@ -8,12 +8,7 @@ from kmd.file_storage.workspaces import current_workspace
 from kmd.lang_tools.inflection import plural
 from kmd.model.paths_model import fmt_shell_path, StorePath
 from kmd.model.shell_model import ShellResult
-from kmd.text_ui.command_output import (
-    console_pager,
-    output,
-    output_result,
-    output_selection,
-)
+from kmd.shell.shell_output import console_pager, output, output_result, output_selection
 from kmd.util.format_utils import fmt_lines
 
 log = get_logger(__name__)

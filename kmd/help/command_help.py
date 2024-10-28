@@ -6,7 +6,7 @@ from kmd.help.function_param_info import annotate_param_info
 from kmd.model.actions_model import Action
 from kmd.model.params_model import Param, RUNTIME_ACTION_PARAMS
 from kmd.model.preconditions_model import Precondition
-from kmd.text_ui.command_output import format_name_and_description, output, output_help, Wrap
+from kmd.shell.shell_output import format_name_and_description, output, output_help, Wrap
 from kmd.util.format_utils import DEFAULT_INDENT
 
 

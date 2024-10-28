@@ -6,7 +6,6 @@ from typing import Any, Callable, Dict, List, TypeVar
 from kmd.action_defs import reload_all_actions
 from kmd.commands import help_commands
 from kmd.commands.command_registry import all_commands
-from kmd.commands.shell_results import handle_shell_result
 from kmd.config.logger import get_logger
 from kmd.config.setup import setup
 from kmd.config.text_styles import PROMPT_COLOR_NORMAL, PROMPT_COLOR_WARN, PROMPT_MAIN
@@ -14,10 +13,11 @@ from kmd.exec.history import wrap_with_history
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import Action
 from kmd.model.shell_model import ShellResult
+from kmd.shell.shell_output import output
+from kmd.shell.shell_results import handle_shell_result
 from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
-from kmd.text_ui.command_output import output
 from kmd.version import get_version_name
 from kmd.xontrib.xonsh_completers import load_completers
 

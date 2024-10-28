@@ -16,7 +16,7 @@ from kmd.model import (
     NO_ARGS,
     ParamList,
 )
-from kmd.text_ui.command_output import output_assistance, output_response
+from kmd.shell.shell_output import output_assistance, output_response
 
 
 @kmd_action

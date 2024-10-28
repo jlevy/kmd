@@ -11,7 +11,7 @@ Can run from the custom kmd shell (main.py) or from a regular xonsh shell.
 # Using absolute imports to avoid polluting the user's shell namespace.
 import kmd.action_defs
 import kmd.commands.command_registry
-import kmd.text_ui.command_output
+import kmd.shell.shell_output
 import kmd.util.format_utils
 import kmd.xontrib.xonsh_customization
 
@@ -38,7 +38,7 @@ def load(*paths: str) -> None:
     kmd.action_defs.reload_all_actions()
     kmd.xontrib.xonsh_customization._load_xonsh_actions()
 
-    kmd.text_ui.command_output.output(
+    kmd.shell.shell_output.output(
         "Imported extensions and reloaded actions: %s",
         ", ".join(kmd.util.format_utils.fmt_path(p) for p in paths),
     )
