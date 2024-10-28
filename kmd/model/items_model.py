@@ -18,13 +18,12 @@ from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.file_formats_model import FileExt, Format
 from kmd.model.media_model import MediaMetadata
 from kmd.model.operations_model import OperationSummary, Source
-from kmd.model.paths_model import Locator, StorePath
+from kmd.model.paths_model import fmt_shell_path, fmt_store_path, Locator, StorePath
 from kmd.text_formatting.markdown_util import markdown_to_html
 from kmd.util.format_utils import (
     abbreviate_on_words,
     abbreviate_phrase_in_middle,
     clean_up_title,
-    fmt_path,
     html_to_plaintext,
     plaintext_to_html,
 )
@@ -187,7 +186,9 @@ class Item:
         """
         item_dict = {**item_dict, **kwargs}
 
-        info_prefix = f"{fmt_path(item_dict['store_path'])}: " if "store_path" in item_dict else ""
+        info_prefix = (
+            f"{fmt_store_path(item_dict['store_path'])}: " if "store_path" in item_dict else ""
+        )
 
         # Metadata formats might change over time so it's important to gracefully handle issues.
         def set_field(key: str, default: Any, cls_: Type[T]) -> T:
@@ -559,9 +560,9 @@ class Item:
         Formatted path or title, for error messages etc.
         """
         if self.store_path:
-            return fmt_path(self.store_path)
+            return fmt_store_path(self.store_path)
         elif self.external_path:
-            return fmt_path(self.external_path)
+            return fmt_shell_path(self.external_path)
         else:
             return repr(self.abbrev_title())
 

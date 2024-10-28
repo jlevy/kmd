@@ -281,7 +281,7 @@ def output_separator():
     rprint(HRULE)
 
 
-def output_status(
+def output_selection(
     message: str,
     *args,
     text_wrap: Wrap = Wrap.NONE,
@@ -297,6 +297,23 @@ def output_status(
             extra_indent=extra_indent,
             extra_newlines=extra_newlines,
         )
+
+
+def output_status(
+    message: str,
+    *args,
+    text_wrap: Wrap = Wrap.NONE,
+    extra_indent: str = "",
+    extra_newlines: bool = True,
+):
+    output(
+        message,
+        *args,
+        text_wrap=text_wrap,
+        color=COLOR_STATUS,
+        extra_indent=extra_indent,
+        extra_newlines=extra_newlines,
+    )
 
 
 def output_result(

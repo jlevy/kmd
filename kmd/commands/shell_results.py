@@ -6,9 +6,14 @@ from kmd.errors import is_fatal
 from kmd.exec.command_exec import run_command
 from kmd.file_storage.workspaces import current_workspace
 from kmd.lang_tools.inflection import plural
-from kmd.model.paths_model import StorePath
+from kmd.model.paths_model import fmt_shell_path, StorePath
 from kmd.model.shell_model import ShellResult
-from kmd.text_ui.command_output import console_pager, output, output_result, output_status
+from kmd.text_ui.command_output import (
+    console_pager,
+    output,
+    output_result,
+    output_selection,
+)
 from kmd.util.format_utils import fmt_lines
 
 log = get_logger(__name__)
@@ -34,12 +39,12 @@ def print_selection(selection: List[StorePath]) -> None:
     Print the current selection.
     """
     if not selection:
-        output_status("No selection.", extra_newlines=False)
+        output_selection("No selection.", extra_newlines=False)
     else:
-        output_status(
+        output_selection(
             "Selected %s:\n%s",
             type_str(selection),
-            fmt_lines(selection),
+            fmt_lines(fmt_shell_path(s) for s in selection),
             extra_newlines=False,
         )
 

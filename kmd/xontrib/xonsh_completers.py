@@ -3,7 +3,7 @@ from typing import cast, Iterable, List, Tuple
 from prompt_toolkit.application import get_app
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings, merge_key_bindings
-from xonsh.completers.completer import RichCompletion
+from xonsh.completers.completer import add_one_completer, RichCompletion
 from xonsh.completers.tools import CompleterResult, CompletionContext, contextual_completer
 
 from kmd.commands.help_commands import HELP_COMMANDS
@@ -25,7 +25,7 @@ log = get_logger(__name__)
 MAX_COMPLETIONS = 200
 
 # We want to keep completion fast, so make it obvious when it's slow.
-SLOW_COMPLETION_WARN = 0.15
+SLOW_COMPLETION = 0.15
 
 
 def _completion_match(
@@ -42,6 +42,10 @@ def _completion_match(
     return prefix_matches + substring_matches
 
 
+def _path_prefix_match(prefix: str, path_str: str) -> bool:
+    return path_str.startswith(prefix)
+
+
 def _all_help_completions(include_bare_qm: bool) -> List[RichCompletion]:
     questions = ["? " + question for question in faq_headings()]
     possible_completions = questions + HELP_COMMANDS
@@ -53,12 +57,43 @@ def _all_help_completions(include_bare_qm: bool) -> List[RichCompletion]:
     ]
 
 
+def _item_completions(
+    prefix: str,
+    precondition: Precondition = Precondition.always,
+    complete_from_sandbox: bool = False,
+) -> CompleterResult:
+    prefix = prefix.lstrip("@")
+
+    ws = current_workspace()
+    if ws.is_sandbox and not complete_from_sandbox:
+        return None
+
+    is_prefix_match = Precondition(
+        lambda item: bool(item.store_path and _path_prefix_match(prefix, item.store_path))
+    )
+    matching_items = list(
+        items_matching_precondition(ws, precondition & is_prefix_match, max_results=MAX_COMPLETIONS)
+    )
+    # Too many matches is not so useful.
+    if len(matching_items) < MAX_COMPLETIONS:
+        return {
+            RichCompletion(
+                fmt_store_path(item.store_path),
+                display=f"{fmt_store_path(item.store_path)} ({precondition.name}) ",
+                description=item.title or "",
+                append_space=True,
+            )
+            for item in matching_items
+            if item.store_path and _path_prefix_match(prefix, item.store_path)
+        }
+
+
 def completion_sort(completion: RichCompletion) -> Tuple[int, str]:
     return (len(completion.value), completion.value)
 
 
 @contextual_completer
-@log_calls(level="info", if_slower_than=SLOW_COMPLETION_WARN)
+@log_calls(level="info", if_slower_than=SLOW_COMPLETION)
 def command_or_action_completer(context: CompletionContext) -> CompleterResult:
     """
     Completes command names. We don't complete on regular shell commands to keep it cleaner.
@@ -101,9 +136,11 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
 
         return set(completions)
 
+    return None
+
 
 @contextual_completer
-@log_calls(level="info", if_slower_than=SLOW_COMPLETION_WARN)
+@log_calls(level="info", if_slower_than=SLOW_COMPLETION)
 def item_completer(context: CompletionContext) -> CompleterResult:
     """
     If the current command is an action, complete with paths that match the precondition
@@ -115,37 +152,32 @@ def item_completer(context: CompletionContext) -> CompleterResult:
         if context.command and context.command.arg_index >= 1:
             action_name = context.command.args[0].value
             action = _actions.get(action_name)
-
             prefix = context.command.prefix
-
-            is_prefix_match = Precondition(
-                lambda item: bool(item.store_path and item.store_path.startswith(prefix))
-            )
-
             if action and action.precondition:
-                ws = current_workspace()
-                match_precondition = action.precondition & is_prefix_match
-                matching_items = list(
-                    items_matching_precondition(ws, match_precondition, max_results=MAX_COMPLETIONS)
-                )
-                # Too many matches is not so useful.
-                if len(matching_items) < MAX_COMPLETIONS:
-                    return {
-                        RichCompletion(
-                            fmt_store_path(item.store_path),
-                            display=f"{fmt_store_path(item.store_path)} ({action.precondition.name}) ",
-                            description=item.title or "",
-                            append_space=True,
-                        )
-                        for item in matching_items
-                        if item.store_path and item.store_path.startswith(prefix)
-                    }
+                return _item_completions(prefix, action.precondition)
     except InvalidState:
-        return
+        return None
+    return None
 
 
 @contextual_completer
-@log_calls(level="info", if_slower_than=SLOW_COMPLETION_WARN)
+@log_calls(level="info", if_slower_than=SLOW_COMPLETION)
+def at_prefix_completer(context: CompletionContext) -> CompleterResult:
+    """
+    Completes items in the current workspace if prefixed with '@' sign.
+    """
+    try:
+        if context.command and context.command.arg_index >= 1:
+            prefix = context.command.prefix
+            if prefix.startswith("@"):
+                return _item_completions(prefix)
+    except InvalidState:
+        return None
+    return None
+
+
+@contextual_completer
+@log_calls(level="info", if_slower_than=SLOW_COMPLETION)
 def help_question_completer(context: CompletionContext) -> CompleterResult:
     """
     Suggest help questions after a `?` on the command line.
@@ -162,6 +194,7 @@ def help_question_completer(context: CompletionContext) -> CompleterResult:
         ):
             query = prefix.lstrip("? ")
             return set(_completion_match(query, _all_help_completions(False)))
+    return None
 
 
 def _param_completions(params: List[Param], prefix: str):
@@ -177,7 +210,7 @@ def _param_completions(params: List[Param], prefix: str):
 
 
 @contextual_completer
-@log_calls(level="info", if_slower_than=SLOW_COMPLETION_WARN)
+@log_calls(level="info", if_slower_than=SLOW_COMPLETION)
 def options_completer(context: CompletionContext) -> CompleterResult:
     """
     Suggest options completions after a `-` or `--` on the command line.
@@ -269,3 +302,11 @@ def add_key_bindings() -> None:
     __xonsh__.shell.shell.prompter.app.key_bindings = merged_bindings  # type: ignore  # noqa: F821
 
     log.info("Added custom %s key bindings.", len(merged_bindings.bindings))
+
+
+def load_completers():
+    add_one_completer("command_or_action_completer", command_or_action_completer, "start")
+    add_one_completer("item_completer", item_completer, "start")
+    add_one_completer("at_prefix_completer", at_prefix_completer, "start")
+    add_one_completer("help_question_completer", help_question_completer, "start")
+    add_one_completer("options_completer", options_completer, "start")

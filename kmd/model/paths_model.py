@@ -33,6 +33,12 @@ class InvalidStorePath(StorePathError):
 
 _valid_store_name_re = regex.compile(r"^[\p{L}\p{N}_\.]+$", regex.UNICODE)
 
+STORE_PATH_PREFIX = "@"
+"""
+Any store path can be @-mentioned, and for display we often use this to indicate
+a path is a store path.
+"""
+
 
 class StorePath(BasePath):
     """
@@ -127,7 +133,7 @@ class StorePath(BasePath):
         if path == Path("."):
             raise InvalidStorePath(f"Invalid store path: {value!r}")
         rest = str(value)
-        if rest.startswith("@"):
+        if rest.startswith(STORE_PATH_PREFIX):
             rest = rest[1:]
         if rest.startswith("'"):
             # Path is enclosed in single quotes
@@ -197,9 +203,9 @@ class StorePath(BasePath):
         """
         path_str = str(self)
         if self.store_name:
-            return "@" + shell_quote(f"~{self.store_name}/{path_str}")
+            return STORE_PATH_PREFIX + shell_quote(f"~{self.store_name}/{path_str}")
         else:
-            return "@" + shell_quote(path_str)
+            return STORE_PATH_PREFIX + shell_quote(path_str)
 
     def __str__(self) -> str:
         """
@@ -221,7 +227,14 @@ class StorePath(BasePath):
 
 
 def fmt_store_path(store_path: str | Path | StorePath) -> str:
-    return StorePath(store_path).display_str()
+    return fmt_shell_path(StorePath(store_path))
+
+
+def fmt_shell_path(store_path: str | Path | StorePath) -> str:
+    if isinstance(store_path, StorePath):
+        return store_path.display_str()
+    else:
+        return fmt_path(store_path)
 
 
 Locator = Url | StorePath

@@ -3,8 +3,6 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, TypeVar
 
-from xonsh.completers.completer import add_one_completer
-
 from kmd.action_defs import reload_all_actions
 from kmd.commands import help_commands
 from kmd.commands.command_registry import all_commands
@@ -21,6 +19,7 @@ from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
 from kmd.text_ui.command_output import output
 from kmd.version import get_version_name
+from kmd.xontrib.xonsh_completers import load_completers
 
 
 setup()  # Call to config logging before anything else.
@@ -131,20 +130,6 @@ def _load_xonsh_actions():
     update_aliases(kmd_actions)
 
 
-def _load_completers():
-    from kmd.xontrib.xonsh_completers import (
-        command_or_action_completer,
-        help_question_completer,
-        item_completer,
-        options_completer,
-    )
-
-    add_one_completer("command_or_action_completer", command_or_action_completer, "start")
-    add_one_completer("item_completer", item_completer, "start")
-    add_one_completer("help_question_completer", help_question_completer, "start")
-    add_one_completer("options_completer", options_completer, "start")
-
-
 def _initialize():
     if _is_interactive:
         # Try to seem a little faster starting up.
@@ -157,8 +142,8 @@ def _initialize():
             load_time = time.time() - load_start_time
             log.info(f"Action and command loading took {load_time:.2f}s.")
 
-            # These depend on commands and actions being loaded.
-            _load_completers()
+            # Completers depend on commands and actions being loaded.
+            load_completers()
 
         load_thread = threading.Thread(target=load)
         load_thread.start()

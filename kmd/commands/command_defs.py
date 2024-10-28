@@ -22,7 +22,7 @@ from kmd.config.settings import global_settings, LogLevel, update_global_setting
 from kmd.config.text_styles import (
     COLOR_EMPH,
     COLOR_HINT,
-    COLOR_STATUS,
+    COLOR_SUGGESTION,
     EMOJI_TRUE,
     EMOJI_WARN,
     PROMPT_ASSIST,
@@ -52,7 +52,7 @@ from kmd.model.file_formats_model import (
 )
 from kmd.model.items_model import Item, ItemType
 from kmd.model.params_model import USER_SETTABLE_PARAMS
-from kmd.model.paths_model import as_url_or_path, StorePath
+from kmd.model.paths_model import as_url_or_path, fmt_shell_path, fmt_store_path, StorePath
 from kmd.model.shell_model import ShellResult
 from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths
@@ -77,7 +77,7 @@ from kmd.text_ui.command_output import (
     output_status,
     Wrap,
 )
-from kmd.util.format_utils import fmt_lines, fmt_path, fmt_time
+from kmd.util.format_utils import fmt_lines, fmt_time
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_key_vals import format_key_value, parse_key_value
 from kmd.util.strif import copyfile_atomic
@@ -113,7 +113,7 @@ def clear_logs() -> None:
         trash(obj_dir)
         os.makedirs(obj_dir, exist_ok=True)
 
-    output_status("Logs cleared:\n%s", fmt_lines([fmt_path(log_path)]))
+    output_status("Logs cleared:\n%s", fmt_lines([fmt_shell_path(log_path)]))
 
 
 @kmd_command
@@ -147,7 +147,7 @@ def cache_media(*urls: str) -> None:
         cached_paths = media_tools.cache_media(Url(url))
         output(f"{url}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
         for media_type, path in cached_paths.items():
-            output(f"{media_type.name}: {fmt_path(path)}", text_wrap=Wrap.INDENT_ONLY)
+            output(f"{media_type.name}: {fmt_shell_path(path)}", text_wrap=Wrap.INDENT_ONLY)
         output()
 
 
@@ -161,7 +161,7 @@ def cache_content(*urls_or_paths: str) -> None:
         locator = as_url_or_path(url_or_path)
         cache_path, was_cached = file_cache_tools.cache_content(locator)
         cache_str = " (already cached)" if was_cached else ""
-        output(f"{fmt_path(url_or_path)}{cache_str}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
+        output(f"{fmt_shell_path(url_or_path)}{cache_str}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
         output(f"{cache_path}", text_wrap=Wrap.INDENT_ONLY)
         output()
 
@@ -257,7 +257,7 @@ def init(path: Optional[str] = None) -> None:
     dir = Path(path) if path else Path(".")
     dirs = MetadataDirs(dir)
     if dirs.is_initialized():
-        raise InvalidInput("Workspace already exists: %s", fmt_path(dir))
+        raise InvalidInput("Workspace already exists: %s", fmt_shell_path(dir))
     if not dir.exists():
         dir.mkdir()
     dirs.initialize()
@@ -402,7 +402,7 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
 
     format = detect_file_format(input_path)
     if not format or not format.is_text():
-        raise InvalidInput(f"Cannot copy non-text files to clipboard: {fmt_path(input_path)}")
+        raise InvalidInput(f"Cannot copy non-text files to clipboard: {fmt_shell_path(input_path)}")
 
     if raw:
         with open(input_path, "r") as f:
@@ -412,7 +412,7 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
         output_status(
             "Copied raw contents of file to clipboard (%s chars):\n%s",
             len(content),
-            fmt_lines([fmt_path(input_path)]),
+            fmt_lines([fmt_shell_path(input_path)]),
         )
     else:
         content, metadata_str = fmf_read_raw(input_path)
@@ -424,7 +424,7 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
             "Copied contents of file to clipboard (%s chars%s):\n%s",
             len(content),
             skip_msg,
-            fmt_lines([fmt_path(input_path)]),
+            fmt_lines([fmt_shell_path(input_path)]),
         )
 
 
@@ -461,7 +461,7 @@ def save(
 
     def copy_file(store_path: StorePath, target_path: Path):
         path = ws.base_dir / store_path
-        log.message("Saving: %s -> %s", fmt_path(path), fmt_path(target_path))
+        log.message("Saving: %s -> %s", fmt_shell_path(path), fmt_shell_path(target_path))
         copyfile_atomic(path, target_path, backup_suffix=".bak", make_parents=True)
         if no_frontmatter:
             fmf_strip_frontmatter(target_path)
@@ -488,7 +488,7 @@ def strip_frontmatter(*paths: str) -> None:
     input_paths = assemble_path_args(*paths)
 
     for path in input_paths:
-        log.message("Stripping frontmatter from: %s", fmt_path(path))
+        log.message("Stripping frontmatter from: %s", fmt_shell_path(path))
         fmf_strip_frontmatter(path)
 
 
@@ -520,7 +520,7 @@ def file_info(
     input_paths = assemble_path_args(*paths)
     output()
     for input_path in input_paths:
-        output(f"{fmt_path(input_path)}:", color=COLOR_EMPH)
+        output(f"{fmt_shell_path(input_path)}:", color=COLOR_EMPH)
 
         if format:
             mime_type_str = detect_mime_type(input_path) or "unknown"
@@ -560,7 +560,7 @@ def relations(*paths: str) -> None:
     output()
     for input_path in input_paths:
         item = current_workspace().load(StorePath(input_path))
-        output(f"{fmt_path(not_none(item.store_path))}:", color=COLOR_EMPH)
+        output(f"{fmt_store_path(not_none(item.store_path))}:", color=COLOR_EMPH)
         relations = item.relations.__dict__ if item.relations else {}
         if any(relations.values()):
             output(to_yaml_string(relations), text_wrap=Wrap.INDENT_ONLY)
@@ -756,18 +756,20 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
     )
 
     if not applicable_actions:
-        output_status("No applicable actions for selection.")
+        output("No applicable actions for selection.")
         return
 
     if brief:
         action_names = [action.name for action in applicable_actions]
-        output_status("Applicable actions:")
+        output("Applicable actions:", color=COLOR_SUGGESTION)
         output(
-            ", ".join(f"`{name}`" for name in action_names), extra_indent="    ", color=COLOR_STATUS
+            ", ".join(f"`{name}`" for name in action_names),
+            extra_indent="    ",
+            color=COLOR_SUGGESTION,
         )
         output()
     else:
-        output_status("Applicable actions for items:\n %s", fmt_lines(store_paths))
+        output("Applicable actions for items:\n %s", fmt_lines(store_paths), color=COLOR_SUGGESTION)
 
         for action in applicable_actions:
             precondition_str = (
@@ -948,10 +950,12 @@ def files(
         if not all and path and is_ignored(path.name):
             log.warning(
                 "Requested path is on default ignore list so disabling ignore: %s",
-                fmt_path(path),
+                fmt_shell_path(path),
             )
             ignore = None
             break
+
+    base_path = Path(".")
 
     # Collect all the files.
     file_listing = collect_files(
@@ -959,7 +963,11 @@ def files(
         recursive=True,
         ignore=ignore,
         since_seconds=since_seconds,
+        base_path=base_path,
     )
+
+    ws = current_workspace()
+    base_is_ws = ws.base_dir.resolve() == base_path.resolve()
 
     log.info("Collected %s files.", file_listing.files_total)
 
@@ -990,13 +998,13 @@ def files(
         item = Item(
             type=ItemType.export,
             title="File Listing",
-            description=f"Files in {', '.join(fmt_path(p) for p in paths_to_show)}",
+            description=f"Files in {', '.join(fmt_shell_path(p) for p in paths_to_show)}",
             format=Format.csv,
             body=df.to_csv(index=False),
         )
         ws = current_workspace()
         store_path = ws.save(item, as_tmp=True)
-        log.message("File listing saved to: %s", fmt_path(store_path))
+        log.message("File listing saved to: %s", fmt_shell_path(store_path))
 
         select(store_path)
 
@@ -1024,7 +1032,11 @@ def files(
                 file_size = naturalsize(row["size"], gnu=True)
                 file_mod_time = fmt_time(row["modified"], iso_time, now=now, brief=True)
 
-                display_name = fmt_path(row["relative_path"])
+                # If we are listing from within a workspace, we include the paths as store paths
+                # (with an @ prefix). Otherwise, use regular paths.
+                rel_path = row["relative_path"]
+                display_name = fmt_store_path(rel_path) if base_is_ws else fmt_shell_path(rel_path)
+
                 output(
                     format_str,
                     file_size,
@@ -1148,13 +1160,16 @@ def normalize(*paths: str) -> None:
 
     canon_paths = []
     for store_path in store_paths:
-        log.message("Canonicalizing: %s", fmt_path(store_path))
+        log.message("Canonicalizing: %s", fmt_shell_path(store_path))
         for item_store_path in ws.walk_items(store_path):
             try:
                 ws.normalize(item_store_path)
             except InvalidInput as e:
                 log.warning(
-                    "%s Could not canonicalize %s: %s", EMOJI_WARN, fmt_path(item_store_path), e
+                    "%s Could not canonicalize %s: %s",
+                    EMOJI_WARN,
+                    fmt_shell_path(item_store_path),
+                    e,
                 )
             canon_paths.append(item_store_path)
 
@@ -1182,10 +1197,11 @@ def reformat(*paths: str, inplace: bool = False) -> None:
         if inplace:
             trash(path)
             os.rename(target_path, path)
-            output_status("Formatted:\n%s", fmt_lines([fmt_path(path)]))
+            output_status("Formatted:\n%s", fmt_lines([fmt_shell_path(path)]))
         else:
             output_status(
-                "Formatted:\n%s", fmt_lines([f"{fmt_path(path)} -> {fmt_path(target_path)}"])
+                "Formatted:\n%s",
+                fmt_lines([f"{fmt_shell_path(path)} -> {fmt_shell_path(target_path)}"]),
             )
 
 
