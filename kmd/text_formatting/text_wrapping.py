@@ -94,9 +94,10 @@ def wrap_text(
     for word in words:
         word_width = len(word)
 
-        if current_width + word_width <= width:
+        space_width = 1 if current_line else 0
+        if current_width + word_width + space_width <= width:
             current_line.append(word)
-            current_width += word_width + 1  # +1 for space.
+            current_width += word_width + space_width
         else:
             if current_line:
                 line = " ".join(current_line)
@@ -180,9 +181,9 @@ def test_wrap_text():
         """
         >This is a sample text with a [Markdown
         >>link](https://example.com) and an <a
-        >>href='#'>tag</a>. It should demonstrate
-        >>the functionality of our enhanced text
-        >>wrapping implementation.
+        >>href='#'>tag</a>. It should
+        >>demonstrate the functionality of our
+        >>enhanced text wrapping implementation.
         """
     ).strip()
 
@@ -208,3 +209,18 @@ def test_wrap_text():
     assert filled == filled_expected
 
     assert filled_smart == filled_smart_expected
+
+
+def test_wrap_width():
+    text = dedent(
+        """
+        You may also simply ask a question and the Kmd assistant will help you. Press
+        `?` or just press space twice, then write your question or request. Press `?` and
+        tab to get suggested questions.
+        """
+    ).strip()
+    width = 80
+    wrapped = wrap_text(text, width=width)
+    print(wrapped)
+    print([len(line) for line in wrapped])
+    assert all(len(line) <= width for line in wrapped)
