@@ -34,7 +34,8 @@ By convention, workspace directories should have a `.kb` suffix, such as `fitnes
 Within a workspace, files are organized into folders by type, including resources, notes,
 configs, and exports.
 Most text items are stored in Markdown format with YAML front matter (the same format used
-by Jekyll or other static site generators), optionally with some HTML for structure if needed.
+by Jekyll or other static site generators), optionally with some HTML for structure if
+needed.
 But with Kmd you can process or export items in any other format you wish, like a PDF or a
 webpage.
 
@@ -91,10 +92,10 @@ Kmd makes a few kinds of messy text manipulations easier:
 - Reusable LLM actions: A common kind of action is to invoke an LLM (like GPT-4o or o1) on a
   text item, with a given system and user prompt template.
   New LLM actions can be added with a few lines of Python by subclassing an action base
-  class, typically `Action`, `CachedItemAction` (for any action that doesn't need to be rerun
-  if it has the same single output), `CachedLLMAction` (if it also is performing an LLM-based
-  transform), or `ChunkedLLMAction` (if it will be processing a document broken into
-  <div class="chunk"> elements).
+  class, typically `Action`, `CachedItemAction` (for any action that doesn't need to be
+  rerun if it has the same single output), `CachedLLMAction` (if it also is performing an
+  LLM-based transform), or `ChunkedLLMAction` (if it will be processing a document broken
+  into <div class="chunk"> elements).
 
 - Sliding window transformations: LLMs can have trouble processing large inputs, not just
   because of context window and because they may make more mistakes when making lots of

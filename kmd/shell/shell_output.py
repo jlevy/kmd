@@ -17,6 +17,9 @@ from rich.text import Text
 
 from kmd.config.logger import get_console, get_logger
 from kmd.config.text_styles import (
+    BOX_BOTTOM,
+    BOX_PREFIX,
+    BOX_TOP,
     COLOR_ASSISTANCE,
     COLOR_HEADING,
     COLOR_HELP,
@@ -28,17 +31,13 @@ from kmd.config.text_styles import (
     CONSOLE_WRAP_WIDTH,
     EMOJI_ASSISTANT,
     HRULE,
-    HRULE_CHAR,
-    LL_CORNER,
-    UL_CORNER,
-    VRULE_CHAR,
 )
 from kmd.text_formatting.markdown_normalization import (
     DEFAULT_WRAP_WIDTH,
     normalize_markdown,
     wrap_lines_to_width,
 )
-from kmd.text_formatting.text_wrapping import text_wrap_fill
+from kmd.text_formatting.text_wrapping import wrap_paragraph
 from kmd.util.format_utils import DEFAULT_INDENT, split_paragraphs
 
 console = get_console()
@@ -68,11 +67,16 @@ class Wrap(Enum):
         return self in [Wrap.WRAP, Wrap.WRAP_FULL, Wrap.WRAP_INDENT, Wrap.HANGING_INDENT]
 
 
-def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
-    if text_wrap == Wrap.NONE:
-        return "\n".join(extra_indent + line for line in text.split("\n"))
-    elif text_wrap == Wrap.INDENT_ONLY:
-        return "\n".join(extra_indent + DEFAULT_INDENT + line for line in text.split("\n"))
+def fill_text(
+    text: str, text_wrap=Wrap.WRAP, extra_indent: str = "", empty_indent: str = ""
+) -> str:
+    if text_wrap in [Wrap.NONE, Wrap.INDENT_ONLY]:
+        indent = extra_indent + DEFAULT_INDENT if text_wrap == Wrap.INDENT_ONLY else extra_indent
+        lines = text.splitlines()
+        if lines:
+            return "\n".join(indent + line for line in lines)
+        else:
+            return empty_indent
     elif text_wrap in [Wrap.WRAP, Wrap.WRAP_FULL, Wrap.WRAP_INDENT, Wrap.HANGING_INDENT]:
         paragraphs = split_paragraphs(text)
         wrapped_paragraphs = []
@@ -80,47 +84,51 @@ def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
         for i, paragraph in enumerate(paragraphs):
             if text_wrap == Wrap.WRAP:
                 wrapped_paragraphs.append(
-                    text_wrap_fill(
+                    wrap_paragraph(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH,
                         initial_indent=extra_indent,
                         subsequent_indent=extra_indent,
+                        empty_indent=extra_indent.strip(),
                         replace_whitespace=False,
                     )
                 )
             elif text_wrap == Wrap.WRAP_FULL:
                 wrapped_paragraphs.append(
-                    text_wrap_fill(
+                    wrap_paragraph(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH,
                         initial_indent=extra_indent,
                         subsequent_indent=extra_indent,
+                        empty_indent=extra_indent.strip(),
                         replace_whitespace=True,
                     )
                 )
             elif text_wrap == Wrap.WRAP_INDENT:
                 wrapped_paragraphs.append(
-                    text_wrap_fill(
+                    wrap_paragraph(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH - len(extra_indent + DEFAULT_INDENT),
                         initial_indent=extra_indent + DEFAULT_INDENT,
                         subsequent_indent=extra_indent + DEFAULT_INDENT,
+                        empty_indent=extra_indent.strip(),
                         replace_whitespace=True,
                     )
                 )
             elif text_wrap == Wrap.HANGING_INDENT:
                 wrapped_paragraphs.append(
-                    text_wrap_fill(
+                    wrap_paragraph(
                         paragraph,
                         width=CONSOLE_WRAP_WIDTH - len(extra_indent + DEFAULT_INDENT),
                         # Hang the first line of the first paragraph. All other paragraphs are indented.
                         initial_indent=extra_indent + DEFAULT_INDENT if i > 0 else extra_indent,
                         subsequent_indent=extra_indent + DEFAULT_INDENT,
+                        empty_indent=extra_indent.strip(),
                         replace_whitespace=True,
                     )
                 )
-
-        return "\n\n".join(wrapped_paragraphs)
+        para_sep = f"\n{empty_indent}\n"
+        return para_sep.join(wrapped_paragraphs)
     else:
         raise ValueError(f"Unknown text_wrap value: {text_wrap}")
 
@@ -188,14 +196,14 @@ def set_output_prefix(prefix: str):
 
 @contextmanager
 def output_box(color: Optional[str] = None):
-    output(UL_CORNER + HRULE_CHAR * (CONSOLE_WRAP_WIDTH - len(UL_CORNER)), color=color)
+    output(BOX_TOP, color=color)
     original_prefix = output_prefix()
-    set_output_prefix(f"{VRULE_CHAR} ")
+    set_output_prefix(BOX_PREFIX)
     try:
         yield
     finally:
         _thread_local.output_prefix = original_prefix
-        output(LL_CORNER + HRULE_CHAR * (CONSOLE_WRAP_WIDTH - len(LL_CORNER)), color=color)
+        output(BOX_BOTTOM, color=color)
 
 
 @contextmanager
@@ -242,8 +250,10 @@ def output(
     end="\n",
     width: Optional[int] = DEFAULT_WRAP_WIDTH,
 ):
+    empty_indent = extra_indent.strip()
+
     if extra_newlines:
-        rprint()
+        rprint(empty_indent)
 
     tl_prefix = output_prefix()
     if tl_prefix:
@@ -255,15 +265,27 @@ def output(
     if not isinstance(message, (Text, Markdown)):
         message = str(message)
 
-    if isinstance(message, str):
-        text = message % args if args else message
-        filled_text = fill_text(transform(text), text_wrap, extra_indent=extra_indent)
-        rprint(Text(filled_text, color) if color else filled_text, end=end, width=width)
+    if message:
+        if isinstance(message, str):
+            text = message % args if args else message
+            if text:
+                filled_text = fill_text(
+                    transform(text),
+                    text_wrap,
+                    extra_indent=extra_indent,
+                    empty_indent=empty_indent,
+                )
+                rprint(Text(filled_text, color) if color else filled_text, end=end, width=width)
+            elif extra_indent:
+                rprint(extra_indent, end=end)
+        else:
+            rprint(extra_indent, end="")
+            rprint(message, end=end, width=width)
     else:
-        rprint(extra_indent, end="")
-        rprint(message, end=end, width=width)
+        rprint(empty_indent)
+
     if extra_newlines:
-        rprint()
+        rprint(empty_indent)
 
 
 log = get_logger(__name__)

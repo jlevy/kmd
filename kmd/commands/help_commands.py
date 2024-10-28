@@ -2,7 +2,16 @@ from rich.text import Text
 
 from kmd.commands.command_registry import kmd_command
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import COLOR_HEADING, COLOR_HINT, COLOR_LOGO, HRULE, LOGO
+from kmd.config.text_styles import (
+    BOX_BOTTOM,
+    BOX_MID,
+    BOX_PREFIX,
+    BOX_TOP,
+    COLOR_HEADING,
+    COLOR_HINT,
+    COLOR_LOGO,
+    LOGO,
+)
 from kmd.help.help_page import output_see_also
 from kmd.shell.shell_output import console_pager, output, output_markdown, Wrap
 from kmd.version import get_version_name
@@ -30,16 +39,19 @@ def welcome() -> None:
     from kmd.docs import welcome
 
     output()
-    output(HRULE, color=COLOR_HINT)
+    output(BOX_TOP, color=COLOR_HINT)
     version = get_version_name()
-    padding = " " * (len(HRULE) - len(LOGO) - len(version))
-    output(Text(LOGO, style=COLOR_LOGO) + Text(padding + version, style=COLOR_HINT))
-    output(HRULE, color=COLOR_HINT)
-    output()
-    output("Welcome to kmd.\n", color=COLOR_HEADING)
-    output()
-    output(welcome, text_wrap=Wrap.WRAP_FULL)
-    output(HRULE, color=COLOR_HINT)
+    padding = " " * (len(BOX_TOP) - len(BOX_PREFIX) - len(LOGO) - len(version))
+    output(
+        Text(LOGO, style=COLOR_LOGO) + Text(padding + version, style=COLOR_HINT),
+        extra_indent=BOX_PREFIX,
+    )
+    output(BOX_MID, color=COLOR_HINT)
+    output(extra_indent=BOX_PREFIX)
+    output(Text("Welcome to kmd.", style=COLOR_HEADING), extra_indent=BOX_PREFIX)
+    output(extra_indent=BOX_PREFIX)
+    output(welcome, text_wrap=Wrap.WRAP_FULL, extra_indent=BOX_PREFIX)
+    output(BOX_BOTTOM, color=COLOR_HINT)
 
 
 @kmd_command
@@ -69,14 +81,37 @@ def why_kmd() -> None:
 
 
 @kmd_command
-def getting_started() -> None:
+def installation() -> None:
     """
-    Show help on getting started with Kmd.
+    Show help on installing Kmd.
     """
     from kmd.docs import getting_started
 
     with console_pager():
         output_markdown(getting_started)
+        output_see_also(
+            [
+                "What is Kmd?",
+                "What can I do with Kmd?",
+                "getting_started",
+                "What are the most important Kmd commands?",
+                "commands",
+                "actions",
+                "check_tools",
+                "faq",
+            ]
+        )
+
+
+@kmd_command
+def getting_started() -> None:
+    """
+    Show help on getting started using Kmd.
+    """
+    from kmd.docs import installation
+
+    with console_pager():
+        output_markdown(installation)
         output_see_also(
             [
                 "What is Kmd?",

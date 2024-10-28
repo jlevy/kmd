@@ -23,7 +23,7 @@ from marko.source import Source
 
 from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
 from kmd.lang_tools.sentence_split_regex import split_sentences_regex
-from kmd.text_formatting.text_wrapping import text_wrap_fill
+from kmd.text_formatting.text_wrapping import wrap_paragraph
 
 
 def _normalize_html_comments(text: str, break_str: str = "\n\n") -> str:
@@ -281,7 +281,7 @@ def wrap_lines_to_width(
     """
     Wrap lines of text to a given width.
     """
-    return text_wrap_fill(
+    return wrap_paragraph(
         text,
         width=width,
         initial_indent=initial_indent,
@@ -309,7 +309,7 @@ def wrap_lines_and_break_sentences(
             sentences = split_sentences(line)
             for sentence in sentences:
                 wrapped_lines.append(
-                    text_wrap_fill(
+                    wrap_paragraph(
                         sentence,
                         width=width,
                         initial_indent=initial_indent if first_line else subsequent_indent,

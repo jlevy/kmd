@@ -29,11 +29,13 @@ for Kmd or ideas or feedback.*
 
 {a2_philosophy_of_kmd}
 
-{a3_getting_started}
+{a3_installation}
 
-{a4_tips_for_use_with_other_tools}
+{a4_getting_started}
 
-{a5_development}
+{a5_tips_for_use_with_other_tools}
+
+{a6_development}
 
 <br/>
 

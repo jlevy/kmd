@@ -71,9 +71,9 @@ But building apps that are good enough people will pay them is hard.
 And we can't all drop what we're doing and build new apps.
 
 It has long been a rule that once products become widely successful, the curse of
-[Conway's Law](https://en.wikipedia.org/wiki/Conway%27s_law) and the complexity of full-stack
-apps means many companies won't add many of the specific features you want, or at best are
-likely to do it slowly.
+[Conway's Law](https://en.wikipedia.org/wiki/Conway%27s_law) and the complexity of
+full-stack apps means many companies won't add many of the specific features you want, or at
+best are likely to do it slowly.
 
 In short, in spite of AI tools accelerating software, certain things don't change: we are
 waiting for developers, product managers, designers, and entrepreneurs to design and ship
@@ -109,8 +109,8 @@ Few companies make money shipping new command-line tooling.
 Warp.)
 
 Nonetheless, for all its faults, there is a uniquely powerful thing about the command line:
-With a command line, you can do complex things that were never planned by an app developer, a
-designer, or an enterpreneur building a product.
+With a command line, you can do complex things that were never planned by an app developer,
+a designer, or an enterpreneur building a product.
 
 *You* know your problems better than anyone else.
 Any tool that lets you solve complex problems yourself, without waiting for engineers and
@@ -122,8 +122,8 @@ In a post-LLM world, it should be possible to do more things without so much tim
 spent (even with the help of LLMs) on coding and UI/UX design.
 
 If we have an idea for a script or a feature or a workflow, we should not have to spend
-weeks or months to iterate on web or mobile app design and full-stack engineering just to see
-how well it works.
+weeks or months to iterate on web or mobile app design and full-stack engineering just to
+see how well it works.
 
 ### The Goals of Kmd
 
@@ -188,13 +188,14 @@ This boils down to a few specific design choices:
 5. Use local files whenever possible (not tied to a particular SaaS provider)
 
 6. Use simple and transparent file formats (especially text files like Markdown, YAML, and
-   HTML, with intuitive filenames names, so you can edit content with any editors or external
-   tools; avoid opaque formats, sprawling JSON, or data stored in the cloud and accessible
-   only from an app)
+   HTML, with intuitive filenames names, so you can edit content with any editors or
+   external tools; avoid opaque formats, sprawling JSON, or data stored in the cloud and
+   accessible only from an app)
 
 7. Keep content human reviewable, diff-able, and editable at any stage of a workflow (don't
    just assume automation will work; expect it not to and plan for workflows to understand
-   failures, fix them, and resume; use formats that make diffs as easy and clear as possible)
+   failures, fix them, and resume; use formats that make diffs as easy and clear as
+   possible)
 
 8. Maintain metadata on files, so you always know where each piece of content comes from
    (and keep this close to the content, as YAML frontmatter)
@@ -220,7 +221,8 @@ It could be the tool you need when you don't know what tool you need.
 
 All of this is only possible by relying on a wide variety of powerful libraries, especially
 [LiteLLM](https://github.com/BerriAI/litellm), [yt-dlp](https://github.com/yt-dlp/yt-dlp),
-[Pydantic](https://github.com/pydantic/pydantic), [Rich](https://github.com/Textualize/rich),
+[Pydantic](https://github.com/pydantic/pydantic),
+[Rich](https://github.com/Textualize/rich),
 [Ripgrep](https://github.com/BurntSushi/ripgrep), [Bat](https://github.com/sharkdp/bat),
 [jusText](https://github.com/miso-belica/jusText),
 [WeasyPrint](https://github.com/Kozea/WeasyPrint),
@@ -286,7 +288,7 @@ My contact info is at [github.com/jlevy](https://github.com/jlevy).
 
   - media handling of videos and audio, including downloading and transcribing videos
 
-## Getting Started
+## Installation
 
 ### Running the Kmd Shell
 
@@ -401,7 +403,7 @@ cd myworkspace.kb
 kmd transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
 ```
 
-## Examples
+## Getting Started
 
 Tab completion is your friend!
 Just press tab to get lists of commands and guidance on help from the LLM-based assistant.

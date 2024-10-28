@@ -66,9 +66,10 @@ Split words, but not within HTML tags or Markdown links.
 
 def wrap_text(
     text: str,
-    width: int = 70,
+    width: int,
     initial_indent: str = "",
     subsequent_indent: str = "",
+    empty_indent: str = "",
     replace_whitespace: bool = True,
     drop_whitespace: bool = True,
     splitter: WordSplitter = smarter_word_splitter,
@@ -112,15 +113,37 @@ def wrap_text(
         if drop_whitespace:
             line = line.strip()
         lines.append((initial_indent if not lines else subsequent_indent) + line)
+    elif empty_indent:
+        lines.append(empty_indent)
 
     return lines
 
 
-def text_wrap_fill(text: str, width: int = 70, **kwargs) -> str:
+def wrap_paragraph(
+    text: str,
+    width: int,
+    initial_indent: str = "",
+    subsequent_indent: str = "",
+    empty_indent: str = "",
+    replace_whitespace: bool = True,
+    drop_whitespace: bool = True,
+    splitter: WordSplitter = smarter_word_splitter,
+) -> str:
     """
     Fill a single paragraph of text, returning a new string.
     """
-    return "\n".join(wrap_text(text, width, **kwargs))
+    return "\n".join(
+        wrap_text(
+            text,
+            width,
+            initial_indent,
+            subsequent_indent,
+            empty_indent,
+            replace_whitespace,
+            drop_whitespace,
+            splitter,
+        )
+    )
 
 
 # Tests
@@ -169,7 +192,7 @@ def test_wrap_text():
     )
 
     print("\nFilled text with default splitter:")
-    filled = text_wrap_fill(
+    filled = wrap_paragraph(
         sample_text,
         splitter=simple_word_splitter,
         width=40,
@@ -188,7 +211,7 @@ def test_wrap_text():
     ).strip()
 
     print("\nFilled text with smart splitter:")
-    filled_smart = text_wrap_fill(
+    filled_smart = wrap_paragraph(
         sample_text,
         splitter=smarter_word_splitter,
         width=40,

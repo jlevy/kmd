@@ -63,7 +63,7 @@ def items_matching_precondition(
     duration = time.time() - start_time
     if duration > 0.1:
         log.info(
-            "Autocomplete matched %s/%s items in %s (%s/s)",
+            "Matched %s/%s items in %s (%s/s)",
             count,
             files_checked,
             format_duration(duration),
