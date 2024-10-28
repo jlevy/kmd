@@ -56,8 +56,8 @@ class IdentifySpeakers(PerItemAction):
         mapping_str = llm_template_completion(
             model=LLM.gpt_4o_mini,
             system_message=system_message,
-            template=identification_template,
             input=item.body,
+            template=identification_template,
         ).content
 
         # Parse the mapping.

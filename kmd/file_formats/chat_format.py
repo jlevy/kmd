@@ -22,6 +22,9 @@ Rules:
 - Any YAML is valid in a block, as long as it contains `role` and `content`
  string fields.
 
+- The `content` field can be a string or a dictionary with additional fields
+  (useful for structured output chat responses).
+
 - It's recommended but not required that `role` be one of the
   following: "system", "user", "assistant", "command", "output", or "template".
 
@@ -43,6 +46,17 @@ content: |
 role: assistant
 content: |
   I'm fine, thank you!
+---
+role: user
+content: |
+  Give me a hello world.
+---
+role: assistant
+content:
+  code: |
+    def hello_world():
+        print("Hello, world!")
+  explanation: A simple function that prints a greeting.
 ```
 
 Command example:
@@ -71,11 +85,13 @@ content: |
 
 """
 
+import json
 from dataclasses import field
 from enum import Enum
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, List
+from textwrap import dedent
+from typing import Any, Dict, List, Union
 
 from frontmatter_format import from_yaml_string, new_yaml, to_yaml_string
 from pydantic.dataclasses import dataclass
@@ -101,11 +117,13 @@ class ChatRole(str, Enum):
 
 _custom_key_sort = custom_key_sort(["role", "content"])
 
+ChatContent = Union[str, Dict[str, Any]]
+
 
 @dataclass
 class ChatMessage:
     role: ChatRole
-    content: str
+    content: ChatContent
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
@@ -138,7 +156,7 @@ class ChatMessage:
     def as_chat_completion(self) -> Dict[str, str]:
         return {
             "role": self.role.value,
-            "content": self.content,
+            "content": json.dumps(self.content) if isinstance(self.content, dict) else self.content,
         }
 
     def to_yaml(self) -> str:
@@ -297,3 +315,51 @@ def test_chat_history_serialization():
     yaml = test_long_message.to_yaml()
     assert len(yaml.splitlines()) > 10
     assert "content: |" in yaml
+
+
+def test_structured_content():
+    structured_yaml = dedent(
+        """
+        ---
+        role: assistant
+        content:
+            thought: I need to parse this JSON
+            steps:
+                - Read the input
+                - Parse using json.loads
+            code: |
+                import json
+                data = json.loads(input_str)
+        ---
+        role: assistant
+        content:
+            result: success
+            parsed_items: 42
+            details:
+                errors: []
+                warnings: null
+        """
+    ).lstrip()
+
+    chat_history = ChatHistory.from_yaml(structured_yaml)
+
+    first_msg = chat_history.messages[0]
+    assert isinstance(first_msg.content, dict)
+    assert first_msg.content["thought"] == "I need to parse this JSON"
+    assert len(first_msg.content["steps"]) == 2
+    assert "code" in first_msg.content
+
+    second_msg = chat_history.messages[1]
+    assert isinstance(second_msg.content, dict)
+    assert second_msg.content["result"] == "success"
+    assert second_msg.content["parsed_items"] == 42
+    assert isinstance(second_msg.content["details"], dict)
+
+    yaml_output = chat_history.to_yaml()
+    reloaded = ChatHistory.from_yaml(yaml_output)
+    assert reloaded.messages[0].content == first_msg.content
+    assert reloaded.messages[1].content == {
+        "result": "success",
+        "parsed_items": 42,
+        "details": {"errors": []},  # null field is dropped.
+    }

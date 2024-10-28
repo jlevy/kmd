@@ -40,6 +40,7 @@ class MetadataDirs:
 
     history_dir: StorePath = StorePath(f"{DOT_DIR}/history")
     shell_history_yml: StorePath = StorePath(f"{DOT_DIR}/history/shell_history.yml")
+    assistant_history_yml: StorePath = StorePath(f"{DOT_DIR}/history/assistant_history.yml")
 
     tmp_dir: StorePath = StorePath(f"{DOT_DIR}/tmp")
 

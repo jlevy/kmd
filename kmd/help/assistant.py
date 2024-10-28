@@ -7,16 +7,24 @@ from pydantic import ValidationError
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings
 from kmd.docs import api_docs, assistant_instructions
-from kmd.errors import KmdRuntimeError
-from kmd.file_storage.workspaces import current_workspace_info, get_param_value
+from kmd.errors import InvalidState, KmdRuntimeError
+from kmd.file_formats.chat_format import (
+    append_chat_message,
+    ChatHistory,
+    ChatMessage,
+    ChatRole,
+    tail_chat_history,
+)
+from kmd.file_storage.workspaces import current_workspace, current_workspace_info, get_param_value
 from kmd.llms.llm_completion import llm_template_completion
 from kmd.model.assistant_model import AssistantResponse
 from kmd.model.language_models import LLM
-from kmd.model.messages_model import Message, MessageTemplate
+from kmd.model.messages_model import Message
 from kmd.shell.shell_output import fill_markdown, output, output_as_string
 from kmd.util.format_utils import fmt_paras, fmt_path
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none
+
 
 log = get_logger(__name__)
 
@@ -109,35 +117,36 @@ def assist_system_message(skip_api: bool = False) -> Message:
 
 
 def assistance(input: str, fast: bool = False) -> str:
-
     # TODO: Stream response.
 
     assistant_model = "assistant_model_fast" if fast else "assistant_model"
-
     model = not_none(get_param_value(assistant_model, type=LLM))
 
     output(f"Getting assistance (model {model})…")
 
     system_message = assist_system_message(skip_api=fast)
 
-    template = MessageTemplate(
-        """
-        Here is the user's request:
-        
-        {body}
+    assistant_history = ChatHistory()
+    try:
+        ws = current_workspace()
+        assistant_history_file = ws.base_dir / ws.dirs.assistant_history_yml
+        assistant_history = tail_chat_history(assistant_history_file, max_records=20)
+    except FileNotFoundError:
+        log.info("No assistant history file found: %s", assistant_history_file)
+    except (InvalidState, ValueError) as e:
+        log.warning("Couldn't load assistant history, so skipping it: %s", e)
 
-        Give your response:
-        """
-    )
-
+    # Get and record the user's message.
     input = shell_unquote(input)
     log.info("User request to assistant: %s", input)
+    append_chat_message(assistant_history_file, ChatMessage(ChatRole.user, input))
 
+    # Get the assistant's response, including history.
     response = llm_template_completion(
         model,
         system_message=system_message,
-        template=template,
         input=input,
+        previous_messages=assistant_history.as_chat_completion(),
         save_objects=global_settings().debug_assistant,
         response_format=AssistantResponse,
     )
@@ -145,6 +154,13 @@ def assistance(input: str, fast: bool = False) -> str:
     try:
         response_data = json.loads(response.content)
         assistant_response = AssistantResponse.model_validate(response_data)
+
+        log.message("Assistant response: %s", assistant_response)
+
+        # Record the assistant's response, in structured format.
+        append_chat_message(
+            assistant_history_file, ChatMessage(ChatRole.assistant, assistant_response.model_dump())
+        )
 
         return assistant_response.full_str()
     except (ValidationError, json.JSONDecodeError) as e:

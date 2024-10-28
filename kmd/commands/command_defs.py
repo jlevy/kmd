@@ -251,8 +251,26 @@ def clear_history() -> None:
     moved to the trash.
     """
     ws = current_workspace()
-    history_file = ws.base_dir / ws.dirs.shell_history_yml
-    trash(history_file)
+    trash(ws.base_dir / ws.dirs.shell_history_yml)
+
+
+@kmd_command
+def assistant_history() -> None:
+    """
+    Show the assistant history for the current workspace.
+    """
+    ws = current_workspace()
+    tail_file(ws.base_dir / ws.dirs.assistant_history_yml)
+
+
+@kmd_command
+def clear_assistant() -> None:
+    """
+    Clear the assistant history for the current workspace. Old history file will be
+    moved to the trash.
+    """
+    ws = current_workspace()
+    trash(ws.base_dir / ws.dirs.assistant_history_yml)
 
 
 @kmd_command

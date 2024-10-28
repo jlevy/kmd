@@ -36,8 +36,8 @@ def windowed_llm_transform(
                 llm_template_completion(
                     model,
                     system_message=system_message,
-                    template=template,
                     input=input_doc.reassemble(),
+                    template=template,
                     check_no_results=check_no_results,
                 ).content
             )

@@ -69,8 +69,9 @@ def llm_completion(
 def llm_template_completion(
     model: LLM,
     system_message: Message,
-    template: MessageTemplate,
     input: str,
+    template: Optional[MessageTemplate] = None,
+    previous_messages: Optional[List[Dict[str, str]]] = None,
     save_objects: bool = True,
     check_no_results: bool = True,
     response_format: Optional[Union[dict, Type[BaseModel]]] = None,
@@ -80,6 +81,9 @@ def llm_template_completion(
     Perform an LLM completion. Input is inserted into the template with a `body` parameter.
     Use this function to interact with the LLMs for consistent logging.
     """
+    if not template:
+        template = MessageTemplate("{body}")
+
     user_message = template.format(body=input)
     model_slug = slugify(model.value, separator="_")
 
@@ -100,10 +104,14 @@ def llm_template_completion(
         ),
     )
 
+    if not previous_messages:
+        previous_messages = []
+
     result = llm_completion(
         model,
         messages=[
             {"role": "system", "content": str(system_message)},
+            *previous_messages,
             {"role": "user", "content": user_message},
         ],
         response_format=response_format,

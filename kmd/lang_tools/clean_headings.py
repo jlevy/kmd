@@ -46,6 +46,7 @@ def summary_heading(values: List[str]) -> str:
             You are a careful and precise editor. You follow directions exactly and do not embellish or offer any other commentary.
             """
         ),
+        input=as_bullet_points(values),
         template=MessageTemplate(
             """
             Summarize the following list of headings into a single heading that captures the essence of the list.
@@ -62,6 +63,5 @@ def summary_heading(values: List[str]) -> str:
             Summarized heading:
             """
         ),
-        input=as_bullet_points(values),
         save_objects=False,
     ).content
