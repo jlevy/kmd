@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import cast, Iterable, List, Tuple
 
 from prompt_toolkit.application import get_app
@@ -13,6 +14,7 @@ from kmd.docs.faq_headings import faq_headings
 from kmd.errors import InvalidState
 from kmd.file_storage.workspaces import current_workspace
 from kmd.help.function_param_info import annotate_param_info
+from kmd.model.file_formats_model import is_ignored
 from kmd.model.params_model import Param
 from kmd.model.paths_model import fmt_store_path
 from kmd.model.preconditions_model import Precondition
@@ -22,28 +24,35 @@ from kmd.util.log_calls import log_calls
 
 log = get_logger(__name__)
 
-MAX_COMPLETIONS = 200
+MAX_COMPLETIONS = 500
 
 # We want to keep completion fast, so make it obvious when it's slow.
 SLOW_COMPLETION = 0.15
 
 
-def _completion_match(
-    query: str, values: Iterable[str | RichCompletion]
-) -> List[str | RichCompletion]:
+def _completion_match(query: str, values: Iterable[str | RichCompletion]) -> List[RichCompletion]:
     """
     Match a prefix against a list of items and return prefix matches and substring matches.
     """
-    options = [(value.lower().strip(), value) for value in values]
+
+    def rich_completion(value: str | RichCompletion) -> RichCompletion:
+        if not isinstance(value, RichCompletion):
+            return RichCompletion(value)
+        return value
+
+    options = [(value.lower().strip(), rich_completion(value)) for value in values]
     query = query.lower().strip()
 
-    prefix_matches = [value for (norm_value, value) in options if norm_value.startswith(query)]
-    substring_matches = [value for (norm_value, value) in options if query in norm_value]
-    return prefix_matches + substring_matches
+    prefix_matches = {value for (norm_value, value) in options if norm_value.startswith(query)}
+    substring_matches = {value for (norm_value, value) in options if query in norm_value}
+    return list(prefix_matches | substring_matches)
 
 
-def _path_prefix_match(prefix: str, path_str: str) -> bool:
-    return path_str.startswith(prefix)
+def _path_completion_match(prefix: str, path_str: str) -> bool:
+    if len(prefix) < 4:
+        return path_str.startswith(prefix) or Path(path_str).name.startswith(prefix)
+    else:
+        return prefix in path_str
 
 
 def _all_help_completions(include_bare_qm: bool) -> List[RichCompletion]:
@@ -57,26 +66,88 @@ def _all_help_completions(include_bare_qm: bool) -> List[RichCompletion]:
     ]
 
 
+def _command_completions(prefix: str) -> set[RichCompletion]:
+    from kmd.xontrib.xonsh_customization import _actions, _commands
+
+    command_matches = _completion_match(prefix, [c.__name__ for c in _commands.values()])
+    command_completions = [
+        RichCompletion(
+            name,
+            description=single_line(_commands[name].__doc__ or "xxx"),
+            style=COLOR_COMMAND_TEXT,
+        )
+        for name in command_matches
+    ]
+
+    action_matches = _completion_match(prefix, [a.name for a in _actions.values()])
+    action_completions = [
+        RichCompletion(
+            name,
+            display=f"{name} {EMOJI_TASK}",
+            description=single_line(_actions[name].description or "xxx"),
+            style=COLOR_ACTION_TEXT,
+            append_space=True,
+        )
+        for name in action_matches
+    ]
+
+    input_empty = not prefix.strip()
+    help_completions = _completion_match(prefix, _all_help_completions(input_empty))
+
+    all_completions = command_completions + action_completions + help_completions
+    all_completions.sort(key=completion_sort)
+
+    return set(all_completions)
+
+
+def _dir_description(directory: Path) -> str:
+    if not directory.exists():
+        return ""
+    # TODO: Cache, maybe also track size and other info.
+    count = sum(1 for _ in directory.glob("*"))
+    return f"{count} files"
+
+
+def _dir_completions(prefix: str, base_dir: Path) -> set[RichCompletion]:
+    return {
+        RichCompletion(
+            fmt_store_path(d.relative_to(base_dir)),
+            display=f"{d.name}/",
+            description=_dir_description(d),
+            append_space=False,
+        )
+        for d in base_dir.iterdir()
+        if d.is_dir()
+        and not is_ignored(d)
+        and _path_completion_match(prefix, str(d.relative_to(base_dir)))
+    }
+
+
+@log_calls(level="info")
 def _item_completions(
     prefix: str,
     precondition: Precondition = Precondition.always,
     complete_from_sandbox: bool = False,
-) -> CompleterResult:
+) -> set[RichCompletion] | None:
     prefix = prefix.lstrip("@")
 
     ws = current_workspace()
     if ws.is_sandbox and not complete_from_sandbox:
         return None
 
+    # Get immediate subdirectories from workspace base directory
+    completions = _dir_completions(prefix, ws.base_dir)
+
     is_prefix_match = Precondition(
-        lambda item: bool(item.store_path and _path_prefix_match(prefix, item.store_path))
+        lambda item: bool(item.store_path and _path_completion_match(prefix, item.store_path))
     )
     matching_items = list(
         items_matching_precondition(ws, precondition & is_prefix_match, max_results=MAX_COMPLETIONS)
     )
-    # Too many matches is not so useful.
+
+    # Don't show completions if there are too many matches.
     if len(matching_items) < MAX_COMPLETIONS:
-        return {
+        item_completions = {
             RichCompletion(
                 fmt_store_path(item.store_path),
                 display=f"{fmt_store_path(item.store_path)} ({precondition.name}) ",
@@ -84,8 +155,11 @@ def _item_completions(
                 append_space=True,
             )
             for item in matching_items
-            if item.store_path and _path_prefix_match(prefix, item.store_path)
+            if item.store_path and _path_completion_match(prefix, item.store_path)
         }
+        completions |= item_completions
+
+    return completions
 
 
 def completion_sort(completion: RichCompletion) -> Tuple[int, str]:
@@ -98,43 +172,10 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
     """
     Completes command names. We don't complete on regular shell commands to keep it cleaner.
     """
-    from kmd.xontrib.xonsh_customization import _actions, _commands
 
     if context.command and context.command.arg_index == 0:
         prefix = context.command.prefix
-
-        command_matches = _completion_match(prefix, [c.__name__ for c in _commands.values()])
-        command_completions = [
-            RichCompletion(
-                name,
-                description=single_line(_commands[name].__doc__ or "xxx"),
-                style=COLOR_COMMAND_TEXT,
-            )
-            for name in command_matches
-        ]
-
-        action_matches = _completion_match(prefix, [a.name for a in _actions.values()])
-        action_completions = [
-            RichCompletion(
-                name,
-                display=f"{name} {EMOJI_TASK}",
-                description=single_line(_actions[name].description or "xxx"),
-                style=COLOR_ACTION_TEXT,
-                append_space=True,
-            )
-            for name in action_matches
-        ]
-
-        input_empty = not prefix.strip()
-        help_completions = cast(
-            List[RichCompletion], _completion_match(prefix, _all_help_completions(input_empty))
-        )
-
-        completions = sorted(
-            command_completions + action_completions + help_completions, key=completion_sort
-        )
-
-        return set(completions)
+        return cast(CompleterResult, _command_completions(prefix))
 
     return None
 
@@ -154,7 +195,7 @@ def item_completer(context: CompletionContext) -> CompleterResult:
             action = _actions.get(action_name)
             prefix = context.command.prefix
             if action and action.precondition:
-                return _item_completions(prefix, action.precondition)
+                return cast(CompleterResult, _item_completions(prefix, action.precondition))
     except InvalidState:
         return None
     return None
@@ -167,10 +208,17 @@ def at_prefix_completer(context: CompletionContext) -> CompleterResult:
     Completes items in the current workspace if prefixed with '@' sign.
     """
     try:
-        if context.command and context.command.arg_index >= 1:
+        if context.command:
             prefix = context.command.prefix
             if prefix.startswith("@"):
-                return _item_completions(prefix)
+                prefix = prefix.lstrip("@")
+                if context.command.arg_index >= 1:
+                    # FIXME: We should delegate back to usual file completions if this isn't matching
+                    # (e.g. we are in the sandbox).
+                    return cast(CompleterResult, _item_completions(prefix))
+                else:
+                    return cast(CompleterResult, _command_completions(prefix))
+
     except InvalidState:
         return None
     return None
@@ -251,7 +299,6 @@ def options_completer(context: CompletionContext) -> CompleterResult:
 
 
 def add_key_bindings() -> None:
-
     custom_bindings = KeyBindings()
 
     @custom_bindings.add(" ")
@@ -296,6 +343,15 @@ def add_key_bindings() -> None:
         buf.insert_text(f"? {repr(question_text)}")
 
         buf.validate_and_handle()
+
+    @custom_bindings.add("@")
+    def _(event):
+        """
+        Auto-trigger item completions after `@` sign.
+        """
+        buf = event.app.current_buffer
+        buf.insert_text("@")
+        buf.start_completion()
 
     existing_bindings = __xonsh__.shell.shell.prompter.app.key_bindings  # type: ignore  # noqa: F821
     merged_bindings = merge_key_bindings([existing_bindings, custom_bindings])

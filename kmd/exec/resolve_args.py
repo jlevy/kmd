@@ -4,7 +4,7 @@ from typing import cast, List, Optional, Sequence, Tuple
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, MissingInput
 from kmd.file_storage.workspaces import current_workspace
-from kmd.model.paths_model import InputArg, StorePath
+from kmd.model.paths_model import InputArg, resolve_at_path, StorePath
 
 log = get_logger(__name__)
 
@@ -13,7 +13,7 @@ def resolve_path_arg(path_str: str) -> Path | StorePath:
     """
     Resolve a path argument to a Path or StorePath, if it is within the current workspace.
     """
-    path = Path(path_str)
+    path = resolve_at_path(path_str)
     if path.is_absolute():
         return path
     elif store_path := current_workspace().resolve_path(path):

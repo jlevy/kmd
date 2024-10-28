@@ -52,7 +52,13 @@ from kmd.model.file_formats_model import (
 )
 from kmd.model.items_model import Item, ItemType
 from kmd.model.params_model import USER_SETTABLE_PARAMS
-from kmd.model.paths_model import as_url_or_path, fmt_shell_path, fmt_store_path, StorePath
+from kmd.model.paths_model import (
+    as_url_or_path,
+    fmt_shell_path,
+    fmt_store_path,
+    resolve_at_path,
+    StorePath,
+)
 from kmd.model.shell_model import ShellResult
 from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths
@@ -930,7 +936,7 @@ def files(
     if len(paths) == 0:
         paths_to_show = [Path(".")]
     else:
-        paths_to_show = [Path(path) for path in paths]
+        paths_to_show = [resolve_at_path(path) for path in paths]
 
     if brief or recent:
         if head == 0:

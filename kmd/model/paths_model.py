@@ -196,6 +196,12 @@ class StorePath(BasePath):
             return value
         return cls(value)
 
+    def resolve(self) -> Path:
+        """
+        If we resolve a StorePath, it must be a plain Path again, since StorePaths are relative.
+        """
+        return Path(self).resolve()
+
     def display_str(self) -> str:
         """
         String representation of the path with the `@` prefix and store name (if any)
@@ -255,6 +261,22 @@ def is_store_path(input_arg: InputArg) -> bool:
         return False
     else:
         return not is_url(input_arg)
+
+
+def resolve_at_path(path: str | Path | StorePath) -> Path | StorePath:
+    """
+    Resolve any string path that includes an @ prefix into a StorePath.
+    Leaves other paths as Paths or StorePaths.
+    """
+
+    if isinstance(path, StorePath):
+        return path
+    elif isinstance(path, Path):
+        return path
+    elif path.startswith(STORE_PATH_PREFIX):
+        return StorePath(path)
+    else:
+        return Path(path)
 
 
 def as_url_or_path(input: str | Path) -> Path | Url:

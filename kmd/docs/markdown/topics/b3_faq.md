@@ -28,8 +28,8 @@ and actions.
 Run `help` to get an overview.
 
 Or use the Kmd assistant to get help.
-Ask by typing any question ending in `?` The Kmd assistant knows the docs and can answer many
-questions!
+Ask by typing any question ending in `?` The Kmd assistant knows the docs and can answer
+many questions!
 
 Remember there are tab completions on many commands and actions, and that can help you get
 started.
@@ -105,22 +105,6 @@ include:
 
 - `create_pdf` formats Markdown or HTML documents as a PDF.
 
-### What is the difference between a command and an action in Kmd?
-
-Any command you type on the command-line in Kmd is a command.
-
-Some commands are basic, built-in commands.
-The idea is there are relatively few of these, and they do important primitive things like
-`select` (select or show selections), `show` (show an item), `files` (list files—Kmd's better
-version of `ls`), `workspace` (shows information about the current workspace), or `logs`
-(shows the detailed logs for the current workspace).
-In Python, built-in commands are defined by simple functions.
-
-But most commands are defined as an *action*. Actions are invoked just like any other
-command but have a standard structure: they are assumed to perform an "action" on a set of
-items (files of known types) and then save those items, all within an existing workspace.
-Actions are defined as a subclass of `Action` in Python.
-
 ### What models are available?
 
 You can use Kmd with any APIs or models you like!
@@ -174,3 +158,36 @@ show
 transcribe_annotate_summarize 'https://www.youtube.com/watch?v=XRQnWomofIY'
 show_as_webpage
 ```
+
+### How is Kmd different from other shells like Bash (or Fish or Xonsh)?
+
+Kmd is built directly on top of Xonsh, so it is very much like a regular shell, but has
+extra compatibility with Python, like Xonsh.
+
+But it is intended to be used quite differently from a regular shell.
+
+Although nothing stops you from using traditional commands like `df` or `grep`, most
+commands you will want to use are Kmd commands that are more powerful.
+For example, `files` is easier to use than `ls`.
+
+Kmd also wraps the shell to natively supports natural language so you can ask questions
+starting with `?`.
+
+There are other customizations Kmd needs to make to Xonsh, including tab completion to fit
+Kmd commands and actions, reading metadata on items, etc.
+
+### What are commands and actions in Kmd?
+
+Any command you type on the command-line in Kmd is a command.
+
+Some commands are basic, built-in commands.
+The idea is there are relatively few of these, and they do important primitive things like
+`select` (select or show selections), `show` (show an item), `files` (list files—Kmd's
+better version of `ls`), `workspace` (shows information about the current workspace), or
+`logs` (shows the detailed logs for the current workspace).
+In Python, built-in commands are defined by simple functions.
+
+But most commands are defined as an *action*. Actions are invoked just like any other
+command but have a standard structure: they are assumed to perform an "action" on a set of
+items (files of known types) and then save those items, all within an existing workspace.
+Actions are defined as a subclass of `Action` in Python.
