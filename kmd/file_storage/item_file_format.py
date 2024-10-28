@@ -4,6 +4,7 @@ from frontmatter_format import fmf_read, fmf_write, FmStyle
 
 from kmd.config.logger import get_logger
 from kmd.errors import FileFormatError
+from kmd.file_storage.file_cache import FileMtimeCache
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ITEM_FIELDS
 from kmd.model.operations_model import OPERATION_FIELDS
@@ -13,25 +14,29 @@ from kmd.util.sort_utils import custom_key_sort
 
 log = get_logger(__name__)
 
-
 # Keeps YAML much prettier.
 ITEM_FIELD_SORT = custom_key_sort(OPERATION_FIELDS + ITEM_FIELDS)
+
+# Initialize the file modification time cache with Item type
+_item_cache = FileMtimeCache[Item](max_size=2000)
 
 
 def write_item(item: Item, full_path: Path):
     if item.is_binary:
         raise ValueError(f"Binary Items should be external files: {item}")
 
+    # Clear cache before writing.
+    _item_cache.delete(full_path)
+
     body = normalize_formatting(item.body_text(), item.format)
 
-    # Special case of YAML files that already have a `---`, which is not
-    # necessary since we'll write it ourselves.
+    # Special case for YAML files
     if body and item.format == Format.yaml:
         stripped = body.lstrip()
         if stripped.startswith("---\n"):
             body = stripped[4:]
 
-    # Detect what style of frontmatter to use so it's compatible with the content.
+    # Detect the frontmatter style
     if str(item.format) == str(Format.html):
         fm_style = FmStyle.html
     elif str(item.format) in [str(Format.python), str(Format.csv)]:
@@ -51,8 +56,18 @@ def write_item(item: Item, full_path: Path):
         make_parents=True,
     )
 
+    # Update cache.
+    _item_cache.update(full_path, item)
+
 
 def read_item(full_path: Path, base_dir: Path) -> Item:
+    # Check cache.
+    cached_item = _item_cache.read(full_path)
+    if cached_item is not None:
+        log.debug("Cache hit for %s", full_path)
+        return cached_item
+
+    # Read the item from disk.
     body, metadata = fmf_read(full_path)
     log.debug("Read item from %s: body length %s, metadata %s", full_path, len(body), metadata)
     if not metadata:
@@ -64,4 +79,9 @@ def read_item(full_path: Path, base_dir: Path) -> Item:
     except ValueError:
         store_path = None
         external_path = str(full_path)
-    return Item.from_dict(metadata, body=body, store_path=store_path, external_path=external_path)
+    item = Item.from_dict(metadata, body=body, store_path=store_path, external_path=external_path)
+
+    # Update the cache with the new item
+    _item_cache.update(full_path, item)
+
+    return item

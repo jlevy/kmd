@@ -6,9 +6,12 @@ from typing import cast, List, Optional, Tuple
 
 import magic
 
+from kmd.config.logger import get_logger
 from kmd.errors import InvalidFilename
 from kmd.model.media_model import MediaType
 from kmd.util.url import is_file_url, parse_file_url, Url
+
+log = get_logger(__name__)
 
 
 class Format(Enum):
@@ -305,11 +308,12 @@ def is_ignored(path: str | Path) -> bool:
     This skips .., .archive, .settings, __pycache__, .partial.xxx, etc.
     """
     name = os.path.basename(path)
-    return (
+    should_ignore = (
         bool(_hidden_file_pattern.match(name))
         or name.startswith("__")
         or bool(_partial_file_pattern.match(name))
     )
+    return should_ignore
 
 
 def is_full_html_page(content: str) -> bool:

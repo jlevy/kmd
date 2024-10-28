@@ -25,6 +25,10 @@ def aws_cli(*cmd):
 
 
 def file_mtime_hash(path: Path) -> str:
+    """
+    A fast hash to detect file modifications via high-resolution modification time.
+    Hashes the file name, size, and modification time.
+    """
     name = path.name
     size = path.stat().st_size
     mtime = path.stat().st_mtime_ns  # Nanosecond precision works on most platforms.

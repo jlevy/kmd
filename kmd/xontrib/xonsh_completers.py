@@ -17,11 +17,14 @@ from kmd.model.params_model import Param
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_checks import items_matching_precondition
 from kmd.util.format_utils import fmt_path, single_line
-
-MAX_COMPLETIONS = 500
-
+from kmd.util.log_calls import log_calls
 
 log = get_logger(__name__)
+
+MAX_COMPLETIONS = 200
+
+# We want to keep completion fast, so make it obvious when it's slow.
+SLOW_COMPLETION_WARN = 0.15
 
 
 def _completion_match(
@@ -54,6 +57,7 @@ def completion_sort(completion: RichCompletion) -> Tuple[int, str]:
 
 
 @contextual_completer
+@log_calls(level="info", if_slower_than=SLOW_COMPLETION_WARN)
 def command_or_action_completer(context: CompletionContext) -> CompleterResult:
     """
     Completes command names. We don't complete on regular shell commands to keep it cleaner.
@@ -98,6 +102,7 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
 
 
 @contextual_completer
+@log_calls(level="info", if_slower_than=SLOW_COMPLETION_WARN)
 def item_completer(context: CompletionContext) -> CompleterResult:
     """
     If the current command is an action, complete with paths that match the precondition
@@ -139,6 +144,7 @@ def item_completer(context: CompletionContext) -> CompleterResult:
 
 
 @contextual_completer
+@log_calls(level="info", if_slower_than=SLOW_COMPLETION_WARN)
 def help_question_completer(context: CompletionContext) -> CompleterResult:
     """
     Suggest help questions after a `?` on the command line.
@@ -170,6 +176,7 @@ def _param_completions(params: List[Param], prefix: str):
 
 
 @contextual_completer
+@log_calls(level="info", if_slower_than=SLOW_COMPLETION_WARN)
 def options_completer(context: CompletionContext) -> CompleterResult:
     """
     Suggest options completions after a `-` or `--` on the command line.
@@ -206,7 +213,7 @@ def options_completer(context: CompletionContext) -> CompleterResult:
             return set(completions) if completions else None
 
 
-# TODO: Complete enum values for enum options.
+# FIXME: Complete enum values for enum options.
 
 
 def add_key_bindings() -> None:

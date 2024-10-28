@@ -1,3 +1,4 @@
+import time
 from typing import Iterable, List
 
 from kmd.config.logger import get_logger
@@ -9,6 +10,7 @@ from kmd.model.items_model import Item
 from kmd.model.paths_model import StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.util.format_utils import fmt_path
+from kmd.util.log_calls import format_duration, log_calls
 
 log = get_logger(__name__)
 
@@ -40,8 +42,11 @@ def items_matching_precondition(
     """
     Yield items matching the given precondition, up to max_results if specified.
     """
+    start_time = time.time()
     count = 0
+    files_checked = 0
     for store_path in ws.walk_items():
+        files_checked += 1
         if max_results > 0 and count >= max_results:
             break
         try:
@@ -54,3 +59,13 @@ def items_matching_precondition(
         if precondition(item):
             yield item
             count += 1
+
+    duration = time.time() - start_time
+    if duration > 0.1:
+        log.info(
+            "Autocomplete matched %s/%s items in %s (%s/s)",
+            count,
+            files_checked,
+            format_duration(duration),
+            int(files_checked / duration) if duration > 0 else 0,
+        )

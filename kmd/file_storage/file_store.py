@@ -72,6 +72,11 @@ class FileStore:
 
         self.end_time = time.time()
 
+        # Warm the item cache in a separate thread.
+        from kmd.file_storage.file_cache_warmer import warm_file_store
+
+        warm_file_store(self)
+
     def __str__(self):
         return f"FileStore(~{self.name})"
 
