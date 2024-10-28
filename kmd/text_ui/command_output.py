@@ -8,7 +8,7 @@ import threading
 from contextlib import contextmanager
 from enum import Enum
 from io import StringIO
-from textwrap import dedent, indent
+from textwrap import dedent
 from typing import Any, Callable, List, Optional
 
 import rich
@@ -28,6 +28,10 @@ from kmd.config.text_styles import (
     CONSOLE_WRAP_WIDTH,
     EMOJI_ASSISTANT,
     HRULE,
+    HRULE_CHAR,
+    LL_CORNER,
+    UL_CORNER,
+    VRULE_CHAR,
 )
 from kmd.text_formatting.markdown_normalization import (
     DEFAULT_WRAP_WIDTH,
@@ -66,9 +70,9 @@ class Wrap(Enum):
 
 def fill_text(text: str, text_wrap=Wrap.WRAP, extra_indent: str = "") -> str:
     if text_wrap == Wrap.NONE:
-        return text
+        return "\n".join(extra_indent + line for line in text.split("\n"))
     elif text_wrap == Wrap.INDENT_ONLY:
-        return indent(text, prefix="    ")
+        return "\n".join(extra_indent + DEFAULT_INDENT + line for line in text.split("\n"))
     elif text_wrap in [Wrap.WRAP, Wrap.WRAP_FULL, Wrap.WRAP_INDENT, Wrap.HANGING_INDENT]:
         paragraphs = split_paragraphs(text)
         wrapped_paragraphs = []
@@ -168,6 +172,32 @@ def redirect_output(new_output):
         _output_context.rich_console = True
 
 
+_thread_local = threading.local()
+
+
+def output_prefix() -> str:
+    if not hasattr(_thread_local, "output_prefix"):
+        _thread_local.output_prefix = ""
+
+    return _thread_local.output_prefix
+
+
+def set_output_prefix(prefix: str):
+    _thread_local.output_prefix = prefix
+
+
+@contextmanager
+def output_box(color: Optional[str] = None):
+    output(UL_CORNER + HRULE_CHAR * (CONSOLE_WRAP_WIDTH - len(UL_CORNER)), color=color)
+    original_prefix = output_prefix()
+    set_output_prefix(f"{VRULE_CHAR} ")
+    try:
+        yield
+    finally:
+        _thread_local.output_prefix = original_prefix
+        output(LL_CORNER + HRULE_CHAR * (CONSOLE_WRAP_WIDTH - len(LL_CORNER)), color=color)
+
+
 @contextmanager
 def console_pager(use_pager: Optional[bool] = None):
     """
@@ -215,6 +245,10 @@ def output(
     if extra_newlines:
         rprint()
 
+    tl_prefix = output_prefix()
+    if tl_prefix:
+        extra_indent = tl_prefix + extra_indent
+
     if not text_wrap.should_wrap:
         width = None
 
@@ -223,7 +257,7 @@ def output(
 
     if isinstance(message, str):
         text = message % args if args else message
-        filled_text = fill_text(transform(text), text_wrap, extra_indent)
+        filled_text = fill_text(transform(text), text_wrap, extra_indent=extra_indent)
         rprint(Text(filled_text, color) if color else filled_text, end=end, width=width)
     else:
         rprint(extra_indent, end="")
@@ -254,14 +288,15 @@ def output_status(
     extra_indent: str = "",
     extra_newlines: bool = True,
 ):
-    output(
-        message,
-        *args,
-        text_wrap=text_wrap,
-        color=COLOR_STATUS,
-        extra_indent=extra_indent,
-        extra_newlines=extra_newlines,
-    )
+    with output_box(color=COLOR_STATUS):
+        output(
+            message,
+            *args,
+            text_wrap=text_wrap,
+            color=COLOR_STATUS,
+            extra_indent=extra_indent,
+            extra_newlines=extra_newlines,
+        )
 
 
 def output_result(

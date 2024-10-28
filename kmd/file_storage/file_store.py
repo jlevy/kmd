@@ -330,7 +330,7 @@ class FileStore:
         log.message("%s Saved item: %s", EMOJI_SUCCESS, fmt_path(store_path))
         return store_path
 
-    @log_calls()
+    @log_calls(level="debug")
     def load(self, store_path: StorePath) -> Item:
         """
         Load item at the given path.

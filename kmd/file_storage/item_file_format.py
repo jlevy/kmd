@@ -10,6 +10,7 @@ from kmd.model.items_model import Item, ITEM_FIELDS
 from kmd.model.operations_model import OPERATION_FIELDS
 from kmd.text_formatting.doc_formatting import normalize_formatting
 from kmd.util.format_utils import fmt_path
+from kmd.util.log_calls import tally_calls
 from kmd.util.sort_utils import custom_key_sort
 
 log = get_logger(__name__)
@@ -21,6 +22,7 @@ ITEM_FIELD_SORT = custom_key_sort(OPERATION_FIELDS + ITEM_FIELDS)
 _item_cache = FileMtimeCache[Item](max_size=2000)
 
 
+@tally_calls()
 def write_item(item: Item, full_path: Path):
     if item.is_binary:
         raise ValueError(f"Binary Items should be external files: {item}")
@@ -61,13 +63,16 @@ def write_item(item: Item, full_path: Path):
 
 
 def read_item(full_path: Path, base_dir: Path) -> Item:
-    # Check cache.
     cached_item = _item_cache.read(full_path)
     if cached_item is not None:
         log.debug("Cache hit for %s", full_path)
         return cached_item
 
-    # Read the item from disk.
+    return read_item_uncached(full_path, base_dir)
+
+
+@tally_calls()
+def read_item_uncached(full_path: Path, base_dir: Path) -> Item:
     body, metadata = fmf_read(full_path)
     log.debug("Read item from %s: body length %s, metadata %s", full_path, len(body), metadata)
     if not metadata:

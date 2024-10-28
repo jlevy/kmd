@@ -54,6 +54,8 @@ COLOR_ASSISTANCE = "italic bright_blue"
 
 COLOR_RESPONSE = "bright_blue"
 
+COLOR_SUGGESTION = "bright_blue"
+
 COLOR_LITERAL = "bright_blue"
 
 COLOR_KEY = "bright_blue"
@@ -95,11 +97,20 @@ COLOR_SIZE5 = "yellow"
 COLOR_SIZE6 = "bright_red"
 
 
+# Boxes
+
+HRULE_CHAR = "─"
+VRULE_CHAR = "│"
+
+UL_CORNER = "┬"
+LL_CORNER = "┴"
+
 ## Formatting
 
 NBSP = "\u00a0"
 
-HRULE = ("⋯ " * (CONSOLE_WRAP_WIDTH // 2)).strip()
+# HRULE = ("⋯ " * (CONSOLE_WRAP_WIDTH // 2)).strip()
+HRULE = HRULE_CHAR * CONSOLE_WRAP_WIDTH
 
 HRULE_SHORT = ("⋯ " * 20).strip()
 
@@ -184,12 +195,13 @@ class KmdHighlighter(RegexHighlighter):
             r"\b(?P<duration>(?<!\w)\-?[0-9]+\.?[0-9]*(ms|s)\b(?!\-\w))\b",
         ),
         _combine_regex(
+            r"(?P<ellipsis>(\.\.\.|…))",
+            r"(?P<at_mention>(?<!\w)@(?=\w))",  # @some/file.txt
             # A subset of the repr-style highlights:
             r"(?P<ipv4>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
             r"(?P<uuid>[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})",
             r"(?P<call>[\w.]*?)\(",
             r"\b(?P<bool_true>True)\b|\b(?P<bool_false>False)\b|\b(?P<none>None)\b",
-            r"(?P<ellipsis>(\.\.\.|…))",
             # r"(?P<number>(?<!\w)\-?[0-9]+\.?[0-9]*(e[-+]?\d+?)?\b(?!\-\w)|0x[0-9a-fA-F]*)",
             r"(?P<path>\B(/[-\w._+]+)*\/)(?P<filename>[-\w._+]*)?",
             # r"(?P<relpath>\B([\w._+][-\w._+]*)*(/\w[-\w._+]*)+)*\.(html|htm|pdf|yaml|yml|md|txt)",
@@ -209,7 +221,7 @@ class KmdHighlighter(RegexHighlighter):
             f"(?P<warn>{EMOJI_WARN})",
             f"(?P<saved>{EMOJI_SAVED})",
             f"(?P<log_call>{EMOJI_CALL_BEGIN}|{EMOJI_CALL_END})",
-            f"(?P<hrule>{HRULE})",
+            f"(?P<box_chars>{HRULE_CHAR}|{VRULE_CHAR}|{UL_CORNER}|{LL_CORNER})",
         ),
     ]
 
@@ -218,8 +230,9 @@ RICH_STYLES = {
     "markdown.h1": Style(color=COLOR_EMPH, bold=True),
     "markdown.h2": Style(color=COLOR_EMPH, bold=True),
     "markdown.h3": Style(color=COLOR_EMPH, bold=True, italic=True),
-    "markdown.h4": Style(color=COLOR_EMPH_ALT, bold=True, italic=True),
+    "markdown.h4": Style(color=COLOR_EMPH_ALT, bold=True),
     "kmd.ellipsis": Style(color=COLOR_HINT),
+    "kmd.at_mention": Style(color=COLOR_HINT, bold=True),
     "kmd.indent": Style(color=COLOR_KEY, dim=True),
     "kmd.error": Style(color=COLOR_ERROR, bold=True),
     "kmd.str": Style(color=COLOR_LITERAL, italic=False, bold=False),
@@ -271,5 +284,5 @@ RICH_STYLES = {
     "kmd.warn": Style(color=COLOR_VALUE, bold=True),
     "kmd.saved": Style(color=COLOR_SAVED, bold=True),
     "kmd.log_call": Style(color=COLOR_CALL, bold=True),
-    "kmd.hrule": Style(color=COLOR_HINT),
+    "kmd.box_chars": Style(color=COLOR_HINT),
 }
