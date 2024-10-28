@@ -1,11 +1,11 @@
 from kmd.action_defs import look_up_action
 from kmd.commands.command_registry import look_up_command
 from kmd.model.commands_model import Command
-from kmd.model.output_model import CommandOutput
+from kmd.model.shell_model import ShellResult
 from kmd.shell_tools.action_wrapper import ShellCallableAction
 
 
-def run_command(command: Command) -> CommandOutput:
+def run_command(command: Command) -> ShellResult:
     """
     Run a generic command, which could be invoking the assistant, an action,
     or a built-in command function.

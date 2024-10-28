@@ -51,9 +51,9 @@ from kmd.model.file_formats_model import (
     split_filename,
 )
 from kmd.model.items_model import Item, ItemType
-from kmd.model.output_model import CommandOutput
 from kmd.model.params_model import USER_SETTABLE_PARAMS
 from kmd.model.paths_model import as_url_or_path, StorePath
+from kmd.model.shell_model import ShellResult
 from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths
 from kmd.shell_tools.native_tools import (
@@ -185,7 +185,7 @@ def assist(input: Optional[str] = None) -> None:
 
 
 @kmd_command
-def assistant_system_message(skip_api: bool = False) -> CommandOutput:
+def assistant_system_message(skip_api: bool = False) -> ShellResult:
     """
     Print the assistant system message.
     """
@@ -203,7 +203,7 @@ def assistant_system_message(skip_api: bool = False) -> CommandOutput:
 
     select(store_path)
 
-    return CommandOutput(show_selection=True)
+    return ShellResult(show_selection=True)
 
 
 @kmd_command
@@ -294,7 +294,7 @@ def reload_workspace() -> None:
 
 
 @kmd_command
-def select(*paths: str, stdin: bool = False) -> CommandOutput:
+def select(*paths: str, stdin: bool = False) -> ShellResult:
     """
     Get or show the current selection.
     """
@@ -312,7 +312,7 @@ def select(*paths: str, stdin: bool = False) -> CommandOutput:
         store_paths = [StorePath(path) for path in paths]
         ws.set_selection(store_paths)
 
-    return CommandOutput(show_selection=True)
+    return ShellResult(show_selection=True)
 
 
 @kmd_command
@@ -900,7 +900,7 @@ def files(
     since: Optional[str] = None,
     groupby: Optional[GroupByOption] = None,
     iso_time: bool = False,
-) -> CommandOutput:
+) -> ShellResult:
     """
     List files or folders in the current directory or specified paths. Lists recursively
     by default.
@@ -965,7 +965,7 @@ def files(
 
     if not file_listing.files:
         output("No files found.")
-        return CommandOutput()
+        return ShellResult()
 
     df = file_listing.as_dataframe()
 
@@ -1000,7 +1000,7 @@ def files(
 
         select(store_path)
 
-        return CommandOutput(show_selection=True)
+        return ShellResult(show_selection=True)
 
     total_displayed = 0
     total_displayed_size = 0
@@ -1071,13 +1071,13 @@ def files(
                 color=COLOR_EMPH,
             )
 
-    return CommandOutput()
+    return ShellResult()
 
 
 @kmd_command
 def search(
     query_str: str, *paths: str, sort: str = "path", ignore_case: bool = False
-) -> CommandOutput:
+) -> ShellResult:
     """
     Search for a string in files at the given paths and return their store paths.
     Useful to find all docs or resources matching a string or regex. This wraps
@@ -1109,7 +1109,7 @@ def search(
             for line in rg_output.splitlines()
         ]
 
-        return CommandOutput(results, show_result=True)
+        return ShellResult(results, show_result=True)
     except RipGrepNotFound:
         raise InvalidState("`rg` command not found. Install ripgrep to use the search command.")
 

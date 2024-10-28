@@ -11,10 +11,10 @@ from kmd.errors import InvalidActionDefinition, InvalidInput
 from kmd.model.items_model import Item, ItemType, UNTITLED
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.operations_model import Operation, Source
-from kmd.model.output_model import CommandOutput
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamList, ParamValues
 from kmd.model.paths_model import InputArg, StorePath
 from kmd.model.preconditions_model import Precondition
+from kmd.model.shell_model import ShellResult
 from kmd.text_docs.diff_filters import DiffFilter
 from kmd.text_docs.text_diffs import DIFF_FILTER_NONE
 from kmd.text_docs.window_settings import WINDOW_NONE, WindowSettings
@@ -88,12 +88,12 @@ class ActionResult:
     path_ops: Optional[List[PathOp]] = None
     """If specified, operations to perform on specific paths, such as selecting items."""
 
-    command_output: Optional[CommandOutput] = None
-    """If specified, control the output from the command."""
+    shell_result: Optional[ShellResult] = None
+    """Customize control of how the action's result is displayed in the shell."""
 
     def has_hints(self) -> bool:
         return bool(
-            self.replaces_input or self.skip_duplicates or self.path_ops or self.command_output
+            self.replaces_input or self.skip_duplicates or self.path_ops or self.shell_result
         )
 
     def __str__(self):

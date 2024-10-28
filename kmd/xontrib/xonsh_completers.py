@@ -14,9 +14,10 @@ from kmd.errors import InvalidState
 from kmd.file_storage.workspaces import current_workspace
 from kmd.help.function_param_info import annotate_param_info
 from kmd.model.params_model import Param
+from kmd.model.paths_model import fmt_store_path
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_checks import items_matching_precondition
-from kmd.util.format_utils import fmt_path, single_line
+from kmd.util.format_utils import single_line
 from kmd.util.log_calls import log_calls
 
 log = get_logger(__name__)
@@ -131,8 +132,8 @@ def item_completer(context: CompletionContext) -> CompleterResult:
                 if len(matching_items) < MAX_COMPLETIONS:
                     return {
                         RichCompletion(
-                            fmt_path(item.store_path),
-                            display=f"{fmt_path(item.store_path)} ({action.precondition.name}) ",
+                            fmt_store_path(item.store_path),
+                            display=f"{fmt_store_path(item.store_path)} ({action.precondition.name}) ",
                             description=item.title or "",
                             append_space=True,
                         )

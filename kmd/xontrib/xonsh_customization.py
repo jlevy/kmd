@@ -8,14 +8,14 @@ from xonsh.completers.completer import add_one_completer
 from kmd.action_defs import reload_all_actions
 from kmd.commands import help_commands
 from kmd.commands.command_registry import all_commands
-from kmd.commands.command_results import handle_command_output
+from kmd.commands.shell_results import handle_shell_result
 from kmd.config.logger import get_logger
 from kmd.config.setup import setup
 from kmd.config.text_styles import PROMPT_COLOR_NORMAL, PROMPT_COLOR_WARN, PROMPT_MAIN
 from kmd.exec.history import wrap_with_history
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import Action
-from kmd.model.output_model import CommandOutput
+from kmd.model.shell_model import ShellResult
 from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
@@ -58,18 +58,18 @@ def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], None]:
     def command(args: List[str]) -> None:
         retval = func(args)
 
-        res: CommandOutput
-        if isinstance(retval, CommandOutput):
+        res: ShellResult
+        if isinstance(retval, ShellResult):
             res = retval
         else:
-            res = CommandOutput(retval)
+            res = ShellResult(retval)
 
         set_env("result", res.result)
 
         selection = current_workspace().get_selection()
         set_env("selection", selection)
 
-        handle_command_output(res)
+        handle_shell_result(res)
 
         return None
 

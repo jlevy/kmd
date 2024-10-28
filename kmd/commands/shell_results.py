@@ -6,8 +6,8 @@ from kmd.errors import is_fatal
 from kmd.exec.command_exec import run_command
 from kmd.file_storage.workspaces import current_workspace
 from kmd.lang_tools.inflection import plural
-from kmd.model.output_model import CommandOutput
 from kmd.model.paths_model import StorePath
+from kmd.model.shell_model import ShellResult
 from kmd.text_ui.command_output import console_pager, output, output_result, output_status
 from kmd.util.format_utils import fmt_lines
 
@@ -58,7 +58,7 @@ def print_result(value: Optional[Any]) -> None:
             output_result(str(value))
 
 
-def handle_command_output(res: CommandOutput) -> None:
+def handle_shell_result(res: ShellResult) -> None:
     if res.exception:
         # Nonfatal exceptions will already be logged.
         if is_fatal(res.exception):

@@ -9,8 +9,8 @@ from kmd.exec.history import record_command
 from kmd.help.command_help import output_action_help
 from kmd.model.actions_model import Action
 from kmd.model.commands_model import Command
-from kmd.model.output_model import CommandOutput
 from kmd.model.params_model import ParamValues
+from kmd.model.shell_model import ShellResult
 from kmd.shell_tools.exception_printing import summarize_traceback
 from kmd.text_ui.command_output import output
 from kmd.util.log_calls import log_tallies
@@ -25,13 +25,13 @@ class ShellCallableAction:
         self.__name__ = action.name
         self.__doc__ = action.description
 
-    def __call__(self, args: List[str]) -> CommandOutput:
+    def __call__(self, args: List[str]) -> ShellResult:
         shell_args = parse_shell_args(args)
 
         if shell_args.show_help:
             output_action_help(self.action, verbose=True)
 
-            return CommandOutput()
+            return ShellResult()
 
         # Handle --rerun option at action invocation time.
         rerun = bool(shell_args.options.get("rerun", False))
@@ -54,24 +54,24 @@ class ShellCallableAction:
             output()
             log.error(f"[{COLOR_ERROR}]Action error:[/{COLOR_ERROR}] %s", summarize_traceback(e))
             log.info("Action error details: %s", e, exc_info=True)
-            return CommandOutput(exception=e)
+            return ShellResult(exception=e)
         finally:
             log_tallies(if_slower_than=10.0)
             # output_separator()
 
         # The handling of the output can be overridden by the action, but by default just show
         # the selection and suggested actions.
-        if result.command_output:
-            command_output = result.command_output
+        if result.shell_result:
+            shell_result = result.shell_result
         else:
-            command_output = CommandOutput(
+            shell_result = ShellResult(
                 show_selection=True,
                 suggest_actions=True,
             )
 
         record_command(Command.assemble(self.action, args))
 
-        return command_output
+        return shell_result
 
     def __repr__(self):
         return f"CallableAction({str(self.action)})"

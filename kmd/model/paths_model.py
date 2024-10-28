@@ -220,6 +220,10 @@ class StorePath(BasePath):
         return hash((super().__str__(), self.store_name))
 
 
+def fmt_store_path(store_path: str | Path | StorePath) -> str:
+    return StorePath(store_path).display_str()
+
+
 Locator = Url | StorePath
 """
 A reference to an external resource or an item in the store.

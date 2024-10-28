@@ -7,9 +7,10 @@ from kmd.model.commands_model import Command
 
 
 @dataclass(frozen=True, config=ConfigDict(arbitrary_types_allowed=True))
-class CommandOutput:
+class ShellResult:
     """
-    Everything needed to handle and display the result of an action or command on the console.
+    Everything needed to handle and display the result of an action or command
+    in the shell.
     """
 
     result: Optional[Any] = None
