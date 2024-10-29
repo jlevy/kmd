@@ -702,6 +702,19 @@ def add_resource(*files_or_urls: str) -> None:
 
 
 @kmd_command
+def rename(path: str, new_path: str) -> None:
+    """
+    Rename a file or item. Creates any new parent paths as needed.
+    """
+    from_path, to_path = assemble_path_args(path, new_path)
+    to_path.parent.mkdir(parents=True, exist_ok=True)
+    os.rename(from_path, to_path)
+
+    output_status(f"Renamed: {fmt_shell_path(from_path)} -> {fmt_shell_path(to_path)}")
+    select(to_path)
+
+
+@kmd_command
 def archive(*paths: str) -> None:
     """
     Archive the items at the given path, or the current selection.
@@ -712,7 +725,6 @@ def archive(*paths: str) -> None:
         ws.archive(store_path)
 
     output_status(f"Archived:\n{fmt_lines(store_paths)}")
-
     select()
 
 
@@ -1084,8 +1096,6 @@ def files(
                 f"{indent}… {files_matching - head} more files not shown",
                 text_wrap=Wrap.NONE,
             )
-        else:
-            output()
 
         output(
             f"{total_displayed} files ({naturalsize(total_displayed_size)}) shown",

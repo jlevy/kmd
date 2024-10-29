@@ -365,7 +365,7 @@ class FileStore:
     def add_resource(self, path_or_url: str | Path) -> StorePath:
         """
         Add a resource from a file or URL. If it's string or Path path, copy it into
-        the store. If it's already there, hjust return the
+        the store. If it's already there, just return the store path.
         """
         if isinstance(path_or_url, str) and is_url(path_or_url):
             orig_url = Url(path_or_url)
@@ -478,9 +478,10 @@ class FileStore:
             filtered_store_paths = [StorePath(path) for path in store_paths if self.exists(path)]
             if len(filtered_store_paths) != len(store_paths):
                 log.warning(
-                    "Items in selection are missing, so ignoring: %s",
-                    ", ".join(sorted(set(store_paths) - set(filtered_store_paths))),
+                    "Items in selection are missing, so unselecting:\n%s",
+                    fmt_lines(sorted(set(store_paths) - set(filtered_store_paths))),
                 )
+                self.selection.set(filtered_store_paths)
             return filtered_store_paths
         except OSError:
             raise InvalidState("No selection saved in workspace")

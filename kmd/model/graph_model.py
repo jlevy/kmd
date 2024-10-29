@@ -30,6 +30,11 @@ class Link:
 
 @dataclass
 class GraphData:
+    """
+    A generic model of a graph of nodes and links. Intended to help visualize
+    relationships between items like resources, documents, or concepts.
+    """
+
     nodes: Dict[str, Node] = field(default_factory=dict)
     # We allow duplicate links as long as they are of different relationships.
     links: Set[Link] = field(default_factory=set)

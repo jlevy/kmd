@@ -4,6 +4,7 @@ from typing import Any, Dict, Iterable, List, Optional, TYPE_CHECKING
 
 from pydantic.dataclasses import dataclass
 
+from kmd.util.log_calls import quote_if_needed
 from kmd.util.parse_shell_args import format_command_str, parse_command_str
 
 
@@ -26,7 +27,7 @@ def assist_request_str(request: str) -> str:
     """
     Command string to call the assistant.
     """
-    return f"? {request}"
+    return f"? {quote_if_needed(request)}"
 
 
 def stringify_non_bool(value: Any) -> str | bool:
@@ -43,8 +44,9 @@ class Command:
 
     `args` is the list of arguments, as they appear in string form on the command line.
 
-    `options` is a dictionary of options. Options with values will have a string value.
-    Options without values will be treated as boolean flags.
+    `options` is a dictionary of options. Command-line options with values are represented
+    with a string value. Command-line options present but without a value are represented
+    as a boolean True.
     """
 
     name: str

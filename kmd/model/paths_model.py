@@ -202,6 +202,13 @@ class StorePath(BasePath):
         """
         return Path(self).resolve()
 
+    @property
+    def parent(self) -> Path:
+        """
+        The parent of a StorePath is a Path, for simplicity.
+        """
+        return Path(self).parent
+
     def display_str(self) -> str:
         """
         String representation of the path with the `@` prefix and store name (if any)

@@ -26,6 +26,8 @@ class ShellCallableAction:
         self.__doc__ = action.description
 
     def __call__(self, args: List[str]) -> ShellResult:
+        from kmd.shell.shell_results import shell_before_exec
+
         shell_args = parse_shell_args(args)
 
         if shell_args.show_help:
@@ -44,6 +46,7 @@ class ShellCallableAction:
         )
 
         try:
+            shell_before_exec()
             if not self.action.interactive_input:
                 with get_console().status(f"Running action {self.action.name}…", spinner=SPINNER):
                     result = run_action(self.action, *shell_args.args, rerun=rerun)

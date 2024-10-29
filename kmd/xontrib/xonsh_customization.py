@@ -14,7 +14,7 @@ from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import Action
 from kmd.model.shell_model import ShellResult
 from kmd.shell.shell_output import output
-from kmd.shell.shell_results import handle_shell_result
+from kmd.shell.shell_results import handle_shell_result, shell_before_exec
 from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
@@ -55,6 +55,10 @@ R = TypeVar("R")
 def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], None]:
 
     def command(args: List[str]) -> None:
+
+        shell_before_exec()
+
+        # Run the function.
         retval = func(args)
 
         res: ShellResult

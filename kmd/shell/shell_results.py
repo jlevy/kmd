@@ -57,7 +57,17 @@ def print_result(value: Optional[Any]) -> None:
             output_result(str(value))
 
 
+def shell_before_exec() -> None:
+    """
+    Code to run before executing a command.
+    """
+    output()
+
+
 def handle_shell_result(res: ShellResult) -> None:
+    """
+    Handle the result of a command, displaying output, selection, etc.
+    """
     if res.exception:
         # Nonfatal exceptions will already be logged.
         if is_fatal(res.exception):
