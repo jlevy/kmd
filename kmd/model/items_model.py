@@ -4,7 +4,7 @@ The data model for Items and their file formats.
 
 from copy import deepcopy
 from dataclasses import asdict, field, is_dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
@@ -137,7 +137,7 @@ class Item:
     format: Optional[Format] = None
     file_ext: Optional[FileExt] = None
 
-    created_at: datetime = field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     modified_at: Optional[datetime] = None
 
     # TODO: Consider adding aliases and tags. See also Obsidian frontmatter format:

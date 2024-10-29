@@ -26,8 +26,7 @@ from kmd.config.text_styles import (
     COLOR_HINT,
     COLOR_KEY,
     COLOR_RESPONSE,
-    COLOR_RESULT,
-    COLOR_STATUS,
+    COLOR_SELECTION,
     CONSOLE_WRAP_WIDTH,
     EMOJI_ASSISTANT,
     HRULE,
@@ -207,6 +206,13 @@ def output_box(color: Optional[str] = None):
 
 
 @contextmanager
+def output_padding():
+    output()
+    yield
+    output()
+
+
+@contextmanager
 def console_pager(use_pager: Optional[bool] = None):
     """
     Use Rich pager if requested, or detect if it's applicable.
@@ -246,14 +252,10 @@ def output(
     color=None,
     transform: Callable[[str], str] = lambda x: x,
     extra_indent: str = "",
-    extra_newlines: bool = False,
     end="\n",
     width: Optional[int] = DEFAULT_WRAP_WIDTH,
 ):
     empty_indent = extra_indent.strip()
-
-    if extra_newlines:
-        rprint(empty_indent)
 
     tl_prefix = output_prefix()
     if tl_prefix:
@@ -284,9 +286,6 @@ def output(
     else:
         rprint(empty_indent)
 
-    if extra_newlines:
-        rprint(empty_indent)
-
 
 log = get_logger(__name__)
 
@@ -308,16 +307,14 @@ def output_selection(
     *args,
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
-    extra_newlines: bool = True,
 ):
-    with output_box(color=COLOR_STATUS):
+    with output_box(color=COLOR_SELECTION):
         output(
             message,
             *args,
             text_wrap=text_wrap,
-            color=COLOR_STATUS,
+            color=COLOR_SELECTION,
             extra_indent=extra_indent,
-            extra_newlines=extra_newlines,
         )
 
 
@@ -326,15 +323,13 @@ def output_status(
     *args,
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
-    extra_newlines: bool = True,
 ):
+    output()
     output(
         message,
         *args,
         text_wrap=text_wrap,
-        color=COLOR_STATUS,
         extra_indent=extra_indent,
-        extra_newlines=extra_newlines,
     )
 
 
@@ -343,15 +338,12 @@ def output_result(
     *args,
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
-    extra_newlines: bool = False,
 ):
     output(
         message,
         *args,
         text_wrap=text_wrap,
-        color=COLOR_RESULT,
         extra_indent=extra_indent,
-        extra_newlines=extra_newlines,
     )
 
 
@@ -363,33 +355,33 @@ def output_assistance(
     message: str, *args, model: str = "", text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""
 ):
     model_str = f"({model})" if model else ""
-    output(
-        f"\n{EMOJI_ASSISTANT}{model_str} " + message,
-        *args,
-        text_wrap=text_wrap,
-        color=COLOR_ASSISTANCE,
-        extra_indent=extra_indent,
-        extra_newlines=True,
-    )
+    with output_padding():
+        output(
+            f"\n{EMOJI_ASSISTANT}{model_str} " + message,
+            *args,
+            text_wrap=text_wrap,
+            color=COLOR_ASSISTANCE,
+            extra_indent=extra_indent,
+        )
 
 
 def output_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
-    output(
-        message,
-        *args,
-        text_wrap=text_wrap,
-        color=COLOR_RESPONSE,
-        extra_indent=extra_indent,
-        extra_newlines=True,
-    )
+    with output_padding():
+        output(
+            message,
+            *args,
+            text_wrap=text_wrap,
+            color=COLOR_RESPONSE,
+            extra_indent=extra_indent,
+        )
 
 
 def output_heading(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
-    output(
-        Markdown(f"## {message.upper()}"),
-        *args,
-        text_wrap=text_wrap,
-        color=COLOR_HEADING,
-        extra_indent=extra_indent,
-        extra_newlines=True,
-    )
+    with output_padding():
+        output(
+            Markdown(f"## {message.upper()}"),
+            *args,
+            text_wrap=text_wrap,
+            color=COLOR_HEADING,
+            extra_indent=extra_indent,
+        )

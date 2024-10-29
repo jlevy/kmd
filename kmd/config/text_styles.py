@@ -42,7 +42,7 @@ COLOR_EMPH = "bright_green"
 
 COLOR_EMPH_ALT = "bright_green"
 
-COLOR_STATUS = "yellow"
+COLOR_SELECTION = "yellow"
 
 COLOR_RESULT = "default"
 

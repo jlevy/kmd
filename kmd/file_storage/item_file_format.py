@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from pathlib import Path
 
 from frontmatter_format import fmf_read, fmf_write, FmStyle
@@ -85,6 +86,8 @@ def read_item_uncached(full_path: Path, base_dir: Path) -> Item:
         store_path = None
         external_path = str(full_path)
     item = Item.from_dict(metadata, body=body, store_path=store_path, external_path=external_path)
+    # Update modified time from the file system.
+    item.modified_at = datetime.fromtimestamp(full_path.stat().st_mtime, tz=timezone.utc)
 
     # Update the cache with the new item
     _item_cache.update(full_path, item)

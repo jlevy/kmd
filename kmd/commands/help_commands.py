@@ -85,10 +85,10 @@ def installation() -> None:
     """
     Show help on installing Kmd.
     """
-    from kmd.docs import getting_started
+    from kmd.docs import installation
 
     with console_pager():
-        output_markdown(getting_started)
+        output_markdown(installation)
         output_see_also(
             [
                 "What is Kmd?",
@@ -108,10 +108,10 @@ def getting_started() -> None:
     """
     Show help on getting started using Kmd.
     """
-    from kmd.docs import installation
+    from kmd.docs import getting_started
 
     with console_pager():
-        output_markdown(installation)
+        output_markdown(getting_started)
         output_see_also(
             [
                 "What is Kmd?",

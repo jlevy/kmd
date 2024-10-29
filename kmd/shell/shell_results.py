@@ -34,13 +34,12 @@ def print_selection(selection: List[StorePath]) -> None:
     Print the current selection.
     """
     if not selection:
-        output_selection("No selection.", extra_newlines=False)
+        output_selection("No selection.")
     else:
         output_selection(
             "Selected %s:\n%s",
             type_str(selection),
             fmt_lines(fmt_shell_path(s) for s in selection),
-            extra_newlines=False,
         )
 
 
