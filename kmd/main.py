@@ -43,7 +43,7 @@ __version__ = get_version()
 USE_KMD_SHELL = True
 
 # Turn off for cleaner outputs. Sometimes you want this on for development.
-XONSH_SHOW_TRACEBACK = False
+XONSH_SHOW_TRACEBACK = True
 
 
 ## Non-customized xonsh shell setup

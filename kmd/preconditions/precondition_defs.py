@@ -37,7 +37,7 @@ def is_instructions(item: Item) -> bool:
 
 
 @precondition
-def is_url(item: Item) -> bool:
+def is_url_item(item: Item) -> bool:
     return item.type == ItemType.resource and item.url is not None
 
 

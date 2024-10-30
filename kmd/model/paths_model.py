@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path, PosixPath, WindowsPath
-from typing import Any, cast, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union
 
 import regex
 from frontmatter_format import add_default_yaml_representer
@@ -250,12 +250,12 @@ def fmt_shell_path(store_path: str | Path | StorePath) -> str:
         return fmt_path(store_path)
 
 
-Locator = Url | StorePath
+Locator = Url | Path | StorePath
 """
 A reference to an external resource or an item in the store.
 """
 
-InputArg = Locator | Path | str
+InputArg = Locator | str
 """
 An argument to a command or action.
 """
@@ -284,10 +284,6 @@ def resolve_at_path(path: str | Path | StorePath) -> Path | StorePath:
         return StorePath(path)
     else:
         return Path(path)
-
-
-def as_url_or_path(input: str | Path) -> Path | Url:
-    return cast(Url, str(input)) if is_url(str(input)) else cast(Path, input)
 
 
 def _represent_store_path(dumper: Any, data: StorePath) -> Any:

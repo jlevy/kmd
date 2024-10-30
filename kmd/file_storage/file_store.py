@@ -1,7 +1,7 @@
 import os
 import time
 from os import path
-from os.path import basename, commonpath, join, relpath
+from os.path import commonpath, join, relpath
 from pathlib import Path
 from typing import Dict, Generator, List, Optional, Tuple
 
@@ -23,10 +23,10 @@ from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_item_filename
 from kmd.file_tools.file_walk import IgnoreFilter, walk_by_dir
 from kmd.model.canon_url import canonicalize_url
-from kmd.model.file_formats_model import FileExt, Format, is_ignored
+from kmd.model.file_formats_model import Format, is_ignored
 from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.params_model import ParamValues
-from kmd.model.paths_model import StorePath
+from kmd.model.paths_model import Locator, StorePath
 from kmd.query.vector_index import WsVectorIndex
 from kmd.shell.shell_output import output
 from kmd.util.format_utils import fmt_lines, fmt_path
@@ -122,7 +122,7 @@ class FileStore:
                     )
                 self.id_map[item_id] = store_path
         except SkippableError as e:
-            log.warning("Could not read file, skipping: %s", e)
+            log.warning("Could not read file, skipping: %s: %s", fmt_path(store_path), e)
 
         return dup_path
 
@@ -273,11 +273,7 @@ class FileStore:
         Updates item.store_path.
         """
         # If external file already exists within the workspace, the file is already saved (without metadata).
-        if (
-            item.external_path
-            and path.exists(item.external_path)
-            and path.commonpath([self.base_dir, item.external_path]) == str(self.base_dir)
-        ):
+        if item.external_path and Path(item.external_path).resolve().is_relative_to(self.base_dir):
             log.info("External file already saved: %s", fmt_path(item.external_path))
             store_path = StorePath(path.relpath(item.external_path, self.base_dir))
         else:
@@ -302,7 +298,10 @@ class FileStore:
                     write_item(item, full_path)
             except IOError as e:
                 log.error("Error saving item: %s", e)
-                self.unarchive(store_path)
+                try:
+                    self.unarchive(store_path)
+                except Exception:
+                    pass
                 raise e
 
             # Set filesystem file creation and modification times as well.
@@ -336,7 +335,8 @@ class FileStore:
         Load item at the given path.
         """
         _name, item_type, format, file_ext = parse_item_filename(store_path)
-        if FileExt.is_text(file_ext):
+
+        if file_ext.is_text() or (format and format.supports_frontmatter()):
             # This is a known text format or a YAML file, so we can read the whole thing.
             return read_item(self.base_dir / store_path, self.base_dir)
         else:
@@ -362,62 +362,85 @@ class FileStore:
         """
         return hash_file(self.base_dir / store_path, algorithm="sha1")
 
-    def add_resource(self, path_or_url: str | Path) -> StorePath:
+    def import_item(
+        self, locator: Locator, as_type: ItemType = ItemType.resource, reimport: bool = False
+    ) -> StorePath:
         """
         Add a resource from a file or URL. If it's string or Path path, copy it into
         the store. If it's already there, just return the store path.
         """
-        if isinstance(path_or_url, str) and is_url(path_or_url):
-            orig_url = Url(path_or_url)
+        if is_url(str(locator)):
+            # Import a URL as a resource.
+            orig_url = Url(str(locator))
             url = canonicalize_url(orig_url)
             if url != orig_url:
                 log.message("Canonicalized URL: %s -> %s", orig_url, url)
-            item = Item(ItemType.resource, url=url, format=Format.url)
-            # TODO: Also fetch the title and description as a follow-on action?
+            item = Item(as_type, url=url, format=Format.url)
             store_path = self.save(item)
+            return store_path
+        elif isinstance(locator, StorePath) and not reimport:
+            # TODO: Maybe check if we need to insert metadata, in case it's a regular file just
+            # sitting in the store.
+            log.message("Store path already imported: %s", fmt_path(locator))
+            return locator
         else:
-            path = Path(path_or_url)
-            path_str = str(path_or_url)
-
-            # If it's already in the store, do nothing.
-            if not path.is_absolute() and (self.base_dir / path).exists():
-                return StorePath(path_str)
-
-            # A rarer case, but if it happens to be an absolute path that's still
-            # within the store, return the store path.
+            # We have a path, possibly outside of or inside of the store.
+            path = Path(locator).resolve()
             if path.is_relative_to(self.base_dir):
                 store_path = StorePath(path.relative_to(self.base_dir))
-                if self.exists(store_path):
+                if self.exists(store_path) and not reimport:
+                    log.message("Path already imported: %s", fmt_path(store_path))
                     return store_path
 
             if not path.exists():
-                raise FileNotFound(f"File not found: {fmt_path(path_str)}")
+                raise FileNotFound(f"File not found: {fmt_path(path)}")
 
-            # It's a string or Path presumably outside the store, so copy it in.
-            name, _item_type, format, file_ext = parse_item_filename(path)
-            if format and format.is_text():
-                # Text files we copy into canonical store format.
-                # Note YAML files can be various formats so we don't handle them here.
-                with open(path_str, "r") as file:
-                    body = file.read()
+            # It's a path outside the store, so copy it in.
+            name, filename_item_type, format, file_ext = parse_item_filename(path)
 
-                new_item = Item(
-                    type=ItemType.resource,
-                    title=name,
-                    file_ext=file_ext,
-                    format=format,
-                    body=body,
-                )
-                store_path = self.save(new_item)
+            if filename_item_type:
+                as_type = filename_item_type
+            if format and format.supports_frontmatter():
+                log.message("Importing text file: %s", fmt_path(path))
+                # This will read the file with or without frontmatter.
+                # We are importing so we want to drop the external path so we save the body.
+                item = read_item(path, self.base_dir)
+                item.external_path = None
+
+                if item.type != as_type:
+                    log.warning(
+                        "Reimporting as item type `%s` instead of `%s`: %s",
+                        as_type.value,
+                        item.type.value,
+                        fmt_path(path),
+                    )
+                    item.type = as_type
+
+                # This will only have a store path if it was already in the store; otherwise
+                # we'll pick a new store path.
+                store_path = self.save(item)
+                log.info("Imported text file: %s", item.as_str())
             else:
-                # YAML or binary files we just copy over as-is, preserving the name.
+                log.message("Importing non-text file: %s", fmt_path(path))
+                # Binary or other files we just copy over as-is, preserving the name.
                 # We know the extension is recognized.
-                store_path = StorePath(folder_for_type(ItemType.resource) / basename(path_str))
+                item = Item.from_external_path(path)
+                store_path, _prev = self.find_path_for(item)
                 if self.exists(store_path):
                     raise FileExists(f"Resource already in store: {fmt_path(store_path)}")
-                copyfile_atomic(path_str, self.base_dir / store_path, make_parents=True)
 
-        return store_path
+                if item.type != as_type:
+                    log.warning(
+                        "Reimporting as item type `%s` instead of `%s`: %s",
+                        as_type.value,
+                        item.type.value,
+                        fmt_path(path),
+                    )
+                    item.type = as_type
+
+                log.message("Importing resource: %s -> %s", fmt_path(path), fmt_path(store_path))
+                copyfile_atomic(path, self.base_dir / store_path, make_parents=True)
+            return store_path
 
     def _remove_references(self, store_paths: List[StorePath]):
         self.selection.remove_values(store_paths)
@@ -451,14 +474,15 @@ class FileStore:
             return store_path
         move_file(orig_path, archive_path)
         self._remove_references([store_path])
-        return self.dirs.archive_dir / store_path
+
+        archive_path = StorePath(self.dirs.archive_dir / store_path)
+        return archive_path
 
     def unarchive(self, store_path: StorePath):
         """
         Unarchive the item by moving back out of the archive directory.
         Path may be with or without the archive dir prefix.
         """
-        log.info("Unarchiving item: %s", fmt_path(store_path))
         if commonpath([self.dirs.archive_dir, store_path]) == self.dirs.archive_dir:
             store_path = StorePath(relpath(store_path, self.dirs.archive_dir))
         original_path = self.base_dir / store_path
@@ -508,6 +532,7 @@ class FileStore:
             return
         self.info_logged = True
 
+        output()
         log.message(
             "Using workspace: %s (%s items)",
             path.abspath(self.base_dir),

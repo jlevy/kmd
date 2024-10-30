@@ -27,6 +27,7 @@ from kmd.config.text_styles import (
     COLOR_KEY,
     COLOR_RESPONSE,
     COLOR_SELECTION,
+    COLOR_STATUS,
     CONSOLE_WRAP_WIDTH,
     EMOJI_ASSISTANT,
     HRULE,
@@ -324,13 +325,14 @@ def output_status(
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
 ):
-    output()
-    output(
-        message,
-        *args,
-        text_wrap=text_wrap,
-        extra_indent=extra_indent,
-    )
+    with output_padding():
+        output(
+            message,
+            *args,
+            text_wrap=text_wrap,
+            color=COLOR_STATUS,
+            extra_indent=extra_indent,
+        )
 
 
 def output_result(

@@ -4,9 +4,20 @@ from typing import cast, List, Optional, Sequence, Tuple
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, MissingInput
 from kmd.file_storage.workspaces import current_workspace
-from kmd.model.paths_model import InputArg, resolve_at_path, StorePath
+from kmd.model.paths_model import InputArg, Locator, resolve_at_path, StorePath
+from kmd.util.url import is_url, Url
 
 log = get_logger(__name__)
+
+
+def resolve_arg(locator: str) -> Locator:
+    """
+    Resolve a path or URL argument to a Path, StorePath, or Url.
+    """
+    if is_url(locator):
+        return Url(locator)
+    else:
+        return resolve_path_arg(locator)
 
 
 def resolve_path_arg(path_str: str) -> Path | StorePath:
@@ -68,3 +79,9 @@ def assemble_action_args(*paths: Optional[str]) -> Tuple[List[InputArg], bool]:
             return [], False
     else:
         return cast(List[InputArg], resolved), False
+
+
+def resolvable_paths(paths: Sequence[StorePath | Path]) -> List[StorePath]:
+    ws = current_workspace()
+    resolvable = list(filter(None, (ws.resolve_path(p) for p in paths)))
+    return resolvable

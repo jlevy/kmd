@@ -160,7 +160,7 @@ def import_and_load(locator: InputArg) -> Item:
             if not path.exists():
                 raise InvalidInput(f"File not found: {path}")
 
-            store_path = ws.add_resource(path)
+            store_path = ws.import_item(path)
             item = ws.load(store_path)
 
     return item

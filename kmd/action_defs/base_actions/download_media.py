@@ -3,7 +3,7 @@ from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.media.media_tools import cache_media
 from kmd.model import Item, PerItemAction, Precondition
-from kmd.preconditions.precondition_defs import is_url
+from kmd.preconditions.precondition_defs import is_url_item
 
 log = get_logger(__name__)
 
@@ -17,7 +17,7 @@ class DownloadMedia(PerItemAction):
         "Download and save audio from a podcast or video. Only saves to media cache; does not create new items."
     )
 
-    precondition: Precondition = is_url
+    precondition: Precondition = is_url_item
 
     cacheable: bool = False
 

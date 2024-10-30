@@ -6,6 +6,7 @@ from copy import deepcopy
 from dataclasses import asdict, field, is_dataclass
 from datetime import datetime, timezone
 from enum import Enum
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from frontmatter_format import from_yaml_string
@@ -24,6 +25,7 @@ from kmd.util.format_utils import (
     abbreviate_on_words,
     abbreviate_phrase_in_middle,
     clean_up_title,
+    fmt_path,
     html_to_plaintext,
     plaintext_to_html,
 )
@@ -260,6 +262,39 @@ class Item:
         return result
 
     @classmethod
+    def from_external_path(cls, path: Path, item_type: ItemType = ItemType.resource) -> "Item":
+        """
+        Create a resource Item for a file with a format inferred from the file extension
+        or the content. Only sets basic metadata. Does not read the content.
+        Raises `InvalidFilename` or `FileFormatError` if the file extension or format
+        is unrecognized.
+        """
+        from kmd.file_storage.store_filenames import parse_item_filename
+        from kmd.model.file_formats_model import detect_file_format
+
+        # Will raise error for unrecognized file ext.
+        name, filename_item_type, format, file_ext = parse_item_filename(path)
+        if filename_item_type:
+            item_type = filename_item_type
+        if not format:
+            format = detect_file_format(path)
+        if not format:
+            raise FileFormatError(f"Unrecognized file format: {fmt_path(path)}")
+
+        item = cls(
+            type=item_type,
+            title=name,
+            file_ext=file_ext,
+            format=format,
+            external_path=str(path),
+        )
+
+        # Update modified time from the file system.
+        item.set_modified(path.stat().st_mtime)
+
+        return item
+
+    @classmethod
     def from_media_metadata(cls, media_metadata: MediaMetadata) -> "Item":
         """
         Create an Item instance from MediaMetadata.
@@ -287,6 +322,12 @@ class Item:
                 "heatmap": media_metadata.heatmap,
             },
         )
+
+    def set_created(self, timestamp: float):
+        self.created_at = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+
+    def set_modified(self, timestamp: float):
+        self.modified_at = datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
     def doc_id(self) -> str:
         """
@@ -567,31 +608,37 @@ class Item:
             return repr(self.abbrev_title())
 
     def as_str_brief(self) -> str:
-        return abbreviate_obj(
-            self,
-            key_filter={
-                "store_path": 0,
-                "type": 64,
-                "title": 64,
-                "url": 64,
-                "external_path": 64,
-            },
+        return (
+            abbreviate_obj(
+                self,
+                key_filter={
+                    "store_path": 0,
+                    "type": 64,
+                    "title": 64,
+                    "url": 64,
+                    "external_path": 64,
+                },
+            )
+            + f"[{len(self.body) if self.body else 0} body chars]"
         )
 
     def as_str(self) -> str:
-        return abbreviate_obj(
-            self,
-            key_filter={
-                "store_path": 0,
-                "external_path": 64,
-                "type": 64,
-                "state": 64,
-                "title": 64,
-                "url": 64,
-                "format": 64,
-                "created_at": 64,
-                "body": 64,
-            },
+        return (
+            abbreviate_obj(
+                self,
+                key_filter={
+                    "store_path": 0,
+                    "external_path": 64,
+                    "type": 64,
+                    "state": 64,
+                    "title": 64,
+                    "url": 64,
+                    "format": 64,
+                    "created_at": 64,
+                    "body": 64,
+                },
+            )
+            + f"[{len(self.body) if self.body else 0} body chars]"
         )
 
     def __str__(self):

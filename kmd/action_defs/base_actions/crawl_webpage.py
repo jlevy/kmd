@@ -5,7 +5,7 @@ from kmd.config.settings import LogLevel
 from kmd.errors import ApiResultError, InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.model import Format, Item, ItemType, PerItemAction, Precondition
-from kmd.preconditions.precondition_defs import is_url
+from kmd.preconditions.precondition_defs import is_url_item
 
 log = get_logger(__name__)
 
@@ -17,7 +17,7 @@ class CrawlWebpage(PerItemAction):
 
     description: str = "Crawl a web page using Firecrawl's web crawler and save it in Markdown."
 
-    precondition: Precondition = is_url
+    precondition: Precondition = is_url_item
 
     def run_item(self, item: Item) -> Item:
         if not item.url:

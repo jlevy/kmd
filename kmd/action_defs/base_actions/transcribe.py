@@ -6,7 +6,7 @@ from kmd.file_storage.workspaces import current_workspace
 from kmd.media.media_tools import cache_and_transcribe
 from kmd.model import common_params, FileExt, Format, Item, ItemType, ParamList, PerItemAction
 from kmd.model.preconditions_model import Precondition
-from kmd.preconditions.precondition_defs import is_audio_resource, is_url, is_video_resource
+from kmd.preconditions.precondition_defs import is_audio_resource, is_url_item, is_video_resource
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.util.url import as_file_url
 
@@ -21,7 +21,7 @@ class Transcribe(PerItemAction):
 
     description: str = "Download and transcribe audio from a podcast or video."
 
-    precondition: Precondition = is_url | is_audio_resource | is_video_resource
+    precondition: Precondition = is_url_item | is_audio_resource | is_video_resource
 
     params: ParamList = common_params("language")
 

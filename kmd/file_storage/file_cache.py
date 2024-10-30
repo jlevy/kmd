@@ -64,6 +64,7 @@ class FileMtimeCache(Generic[T]):
         Updates the cache with the new value for the given path.
         """
         key = self._cache_key(path)
+        value = copy.deepcopy(value)
         mtime_hash = file_mtime_hash(path)
         with self.lock:
             self.log_stats()

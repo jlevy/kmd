@@ -3,7 +3,7 @@ from kmd.errors import InvalidInput, WebFetchError
 from kmd.exec.action_registry import kmd_action
 from kmd.media.media_services import get_media_metadata
 from kmd.model import Item, PerItemAction, Precondition
-from kmd.preconditions.precondition_defs import is_url
+from kmd.preconditions.precondition_defs import is_url_item
 from kmd.web_content.web_extract import fetch_extract
 
 log = get_logger(__name__)
@@ -16,7 +16,7 @@ class FetchPageMetadata(PerItemAction):
 
     description: str = "Fetches a web page for title, description, and thumbnail, if available."
 
-    precondition: Precondition = is_url
+    precondition: Precondition = is_url_item
 
     cacheable: bool = False
 

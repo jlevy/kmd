@@ -15,10 +15,11 @@ for better clarity and type checking.
 """
 
 
-def is_url(text: str, http_only: bool = False) -> bool:
+def is_url(text: str | Url, http_only: bool = False) -> bool:
     """
     Check if a string is a URL.
     """
+    text = str(text)  # Handle paths or anything else unexpected.
     try:
         result = urlparse(text)
         if http_only:

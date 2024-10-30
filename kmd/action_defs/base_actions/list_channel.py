@@ -3,7 +3,7 @@ from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.media.media_services import canonicalize_media_url, list_channel_items
 from kmd.model import Action, ActionInput, ActionResult, Item, Precondition
-from kmd.preconditions.precondition_defs import is_url
+from kmd.preconditions.precondition_defs import is_url_item
 
 log = get_logger(__name__)
 
@@ -21,7 +21,7 @@ class ListChannel(Action):
         """
     )
 
-    precondition: Precondition = is_url
+    precondition: Precondition = is_url_item
 
     def run(self, items: ActionInput) -> ActionResult:
         item = items[0]

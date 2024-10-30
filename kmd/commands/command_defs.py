@@ -29,7 +29,13 @@ from kmd.config.text_styles import (
     SPINNER,
 )
 from kmd.errors import InvalidInput, InvalidState
-from kmd.exec.resolve_args import assemble_path_args, assemble_store_path_args
+from kmd.exec.resolve_args import (
+    assemble_path_args,
+    assemble_store_path_args,
+    resolvable_paths,
+    resolve_arg,
+    resolve_path_arg,
+)
 from kmd.file_formats.chat_format import tail_chat_history
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_storage.workspaces import (
@@ -52,13 +58,7 @@ from kmd.model.file_formats_model import (
 )
 from kmd.model.items_model import Item, ItemType
 from kmd.model.params_model import USER_SETTABLE_PARAMS
-from kmd.model.paths_model import (
-    as_url_or_path,
-    fmt_shell_path,
-    fmt_store_path,
-    resolve_at_path,
-    StorePath,
-)
+from kmd.model.paths_model import fmt_shell_path, fmt_store_path, resolve_at_path, StorePath
 from kmd.model.shell_model import ShellResult
 from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths
@@ -164,7 +164,7 @@ def cache_content(*urls_or_paths: str) -> None:
     """
     output()
     for url_or_path in urls_or_paths:
-        locator = as_url_or_path(url_or_path)
+        locator = resolve_arg(url_or_path)
         cache_path, was_cached = file_cache_tools.cache_content(locator)
         cache_str = " (already cached)" if was_cached else ""
         output(f"{fmt_shell_path(url_or_path)}{cache_str}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
@@ -683,15 +683,28 @@ def log_level(level: Optional[str] = None, console: bool = False, file: bool = F
 
 
 @kmd_command
-def add_resource(*files_or_urls: str) -> None:
+def import_item(
+    *files_or_urls: str, type: ItemType = ItemType.resource, inplace: bool = False
+) -> ShellResult:
     """
-    Add a file or URL resource to the workspace.
+    Add a file or URL resource to the workspace as an item, with associated metadata.
+
+    :param inplace: If set and the item is already in the store, reimport the item,
+      adding or rewriting metadata frontmatter.
+    :param type: Change the item type. Usually items are imported as resource type
+      but for example you may wish to import a file as a doc type.
     """
     if not files_or_urls:
         raise InvalidInput("No files or URLs provided to import")
 
     ws = current_workspace()
-    store_paths = [ws.add_resource(r) for r in files_or_urls]
+    store_paths = []
+
+    locators = [resolve_arg(r) for r in files_or_urls]
+    for locator in locators:
+        store_path = ws.import_item(locator, as_type=type, reimport=inplace)
+        store_paths.append(store_path)
+
     output_status(
         "Imported %s %s:\n%s",
         len(store_paths),
@@ -700,18 +713,46 @@ def add_resource(*files_or_urls: str) -> None:
     )
     select(*store_paths)
 
+    return ShellResult(show_selection=True)
+
 
 @kmd_command
 def rename(path: str, new_path: str) -> None:
     """
     Rename a file or item. Creates any new parent paths as needed.
+    Note this may invalidate relations that point to the old store path.
+
+    TODO: Add an option here to update all relations in the workspace.
     """
     from_path, to_path = assemble_path_args(path, new_path)
     to_path.parent.mkdir(parents=True, exist_ok=True)
     os.rename(from_path, to_path)
 
     output_status(f"Renamed: {fmt_shell_path(from_path)} -> {fmt_shell_path(to_path)}")
-    select(to_path)
+
+
+@kmd_command
+def copy(*paths: str) -> None:
+    """
+    Copy the items at the given paths to the target path.
+    """
+    if len(paths) < 2:
+        raise InvalidInput("Must provide at least one source path and a target path")
+
+    src_paths = [resolve_path_arg(path) for path in paths[:-1] if path]
+    dest_path = resolve_path_arg(paths[-1])
+
+    if len(src_paths) == 1 and dest_path.is_dir():
+        dest_path = dest_path / src_paths[0].name
+    elif len(src_paths) > 1 and not dest_path.is_dir():
+        raise InvalidInput(f"Cannot copy multiple files to a file target: {dest_path}")
+
+    for src_path in src_paths:
+        copyfile_atomic(src_path, dest_path, make_parents=True)
+
+    output_status(
+        f"Copied:\n{fmt_lines(fmt_shell_path(p) for p in src_paths)}\n->\n{fmt_lines([fmt_shell_path(dest_path)])}",
+    )
 
 
 @kmd_command
@@ -721,10 +762,9 @@ def archive(*paths: str) -> None:
     """
     store_paths = assemble_store_path_args(*paths)
     ws = current_workspace()
-    for store_path in store_paths:
-        ws.archive(store_path)
+    archived_paths = [ws.archive(store_path) for store_path in store_paths]
 
-    output_status(f"Archived:\n{fmt_lines(store_paths)}")
+    output_status(f"Archived:\n{fmt_lines(archived_paths)}")
     select()
 
 
@@ -757,8 +797,11 @@ def trash(*paths: str) -> None:
     """
     from send2trash import send2trash
 
-    send2trash(list(paths))
-    output_status(f"Deleted (check trash or recycling bin to recover):\n{fmt_lines(paths)}")
+    resolved_paths = assemble_path_args(*paths)
+    send2trash(list(resolved_paths))
+    output_status(
+        f"Deleted (check trash or recycling bin to recover):\n{fmt_lines(resolved_paths)}"
+    )
 
 
 @kmd_command
@@ -1050,8 +1093,8 @@ def files(
     total_displayed_size = 0
     now = datetime.now(timezone.utc)
 
-    format_str = "%8s  %12s  %s"
-    indent = " " * (8 + 12 + 4)
+    format_str = "%12s  %8s  %s"
+    indent = " " * (12 + 8 + 4)
 
     with console_pager(use_pager=pager):
         for group_name, group_df in grouped:
@@ -1075,8 +1118,8 @@ def files(
 
                 output(
                     format_str,
-                    file_size,
                     file_mod_time,
+                    file_size,
                     display_name,
                     text_wrap=Wrap.NONE,
                 )
@@ -1140,12 +1183,14 @@ def search(
     tool_check().require(CmdlineTool.ripgrep)
     from ripgrepy import RipGrepNotFound, Ripgrepy
 
+    resolved_paths = assemble_path_args(*paths)
+
     strip_prefix = None
-    if not paths:
-        paths = (".",)
+    if not resolved_paths:
+        resolved_paths = (Path("."),)
         strip_prefix = "./"
     try:
-        rg = Ripgrepy(query_str, *paths)
+        rg = Ripgrepy(query_str, *[str(p) for p in resolved_paths])
         rg = rg.files_with_matches().sort(sort)
         if ignore_case:
             rg = rg.ignore_case()
@@ -1182,7 +1227,7 @@ def graph_view(
 
 
 @kmd_command
-def normalize(*paths: str) -> None:
+def normalize(*paths: str) -> ShellResult:
     """
     Normalize the given items, reformatting files' YAML and text or Markdown according
     to our conventions.
@@ -1207,21 +1252,25 @@ def normalize(*paths: str) -> None:
                 )
             canon_paths.append(item_store_path)
 
-    if len(canon_paths) == 1:
-        select(*canon_paths)
-
     # TODO: Also consider implementing duplicate elimination here.
+
+    if len(canon_paths) > 0:
+        select(*canon_paths)
+    return ShellResult(show_selection=len(canon_paths) > 0)
 
 
 @kmd_command
-def reformat(*paths: str, inplace: bool = False) -> None:
+def reformat(*paths: str, inplace: bool = False) -> ShellResult:
     """
     Format text, Markdown, or HTML according to kmd conventions.
 
     :param inplace: Overwrite the original file. Otherwise save to a new
     file with `_formatted` appended to the original name.
     """
-    for path in paths:
+    resolved_paths = assemble_path_args(*paths)
+    final_paths = []
+
+    for path in resolved_paths:
         target_path = None
         dirname, name, item_type, ext = split_filename(path)
         new_name = f"{name}_formatted"
@@ -1232,11 +1281,18 @@ def reformat(*paths: str, inplace: bool = False) -> None:
             trash(path)
             os.rename(target_path, path)
             output_status("Formatted:\n%s", fmt_lines([fmt_shell_path(path)]))
+            final_paths.append(path)
         else:
             output_status(
                 "Formatted:\n%s",
                 fmt_lines([f"{fmt_shell_path(path)} -> {fmt_shell_path(target_path)}"]),
             )
+            final_paths.append(target_path)
+
+    resolvable = resolvable_paths(final_paths)
+    if resolvable:
+        select(*resolvable)
+    return ShellResult(show_selection=len(resolvable) > 0)
 
 
 @kmd_command

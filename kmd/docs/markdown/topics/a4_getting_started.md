@@ -172,7 +172,7 @@ A few of the most important commands for managing files and work are these:
 
 - `history` to see recent commands you've run.
 
-- `add_resource` to add a resource such as a URL or a file to your local workspace.
+- `import_item` to add a resource such as a URL or a file to your local workspace.
 
 The set of actions that do specific useful things is much longer, but a few to be aware of
 include:

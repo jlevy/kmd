@@ -2,7 +2,7 @@ from typing import Tuple
 
 from kmd.exec.action_registry import kmd_action
 from kmd.model import Precondition, SequenceAction
-from kmd.preconditions.precondition_defs import is_audio_resource, is_url, is_video_resource
+from kmd.preconditions.precondition_defs import is_audio_resource, is_url_item, is_video_resource
 
 
 @kmd_action
@@ -25,6 +25,6 @@ class TranscribeAnnotateSummarize(SequenceAction):
 
     cacheable: bool = True
 
-    precondition: Precondition = is_url | is_audio_resource | is_video_resource
+    precondition: Precondition = is_url_item | is_audio_resource | is_video_resource
 
     run_per_item: bool = True

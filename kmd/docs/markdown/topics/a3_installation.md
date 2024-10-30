@@ -43,7 +43,7 @@ apt install pipx ffmpeg ripgrep bat libmagic1
 Now install a recent Python and Poetry:
 
 ```shell
-pyenv install 3.11.10  # Or any later version, like 3.12.6.
+pyenv install 3.12.7  # Or any version 3.11+ should work.
 pipx install poetry
 poetry self add "poetry-dynamic-versioning[plugin]"  # Helps build versioning.
 ```

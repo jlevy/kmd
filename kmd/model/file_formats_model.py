@@ -57,6 +57,21 @@ class Format(Enum):
             self.python,
         ]
 
+    def supports_frontmatter(self) -> bool:
+        """
+        Is this format compatible with frontmatter format?
+        """
+        return self in [
+            self.url,
+            self.plaintext,
+            self.markdown,
+            self.md_html,
+            self.html,
+            self.yaml,
+            self.python,
+            self.csv,
+        ]
+
     def media_format(self) -> MediaType:
         format_to_media_format = {
             Format.url: MediaType.webpage,
@@ -77,17 +92,6 @@ class Format(Enum):
             Format.mp4: MediaType.video,
         }
         return format_to_media_format.get(self, MediaType.binary)
-
-    def supports_frontmatter(self) -> bool:
-        return self in [
-            self.url,
-            self.plaintext,
-            self.markdown,
-            self.md_html,
-            self.html,
-            self.yaml,
-            self.python,
-        ]
 
     def is_audio(self) -> bool:
         return self in [self.mp3, self.m4a]
