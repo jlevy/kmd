@@ -340,10 +340,13 @@ def normalize_markdown(
     return result
 
 
-def wrap_markdown(markdown_text: str) -> str:
+def fill_markdown(markdown_text: str, dedent_input: bool = True) -> str:
     """
     Normalize and wrap Markdown text for reading on the console.
+    Also dedents and strips the input, so it can be used on docstrings.
     """
+    if dedent_input:
+        markdown_text = dedent(markdown_text).strip()
     return normalize_markdown(markdown_text, line_wrapper=wrap_lines_to_width)
 
 

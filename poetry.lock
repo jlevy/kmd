@@ -1455,13 +1455,13 @@ files = [
 
 [[package]]
 name = "exa-py"
-version = "1.4.0"
+version = "1.5.1"
 description = "Python SDK for Exa API."
 optional = false
 python-versions = "*"
 files = [
-    {file = "exa_py-1.4.0-py3-none-any.whl", hash = "sha256:89e425c44ee8a78e57ca831a2b1c12adfc75be0ac5c1de0c6ab49f91b0c5398b"},
-    {file = "exa_py-1.4.0.tar.gz", hash = "sha256:d31e13ab290203c44f7fe66ae34c9ad3329e0d9fb7a346d96b206e1d0f647eed"},
+    {file = "exa_py-1.5.1-py3-none-any.whl", hash = "sha256:66315909547e2e205c51acfcade6398b4fa15aa4556abf053a26ebbfb1f5b58b"},
+    {file = "exa_py-1.5.1.tar.gz", hash = "sha256:f8798e1a95d19e13b9b24c35af28af0aeeb1e28ccb69987cdb1476a04424ace5"},
 ]
 
 [package.dependencies]
@@ -1625,13 +1625,13 @@ woff = ["brotli (>=1.0.1)", "brotlicffi (>=0.8.0)", "zopfli (>=0.1.4)"]
 
 [[package]]
 name = "frontmatter-format"
-version = "0.1.4"
-description = "A format for YAML frontmatter on any file."
+version = "0.1.5"
+description = "A micro-format for YAML metadata on any file."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "frontmatter_format-0.1.4-py3-none-any.whl", hash = "sha256:2906a5483c60e1a837980989e7956b451e82238e4bf15d842f5c75ad9be8e015"},
-    {file = "frontmatter_format-0.1.4.tar.gz", hash = "sha256:86de8b35dabd36a27b9ee440fc939a3a4d578f033914e23341864aa8181b3813"},
+    {file = "frontmatter_format-0.1.5-py3-none-any.whl", hash = "sha256:41f32f3756815140ada86bcb976c37936dccf0c12b8433aadbf1e794a77a3b02"},
+    {file = "frontmatter_format-0.1.5.tar.gz", hash = "sha256:17c03b3439da194905bf7469ba3cd29f4eaba6c33f2f28eca16efcc7c9e9e170"},
 ]
 
 [package.dependencies]
@@ -2598,13 +2598,13 @@ dev = ["Sphinx (>=5.1.1)", "black (==24.8.0)", "build (>=0.10.0)", "coverage[tom
 
 [[package]]
 name = "litellm"
-version = "1.50.4"
+version = "1.51.2"
 description = "Library to easily interface with LLM API providers"
 optional = false
 python-versions = "!=2.7.*,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,>=3.8"
 files = [
-    {file = "litellm-1.50.4-py3-none-any.whl", hash = "sha256:cc6992275e24a0bbb4a3b377e6842d45a8510fc85d7f255930a64bb872980a36"},
-    {file = "litellm-1.50.4.tar.gz", hash = "sha256:a7e68ef614f631b58969c2c7a5154a565ba5974558d437c8cd6c8623654880ea"},
+    {file = "litellm-1.51.2-py3-none-any.whl", hash = "sha256:a8469d8b037a61fd7ba5041b2c42b7f1ba433d4953081b86c9916b6dd220e51c"},
+    {file = "litellm-1.51.2.tar.gz", hash = "sha256:a86e524b5cf9ad2863d835adb81fd92afd206a190c8629f3e86f652b5f405efa"},
 ]
 
 [package.dependencies]
@@ -3738,13 +3738,13 @@ sympy = "*"
 
 [[package]]
 name = "openai"
-version = "1.52.2"
+version = "1.53.0"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.52.2-py3-none-any.whl", hash = "sha256:57e9e37bc407f39bb6ec3a27d7e8fb9728b2779936daa1fcf95df17d3edfaccc"},
-    {file = "openai-1.52.2.tar.gz", hash = "sha256:87b7d0f69d85f5641678d414b7ee3082363647a5c66a462ed7f3ccb59582da0d"},
+    {file = "openai-1.53.0-py3-none-any.whl", hash = "sha256:20f408c32fc5cb66e60c6882c994cdca580a5648e10045cd840734194f033418"},
+    {file = "openai-1.53.0.tar.gz", hash = "sha256:be2c4e77721b166cce8130e544178b7d579f751b4b074ffbaade3854b6f85ec5"},
 ]
 
 [package.dependencies]
@@ -7271,7 +7271,7 @@ websockets = ">=13.0"
 
 [package.extras]
 build = ["build", "hatchling", "pip", "setuptools (>=71.0.2)", "wheel"]
-curl-cffi = ["curl-cffi (==0.5.10)", "curl-cffi[] (>=0.5.10,<0.6.dev0 || ==0.7.*)"]
+curl-cffi = ["curl-cffi (==0.5.10)", "curl-cffi[][] (>=0.5.10,<0.6.dev0 || ==0.7.*)"]
 dev = ["autopep8 (>=2.0,<3.0)", "pre-commit", "pytest (>=8.1,<9.0)", "ruff (>=0.5.0,<0.6.0)"]
 py2exe = ["py2exe (>=0.12)"]
 pyinstaller = ["pyinstaller (>=6.7.0)"]
@@ -7390,4 +7390,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "cc74dbe54b0de0ea13e3a541a6e6a9ec9d5e99379b574ee8af4ae40e10289db8"
+content-hash = "a80a19f1713becd0504f2dd692a0d9350a6316c5f2d7f5549d34c1d47b51b45e"

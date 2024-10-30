@@ -1,5 +1,6 @@
+from enum import Enum
 from textwrap import dedent
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel
 
@@ -58,30 +59,63 @@ class SuggestedCommand(BaseModel):
         ).strip()
 
 
+class Confidence(str, Enum):
+    """
+    How confident the assistant is that the answer is correct.
+    """
+
+    direct_answer = "direct_answer"
+    """
+    This response is a direct answer to the user's question.
+    """
+
+    partial_answer = "partial_answer"
+    """
+    This response is a partial answer to the user's question.
+    """
+
+    conversation = "conversation"
+    """
+    This response is conversational, not a direct answer to a user's question.
+    """
+
+    info_request = "info_request"
+    """
+    This response is a request for more information from the user.
+    """
+
+    unsure = "unsure"
+    """
+    This assistant is unsure of how to respond or answer the question.
+    """
+
+
 class AssistantResponse(BaseModel):
-    commentary: Optional[str]
+    response_text: str
     """
-    The Markdown-formatted text response from the assistant. Should include
-    only the assistant's initial response and commentary, *not* any specific
-    output or commands.
+    Put the answer to the user's question here.
 
-    If there is a simple direct answer to the question and no commentary is
-    needed, then make this blank and use `answer_text` instead.
+    If the user's last message was a question, and there is a clear answer,
+    this should be a direct answer to the question and confidence should be
+    `direct_answer`.
+    
+    If the answer is not complete, confidence should be
+    `partial_answer`.
+
+    If answering the last message would would require more information,
+    this response text should be one or more questions to get the information
+    needed and the confidence should be `info_request`.
+
+    If the user is being conversational, this response text should be a
+    response to the user's message and the confidence should be `conversation`.
+
+    If the assistant is unsure of how to respond, confidence should be `unsure`.
     """
 
-    answer_text: Optional[str]
+    confidence: Confidence
     """
-    Text that is a direct answer to the question by the assistant, if applicable.
-    Leave this blank if the answer is just commentary!
-
-    This is not commentary. It should not say the same thing as the commentary.
-    It is the answer or the text requested. It should be in a form that the user
-    could copy or use in another context, if desired.
-
-    If the answer is complex, you may include Markdown formatting. Do not
-    include any other commentary in `answer_text`.
-
-    This can be blank if the response is only commentary.
+    What is the nature of this response? Is it a direct answer, a partial answer,
+    a conversational response, or a request for more information?
     """
 
     suggested_commands: List[SuggestedCommand]

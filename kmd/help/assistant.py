@@ -3,10 +3,11 @@ from typing import Callable
 
 from cachetools import cached
 from pydantic import ValidationError
+from rich.text import Text
 
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings
-from kmd.config.text_styles import COLOR_STATUS
+from kmd.config.text_styles import COLOR_HEADING, COLOR_HINT, COLOR_STATUS, EMOJI_ASSISTANT
 from kmd.docs import api_docs, assistant_instructions
 from kmd.errors import InvalidState, KmdRuntimeError
 from kmd.file_formats.chat_format import (
@@ -18,7 +19,7 @@ from kmd.file_formats.chat_format import (
 )
 from kmd.file_storage.workspaces import current_workspace, current_workspace_info, get_param_value
 from kmd.llms.llm_completion import llm_template_completion
-from kmd.model.assistant_response_model import AssistantResponse
+from kmd.model.assistant_response_model import AssistantResponse, Confidence
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message
 from kmd.model.paths_model import fmt_loc
@@ -28,8 +29,12 @@ from kmd.shell.shell_output import (
     print_assistance,
     print_code_block,
     print_small_heading,
+    print_style,
     print_text_block,
+    Style,
+    Wrap,
 )
+from kmd.text_formatting.markdown_normalization import fill_markdown
 from kmd.util.format_utils import fmt_paras
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none
@@ -127,22 +132,28 @@ def assist_system_message(skip_api: bool = False) -> Message:
     )
 
 
-def print_assistant_response(response: AssistantResponse) -> None:
-    if response.commentary:
-        print_assistance(response.commentary)
+def print_assistant_response(response: AssistantResponse, model: LLM) -> None:
+    with print_style(Style.PAD):
+        assistant_name = Text(f"{EMOJI_ASSISTANT} Kmd Assistant", style=COLOR_HEADING)
+        info = Text(f"({model}) [{response.confidence.value}]", style=COLOR_HINT)
+        cprint(assistant_name + " " + info)
+        cprint()
 
-    if response.answer_text:
-        print_text_block(response.answer_text)  # Not Markdown so it's easy to copy/paste.
+        if response.response_text:
+            if response.confidence in {Confidence.direct_answer, Confidence.partial_answer}:
+                print_text_block(fill_markdown(response.response_text))
+            else:
+                print_assistance(fill_markdown(response.response_text))
 
-    if response.suggested_commands:
-        formatted_commands = "\n\n".join(c.full_str() for c in response.suggested_commands)
-        print_small_heading("Suggested commands:")
-        print_code_block(formatted_commands)
+        if response.suggested_commands:
+            formatted_commands = "\n\n".join(c.full_str() for c in response.suggested_commands)
+            print_small_heading("Suggested commands:")
+            print_code_block(formatted_commands)
 
-    if response.see_also:
-        formatted_see_also = ", ".join(f"`{cmd}`" for cmd in response.see_also)
-        print_small_heading("See also:")
-        cprint(formatted_see_also, color=COLOR_STATUS)
+        if response.see_also:
+            formatted_see_also = ", ".join(f"`{cmd}`" for cmd in response.see_also)
+            print_small_heading("See also:")
+            cprint(formatted_see_also, color=COLOR_STATUS, text_wrap=Wrap.WRAP_INDENT)
 
 
 def assistance(input: str, fast: bool = False) -> None:
@@ -183,15 +194,14 @@ def assistance(input: str, fast: bool = False) -> None:
     try:
         response_data = json.loads(response.content)
         assistant_response = AssistantResponse.model_validate(response_data)
-
-        log.message("Assistant response: %s", assistant_response)
+        log.debug("Assistant response: %s", assistant_response)
 
         # Record the assistant's response, in structured format.
         append_chat_message(
             assistant_history_file, ChatMessage(ChatRole.assistant, assistant_response.model_dump())
         )
 
-        print_assistant_response(assistant_response)
+        print_assistant_response(assistant_response, model)
 
     except (ValidationError, json.JSONDecodeError) as e:
         log.error("Error parsing assistant response: %s", e)

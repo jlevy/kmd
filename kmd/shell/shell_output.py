@@ -28,7 +28,6 @@ from kmd.config.text_styles import (
     COLOR_SELECTION,
     COLOR_STATUS,
     CONSOLE_WRAP_WIDTH,
-    EMOJI_ASSISTANT,
     HRULE,
 )
 from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH
@@ -260,7 +259,7 @@ def cprint(
     transform: Callable[[str], str] = lambda x: x,
     extra_indent: str = "",
     end="\n",
-    width: Optional[int] = DEFAULT_WRAP_WIDTH,
+    width: Optional[int] = None,
 ):
     """
     Main way to print to the shell. Wraps `rprint` with all our formatting options.
@@ -271,8 +270,8 @@ def cprint(
     if tl_prefix:
         extra_indent = tl_prefix + extra_indent
 
-    if not text_wrap.should_wrap:
-        width = None
+    if text_wrap.should_wrap and not width:
+        width = DEFAULT_WRAP_WIDTH
 
     if not isinstance(message, (Text, Markdown)):
         message = str(message)
@@ -364,21 +363,15 @@ def print_help(message: str, *args, text_wrap: Wrap = Wrap.WRAP, extra_indent: s
     cprint(message, *args, text_wrap=text_wrap, color=COLOR_HELP, extra_indent=extra_indent)
 
 
-def print_assistance(
-    message: str, *args, model: str = "", text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""
-):
-    model_str = f"({model})" if model else ""
-    prefix = f"\n{EMOJI_ASSISTANT}{model_str} "
-    markdown = Markdown(prefix + message)
-    with print_style(Style.PAD_TOP):
-        cprint(
-            markdown,
-            *args,
-            text_wrap=text_wrap,
-            color=COLOR_ASSISTANCE,
-            extra_indent=extra_indent,
-            width=CONSOLE_WRAP_WIDTH,
-        )
+def print_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+    cprint(
+        message,
+        *args,
+        text_wrap=text_wrap,
+        color=COLOR_ASSISTANCE,
+        extra_indent=extra_indent,
+        width=CONSOLE_WRAP_WIDTH,
+    )
 
 
 def print_code_block(
@@ -421,6 +414,7 @@ def print_heading(
             text_wrap=text_wrap,
             color=color,
             extra_indent=extra_indent,
+            width=CONSOLE_WRAP_WIDTH,
         )
 
 
