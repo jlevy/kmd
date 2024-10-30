@@ -45,11 +45,11 @@ log = get_logger(__name__)
 
 @cached({})
 def assist_preamble(skip_api: bool = False, base_actions_only: bool = False) -> str:
-    from kmd.help.help_page import print_help_page  # Avoid circular imports.
+    from kmd.help.help_page import print_manual  # Avoid circular imports.
 
     return fmt_paras(
         str(assistant_instructions),
-        output_as_string(lambda: print_help_page(base_actions_only)),
+        output_as_string(lambda: print_manual(base_actions_only)),
         None if skip_api else api_docs,
     )
 

@@ -385,8 +385,7 @@ def print_code_block(
 
 
 def print_text_block(message: str, *args, extra_indent: str = ""):
-    with print_style(Style.PAD):
-        cprint(message, text_wrap=Wrap.WRAP_FULL, *args, extra_indent=extra_indent)
+    cprint(message, text_wrap=Wrap.WRAP_FULL, *args, extra_indent=extra_indent)
 
 
 def print_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):

@@ -57,19 +57,20 @@ def find_upstream_item(
     )
     source_items = [workspace.load(StorePath(loc)) for loc in item.relations.derived_from]
 
+    log.message("Looking for upstream item that matches precondition: %s", precondition)
     for source_item in source_items:
         source_path = not_none(source_item.store_path)
         if precondition(source_item):
             log.message(
-                "Found source item that matches requirements:\n%s",
-                fmt_lines([fmt_loc(source_path)]),
+                "Found source item that matches requirements: %s",
+                fmt_loc(source_path),
             )
             return source_item
         else:
             log.message(
-                "Skipping source item that does not match precondition %s:\n%s",
+                "Item does not match precondition %s: %s",
                 precondition,
-                fmt_lines([fmt_loc(source_path)]),
+                fmt_loc(source_path),
             )
 
     for source_item in source_items:

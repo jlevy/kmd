@@ -5,7 +5,7 @@ Make docs and source code for kmd available to itself.
 from pathlib import Path
 
 from kmd.config.logger import get_logger
-from kmd.docs.assemble_source_code import load_sources, SourceCode
+from kmd.docs.assemble_source_code import load_source_code, SourceCode
 from kmd.util.lazyobject import lazyobject
 from kmd.util.string_template import StringTemplate
 
@@ -47,7 +47,7 @@ faq = _lazy_load("markdown/topics/b3_faq")
 
 @lazyobject
 def source_code() -> SourceCode:
-    return load_sources()
+    return load_source_code()
 
 
 @lazyobject
@@ -64,7 +64,7 @@ def assistant_instructions() -> str:
     template = StringTemplate(
         _load_help_src("markdown/assistant_instructions_template"), ["assistant_response_model"]
     )
-    model_src = load_sources().assistant_response_model_src
+    model_src = load_source_code().assistant_response_model_src
     model_src_lines = len(model_src.strip().splitlines())
     instructions = template.format(assistant_response_model=model_src)
     instructions_lines = len(instructions.strip().splitlines())

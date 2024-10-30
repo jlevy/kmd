@@ -200,12 +200,11 @@ class Item:
                     return default
             except (KeyError, ValueError) as e:
                 log.warning(
-                    "Error reading %sfield `%s` so using default `%s`: %s: %s",
+                    "Error reading %sfield `%s` so using default %r: %s",
                     info_prefix,
                     key,
                     default,
                     e,
-                    item_dict,
                 )
                 return default
 
@@ -242,9 +241,7 @@ class Item:
             key: value for key, value in item_dict.items() if key not in all_fields
         }
         if unexpected_metadata:
-            log.info(
-                "Skipping unexpected metadata on item: %s: %s", info_prefix, unexpected_metadata
-            )
+            log.info("Skipping unexpected metadata on item: %s%s", info_prefix, unexpected_metadata)
 
         result = cls(
             type=type_,

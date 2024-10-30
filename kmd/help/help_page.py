@@ -46,7 +46,7 @@ def print_see_also(commands_or_questions: List[str]) -> None:
         cprint(quote_item(item), text_wrap=Wrap.INDENT_ONLY)
 
 
-def print_help_page(base_actions_only: bool = False) -> None:
+def print_manual(base_actions_only: bool = False) -> None:
 
     print_markdown(what_is_kmd)
 

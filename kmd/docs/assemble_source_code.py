@@ -16,28 +16,31 @@ kmd_base_path = Path(os.path.dirname(__file__)).parent
 
 _TESTS_COMMENT_STR = "\n## Tests"
 
+_SOURCE_SEPARATOR = "\n---\n"
+
 
 def _format_source_file(path: Path) -> str:
     with open(path, "r") as file:
         file_content = file.read()
 
     # Don't include any pytests that happen to be in the files.
-    file_content = file_content.split(_TESTS_COMMENT_STR)[0] + "\n"
+    file_content = file_content.split(_TESTS_COMMENT_STR)[0]
+    file_content = file_content.rstrip("\n") + "\n"
 
-    header = f"\n\n# File {path.relative_to(kmd_base_path.parent)}:\n\n"
-    footer = "\n\n"
+    header = f"# File {path.relative_to(kmd_base_path.parent)}:\n\n"
 
-    return header + file_content + footer
+    return header + (file_content if file_content.strip() else "(empty)")
 
 
 def _format_source_module(module_path: Path) -> str:
-    source_files = [f for f in os.listdir(module_path) if f.endswith(".py") and f != "__init__.py"]
+    source_files = [f for f in os.listdir(module_path) if f.endswith(".py")]
     output: List[str] = []
 
     for filename in source_files:
-        output.append(_format_source_file(module_path / filename))
+        if source_code := _format_source_file(module_path / filename):
+            output.append(source_code)
 
-    return "".join(output)
+    return _SOURCE_SEPARATOR.join(output)
 
 
 def _format_file_or_module(path: Path) -> str:
@@ -49,11 +52,11 @@ def _format_file_or_module(path: Path) -> str:
         raise ValueError(f"Path for source not found (or not a file/directory): {fmt_path(path)}")
 
 
-def source_for(*paths: Path) -> str:
+def read_source_code(*paths: Path) -> str:
     """
     Get the source code for the given paths, formatted in a format friendly for an LLM.
     """
-    return "\n\n".join(_format_file_or_module(path) for path in paths)
+    return _SOURCE_SEPARATOR.join(filter(None, (_format_file_or_module(path) for path in paths)))
 
 
 @dataclass(frozen=True)
@@ -81,19 +84,19 @@ class SourceCode:
 
 
 @cached(cache={})
-def load_sources() -> SourceCode:
+def load_source_code() -> SourceCode:
     code = SourceCode(
-        model_src=source_for(kmd_base_path / "model"),
-        assistant_response_model_src=source_for(
+        model_src=read_source_code(kmd_base_path / "model"),
+        assistant_response_model_src=read_source_code(
             kmd_base_path / "model" / "assistant_response_model.py"
         ),
-        base_action_defs_src=source_for(kmd_base_path / "action_defs" / "base_actions"),
-        text_tool_src=source_for(
+        base_action_defs_src=read_source_code(kmd_base_path / "action_defs" / "base_actions"),
+        text_tool_src=read_source_code(
             kmd_base_path / "text_formatting",
             kmd_base_path / "lang_tools",
             kmd_base_path / "text_docs" / "text_doc.py",
         ),
-        file_formats_src=source_for(kmd_base_path / "file_formats"),
+        file_formats_src=read_source_code(kmd_base_path / "file_formats"),
     )
     log.info("Loaded sources: %s", str(code))
     return code

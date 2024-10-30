@@ -10,12 +10,19 @@ from kmd.shell.shell_output import cprint, format_name_and_description, print_he
 from kmd.util.format_utils import DEFAULT_INDENT
 
 
+GENERAL_HELP = (
+    "For more information, ask the assistant a question "
+    "(press space twice or type `?`) or check `help`."
+)
+
+
 def _output_command_help(
     name: str,
     description: Optional[str] = None,
     param_info: Optional[List[Param]] = None,
     precondition: Optional[Precondition] = None,
     verbose: bool = True,
+    source: bool = False,
 ):
     command_str = f"the `{name}` command" if name else "this command"
 
@@ -64,10 +71,15 @@ def _output_command_help(
                 )
                 cprint()
 
+    if source:
+        cprint()
+        print_help(GENERAL_HELP)
+        cprint()
+
     if verbose:
         cprint()
         print_help(
-            "For more information, ask the assistant by typing a question (ending in ?) or check `help`."
+            GENERAL_HELP + f" Use `action_source {name}` to see the source code for this action."
         )
         cprint()
 

@@ -1,5 +1,6 @@
 from rich.text import Text
 
+from kmd.action_defs import look_up_action
 from kmd.commands.command_registry import kmd_command
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import (
@@ -12,8 +13,10 @@ from kmd.config.text_styles import (
     COLOR_LOGO,
     LOGO,
 )
+from kmd.docs.assemble_source_code import read_source_code
+from kmd.errors import FileNotFound
 from kmd.help.help_page import print_see_also
-from kmd.shell.shell_output import console_pager, cprint, print_markdown, Wrap
+from kmd.shell.shell_output import console_pager, cprint, print_code_block, print_markdown, Wrap
 from kmd.version import get_version_name
 
 log = get_logger(__name__)
@@ -61,10 +64,10 @@ def help() -> None:
     """
     # TODO: Take an argument to show help for a specific command or action.
 
-    from kmd.help.help_page import print_help_page
+    from kmd.help.help_page import print_manual
 
     with console_pager():
-        print_help_page()
+        print_manual()
 
 
 @kmd_command
@@ -160,3 +163,18 @@ def actions() -> None:
     with console_pager():
         print_actions_help()
         print_see_also(["commands", "help", "faq", "What are the most important Kmd commands?"])
+
+
+@kmd_command
+def action_source(action_name: str) -> None:
+    """
+    Show the source code for an action.
+    """
+
+    action = look_up_action(action_name)
+    source_path = getattr(action, "__source_path__", None)
+    if not source_path:
+        raise FileNotFound(f"No source path found for action `{action_name}`")
+
+    source_code = read_source_code(source_path)
+    print_code_block(source_code, format_name="python")

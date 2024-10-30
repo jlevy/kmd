@@ -31,14 +31,11 @@ class Input:
     @classmethod
     def parse(cls, input_str: str) -> "Input":
         """
-        Parse an Input string in the format `path@hash`.
+        Parse an Input string in the format `some/path/filename.ext@sha1:hash` or
+        `@some/path/filename.ext@sha1:hash`, with a store path and a hash.
         """
-        parts = input_str.split("@")
-        if len(parts) > 2:
-            raise ValueError(
-                f"Invalid input string format. Expected 'path@hash' or 'path': {input_str}"
-            )
-        elif len(parts) == 2:
+        parts = input_str.rsplit("@", 1)
+        if len(parts) == 2:
             path, hash = parts
             return cls(path=StorePath(path), hash=hash)
         else:
