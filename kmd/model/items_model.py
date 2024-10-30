@@ -19,7 +19,7 @@ from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.file_formats_model import FileExt, Format
 from kmd.model.media_model import MediaMetadata
 from kmd.model.operations_model import OperationSummary, Source
-from kmd.model.paths_model import fmt_loc, fmt_shell_path, fmt_store_path, Locator, StorePath
+from kmd.model.paths_model import fmt_loc, fmt_store_path, Locator, StorePath
 from kmd.text_formatting.markdown_util import markdown_to_html
 from kmd.util.format_utils import (
     abbreviate_on_words,
@@ -602,7 +602,7 @@ class Item:
         if self.store_path:
             return fmt_store_path(self.store_path)
         elif self.external_path:
-            return fmt_shell_path(self.external_path)
+            return fmt_loc(self.external_path)
         else:
             return repr(self.abbrev_title())
 

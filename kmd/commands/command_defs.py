@@ -58,7 +58,7 @@ from kmd.model.file_formats_model import (
 )
 from kmd.model.items_model import Item, ItemType
 from kmd.model.params_model import USER_SETTABLE_PARAMS
-from kmd.model.paths_model import fmt_shell_path, fmt_store_path, resolve_at_path, StorePath
+from kmd.model.paths_model import fmt_loc, fmt_store_path, resolve_at_path, StorePath
 from kmd.model.shell_model import ShellResult
 from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths
@@ -119,7 +119,7 @@ def clear_logs() -> None:
         trash(obj_dir)
         os.makedirs(obj_dir, exist_ok=True)
 
-    output_status("Logs cleared:\n%s", fmt_lines([fmt_shell_path(log_path)]))
+    output_status("Logs cleared:\n%s", fmt_lines([fmt_loc(log_path)]))
 
 
 @kmd_command
@@ -153,7 +153,7 @@ def cache_media(*urls: str) -> None:
         cached_paths = media_tools.cache_media(Url(url))
         output(f"{url}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
         for media_type, path in cached_paths.items():
-            output(f"{media_type.name}: {fmt_shell_path(path)}", text_wrap=Wrap.INDENT_ONLY)
+            output(f"{media_type.name}: {fmt_loc(path)}", text_wrap=Wrap.INDENT_ONLY)
         output()
 
 
@@ -167,7 +167,7 @@ def cache_content(*urls_or_paths: str) -> None:
         locator = resolve_arg(url_or_path)
         cache_path, was_cached = file_cache_tools.cache_content(locator)
         cache_str = " (already cached)" if was_cached else ""
-        output(f"{fmt_shell_path(url_or_path)}{cache_str}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
+        output(f"{fmt_loc(url_or_path)}{cache_str}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
         output(f"{cache_path}", text_wrap=Wrap.INDENT_ONLY)
         output()
 
@@ -281,7 +281,7 @@ def init(path: Optional[str] = None) -> None:
     dir = Path(path) if path else Path(".")
     dirs = MetadataDirs(dir)
     if dirs.is_initialized():
-        raise InvalidInput("Workspace already exists: %s", fmt_shell_path(dir))
+        raise InvalidInput("Workspace already exists: %s", fmt_loc(dir))
     if not dir.exists():
         dir.mkdir()
     dirs.initialize()
@@ -426,7 +426,7 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
 
     format = detect_file_format(input_path)
     if not format or not format.is_text():
-        raise InvalidInput(f"Cannot copy non-text files to clipboard: {fmt_shell_path(input_path)}")
+        raise InvalidInput(f"Cannot copy non-text files to clipboard: {fmt_loc(input_path)}")
 
     if raw:
         with open(input_path, "r") as f:
@@ -436,7 +436,7 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
         output_status(
             "Copied raw contents of file to clipboard (%s chars):\n%s",
             len(content),
-            fmt_lines([fmt_shell_path(input_path)]),
+            fmt_lines([fmt_loc(input_path)]),
         )
     else:
         content, metadata_str = fmf_read_raw(input_path)
@@ -448,7 +448,7 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
             "Copied contents of file to clipboard (%s chars%s):\n%s",
             len(content),
             skip_msg,
-            fmt_lines([fmt_shell_path(input_path)]),
+            fmt_lines([fmt_loc(input_path)]),
         )
 
 
@@ -485,7 +485,7 @@ def save(
 
     def copy_file(store_path: StorePath, target_path: Path):
         path = ws.base_dir / store_path
-        log.message("Saving: %s -> %s", fmt_shell_path(path), fmt_shell_path(target_path))
+        log.message("Saving: %s -> %s", fmt_loc(path), fmt_loc(target_path))
         copyfile_atomic(path, target_path, backup_suffix=".bak", make_parents=True)
         if no_frontmatter:
             fmf_strip_frontmatter(target_path)
@@ -512,7 +512,7 @@ def strip_frontmatter(*paths: str) -> None:
     input_paths = assemble_path_args(*paths)
 
     for path in input_paths:
-        log.message("Stripping frontmatter from: %s", fmt_shell_path(path))
+        log.message("Stripping frontmatter from: %s", fmt_loc(path))
         fmf_strip_frontmatter(path)
 
 
@@ -544,7 +544,7 @@ def file_info(
     input_paths = assemble_path_args(*paths)
     output()
     for input_path in input_paths:
-        output(f"{fmt_shell_path(input_path)}:", color=COLOR_EMPH)
+        output(f"{fmt_loc(input_path)}:", color=COLOR_EMPH)
 
         if format:
             mime_type_str = detect_mime_type(input_path) or "unknown"
@@ -728,7 +728,7 @@ def rename(path: str, new_path: str) -> None:
     to_path.parent.mkdir(parents=True, exist_ok=True)
     os.rename(from_path, to_path)
 
-    output_status(f"Renamed: {fmt_shell_path(from_path)} -> {fmt_shell_path(to_path)}")
+    output_status(f"Renamed: {fmt_loc(from_path)} -> {fmt_loc(to_path)}")
 
 
 @kmd_command
@@ -751,7 +751,7 @@ def copy(*paths: str) -> None:
         copyfile_atomic(src_path, dest_path, make_parents=True)
 
     output_status(
-        f"Copied:\n{fmt_lines(fmt_shell_path(p) for p in src_paths)}\n->\n{fmt_lines([fmt_shell_path(dest_path)])}",
+        f"Copied:\n{fmt_lines(fmt_loc(p) for p in src_paths)}\n->\n{fmt_lines([fmt_loc(dest_path)])}",
     )
 
 
@@ -1029,7 +1029,7 @@ def files(
         if not all and path and is_ignored(path.name):
             log.warning(
                 "Requested path is on default ignore list so disabling ignore: %s",
-                fmt_shell_path(path),
+                fmt_loc(path),
             )
             ignore = None
             break
@@ -1077,13 +1077,13 @@ def files(
         item = Item(
             type=ItemType.export,
             title="File Listing",
-            description=f"Files in {', '.join(fmt_shell_path(p) for p in paths_to_show)}",
+            description=f"Files in {', '.join(fmt_loc(p) for p in paths_to_show)}",
             format=Format.csv,
             body=df.to_csv(index=False),
         )
         ws = current_workspace()
         store_path = ws.save(item, as_tmp=True)
-        log.message("File listing saved to: %s", fmt_shell_path(store_path))
+        log.message("File listing saved to: %s", fmt_loc(store_path))
 
         select(store_path)
 
@@ -1114,7 +1114,7 @@ def files(
                 # If we are listing from within a workspace, we include the paths as store paths
                 # (with an @ prefix). Otherwise, use regular paths.
                 rel_path = row["relative_path"]
-                display_name = fmt_store_path(rel_path) if base_is_ws else fmt_shell_path(rel_path)
+                display_name = fmt_store_path(rel_path) if base_is_ws else fmt_loc(rel_path)
 
                 output(
                     format_str,
@@ -1239,7 +1239,7 @@ def normalize(*paths: str) -> ShellResult:
 
     canon_paths = []
     for store_path in store_paths:
-        log.message("Canonicalizing: %s", fmt_shell_path(store_path))
+        log.message("Canonicalizing: %s", fmt_loc(store_path))
         for item_store_path in ws.walk_items(store_path):
             try:
                 ws.normalize(item_store_path)
@@ -1247,7 +1247,7 @@ def normalize(*paths: str) -> ShellResult:
                 log.warning(
                     "%s Could not canonicalize %s: %s",
                     EMOJI_WARN,
-                    fmt_shell_path(item_store_path),
+                    fmt_loc(item_store_path),
                     e,
                 )
             canon_paths.append(item_store_path)
@@ -1280,12 +1280,12 @@ def reformat(*paths: str, inplace: bool = False) -> ShellResult:
         if inplace:
             trash(path)
             os.rename(target_path, path)
-            output_status("Formatted:\n%s", fmt_lines([fmt_shell_path(path)]))
+            output_status("Formatted:\n%s", fmt_lines([fmt_loc(path)]))
             final_paths.append(path)
         else:
             output_status(
                 "Formatted:\n%s",
-                fmt_lines([f"{fmt_shell_path(path)} -> {fmt_shell_path(target_path)}"]),
+                fmt_lines([f"{fmt_loc(path)} -> {fmt_loc(target_path)}"]),
             )
             final_paths.append(target_path)
 

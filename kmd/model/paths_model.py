@@ -251,21 +251,15 @@ An argument to a command or action.
 
 
 def fmt_store_path(store_path: str | Path | StorePath) -> str:
-    return fmt_shell_path(StorePath(store_path))
-
-
-def fmt_shell_path(store_path: str | Path | StorePath) -> str:
-    if isinstance(store_path, StorePath):
-        return store_path.display_str()
-    else:
-        return fmt_path(store_path)
+    return fmt_loc(StorePath(store_path))
 
 
 def fmt_loc(locator: str | Locator) -> str:
     """
-    Use this to format locators: URLs and paths. This automatically formats StorePaths
-    with an @ prefix, and other Paths with quotes and relative to the working directory.
-    (Use `fmt_path` for plain Paths, but not for StorePaths.)
+    Use this to format URLs and paths. This automatically formats StorePaths
+    with an @ prefix, other Paths with quotes and relative to the working directory.
+    It handles everything else like a string. (Note for code not involving
+    StorePaths, you can use `fmt_path` directly for plain Paths.)
     """
     if isinstance(locator, StorePath):
         return locator.display_str()

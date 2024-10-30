@@ -139,6 +139,40 @@ transcribe_format https://www.youtube.com/watch?v=juD99_sPWGU
 show_as_webpage
 ```
 
+### Creating a New Workspace
+
+Although you don't always need one, a *workspace* is very helpful for any real work in Kmd.
+It's just a directory of files, plus a `.kmd/` directory with various logs and metadata.
+
+Note the `.kmd/cache` directory contains all the downloaded videos and media you download,
+so it can get large.
+You can delete these files if they take up too much space.
+
+Typically, we name them like `health.kb` or `personal.kb`, because that makes it clear they
+are in a certain format and may have other data.
+
+Pick a workspace that encompasses a project or topic, and it lets you keep things organized.
+
+Type `workspace` any time to see the current workspace.
+
+By default, when you are not using the shell inside a workspace directory, or when you run
+Kmd the first time, it uses the default *sandbox workspace*.
+
+Once you create a workspace, you can `cd` into that workspace and that will become the
+current workspace.
+(If you're familiar with how the `git` command-line works in conjunction with the `.git/`
+directory, this behavior is very similar.)
+
+To start a new workspace, run a command like
+
+```
+workspace health
+```
+
+This will create a workspace directory called `health.kb` in the current directory.
+You can run `cd health.kb` or `workspace health` to switch to that directory and begin
+working.
+
 ### Essential Kmd Commands
 
 Kmd has quite a few basic commands that are easier to use than usual shell commands.
