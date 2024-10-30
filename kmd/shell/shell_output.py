@@ -6,9 +6,8 @@ import sys
 import textwrap
 import threading
 from contextlib import contextmanager
-from enum import Enum
+from enum import auto, Enum
 from io import StringIO
-from textwrap import dedent
 from typing import Any, Callable, List, Optional
 
 import rich
@@ -32,11 +31,7 @@ from kmd.config.text_styles import (
     EMOJI_ASSISTANT,
     HRULE,
 )
-from kmd.text_formatting.markdown_normalization import (
-    DEFAULT_WRAP_WIDTH,
-    normalize_markdown,
-    wrap_lines_to_width,
-)
+from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH
 from kmd.text_formatting.text_wrapping import wrap_paragraph
 from kmd.util.format_utils import DEFAULT_INDENT, split_paragraphs
 
@@ -133,11 +128,6 @@ def fill_text(
         raise ValueError(f"Unknown text_wrap value: {text_wrap}")
 
 
-def fill_markdown(doc_str: str):
-    doc_str = str(doc_str)  # Convenience for lazy objects.
-    return normalize_markdown(dedent(doc_str).strip(), line_wrapper=wrap_lines_to_width)
-
-
 def format_name_and_description(name: str, doc: str, extra_note: Optional[str] = None) -> Text:
     doc = textwrap.dedent(doc).strip()
     wrapped = fill_text(doc, text_wrap=Wrap.WRAP_INDENT)
@@ -194,23 +184,39 @@ def set_cprint_prefix(prefix: str):
     _thread_local.output_prefix = prefix
 
 
+class Style(Enum):
+    BOX = auto()
+    PAD = auto()
+    PAD_TOP = auto()
+
+
 @contextmanager
-def print_style_box(color: Optional[str] = None):
-    cprint(BOX_TOP, color=color)
-    original_prefix = get_cprint_prefix()
-    set_cprint_prefix(BOX_PREFIX)
-    try:
+def print_style(style: Style, color: Optional[str] = None):
+    """
+    Unified context manager for print styles.
+
+    Args:
+        style: Style enum indicating the desired style (BOX or PAD)
+        color: Optional color for box style
+    """
+    if style == Style.BOX:
+        cprint(BOX_TOP, color=color)
+        original_prefix = get_cprint_prefix()
+        set_cprint_prefix(BOX_PREFIX)
+        try:
+            yield
+        finally:
+            _thread_local.output_prefix = original_prefix
+            cprint(BOX_BOTTOM, color=color)
+    elif style == Style.PAD:
+        cprint()
         yield
-    finally:
-        _thread_local.output_prefix = original_prefix
-        cprint(BOX_BOTTOM, color=color)
-
-
-@contextmanager
-def print_style_pad():
-    cprint()
-    yield
-    cprint()
+        cprint()
+    elif style == Style.PAD_TOP:
+        cprint()
+        yield
+    else:
+        raise ValueError(f"Unknown style: {style}")
 
 
 @contextmanager
@@ -295,9 +301,11 @@ log = get_logger(__name__)
 
 
 def print_markdown(doc_str: str, extra_indent: str = "", rich_markdown_display: bool = True):
-    doc = fill_markdown(str(doc_str))
+    doc_str = str(doc_str)  # Convenience for lazy objects.
     if rich_markdown_display and _output_context.rich_console:
-        doc = Markdown(doc, justify="left")
+        doc = Markdown(doc_str, justify="left")
+    else:
+        doc = doc_str
 
     cprint(doc, extra_indent=extra_indent)
 
@@ -312,7 +320,7 @@ def print_selection(
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
 ):
-    with print_style_box(color=COLOR_SELECTION):
+    with print_style(Style.BOX, color=COLOR_SELECTION):
         cprint(
             message,
             *args,
@@ -328,7 +336,7 @@ def print_status(
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
 ):
-    with print_style_pad():
+    with print_style(Style.PAD):
         cprint(
             message,
             *args,
@@ -360,18 +368,36 @@ def print_assistance(
     message: str, *args, model: str = "", text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""
 ):
     model_str = f"({model})" if model else ""
-    with print_style_pad():
+    prefix = f"\n{EMOJI_ASSISTANT}{model_str} "
+    markdown = Markdown(prefix + message)
+    with print_style(Style.PAD_TOP):
         cprint(
-            f"\n{EMOJI_ASSISTANT}{model_str} " + message,
+            markdown,
             *args,
             text_wrap=text_wrap,
             color=COLOR_ASSISTANCE,
             extra_indent=extra_indent,
+            width=CONSOLE_WRAP_WIDTH,
         )
 
 
+def print_code_block(
+    message: str,
+    *args,
+    format_name="",
+    extra_indent: str = "",
+):
+    markdown = Markdown(f"```{format_name}\n{message}\n```")
+    cprint(markdown, *args, text_wrap=Wrap.NONE, extra_indent=extra_indent)
+
+
+def print_text_block(message: str, *args, extra_indent: str = ""):
+    with print_style(Style.PAD):
+        cprint(message, text_wrap=Wrap.WRAP_FULL, *args, extra_indent=extra_indent)
+
+
 def print_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
-    with print_style_pad():
+    with print_style(Style.PAD):
         cprint(
             message,
             *args,
@@ -381,12 +407,29 @@ def print_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE, extra_
         )
 
 
-def print_heading(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
-    with print_style_pad():
+def print_heading(
+    message: str,
+    *args,
+    text_wrap: Wrap = Wrap.NONE,
+    extra_indent: str = "",
+    color: str = COLOR_HEADING,
+):
+    with print_style(Style.PAD):
         cprint(
             Markdown(f"## {message.upper()}"),
             *args,
             text_wrap=text_wrap,
-            color=COLOR_HEADING,
+            color=color,
             extra_indent=extra_indent,
         )
+
+
+def print_small_heading(
+    message: str,
+    *args,
+    text_wrap: Wrap = Wrap.NONE,
+    extra_indent: str = "",
+    color: str = COLOR_HEADING,
+):
+    with print_style(Style.PAD_TOP):
+        cprint(message, *args, text_wrap=text_wrap, color=color, extra_indent=extra_indent)

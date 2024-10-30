@@ -11,8 +11,9 @@ tmp/
 kmd_cache/
 
 
-# Dev convenience convention: Temporarily rename a file to stop tracking it.
+# Dev convenience: Temporarily rename a file to a stash pattern to stop tracking it.
 stash.*
+*.stash.*
 
 # Ignore secrets file except for the template.
 secrets.toml

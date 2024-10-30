@@ -1,10 +1,8 @@
 from textwrap import dedent
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
-from kmd.shell.shell_output import print_assistance
-from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.util.parse_shell_args import format_command_str, parse_option
 
 
@@ -37,30 +35,6 @@ class Command(BaseModel):
         return f"Command(`{self.full_str()}`)"
 
 
-# FIXME: Improve assistant model. Also let it output a sample doc that is not
-# just a list of commands.
-#
-# class InputType(Enum):
-#     item = "item"
-
-
-# class NeededInput(BaseModel):
-#     name: str
-#     description: str
-
-
-# class Intention(BaseModel):
-#     goal_description: str
-#     """
-#     A description of the goal the user wants to achieve.
-#     """
-
-#     inputs: List[NeededInput]
-#     """
-#     Input values that the assistant needs from the user.
-#     """
-
-
 class SuggestedCommand(BaseModel):
     comment: str
     """
@@ -85,36 +59,42 @@ class SuggestedCommand(BaseModel):
 
 
 class AssistantResponse(BaseModel):
-    commentary: str
-    """The text response from the assistant."""
+    commentary: Optional[str]
+    """
+    The Markdown-formatted text response from the assistant. Should include
+    only the assistant's initial response and commentary, *not* any specific
+    output or commands.
+
+    If there is a simple direct answer to the question and no commentary is
+    needed, then make this blank and use `answer_text` instead.
+    """
+
+    answer_text: Optional[str]
+    """
+    Text that is a direct answer to the question by the assistant, if applicable.
+    Leave this blank if the answer is just commentary!
+
+    This is not commentary. It should not say the same thing as the commentary.
+    It is the answer or the text requested. It should be in a form that the user
+    could copy or use in another context, if desired.
+
+    If the answer is complex, you may include Markdown formatting. Do not
+    include any other commentary in `answer_text`.
+
+    This can be blank if the response is only commentary.
+    """
 
     suggested_commands: List[SuggestedCommand]
     """
     Commands that the assistant suggests to solve the user's request.
-    These should be in the order 
+    These should be in the order the user should execute them.
+    This can be empty if the assistant has no commands to suggest.
     """
 
     see_also: List[str]
     """
     Other commands that may be relevant but were not suggested as a solution.
-    This may be empty.
+    This should not include commands that were already suggested.
+    This usually should not be empty since the assistant can also suggest
+    related commands and help pages.
     """
-
-    # FIXME: Format prettier.
-    def print(self) -> None:
-        parts = []
-
-        parts.append(wrap_markdown(self.commentary.strip()))
-
-        if self.suggested_commands:
-            formatted_commands = "\n\n".join(c.full_str() for c in self.suggested_commands)
-            parts.append(f"Suggested commands:\n\n```\n{formatted_commands}\n```")
-
-        if self.see_also:
-            formatted_see_also = ", ".join(f"`{cmd}`" for cmd in self.see_also)
-            see_also_str = f"See also: {formatted_see_also}"
-            parts.append(see_also_str)
-
-        final_output = "\n\n".join(parts)
-
-        print_assistance(final_output)

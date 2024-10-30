@@ -13,39 +13,40 @@ from kmd.docs import (
     what_is_kmd,
     workspace_and_file_formats,
 )
-from kmd.help.command_help import output_action_help, output_command_function_help
+from kmd.help.command_help import print_action_help, print_command_function_help
 from kmd.shell.shell_output import cprint, print_heading, print_markdown, Wrap
 
 log = get_logger(__name__)
 
 
-def output_builtin_commands_help() -> None:
+def print_builtin_commands_help() -> None:
     for command in all_commands().values():
-        output_command_function_help(command, verbose=False)
+        print_command_function_help(command, verbose=False)
 
 
-def output_actions_help(base_actions_only: bool = False) -> None:
+def print_actions_help(base_actions_only: bool = False) -> None:
     from kmd.action_defs import load_all_actions
 
     actions = load_all_actions(base_only=base_actions_only)
     for action in actions.values():
-        output_action_help(action, verbose=False)
+        print_action_help(action, verbose=False)
 
 
-def output_see_also(commands_or_questions: List[str]) -> None:
-    def quote_item(item: str) -> str:
-        if "`" not in item:
-            return f"`{item}`"
-        else:
-            return item
+def quote_item(item: str) -> str:
+    if "`" not in item:
+        return f"`{item}`"
+    else:
+        return item
 
+
+def print_see_also(commands_or_questions: List[str]) -> None:
     cprint()
     cprint("See also:", color=COLOR_EMPH)
     for item in commands_or_questions:
         cprint(quote_item(item), text_wrap=Wrap.INDENT_ONLY)
 
 
-def output_help_page(base_actions_only: bool = False) -> None:
+def print_help_page(base_actions_only: bool = False) -> None:
 
     print_markdown(what_is_kmd)
 
@@ -65,11 +66,11 @@ def output_help_page(base_actions_only: bool = False) -> None:
 
     print_heading("Available Commands")
 
-    output_builtin_commands_help()
+    print_builtin_commands_help()
 
     print_heading("Available Actions")
 
-    output_actions_help(base_actions_only=base_actions_only)
+    print_actions_help(base_actions_only=base_actions_only)
 
     print_heading("For Additional Help")
 

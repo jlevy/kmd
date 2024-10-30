@@ -72,7 +72,7 @@ def _output_command_help(
         cprint()
 
 
-def output_command_function_help(command: CommandFunction, verbose: bool = True):
+def print_command_function_help(command: CommandFunction, verbose: bool = True):
     param_info = annotate_param_info(command)
 
     _output_command_help(
@@ -83,7 +83,7 @@ def output_command_function_help(command: CommandFunction, verbose: bool = True)
     )
 
 
-def output_action_help(action: Action, verbose: bool = True):
+def print_action_help(action: Action, verbose: bool = True):
     params: List[Param] = []
     if verbose:
         params = list(action.params) + list(RUNTIME_ACTION_PARAMS.values())

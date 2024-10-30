@@ -5,8 +5,11 @@ from typing import List
 from cachetools import cached
 from pydantic.dataclasses import dataclass
 
+from kmd.config.logger import get_logger
 from kmd.util.format_utils import fmt_path
+from kmd.util.strif import lenb
 
+log = get_logger(__name__)
 
 kmd_base_path = Path(os.path.dirname(__file__)).parent
 
@@ -58,6 +61,9 @@ class SourceCode:
     model_src: str
     """The source code for the kmd framework model."""
 
+    assistant_response_model_src: str
+    """The source code for the assistant response model."""
+
     base_action_defs_src: str
     """The source code for all the base action definitions."""
 
@@ -67,11 +73,20 @@ class SourceCode:
     file_formats_src: str
     """Documentation and source for common file formats."""
 
+    def __str__(self) -> str:
+        sizes = ", ".join(
+            f"{k} {len(v.splitlines())} lines ({lenb(v)})" for k, v in self.__dict__.items()
+        )
+        return f"SourceCode({sizes})"
+
 
 @cached(cache={})
 def load_sources() -> SourceCode:
-    return SourceCode(
+    code = SourceCode(
         model_src=source_for(kmd_base_path / "model"),
+        assistant_response_model_src=source_for(
+            kmd_base_path / "model" / "assistant_response_model.py"
+        ),
         base_action_defs_src=source_for(kmd_base_path / "action_defs" / "base_actions"),
         text_tool_src=source_for(
             kmd_base_path / "text_formatting",
@@ -80,3 +95,5 @@ def load_sources() -> SourceCode:
         ),
         file_formats_src=source_for(kmd_base_path / "file_formats"),
     )
+    log.info("Loaded sources: %s", str(code))
+    return code

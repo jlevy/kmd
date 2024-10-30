@@ -29,7 +29,7 @@ from kmd.util.format_utils import (
     plaintext_to_html,
 )
 from kmd.util.obj_utils import abbreviate_obj
-from kmd.util.time_utils import iso_format_z
+from kmd.util.strif import format_iso_timestamp
 from kmd.util.url import Url
 
 log = get_logger(__name__)
@@ -376,7 +376,7 @@ class Item:
         if datetime_as_str:
             for f, v in item_dict.items():
                 if isinstance(v, datetime):
-                    item_dict[f] = iso_format_z(v)
+                    item_dict[f] = format_iso_timestamp(v)
 
         return item_dict
 

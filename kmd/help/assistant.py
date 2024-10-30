@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings
+from kmd.config.text_styles import COLOR_STATUS
 from kmd.docs import api_docs, assistant_instructions
 from kmd.errors import InvalidState, KmdRuntimeError
 from kmd.file_formats.chat_format import (
@@ -17,11 +18,18 @@ from kmd.file_formats.chat_format import (
 )
 from kmd.file_storage.workspaces import current_workspace, current_workspace_info, get_param_value
 from kmd.llms.llm_completion import llm_template_completion
-from kmd.model.assistant_model import AssistantResponse
+from kmd.model.assistant_response_model import AssistantResponse
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message
 from kmd.model.paths_model import fmt_loc
-from kmd.shell.shell_output import cprint, fill_markdown, output_as_string
+from kmd.shell.shell_output import (
+    cprint,
+    output_as_string,
+    print_assistance,
+    print_code_block,
+    print_small_heading,
+    print_text_block,
+)
 from kmd.util.format_utils import fmt_paras
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none
@@ -32,11 +40,11 @@ log = get_logger(__name__)
 
 @cached({})
 def assist_preamble(skip_api: bool = False, base_actions_only: bool = False) -> str:
-    from kmd.help.help_page import output_help_page  # Avoid circular imports.
+    from kmd.help.help_page import print_help_page  # Avoid circular imports.
 
     return fmt_paras(
-        fill_markdown(str(assistant_instructions)),
-        output_as_string(lambda: output_help_page(base_actions_only)),
+        str(assistant_instructions),
+        output_as_string(lambda: print_help_page(base_actions_only)),
         None if skip_api else api_docs,
     )
 
@@ -82,7 +90,7 @@ def assist_current_state() -> Message:
 
     current_state_message = Message(
         f"""
-        CURRENT STATE
+        ## Current State
 
         {ws_info}
 
@@ -117,6 +125,24 @@ def assist_system_message(skip_api: bool = False) -> Message:
         """
         # TODO: Include selection history, command history, any other info about files in the workspace.
     )
+
+
+def print_assistant_response(response: AssistantResponse) -> None:
+    if response.commentary:
+        print_assistance(response.commentary)
+
+    if response.answer_text:
+        print_text_block(response.answer_text)  # Not Markdown so it's easy to copy/paste.
+
+    if response.suggested_commands:
+        formatted_commands = "\n\n".join(c.full_str() for c in response.suggested_commands)
+        print_small_heading("Suggested commands:")
+        print_code_block(formatted_commands)
+
+    if response.see_also:
+        formatted_see_also = ", ".join(f"`{cmd}`" for cmd in response.see_also)
+        print_small_heading("See also:")
+        cprint(formatted_see_also, color=COLOR_STATUS)
 
 
 def assistance(input: str, fast: bool = False) -> None:
@@ -165,7 +191,7 @@ def assistance(input: str, fast: bool = False) -> None:
             assistant_history_file, ChatMessage(ChatRole.assistant, assistant_response.model_dump())
         )
 
-        assistant_response.print()
+        print_assistant_response(assistant_response)
 
     except (ValidationError, json.JSONDecodeError) as e:
         log.error("Error parsing assistant response: %s", e)

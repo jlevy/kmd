@@ -29,17 +29,7 @@ _RANDOM = random.SystemRandom()
 _RANDOM.seed()
 
 #
-# ---- Identifiers and base36 encodings ----
-
-
-def new_uid(bits: int = 64) -> str:
-    """
-    A random alphanumeric value with at least the specified bits of randomness. We use base 36,
-    i.e., not case sensitive. Note this makes it suitable for filenames even on case-insensitive disks.
-    """
-    chars = "0123456789abcdefghijklmnopqrstuvwxyz"
-    length = int(bits / 5.16) + 1  # log2(36) ≈ 5.17
-    return "".join(_RANDOM.choices(chars, k=length))
+# ---- Timestamps ----
 
 
 def iso_timestamp(microseconds: bool = True) -> str:
@@ -51,6 +41,31 @@ def iso_timestamp(microseconds: bool = True) -> str:
     """
     timespec = "microseconds" if microseconds else "seconds"
     return datetime.now(timezone.utc).isoformat(timespec=timespec).replace("+00:00", "Z")
+
+
+def format_iso_timestamp(datetime_obj: datetime, microseconds: bool = True) -> str:
+    """
+    Format a datetime as an ISO 8601 timestamp. Includes the Z for clarity that it is UTC.
+
+    Example with microseconds: 2015-09-12T08:41:12.397217Z
+    Example without microseconds: 2015-09-12T08:41:12Z
+    """
+    timespec = "microseconds" if microseconds else "seconds"
+    return datetime_obj.astimezone(timezone.utc).isoformat(timespec=timespec).replace("+00:00", "Z")
+
+
+#
+# ---- Identifiers and base36 encodings ----
+
+
+def new_uid(bits: int = 64) -> str:
+    """
+    A random alphanumeric value with at least the specified bits of randomness. We use base 36,
+    i.e., not case sensitive. Note this makes it suitable for filenames even on case-insensitive disks.
+    """
+    chars = "0123456789abcdefghijklmnopqrstuvwxyz"
+    length = int(bits / 5.16) + 1  # log2(36) ≈ 5.17
+    return "".join(_RANDOM.choices(chars, k=length))
 
 
 def new_timestamped_uid(bits: int = 32) -> str:
@@ -435,3 +450,14 @@ def chmod_native(path: str | Path, mode_expression: str, recursive: bool = False
     popenargs.append(mode_expression)
     popenargs.append(str(path))
     subprocess.check_call(popenargs)
+
+
+#
+# ---- Strings ----
+
+
+def lenb(s: str, encoding: str = "utf-8") -> int:
+    """
+    Convenience for length of a string in bytes.
+    """
+    return len(s.encode(encoding))

@@ -12,7 +12,7 @@ from kmd.config.text_styles import (
     COLOR_LOGO,
     LOGO,
 )
-from kmd.help.help_page import output_see_also
+from kmd.help.help_page import print_see_also
 from kmd.shell.shell_output import console_pager, cprint, print_markdown, Wrap
 from kmd.version import get_version_name
 
@@ -61,10 +61,10 @@ def help() -> None:
     """
     # TODO: Take an argument to show help for a specific command or action.
 
-    from kmd.help.help_page import output_help_page
+    from kmd.help.help_page import print_help_page
 
     with console_pager():
-        output_help_page()
+        print_help_page()
 
 
 @kmd_command
@@ -77,7 +77,7 @@ def why_kmd() -> None:
     with console_pager():
         print_markdown(what_is_kmd)
         print_markdown(motivation)
-        output_see_also(["help", "getting_started", "faq", "commands", "actions"])
+        print_see_also(["help", "getting_started", "faq", "commands", "actions"])
 
 
 @kmd_command
@@ -89,7 +89,7 @@ def installation() -> None:
 
     with console_pager():
         print_markdown(installation)
-        output_see_also(
+        print_see_also(
             [
                 "What is Kmd?",
                 "What can I do with Kmd?",
@@ -112,7 +112,7 @@ def getting_started() -> None:
 
     with console_pager():
         print_markdown(getting_started)
-        output_see_also(
+        print_see_also(
             [
                 "What is Kmd?",
                 "What can I do with Kmd?",
@@ -135,7 +135,7 @@ def faq() -> None:
     with console_pager():
         print_markdown(faq)
 
-        output_see_also(["help", "commands", "actions"])
+        print_see_also(["help", "commands", "actions"])
 
 
 @kmd_command
@@ -143,11 +143,11 @@ def commands() -> None:
     """
     Show help on all Kmd commands.
     """
-    from kmd.help.help_page import output_builtin_commands_help
+    from kmd.help.help_page import print_builtin_commands_help
 
     with console_pager():
-        output_builtin_commands_help()
-        output_see_also(["actions", "help", "faq", "What are the most important Kmd commands?"])
+        print_builtin_commands_help()
+        print_see_also(["actions", "help", "faq", "What are the most important Kmd commands?"])
 
 
 @kmd_command
@@ -155,8 +155,8 @@ def actions() -> None:
     """
     Show help on the full list of currently loaded actions.
     """
-    from kmd.help.help_page import output_actions_help
+    from kmd.help.help_page import print_actions_help
 
     with console_pager():
-        output_actions_help()
-        output_see_also(["commands", "help", "faq", "What are the most important Kmd commands?"])
+        print_actions_help()
+        print_see_also(["commands", "help", "faq", "What are the most important Kmd commands?"])

@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypeVar
 from kmd.config.logger import get_logger
 
 from kmd.errors import InvalidCommand
-from kmd.help.command_help import output_command_function_help
+from kmd.help.command_help import print_command_function_help
 from kmd.shell_tools.function_inspect import FuncParam, inspect_function_params
 from kmd.util.parse_shell_args import parse_shell_args
 
@@ -100,7 +100,7 @@ def wrap_for_shell_args(func: Callable[..., R]) -> Callable[[List[str]], Optiona
         shell_args = parse_shell_args(args)
 
         if shell_args.show_help:
-            output_command_function_help(wrapped_func, verbose=True)
+            print_command_function_help(wrapped_func, verbose=True)
             return None
 
         pos_values, keywords_consumed = _map_positional(shell_args.args, pos_params, kw_params)

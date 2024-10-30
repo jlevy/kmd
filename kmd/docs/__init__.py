@@ -4,12 +4,16 @@ Make docs and source code for kmd available to itself.
 
 from pathlib import Path
 
+from kmd.config.logger import get_logger
 from kmd.docs.assemble_source_code import load_sources, SourceCode
 from kmd.util.lazyobject import lazyobject
 from kmd.util.string_template import StringTemplate
 
 
-def _load_markdown(path: str) -> str:
+log = get_logger(__name__)
+
+
+def _load_help_src(path: str) -> str:
     if not path.endswith(".md"):
         path += ".md"
     base_dir = Path(__file__).parent
@@ -23,7 +27,7 @@ def _load_markdown(path: str) -> str:
 def _lazy_load(path: str):
     @lazyobject
     def content() -> str:
-        return _load_markdown(path)
+        return _load_help_src(path)
 
     return content
 
@@ -48,7 +52,7 @@ def source_code() -> SourceCode:
 
 @lazyobject
 def api_docs() -> str:
-    template_str = _load_markdown("markdown/api_docs_template")
+    template_str = _load_help_src("markdown/api_docs_template")
     global source_code
     template_vars = list(source_code.__dict__.keys())
     template = StringTemplate(template_str, template_vars)
@@ -57,4 +61,17 @@ def api_docs() -> str:
 
 @lazyobject
 def assistant_instructions() -> str:
-    return _load_markdown("markdown/assistant_instructions")
+    template = StringTemplate(
+        _load_help_src("markdown/assistant_instructions_template"), ["assistant_response_model"]
+    )
+    model_src = load_sources().assistant_response_model_src
+    model_src_lines = len(model_src.strip().splitlines())
+    instructions = template.format(assistant_response_model=model_src)
+    instructions_lines = len(instructions.strip().splitlines())
+    log.info(
+        "Loaded assistant instructions: %s lines, assistant model: %s lines",
+        instructions_lines,
+        model_src_lines,
+    )
+    assert instructions_lines > 100 and model_src_lines > 10
+    return instructions

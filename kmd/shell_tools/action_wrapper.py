@@ -6,7 +6,7 @@ from kmd.config.text_styles import COLOR_ERROR, SPINNER
 from kmd.errors import NONFATAL_EXCEPTIONS
 from kmd.exec.action_exec import run_action
 from kmd.exec.history import record_command
-from kmd.help.command_help import output_action_help
+from kmd.help.command_help import print_action_help
 from kmd.model.actions_model import Action
 from kmd.model.commands_model import Command
 from kmd.model.params_model import ParamValues
@@ -31,7 +31,7 @@ class ShellCallableAction:
         shell_args = parse_shell_args(args)
 
         if shell_args.show_help:
-            output_action_help(self.action, verbose=True)
+            print_action_help(self.action, verbose=True)
 
             return ShellResult()
 

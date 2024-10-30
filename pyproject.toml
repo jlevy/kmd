@@ -126,3 +126,5 @@ filterwarnings = [
     "ignore::SyntaxWarning:pydub.utils",
     "ignore::UserWarning:pydantic",
 ]
+# Dev convenience: Temporarily rename a file to a stash pattern to stop tracking it.
+addopts = "--ignore-glob='stash.*' --ignore-glob='*.stash.*'"
