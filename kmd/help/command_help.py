@@ -6,7 +6,7 @@ from kmd.help.function_param_info import annotate_param_info
 from kmd.model.actions_model import Action
 from kmd.model.params_model import Param, RUNTIME_ACTION_PARAMS
 from kmd.model.preconditions_model import Precondition
-from kmd.shell.shell_output import format_name_and_description, output, output_help, Wrap
+from kmd.shell.shell_output import cprint, format_name_and_description, print_help, Wrap
 from kmd.util.format_utils import DEFAULT_INDENT
 
 
@@ -19,27 +19,27 @@ def _output_command_help(
 ):
     command_str = f"the `{name}` command" if name else "this command"
 
-    output()
+    cprint()
 
     if not description:
-        output_help(f"Sorry, no help available for {command_str}.")
+        print_help(f"Sorry, no help available for {command_str}.")
     else:
         docstring = parse_docstring(description)
 
-        output(format_name_and_description(name, docstring.body))
+        cprint(format_name_and_description(name, docstring.body))
 
         if precondition:
-            output()
-            output(
+            cprint()
+            cprint(
                 "Precondition: " + str(precondition),
                 text_wrap=Wrap.HANGING_INDENT,
                 extra_indent=DEFAULT_INDENT,
             )
 
         if param_info:
-            output()
-            output("Options:", extra_indent=DEFAULT_INDENT)
-            output()
+            cprint()
+            cprint("Options:", extra_indent=DEFAULT_INDENT)
+            cprint()
             for param in param_info:
 
                 if param.type == bool:
@@ -57,19 +57,19 @@ def _output_command_help(
                 if param_desc:
                     param_doc += f": {param_desc}"
 
-                output(
+                cprint(
                     param_doc,
                     text_wrap=Wrap.HANGING_INDENT,
                     extra_indent=DEFAULT_INDENT,
                 )
-                output()
+                cprint()
 
     if verbose:
-        output()
-        output_help(
+        cprint()
+        print_help(
             "For more information, ask the assistant by typing a question (ending in ?) or check `help`."
         )
-        output()
+        cprint()
 
 
 def output_command_function_help(command: CommandFunction, verbose: bool = True):

@@ -13,7 +13,7 @@ from kmd.exec.history import wrap_with_history
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.actions_model import Action
 from kmd.model.shell_model import ShellResult
-from kmd.shell.shell_output import output
+from kmd.shell.shell_output import cprint
 from kmd.shell.shell_results import handle_shell_result, shell_before_exec
 from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
@@ -152,7 +152,7 @@ def _initialize():
         load_thread = threading.Thread(target=load)
         load_thread.start()
 
-        output()
+        cprint()
     else:
         _load_xonsh_commands()
         _load_xonsh_actions()
@@ -161,7 +161,7 @@ def _initialize():
 def _post_initialize():
     if _is_interactive:
         current_workspace()  # Validates and logs info for user.
-        output()
+        cprint()
 
 
 def _kmd_xonsh_prompt():

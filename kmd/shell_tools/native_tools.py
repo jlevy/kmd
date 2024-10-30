@@ -32,7 +32,7 @@ from kmd.model.file_formats_model import (
     read_partial_text,
 )
 from kmd.model.paths_model import fmt_loc
-from kmd.shell.shell_output import format_name_and_description, format_paragraphs, output, Wrap
+from kmd.shell.shell_output import cprint, format_name_and_description, format_paragraphs, Wrap
 from kmd.util.url import as_file_url, is_url
 
 
@@ -202,7 +202,7 @@ def terminal_show_image_graceful(filename: str | Path):
     try:
         terminal_show_image(filename)
     except SetupError:
-        output(f"[Image: {filename}]", color=COLOR_HINT)
+        cprint(f"[Image: {filename}]", color=COLOR_HINT)
 
 
 def terminal_link(url: str, text: str, id: str = "") -> str:
@@ -309,7 +309,7 @@ def tail_file(filename: str | Path):
     else:
         command = f"less +G {quoted_filename}"
 
-    output("Tailing file: `%s`", command, text_wrap=Wrap.NONE)
+    cprint("Tailing file: `%s`", command, text_wrap=Wrap.NONE)
     subprocess.run(command, shell=True, check=True)
 
 
@@ -335,7 +335,7 @@ def view_file_console(filename: str | Path, use_pager: bool = True):
     try:
         subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
-        output(f"Error displaying file: {e}", color=COLOR_ERROR)
+        cprint(f"Error displaying file: {e}", color=COLOR_ERROR)
 
 
 def edit_files(*filenames: str | Path):

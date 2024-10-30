@@ -3,6 +3,7 @@ from typing import List
 
 from pydantic import BaseModel
 
+from kmd.shell.shell_output import print_assistance
 from kmd.text_formatting.markdown_normalization import wrap_markdown
 from kmd.util.parse_shell_args import format_command_str, parse_option
 
@@ -34,6 +35,30 @@ class Command(BaseModel):
 
     def __str__(self):
         return f"Command(`{self.full_str()}`)"
+
+
+# FIXME: Improve assistant model. Also let it output a sample doc that is not
+# just a list of commands.
+#
+# class InputType(Enum):
+#     item = "item"
+
+
+# class NeededInput(BaseModel):
+#     name: str
+#     description: str
+
+
+# class Intention(BaseModel):
+#     goal_description: str
+#     """
+#     A description of the goal the user wants to achieve.
+#     """
+
+#     inputs: List[NeededInput]
+#     """
+#     Input values that the assistant needs from the user.
+#     """
 
 
 class SuggestedCommand(BaseModel):
@@ -75,7 +100,8 @@ class AssistantResponse(BaseModel):
     This may be empty.
     """
 
-    def full_str(self) -> str:
+    # FIXME: Format prettier.
+    def print(self) -> None:
         parts = []
 
         parts.append(wrap_markdown(self.commentary.strip()))
@@ -91,4 +117,4 @@ class AssistantResponse(BaseModel):
 
         final_output = "\n\n".join(parts)
 
-        return final_output
+        print_assistance(final_output)

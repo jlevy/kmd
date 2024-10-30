@@ -28,7 +28,7 @@ from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.params_model import ParamValues
 from kmd.model.paths_model import fmt_loc, Locator, StorePath
 from kmd.query.vector_index import WsVectorIndex
-from kmd.shell.shell_output import output
+from kmd.shell.shell_output import cprint
 from kmd.util.format_utils import fmt_lines
 from kmd.util.hash_utils import hash_file
 from kmd.util.log_calls import format_duration, log_calls
@@ -530,7 +530,7 @@ class FileStore:
             return
         self.info_logged = True
 
-        output()
+        cprint()
         log.message(
             "Using workspace: %s (%s items)",
             path.abspath(self.base_dir),
@@ -543,8 +543,8 @@ class FileStore:
             log.warning("%s", warning)
 
         if self.is_sandbox:
-            output()
-            output(
+            cprint()
+            cprint(
                 f"{EMOJI_WARN} Note you are using the default sandbox workspace."
                 " Create or switch to a workspace with the `workspace` command."
             )

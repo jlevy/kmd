@@ -38,7 +38,7 @@ def load(*paths: str) -> None:
     kmd.action_defs.reload_all_actions()
     kmd.xontrib.xonsh_customization._load_xonsh_actions()
 
-    kmd.shell.shell_output.output(
+    kmd.shell.shell_output.cprint(
         "Imported extensions and reloaded actions: %s",
         ", ".join(kmd.util.format_utils.fmt_path(p) for p in paths),
     )

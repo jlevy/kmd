@@ -64,12 +64,11 @@ from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths
 from kmd.shell.shell_output import (
     console_pager,
+    cprint,
     format_name_and_description,
-    output,
-    output_assistance,
-    output_heading,
-    output_response,
-    output_status,
+    print_heading,
+    print_response,
+    print_status,
     Wrap,
 )
 from kmd.shell_tools.native_tools import (
@@ -119,7 +118,7 @@ def clear_logs() -> None:
         trash(obj_dir)
         os.makedirs(obj_dir, exist_ok=True)
 
-    output_status("Logs cleared:\n%s", fmt_lines([fmt_loc(log_path)]))
+    print_status("Logs cleared:\n%s", fmt_lines([fmt_loc(log_path)]))
 
 
 @kmd_command
@@ -136,10 +135,10 @@ def cache_list(media: bool = False, web: bool = False) -> None:
 
     if media:
         files(global_settings().media_cache_dir)
-        output()
+        cprint()
     if web:
         files(global_settings().content_cache_dir)
-        output()
+        cprint()
 
 
 @kmd_command
@@ -148,13 +147,13 @@ def cache_media(*urls: str) -> None:
     Cache media at the given URLs in the media cache, using a tools for the appropriate
     service (yt-dlp for YouTube, Apple Podcasts, etc).
     """
-    output()
+    cprint()
     for url in urls:
         cached_paths = media_tools.cache_media(Url(url))
-        output(f"{url}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
+        cprint(f"{url}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
         for media_type, path in cached_paths.items():
-            output(f"{media_type.name}: {fmt_loc(path)}", text_wrap=Wrap.INDENT_ONLY)
-        output()
+            cprint(f"{media_type.name}: {fmt_loc(path)}", text_wrap=Wrap.INDENT_ONLY)
+        cprint()
 
 
 @kmd_command
@@ -162,14 +161,14 @@ def cache_content(*urls_or_paths: str) -> None:
     """
     Cache the given file in the content cache. Downloads any URL or copies a local file.
     """
-    output()
+    cprint()
     for url_or_path in urls_or_paths:
         locator = resolve_arg(url_or_path)
         cache_path, was_cached = file_cache_tools.cache_content(locator)
         cache_str = " (already cached)" if was_cached else ""
-        output(f"{fmt_loc(url_or_path)}{cache_str}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
-        output(f"{cache_path}", text_wrap=Wrap.INDENT_ONLY)
-        output()
+        cprint(f"{fmt_loc(url_or_path)}{cache_str}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
+        cprint(f"{cache_path}", text_wrap=Wrap.INDENT_ONLY)
+        cprint()
 
 
 @kmd_command
@@ -187,7 +186,7 @@ def assist(input: Optional[str] = None) -> None:
             help()
             return
     with get_console().status("Thinking…", spinner=SPINNER):
-        output_assistance(assistance(input))
+        assistance(input)
 
 
 @kmd_command
@@ -217,10 +216,10 @@ def check_tools() -> None:
     """
     Check that all tools are installed.
     """
-    output("Checking for recommended tools:")
-    output()
-    output(tool_check().formatted())
-    output()
+    cprint("Checking for recommended tools:")
+    cprint()
+    cprint(tool_check().formatted())
+    cprint()
 
 
 @kmd_command
@@ -241,7 +240,7 @@ def history(max: int = 30, raw: bool = False) -> None:
     else:
         n = len(chat_history.messages)
         for i, message in enumerate(chat_history.messages):
-            output("% 4d: %s", i - n, message.content, text_wrap=Wrap.NONE)
+            cprint("% 4d: %s", i - n, message.content, text_wrap=Wrap.NONE)
 
 
 @kmd_command
@@ -304,7 +303,7 @@ def workspace(workspace_name: Optional[str] = None) -> None:
 
         os.makedirs(ws_path, exist_ok=True)
         os.chdir(ws_path)
-        output_status(f"Changed to workspace: {ws_name} ({ws_path})")
+        print_status(f"Changed to workspace: {ws_name} ({ws_path})")
 
     current_workspace(silent=True).log_store_info()
 
@@ -348,12 +347,12 @@ def unselect(*paths: str) -> None:
     ws = current_workspace()
     if not paths:
         ws.set_selection([])
-        output_status("Cleared selection.")
+        print_status("Cleared selection.")
     else:
         previous_selection = ws.get_selection()
         new_selection = ws.unselect([StorePath(path) for path in paths])
 
-        output_status(
+        print_status(
             "Unselected %s %s, %s now selected:\n%s",
             len(previous_selection) - len(new_selection),
             plural("item", len(previous_selection) - len(new_selection)),
@@ -398,7 +397,7 @@ def show(
                     terminal_show_image(local_path)
                 except Exception as e:
                     log.info("Had trouble showing thumbnail image (will skip): %s", e)
-                    output(f"[Image: {item.thumbnail_url}]", color=COLOR_HINT)
+                    cprint(f"[Image: {item.thumbnail_url}]", color=COLOR_HINT)
 
             view_file_native(ws.base_dir / input_path, view_mode=view_mode)
         else:
@@ -433,7 +432,7 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
             content = f.read()
 
         pyperclip.copy(content)
-        output_status(
+        print_status(
             "Copied raw contents of file to clipboard (%s chars):\n%s",
             len(content),
             fmt_lines([fmt_loc(input_path)]),
@@ -444,7 +443,7 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
         skip_msg = ""
         if metadata_str:
             skip_msg = f", skipping {len(metadata_str)} chars of frontmatter"
-        output_status(
+        print_status(
             "Copied contents of file to clipboard (%s chars%s):\n%s",
             len(content),
             skip_msg,
@@ -542,21 +541,21 @@ def file_info(
         size_summary = format = True
 
     input_paths = assemble_path_args(*paths)
-    output()
+    cprint()
     for input_path in input_paths:
-        output(f"{fmt_loc(input_path)}:", color=COLOR_EMPH)
+        cprint(f"{fmt_loc(input_path)}:", color=COLOR_EMPH)
 
         if format:
             mime_type_str = detect_mime_type(input_path) or "unknown"
-            output(f"{mime_type_str}", text_wrap=Wrap.INDENT_ONLY)
+            cprint(f"{mime_type_str}", text_wrap=Wrap.INDENT_ONLY)
 
         size = Path(input_path).stat().st_size
-        output(_dual_format_size(size), text_wrap=Wrap.INDENT_ONLY)
+        cprint(_dual_format_size(size), text_wrap=Wrap.INDENT_ONLY)
 
         try:
             _frontmatter_str, offset = fmf_read_frontmatter_raw(input_path)
             if offset:
-                output(f"frontmatter: {_dual_format_size(offset)}", text_wrap=Wrap.INDENT_ONLY)
+                cprint(f"frontmatter: {_dual_format_size(offset)}", text_wrap=Wrap.INDENT_ONLY)
         except UnicodeDecodeError:
             pass
 
@@ -566,11 +565,11 @@ def file_info(
             if body:
                 parsed_body = parse_divs(body)
                 size_summary_str = parsed_body.size_summary(fast=not slow)
-                output(f"body: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
+                cprint(f"body: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
             else:
-                output("No text body", text_wrap=Wrap.INDENT_ONLY)
+                cprint("No text body", text_wrap=Wrap.INDENT_ONLY)
 
-        output()
+        cprint()
 
 
 @kmd_command
@@ -581,16 +580,16 @@ def relations(*paths: str) -> None:
     """
     input_paths = assemble_path_args(*paths)
 
-    output()
+    cprint()
     for input_path in input_paths:
         item = current_workspace().load(StorePath(input_path))
-        output(f"{fmt_store_path(not_none(item.store_path))}:", color=COLOR_EMPH)
+        cprint(f"{fmt_store_path(not_none(item.store_path))}:", color=COLOR_EMPH)
         relations = item.relations.__dict__ if item.relations else {}
         if any(relations.values()):
-            output(to_yaml_string(relations), text_wrap=Wrap.INDENT_ONLY)
+            cprint(to_yaml_string(relations), text_wrap=Wrap.INDENT_ONLY)
         else:
-            output("(no relations)", text_wrap=Wrap.INDENT_ONLY)
-        output()
+            cprint("(no relations)", text_wrap=Wrap.INDENT_ONLY)
+        cprint()
 
 
 @kmd_command
@@ -621,20 +620,20 @@ def param(*args: str) -> None:
         new_params = remove_values(new_params, deletes)
         ws.set_param(new_params)
 
-    output_heading("Available Parameters")
+    print_heading("Available Parameters")
 
     for param in USER_SETTABLE_PARAMS.values():
-        output(format_name_and_description(param.name, param.full_description))
-        output()
+        cprint(format_name_and_description(param.name, param.full_description))
+        cprint()
 
     param_values = ws.get_param_values()
     if not param_values.values:
-        output_status("No parameters are set.")
+        print_status("No parameters are set.")
     else:
-        output_heading("Current Parameters")
+        print_heading("Current Parameters")
         for key, value in param_values.items():
-            output(format_key_value(key, value))
-        output()
+            cprint(format_key_value(key, value))
+        cprint()
 
 
 @kmd_command
@@ -643,12 +642,12 @@ def settings() -> None:
     Show the current settings.
     """
     settings = global_settings()
-    output_heading("Settings")
+    print_heading("Settings")
 
     for name, value in settings.__dict__.items():
-        output(format_name_and_description(name, str(value)))
+        cprint(format_name_and_description(name, str(value)))
 
-    output()
+    cprint()
 
 
 @kmd_command
@@ -674,12 +673,12 @@ def log_level(level: Optional[str] = None, console: bool = False, file: bool = F
 
         reset_logging()
 
-    output()
-    output(format_name_and_description("file_log_level", global_settings().file_log_level.name))
-    output(
+    cprint()
+    cprint(format_name_and_description("file_log_level", global_settings().file_log_level.name))
+    cprint(
         format_name_and_description("console_log_level", global_settings().console_log_level.name)
     )
-    output()
+    cprint()
 
 
 @kmd_command
@@ -705,7 +704,7 @@ def import_item(
         store_path = ws.import_item(locator, as_type=type, reimport=inplace)
         store_paths.append(store_path)
 
-    output_status(
+    print_status(
         "Imported %s %s:\n%s",
         len(store_paths),
         plural("item", len(store_paths)),
@@ -728,7 +727,7 @@ def rename(path: str, new_path: str) -> None:
     to_path.parent.mkdir(parents=True, exist_ok=True)
     os.rename(from_path, to_path)
 
-    output_status(f"Renamed: {fmt_loc(from_path)} -> {fmt_loc(to_path)}")
+    print_status(f"Renamed: {fmt_loc(from_path)} -> {fmt_loc(to_path)}")
 
 
 @kmd_command
@@ -750,7 +749,7 @@ def copy(*paths: str) -> None:
     for src_path in src_paths:
         copyfile_atomic(src_path, dest_path, make_parents=True)
 
-    output_status(
+    print_status(
         f"Copied:\n{fmt_lines(fmt_loc(p) for p in src_paths)}\n->\n{fmt_lines([fmt_loc(dest_path)])}",
     )
 
@@ -764,7 +763,7 @@ def archive(*paths: str) -> None:
     ws = current_workspace()
     archived_paths = [ws.archive(store_path) for store_path in store_paths]
 
-    output_status(f"Archived:\n{fmt_lines(archived_paths)}")
+    print_status(f"Archived:\n{fmt_lines(archived_paths)}")
     select()
 
 
@@ -776,7 +775,7 @@ def unarchive(*paths: str) -> None:
     ws = current_workspace()
     for path in paths:
         store_path = ws.unarchive(StorePath(path))
-        output_status(f"Unarchived: {store_path}")
+        print_status(f"Unarchived: {store_path}")
 
 
 @kmd_command
@@ -799,9 +798,7 @@ def trash(*paths: str) -> None:
 
     resolved_paths = assemble_path_args(*paths)
     send2trash(list(resolved_paths))
-    output_status(
-        f"Deleted (check trash or recycling bin to recover):\n{fmt_lines(resolved_paths)}"
-    )
+    print_status(f"Deleted (check trash or recycling bin to recover):\n{fmt_lines(resolved_paths)}")
 
 
 @kmd_command
@@ -835,20 +832,20 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
     )
 
     if not applicable_actions:
-        output("No applicable actions for selection.")
+        cprint("No applicable actions for selection.")
         return
 
     if brief:
         action_names = [action.name for action in applicable_actions]
-        output("Applicable actions:", color=COLOR_SUGGESTION)
-        output(
+        cprint("Applicable actions:", color=COLOR_SUGGESTION)
+        cprint(
             ", ".join(f"`{name}`" for name in action_names),
             extra_indent="    ",
             color=COLOR_SUGGESTION,
         )
-        output()
+        cprint()
     else:
-        output("Applicable actions for items:\n %s", fmt_lines(store_paths), color=COLOR_SUGGESTION)
+        cprint("Applicable actions for items:\n %s", fmt_lines(store_paths), color=COLOR_SUGGESTION)
 
         for action in applicable_actions:
             precondition_str = (
@@ -856,12 +853,12 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
                 if action.precondition
                 else "(no precondition)"
             )
-            output(
+            cprint(
                 format_name_and_description(
                     action.name, action.description, extra_note=precondition_str
                 )
             )
-            output()
+            cprint()
 
 
 @kmd_command
@@ -877,15 +874,15 @@ def preconditions() -> None:
 
     items = [ws.load(item) for item in selection]
 
-    output_status("Precondition check for selection:\n %s", fmt_lines(selection))
+    print_status("Precondition check for selection:\n %s", fmt_lines(selection))
 
     for precondition in all_preconditions():
         satisfied = all(precondition(item) for item in items)
         emoji = EMOJI_TRUE if satisfied else " "
         satisfied_str = "satisfied" if satisfied else "not satisfied"
-        output(f"{emoji} {precondition} {satisfied_str}", text_wrap=Wrap.NONE)
+        cprint(f"{emoji} {precondition} {satisfied_str}", text_wrap=Wrap.NONE)
 
-    output()
+    cprint()
 
 
 @kmd_command
@@ -898,7 +895,7 @@ def index(*paths: str) -> None:
 
     ws.vector_index.index_items([ws.load(store_path) for store_path in store_paths])
 
-    output_status(f"Indexed:\n{fmt_lines(store_paths)}")
+    print_status(f"Indexed:\n{fmt_lines(store_paths)}")
 
 
 @kmd_command
@@ -910,22 +907,22 @@ def unindex(*paths: str) -> None:
     ws = current_workspace()
     ws.vector_index.unindex_items([ws.load(store_path) for store_path in store_paths])
 
-    output_status(f"Unindexed:\n{fmt_lines(store_paths)}")
+    print_status(f"Unindexed:\n{fmt_lines(store_paths)}")
 
 
 def _output_scored_node(scored_node, show_metadata: bool = True):
     from llama_index.core.schema import TextNode
 
     node = cast(TextNode, scored_node.node)
-    output()
-    output(
+    cprint()
+    cprint(
         f"Score {scored_node.score}\n    {node.ref_doc_id}\n    node {node.node_id}",
         text_wrap=Wrap.NONE,
     )
-    output_response("%s", node.text, text_wrap=Wrap.WRAP_INDENT)
+    print_response("%s", node.text, text_wrap=Wrap.WRAP_INDENT)
 
     if show_metadata and node.metadata:
-        output("%s", to_yaml_string(node.metadata), text_wrap=Wrap.INDENT_ONLY)
+        cprint("%s", to_yaml_string(node.metadata), text_wrap=Wrap.INDENT_ONLY)
 
 
 @kmd_command
@@ -937,8 +934,8 @@ def retrieve(query_str: str) -> None:
     ws = current_workspace()
     results = ws.vector_index.retrieve(query_str)
 
-    output()
-    output(f"Matches from {ws.vector_index}:")
+    cprint()
+    cprint(f"Matches from {ws.vector_index}:")
     for scored_node in results:
         _output_scored_node(scored_node)
 
@@ -953,12 +950,12 @@ def query(query_str: str) -> None:
     ws = current_workspace()
     results = cast(Response, ws.vector_index.query(query_str))
 
-    output()
-    output(f"Response from {ws.vector_index}:", text_wrap=Wrap.NONE)
-    output_response("%s", results.response, text_wrap=Wrap.WRAP_FULL)
+    cprint()
+    cprint(f"Response from {ws.vector_index}:", text_wrap=Wrap.NONE)
+    print_response("%s", results.response, text_wrap=Wrap.WRAP_FULL)
 
     if results.source_nodes:
-        output("Sources:")
+        cprint("Sources:")
         for scored_node in results.source_nodes:
             _output_scored_node(scored_node)
 
@@ -1051,7 +1048,7 @@ def files(
     log.info("Collected %s files.", file_listing.files_total)
 
     if not file_listing.files:
-        output("No files found.")
+        cprint("No files found.")
         return ShellResult()
 
     df = file_listing.as_dataframe()
@@ -1099,7 +1096,7 @@ def files(
     with console_pager(use_pager=pager):
         for group_name, group_df in grouped:
             if group_name:
-                output(f"\n{group_name} ({len(group_df)} files)", color=COLOR_EMPH)
+                cprint(f"\n{group_name} ({len(group_df)} files)", color=COLOR_EMPH)
 
             if head:
                 display_df = group_df.head(head)
@@ -1116,7 +1113,7 @@ def files(
                 rel_path = row["relative_path"]
                 display_name = fmt_store_path(rel_path) if base_is_ws else fmt_loc(rel_path)
 
-                output(
+                cprint(
                     format_str,
                     file_mod_time,
                     file_size,
@@ -1128,34 +1125,34 @@ def files(
 
             # Indicate if items are omitted.
             if groupby and head and len(group_df) > head:
-                output(
+                cprint(
                     f"{indent}… {len(group_df) - head} more files not shown",
                     text_wrap=Wrap.NONE,
                 )
             else:
-                output()
+                cprint()
         if not groupby and head and files_matching > head:
-            output(
+            cprint(
                 f"{indent}… {files_matching - head} more files not shown",
                 text_wrap=Wrap.NONE,
             )
 
-        output(
+        cprint(
             f"{total_displayed} files ({naturalsize(total_displayed_size)}) shown",
             color=COLOR_EMPH,
         )
         if file_listing.files_total > file_listing.files_matching > total_displayed:
-            output(
+            cprint(
                 f"of {file_listing.files_matching} files ({naturalsize(file_listing.size_matching)}) matching criteria",
                 color=COLOR_EMPH,
             )
         if file_listing.files_total > total_displayed:
-            output(
+            cprint(
                 f"from {file_listing.files_total} total files ({naturalsize(file_listing.size_total)})",
                 color=COLOR_EMPH,
             )
         if file_listing.files_ignored or file_listing.dirs_ignored:
-            output(
+            cprint(
                 f"with {file_listing.files_ignored + file_listing.dirs_ignored} paths ignored",
                 color=COLOR_EMPH,
             )
@@ -1280,10 +1277,10 @@ def reformat(*paths: str, inplace: bool = False) -> ShellResult:
         if inplace:
             trash(path)
             os.rename(target_path, path)
-            output_status("Formatted:\n%s", fmt_lines([fmt_loc(path)]))
+            print_status("Formatted:\n%s", fmt_lines([fmt_loc(path)]))
             final_paths.append(path)
         else:
-            output_status(
+            print_status(
                 "Formatted:\n%s",
                 fmt_lines([f"{fmt_loc(path)} -> {fmt_loc(target_path)}"]),
             )
@@ -1300,7 +1297,7 @@ def version() -> None:
     """
     Show the version of kmd.
     """
-    output("kmd %s", get_version_name())
+    cprint("kmd %s", get_version_name())
 
 
 # TODO:

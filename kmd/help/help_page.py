@@ -14,7 +14,7 @@ from kmd.docs import (
     workspace_and_file_formats,
 )
 from kmd.help.command_help import output_action_help, output_command_function_help
-from kmd.shell.shell_output import output, output_heading, output_markdown, Wrap
+from kmd.shell.shell_output import cprint, print_heading, print_markdown, Wrap
 
 log = get_logger(__name__)
 
@@ -39,40 +39,40 @@ def output_see_also(commands_or_questions: List[str]) -> None:
         else:
             return item
 
-    output()
-    output("See also:", color=COLOR_EMPH)
+    cprint()
+    cprint("See also:", color=COLOR_EMPH)
     for item in commands_or_questions:
-        output(quote_item(item), text_wrap=Wrap.INDENT_ONLY)
+        cprint(quote_item(item), text_wrap=Wrap.INDENT_ONLY)
 
 
 def output_help_page(base_actions_only: bool = False) -> None:
 
-    output_markdown(what_is_kmd)
+    print_markdown(what_is_kmd)
 
-    output_markdown(motivation)
+    print_markdown(motivation)
 
-    output_markdown(getting_started)
+    print_markdown(getting_started)
 
-    output_markdown(tips_for_use_with_other_tools)
+    print_markdown(tips_for_use_with_other_tools)
 
-    output_markdown(development)
+    print_markdown(development)
 
-    output_markdown(kmd_overview)
+    print_markdown(kmd_overview)
 
-    output_markdown(workspace_and_file_formats)
+    print_markdown(workspace_and_file_formats)
 
-    output_markdown(faq)
+    print_markdown(faq)
 
-    output_heading("Available Commands")
+    print_heading("Available Commands")
 
     output_builtin_commands_help()
 
-    output_heading("Available Actions")
+    print_heading("Available Actions")
 
     output_actions_help(base_actions_only=base_actions_only)
 
-    output_heading("For Additional Help")
+    print_heading("For Additional Help")
 
-    output("Use `help` for this help page. Use `xonfig tutorial` for xonsh help.")
+    cprint("Use `help` for this help page. Use `xonfig tutorial` for xonsh help.")
 
-    output()
+    cprint()

@@ -25,7 +25,7 @@ from kmd.config.setup import setup
 from kmd.config.text_styles import INPUT_COLOR, SPINNER
 from kmd.help.assistant import assistance
 from kmd.model.commands_model import is_assist_request_str
-from kmd.shell.shell_output import output, output_assistance
+from kmd.shell.shell_output import cprint
 from kmd.version import get_version
 
 
@@ -103,7 +103,7 @@ class CustomInteractiveShell(PromptToolkitShell):  # PromptToolkitShell or Readl
         if assist_query:
             try:
                 with get_console().status("Thinking…", spinner=SPINNER):
-                    output_assistance(assistance(assist_query))
+                    assistance(assist_query)
             except Exception as e:
                 log.error(f"Sorry, could not get assistance: {e}")
                 log.info(e, exc_info=True)
@@ -116,21 +116,19 @@ class CustomInteractiveShell(PromptToolkitShell):  # PromptToolkitShell or Readl
 def not_found(cmd: List[str]):
     # Don't call assistant on one-word typos. It's annoying.
     if len(cmd) >= 2:
-        output("Command not found. Getting assistance…")
+        cprint("Command not found. Getting assistance…")
         with get_console().status("", spinner=SPINNER):
-            output_assistance(
-                assistance(
-                    f"""
-                    The user just typed the following command, but it was not found:
+            assistance(
+                f"""
+                The user just typed the following command, but it was not found:
 
-                    {" ".join(cmd)}
+                {" ".join(cmd)}
 
-                    Please give them a brief suggestion of possible correct commands
-                    and how they can get more help with `help` or any question
-                    ending with ? in the terminal.
-                    """,
-                    fast=True,
-                )
+                Please give them a brief suggestion of possible correct commands
+                and how they can get more help with `help` or any question
+                ending with ? in the terminal.
+                """,
+                fast=True,
             )
 
 

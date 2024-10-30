@@ -183,34 +183,34 @@ def redirect_output(new_output):
 _thread_local = threading.local()
 
 
-def output_prefix() -> str:
+def get_cprint_prefix() -> str:
     if not hasattr(_thread_local, "output_prefix"):
         _thread_local.output_prefix = ""
 
     return _thread_local.output_prefix
 
 
-def set_output_prefix(prefix: str):
+def set_cprint_prefix(prefix: str):
     _thread_local.output_prefix = prefix
 
 
 @contextmanager
-def output_box(color: Optional[str] = None):
-    output(BOX_TOP, color=color)
-    original_prefix = output_prefix()
-    set_output_prefix(BOX_PREFIX)
+def print_style_box(color: Optional[str] = None):
+    cprint(BOX_TOP, color=color)
+    original_prefix = get_cprint_prefix()
+    set_cprint_prefix(BOX_PREFIX)
     try:
         yield
     finally:
         _thread_local.output_prefix = original_prefix
-        output(BOX_BOTTOM, color=color)
+        cprint(BOX_BOTTOM, color=color)
 
 
 @contextmanager
-def output_padding():
-    output()
+def print_style_pad():
+    cprint()
     yield
-    output()
+    cprint()
 
 
 @contextmanager
@@ -246,7 +246,7 @@ def rprint(*args, width: Optional[int] = None, **kwargs):
         console.print(*args, width=width, **kwargs)
 
 
-def output(
+def cprint(
     message: str | Text | Markdown = "",
     *args,
     text_wrap: Wrap = Wrap.WRAP,
@@ -256,9 +256,12 @@ def output(
     end="\n",
     width: Optional[int] = DEFAULT_WRAP_WIDTH,
 ):
+    """
+    Main way to print to the shell. Wraps `rprint` with all our formatting options.
+    """
     empty_indent = extra_indent.strip()
 
-    tl_prefix = output_prefix()
+    tl_prefix = get_cprint_prefix()
     if tl_prefix:
         extra_indent = tl_prefix + extra_indent
 
@@ -291,26 +294,26 @@ def output(
 log = get_logger(__name__)
 
 
-def output_markdown(doc_str: str, extra_indent: str = "", rich_markdown_display: bool = True):
+def print_markdown(doc_str: str, extra_indent: str = "", rich_markdown_display: bool = True):
     doc = fill_markdown(str(doc_str))
     if rich_markdown_display and _output_context.rich_console:
         doc = Markdown(doc, justify="left")
 
-    output(doc, extra_indent=extra_indent)
+    cprint(doc, extra_indent=extra_indent)
 
 
-def output_separator():
+def print_separator():
     rprint(HRULE)
 
 
-def output_selection(
+def print_selection(
     message: str,
     *args,
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
 ):
-    with output_box(color=COLOR_SELECTION):
-        output(
+    with print_style_box(color=COLOR_SELECTION):
+        cprint(
             message,
             *args,
             text_wrap=text_wrap,
@@ -319,14 +322,14 @@ def output_selection(
         )
 
 
-def output_status(
+def print_status(
     message: str,
     *args,
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
 ):
-    with output_padding():
-        output(
+    with print_style_pad():
+        cprint(
             message,
             *args,
             text_wrap=text_wrap,
@@ -335,13 +338,13 @@ def output_status(
         )
 
 
-def output_result(
+def print_result(
     message: str,
     *args,
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
 ):
-    output(
+    cprint(
         message,
         *args,
         text_wrap=text_wrap,
@@ -349,16 +352,16 @@ def output_result(
     )
 
 
-def output_help(message: str, *args, text_wrap: Wrap = Wrap.WRAP, extra_indent: str = ""):
-    output(message, *args, text_wrap=text_wrap, color=COLOR_HELP, extra_indent=extra_indent)
+def print_help(message: str, *args, text_wrap: Wrap = Wrap.WRAP, extra_indent: str = ""):
+    cprint(message, *args, text_wrap=text_wrap, color=COLOR_HELP, extra_indent=extra_indent)
 
 
-def output_assistance(
+def print_assistance(
     message: str, *args, model: str = "", text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""
 ):
     model_str = f"({model})" if model else ""
-    with output_padding():
-        output(
+    with print_style_pad():
+        cprint(
             f"\n{EMOJI_ASSISTANT}{model_str} " + message,
             *args,
             text_wrap=text_wrap,
@@ -367,9 +370,9 @@ def output_assistance(
         )
 
 
-def output_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
-    with output_padding():
-        output(
+def print_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+    with print_style_pad():
+        cprint(
             message,
             *args,
             text_wrap=text_wrap,
@@ -378,9 +381,9 @@ def output_response(message: str = "", *args, text_wrap: Wrap = Wrap.NONE, extra
         )
 
 
-def output_heading(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
-    with output_padding():
-        output(
+def print_heading(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+    with print_style_pad():
+        cprint(
             Markdown(f"## {message.upper()}"),
             *args,
             text_wrap=text_wrap,

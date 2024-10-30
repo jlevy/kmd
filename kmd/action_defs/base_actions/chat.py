@@ -16,7 +16,7 @@ from kmd.model import (
     NO_ARGS,
     ParamList,
 )
-from kmd.shell.shell_output import output_assistance, output_response
+from kmd.shell.shell_output import print_assistance, print_response
 
 
 @kmd_action
@@ -39,7 +39,7 @@ class Chat(Action):
     def run(self, items: ActionInput) -> ActionResult:
         chat_history = ChatHistory()
 
-        output_response("Beginning chat. Press enter (or type `exit`) to end chat.")
+        print_response("Beginning chat. Press enter (or type `exit`) to end chat.")
 
         while True:
             try:
@@ -58,7 +58,7 @@ class Chat(Action):
                 messages=chat_history.as_chat_completion(),
             )
 
-            output_assistance("%s", llm_response)
+            print_assistance("%s", llm_response)
 
             # TODO: Why does the response have trailing whitespace on lines? Makes the YAML ugly.
             stripped_response = "\n".join(

@@ -4,7 +4,7 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import COLOR_ERROR
 
 from kmd.errors import NONFATAL_EXCEPTIONS
-from kmd.shell.shell_output import output
+from kmd.shell.shell_output import cprint
 
 
 log = get_logger(__name__)
@@ -40,7 +40,7 @@ def wrap_with_exception_printing(func: Callable[..., R]) -> Callable[[List[str]]
             return func(*args)
         except NONFATAL_EXCEPTIONS as e:
             log.error(f"[{COLOR_ERROR}]Command error:[/{COLOR_ERROR}] %s", summarize_traceback(e))
-            output()
+            cprint()
             log.info("Command error details: %s", e, exc_info=True)
             return None
 

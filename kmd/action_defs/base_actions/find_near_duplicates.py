@@ -15,7 +15,7 @@ from kmd.model import (
     TWO_OR_MORE_ARGS,
 )
 from kmd.preconditions.precondition_defs import is_concept, is_text_doc
-from kmd.shell.shell_output import output, output_heading
+from kmd.shell.shell_output import cprint, print_heading
 from kmd.text_formatting.markdown_util import as_bullet_points
 from kmd.util.type_utils import not_none
 
@@ -62,11 +62,11 @@ class FindNearDuplicates(Action):
                 duplicate_paths.append(key1)  # key1 will be the shorter one.
         report = as_bullet_points(report_lines)
 
-        output_heading("Near Duplicates")
-        output(f"Most-related items (score >= {report_threshold}):")
-        output()
-        output("%s", report)
-        output()
+        print_heading("Near Duplicates")
+        cprint(f"Most-related items (score >= {report_threshold}):")
+        cprint()
+        cprint("%s", report)
+        cprint()
 
         # TODO: Handle concepts that subsume other concepts, e.g. find ones like this even
         # though the similarity score is low:

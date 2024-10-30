@@ -13,7 +13,7 @@ from kmd.config.text_styles import (
     LOGO,
 )
 from kmd.help.help_page import output_see_also
-from kmd.shell.shell_output import console_pager, output, output_markdown, Wrap
+from kmd.shell.shell_output import console_pager, cprint, print_markdown, Wrap
 from kmd.version import get_version_name
 
 log = get_logger(__name__)
@@ -38,20 +38,20 @@ def welcome() -> None:
     """
     from kmd.docs import welcome
 
-    output()
-    output(BOX_TOP, color=COLOR_HINT)
+    cprint()
+    cprint(BOX_TOP, color=COLOR_HINT)
     version = get_version_name()
     padding = " " * (len(BOX_TOP) - len(BOX_PREFIX) - len(LOGO) - len(version))
-    output(
+    cprint(
         Text(LOGO, style=COLOR_LOGO) + Text(padding + version, style=COLOR_HINT),
         extra_indent=BOX_PREFIX,
     )
-    output(BOX_MID, color=COLOR_HINT)
-    output(extra_indent=BOX_PREFIX)
-    output(Text("Welcome to kmd.", style=COLOR_HEADING), extra_indent=BOX_PREFIX)
-    output(extra_indent=BOX_PREFIX)
-    output(welcome, text_wrap=Wrap.WRAP_FULL, extra_indent=BOX_PREFIX)
-    output(BOX_BOTTOM, color=COLOR_HINT)
+    cprint(BOX_MID, color=COLOR_HINT)
+    cprint(extra_indent=BOX_PREFIX)
+    cprint(Text("Welcome to Kmd.", style=COLOR_HEADING), extra_indent=BOX_PREFIX)
+    cprint(extra_indent=BOX_PREFIX)
+    cprint(welcome, text_wrap=Wrap.WRAP_FULL, extra_indent=BOX_PREFIX)
+    cprint(BOX_BOTTOM, color=COLOR_HINT)
 
 
 @kmd_command
@@ -75,8 +75,8 @@ def why_kmd() -> None:
     from kmd.docs import motivation, what_is_kmd
 
     with console_pager():
-        output_markdown(what_is_kmd)
-        output_markdown(motivation)
+        print_markdown(what_is_kmd)
+        print_markdown(motivation)
         output_see_also(["help", "getting_started", "faq", "commands", "actions"])
 
 
@@ -88,7 +88,7 @@ def installation() -> None:
     from kmd.docs import installation
 
     with console_pager():
-        output_markdown(installation)
+        print_markdown(installation)
         output_see_also(
             [
                 "What is Kmd?",
@@ -111,7 +111,7 @@ def getting_started() -> None:
     from kmd.docs import getting_started
 
     with console_pager():
-        output_markdown(getting_started)
+        print_markdown(getting_started)
         output_see_also(
             [
                 "What is Kmd?",
@@ -133,7 +133,7 @@ def faq() -> None:
     from kmd.docs import faq
 
     with console_pager():
-        output_markdown(faq)
+        print_markdown(faq)
 
         output_see_also(["help", "commands", "actions"])
 

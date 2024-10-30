@@ -8,7 +8,7 @@ from kmd.file_storage.workspaces import current_workspace
 from kmd.lang_tools.inflection import plural
 from kmd.model.paths_model import fmt_loc, StorePath
 from kmd.model.shell_model import ShellResult
-from kmd.shell.shell_output import console_pager, output, output_result, output_selection
+from kmd.shell.shell_output import console_pager, cprint, print_result, print_selection
 from kmd.util.format_utils import fmt_lines
 
 log = get_logger(__name__)
@@ -29,39 +29,39 @@ def type_str(value: Optional[Any]) -> str:
         return type(value).__name__
 
 
-def print_selection(selection: List[StorePath]) -> None:
+def shell_print_selection(selection: List[StorePath]) -> None:
     """
     Print the current selection.
     """
     if not selection:
-        output_selection("No selection.")
+        print_selection("No selection.")
     else:
-        output_selection(
+        print_selection(
             "Selected %s:\n%s",
             type_str(selection),
             fmt_lines(fmt_loc(s) for s in selection),
         )
 
 
-def print_result(value: Optional[Any]) -> None:
+def shell_print_result(value: Optional[Any]) -> None:
     if value:
         if isinstance(value, list) and all(isinstance(item, str) for item in value):
             str_lines = "\n".join(value)
             if len(value) > MAX_LINES_WITHOUT_PAGING:
                 with console_pager():
-                    output_result(str_lines)
-                output()
+                    print_result(str_lines)
+                cprint()
             else:
-                output_result(str_lines)
+                print_result(str_lines)
         else:
-            output_result(str(value))
+            print_result(str(value))
 
 
 def shell_before_exec() -> None:
     """
     Code to run before executing a command.
     """
-    output()
+    cprint()
 
 
 def handle_shell_result(res: ShellResult) -> None:
@@ -79,20 +79,20 @@ def handle_shell_result(res: ShellResult) -> None:
         log.info("Ignoring display command output: %s", command_output)
 
     if res.result and res.show_result:
-        output()
-        print_result(res.result)
-        output()
-        output(f"({type_str(res.result)} saved as $result)", color=COLOR_HINT)
+        cprint()
+        shell_print_result(res.result)
+        cprint()
+        cprint(f"({type_str(res.result)} saved as $result)", color=COLOR_HINT)
 
     if res.show_selection or res.suggest_actions:
         selection = current_workspace().get_selection()
 
         if selection and res.show_selection:
-            output()
-            print_selection(selection)
-            output()
-            output("(saved as $selection)", color=COLOR_HINT)
-            output()
+            cprint()
+            shell_print_selection(selection)
+            cprint()
+            cprint("(saved as $selection)", color=COLOR_HINT)
+            cprint()
 
         if selection and res.suggest_actions:
             from kmd.commands import command_defs

@@ -21,7 +21,7 @@ from kmd.model.assistant_model import AssistantResponse
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message
 from kmd.model.paths_model import fmt_loc
-from kmd.shell.shell_output import fill_markdown, output, output_as_string
+from kmd.shell.shell_output import cprint, fill_markdown, output_as_string
 from kmd.util.format_utils import fmt_paras
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none
@@ -119,13 +119,13 @@ def assist_system_message(skip_api: bool = False) -> Message:
     )
 
 
-def assistance(input: str, fast: bool = False) -> str:
+def assistance(input: str, fast: bool = False) -> None:
     # TODO: Stream response.
 
     assistant_model = "assistant_model_fast" if fast else "assistant_model"
     model = not_none(get_param_value(assistant_model, type=LLM))
 
-    output(f"Getting assistance (model {model})…")
+    cprint(f"Getting assistance (model {model})…")
 
     system_message = assist_system_message(skip_api=fast)
 
@@ -165,7 +165,8 @@ def assistance(input: str, fast: bool = False) -> str:
             assistant_history_file, ChatMessage(ChatRole.assistant, assistant_response.model_dump())
         )
 
-        return assistant_response.full_str()
+        assistant_response.print()
+
     except (ValidationError, json.JSONDecodeError) as e:
         log.error("Error parsing assistant response: %s", e)
         raise e
