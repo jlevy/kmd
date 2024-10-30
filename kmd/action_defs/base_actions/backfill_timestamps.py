@@ -7,6 +7,7 @@ from kmd.errors import ContentError, InvalidInput, UnexpectedError
 from kmd.exec.action_registry import kmd_action
 from kmd.model import Format, Item, ItemType, PerItemAction
 from kmd.model.params_model import common_param, Param
+from kmd.model.paths_model import fmt_loc
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
 from kmd.provenance.source_items import find_upstream_item, find_upstream_resource
@@ -17,7 +18,6 @@ from kmd.text_docs.text_doc import SentIndex, TextDoc
 from kmd.text_docs.token_mapping import TokenMapping
 from kmd.text_docs.wordtoks import BOF_TOK, EOF_TOK, PARA_BR_TOK, SENT_BR_TOK
 from kmd.text_formatting.citations import add_citation_to_text, format_timestamp_citation
-from kmd.util.format_utils import fmt_path
 from kmd.util.type_utils import not_none
 
 log = get_logger(__name__)
@@ -72,7 +72,7 @@ class BackfillSourceTimestamps(PerItemAction):
             )
 
         log.message(
-            "Pulling timestamps from source item: %s", fmt_path(not_none(source_item.store_path))
+            "Pulling timestamps from source item: %s", fmt_loc(not_none(source_item.store_path))
         )
 
         # Parse current doc.

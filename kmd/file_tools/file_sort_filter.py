@@ -10,7 +10,8 @@ from pydantic.dataclasses import dataclass
 from kmd.config.logger import get_logger
 from kmd.errors import FileNotFound, InvalidInput
 from kmd.file_tools.file_walk import IgnoreFilter, walk_by_dir
-from kmd.util.format_utils import fmt_path
+from kmd.model.paths_model import fmt_loc
+
 
 log = get_logger(__name__)
 
@@ -106,7 +107,7 @@ def collect_files(
 
     for path in start_paths:
         if not path.exists():
-            raise FileNotFound(f"Path not found: {fmt_path(path)}")
+            raise FileNotFound(f"Path not found: {fmt_loc(path)}")
 
     since_timestamp = (
         datetime.now(timezone.utc).timestamp() - since_seconds if since_seconds else 0.0
@@ -130,14 +131,14 @@ def collect_files(
         dirs_ignored = 0
         files_ignored = 0
 
-        log.debug("Walking folder: %s", fmt_path(path))
+        log.debug("Walking folder: %s", fmt_loc(path))
 
         try:
             for flist in walk_by_dir(
                 path, relative_to=base_path, ignore=ignore, recursive=recursive
             ):
 
-                log.debug("Walking folder: %s: %s", fmt_path(flist.parent_dir), flist.filenames)
+                log.debug("Walking folder: %s: %s", fmt_loc(flist.parent_dir), flist.filenames)
 
                 files_ignored += flist.files_ignored
                 dirs_ignored += flist.dirs_ignored

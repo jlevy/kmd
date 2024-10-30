@@ -26,7 +26,7 @@ from kmd.model.params_model import Param
 from kmd.model.paths_model import fmt_store_path
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_checks import items_matching_precondition
-from kmd.util.format_utils import fmt_lines, single_line
+from kmd.util.format_utils import single_line
 from kmd.util.log_calls import log_calls
 from kmd.util.type_utils import not_none
 
@@ -196,7 +196,7 @@ def _command_match(query: str, values: Iterable[str | RichCompletion]) -> List[R
     return matches
 
 
-@log_calls(level="info")
+@log_calls(level="debug")
 def _command_completions(prefix: str) -> set[RichCompletion]:
     from kmd.xontrib.xonsh_customization import _actions, _commands
 
@@ -233,7 +233,7 @@ def _command_completions(prefix: str) -> set[RichCompletion]:
     return set(all_completions)
 
 
-@log_calls(level="info")
+@log_calls(level="debug")
 def _dir_completions(prefix: str, base_dir: Path) -> List[RichCompletion]:
     prefix = normalize(prefix)
 
@@ -242,7 +242,7 @@ def _dir_completions(prefix: str, base_dir: Path) -> List[RichCompletion]:
 
     hits = select_hits(scored_paths, min_score=60, max_hits=MAX_DIR_COMPLETIONS)
 
-    log.info(
+    log.debug(
         "Found %s dir hits out of %s completions.",
         len(hits),
         len(scored_paths),
@@ -260,11 +260,11 @@ def _dir_completions(prefix: str, base_dir: Path) -> List[RichCompletion]:
     ]
 
 
-@log_calls(level="info")
+@log_calls(level="debug")
 def _item_completions(
     prefix: str,
     precondition: Precondition = Precondition.always,
-    complete_from_sandbox: bool = False,
+    complete_from_sandbox: bool = True,
 ) -> List[RichCompletion] | None:
     prefix = normalize(prefix.lstrip("@"))
 
@@ -285,13 +285,13 @@ def _item_completions(
         )
     )
 
-    log.info("Found %s items matching: %r", len(matching_items), prefix)
+    log.debug("Found %s items matching: %r", len(matching_items), prefix)
 
     scored_items = score_items(prefix, matching_items)
 
     hits = select_hits(scored_items, min_score=0, max_hits=MAX_COMPLETIONS)
 
-    log.info(
+    log.debug(
         "Found %s item hits out of %s completions.",
         len(hits),
         len(scored_items),
@@ -310,9 +310,9 @@ def _item_completions(
             )
             for (score, item) in hits
         ]
-        log.info("Found %s item completions", len(item_completions))
+        log.debug("Found %s item completions", len(item_completions))
     else:
-        log.info("Too many items (%s) to offer completions, skipping.", len(matching_items))
+        log.debug("Too many items (%s) to offer completions, skipping.", len(matching_items))
 
     return dir_completions + item_completions
 

@@ -9,8 +9,8 @@ from pydantic.dataclasses import dataclass
 from kmd.config.logger import get_logger
 from kmd.config.settings import CONTENT_CACHE_NAME, DOT_DIR, MEDIA_CACHE_NAME
 from kmd.file_storage.persisted_yaml import PersistedYaml
-from kmd.model.paths_model import StorePath
-from kmd.util.format_utils import fmt_path
+from kmd.model.paths_model import fmt_loc, StorePath
+
 
 log = get_logger(__name__)
 
@@ -56,7 +56,7 @@ class MetadataDirs:
         # Initialize metadata file.
         metadata_path = self.base_dir / self.metadata_yml
         if not metadata_path.exists():
-            log.info("Initializing new store metadata: %s", fmt_path(metadata_path))
+            log.info("Initializing new store metadata: %s", fmt_loc(metadata_path))
         metadata = PersistedYaml(metadata_path, init_value={"store_version": STORE_VERSION})
 
         if metadata.read().get("store_version") != STORE_VERSION:
@@ -64,7 +64,7 @@ class MetadataDirs:
                 "Store metadata is version %r but we are using version %r: %s",
                 metadata.read().get("store_version"),
                 STORE_VERSION,
-                fmt_path(self.metadata_yml),
+                fmt_loc(self.metadata_yml),
             )
 
         # Create directories.

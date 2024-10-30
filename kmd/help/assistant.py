@@ -20,8 +20,9 @@ from kmd.llms.llm_completion import llm_template_completion
 from kmd.model.assistant_model import AssistantResponse
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message
+from kmd.model.paths_model import fmt_loc
 from kmd.shell.shell_output import fill_markdown, output, output_as_string
-from kmd.util.format_utils import fmt_paras, fmt_path
+from kmd.util.format_utils import fmt_paras
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none
 
@@ -64,7 +65,7 @@ def assist_current_state() -> Message:
     ws_base_dir = ws_dirs.base_dir if ws_dirs else None
 
     if ws_base_dir and not is_sandbox:
-        ws_info = f"Based on the current directory, the current workspace is: {ws_base_dir.name} at {fmt_path(ws_base_dir)}"
+        ws_info = f"Based on the current directory, the current workspace is: {ws_base_dir.name} at {fmt_loc(ws_base_dir)}"
     else:
         if is_sandbox:
             about_ws = "You are currently using the global sandbox workspace."
@@ -76,6 +77,8 @@ def assist_current_state() -> Message:
         )
 
     log.info("Assistant current workspace state: %s", ws_info)
+
+    # FIXME: Add @-mentioned files into context.
 
     current_state_message = Message(
         f"""

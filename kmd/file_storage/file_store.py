@@ -26,10 +26,10 @@ from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format, is_ignored
 from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.params_model import ParamValues
-from kmd.model.paths_model import Locator, StorePath
+from kmd.model.paths_model import fmt_loc, Locator, StorePath
 from kmd.query.vector_index import WsVectorIndex
 from kmd.shell.shell_output import output
-from kmd.util.format_utils import fmt_lines, fmt_path
+from kmd.util.format_utils import fmt_lines
 from kmd.util.hash_utils import hash_file
 from kmd.util.log_calls import format_duration, log_calls
 
@@ -103,7 +103,7 @@ class FileStore:
         try:
             name, item_type, _format, file_ext = parse_item_filename(store_path)
         except InvalidFilename:
-            log.debug("Skipping file with invalid name: %s", fmt_path(store_path))
+            log.debug("Skipping file with invalid name: %s", fmt_loc(store_path))
             return None
         full_suffix = join_suffix(item_type.name, file_ext.name) if item_type else file_ext.name
         self.uniquifier.add(name, full_suffix)
@@ -122,7 +122,7 @@ class FileStore:
                     )
                 self.id_map[item_id] = store_path
         except SkippableError as e:
-            log.warning("Could not read file, skipping: %s: %s", fmt_path(store_path), e)
+            log.warning("Could not read file, skipping: %s: %s", fmt_loc(store_path), e)
 
         return dup_path
 
@@ -274,14 +274,14 @@ class FileStore:
         """
         # If external file already exists within the workspace, the file is already saved (without metadata).
         if item.external_path and Path(item.external_path).resolve().is_relative_to(self.base_dir):
-            log.info("External file already saved: %s", fmt_path(item.external_path))
+            log.info("External file already saved: %s", fmt_loc(item.external_path))
             store_path = StorePath(path.relpath(item.external_path, self.base_dir))
         else:
             # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
             store_path, old_store_path = self.find_path_for(item, as_tmp=as_tmp)
             full_path = self.base_dir / store_path
 
-            log.info("Saving item to %s: %s", fmt_path(full_path), item)
+            log.info("Saving item to %s: %s", fmt_loc(full_path), item)
 
             # If we're overwriting an existing file, archive it first.
             if full_path.exists():
@@ -326,7 +326,7 @@ class FileStore:
         item.store_path = str(store_path)
         self._id_index_item(store_path)
 
-        log.message("%s Saved item: %s", EMOJI_SUCCESS, fmt_path(store_path))
+        log.message("%s Saved item: %s", EMOJI_SUCCESS, fmt_loc(store_path))
         return store_path
 
     @log_calls(level="debug")
@@ -340,13 +340,11 @@ class FileStore:
             # This is a known text format or a YAML file, so we can read the whole thing.
             return read_item(self.base_dir / store_path, self.base_dir)
         else:
-            log.debug(
-                "Not a text file so loading item with external path: %s", fmt_path(store_path)
-            )
+            log.debug("Not a text file so loading item with external path: %s", fmt_loc(store_path))
             # This is an existing file (such as media or docs) so we just return the metadata.
             if not format:
                 raise UnrecognizedFileFormat(
-                    f"Unknown file extension: {file_ext}: {fmt_path(store_path)}"
+                    f"Unknown file extension: {file_ext}: {fmt_loc(store_path)}"
                 )
             return Item(
                 type=item_type or ItemType.resource,  # Default to resource if not specified.
@@ -381,7 +379,7 @@ class FileStore:
         elif isinstance(locator, StorePath) and not reimport:
             # TODO: Maybe check if we need to insert metadata, in case it's a regular file just
             # sitting in the store.
-            log.message("Store path already imported: %s", fmt_path(locator))
+            log.message("Store path already imported: %s", fmt_loc(locator))
             return locator
         else:
             # We have a path, possibly outside of or inside of the store.
@@ -389,11 +387,11 @@ class FileStore:
             if path.is_relative_to(self.base_dir):
                 store_path = StorePath(path.relative_to(self.base_dir))
                 if self.exists(store_path) and not reimport:
-                    log.message("Path already imported: %s", fmt_path(store_path))
+                    log.message("Path already imported: %s", fmt_loc(store_path))
                     return store_path
 
             if not path.exists():
-                raise FileNotFound(f"File not found: {fmt_path(path)}")
+                raise FileNotFound(f"File not found: {fmt_loc(path)}")
 
             # It's a path outside the store, so copy it in.
             name, filename_item_type, format, file_ext = parse_item_filename(path)
@@ -401,7 +399,7 @@ class FileStore:
             if filename_item_type:
                 as_type = filename_item_type
             if format and format.supports_frontmatter():
-                log.message("Importing text file: %s", fmt_path(path))
+                log.message("Importing text file: %s", fmt_loc(path))
                 # This will read the file with or without frontmatter.
                 # We are importing so we want to drop the external path so we save the body.
                 item = read_item(path, self.base_dir)
@@ -412,7 +410,7 @@ class FileStore:
                         "Reimporting as item type `%s` instead of `%s`: %s",
                         as_type.value,
                         item.type.value,
-                        fmt_path(path),
+                        fmt_loc(path),
                     )
                     item.type = as_type
 
@@ -421,24 +419,24 @@ class FileStore:
                 store_path = self.save(item)
                 log.info("Imported text file: %s", item.as_str())
             else:
-                log.message("Importing non-text file: %s", fmt_path(path))
+                log.message("Importing non-text file: %s", fmt_loc(path))
                 # Binary or other files we just copy over as-is, preserving the name.
                 # We know the extension is recognized.
                 item = Item.from_external_path(path)
                 store_path, _prev = self.find_path_for(item)
                 if self.exists(store_path):
-                    raise FileExists(f"Resource already in store: {fmt_path(store_path)}")
+                    raise FileExists(f"Resource already in store: {fmt_loc(store_path)}")
 
                 if item.type != as_type:
                     log.warning(
                         "Reimporting as item type `%s` instead of `%s`: %s",
                         as_type.value,
                         item.type.value,
-                        fmt_path(path),
+                        fmt_loc(path),
                     )
                     item.type = as_type
 
-                log.message("Importing resource: %s -> %s", fmt_path(path), fmt_path(store_path))
+                log.message("Importing resource: %s -> %s", fmt_loc(path), fmt_loc(store_path))
                 copyfile_atomic(path, self.base_dir / store_path, make_parents=True)
             return store_path
 
@@ -464,13 +462,13 @@ class FileStore:
         if not quiet:
             log.message(
                 "Archiving item: %s -> %s/",
-                fmt_path(store_path),
-                fmt_path(self.dirs.archive_dir),
+                fmt_loc(store_path),
+                fmt_loc(self.dirs.archive_dir),
             )
         orig_path = self.base_dir / store_path
         archive_path = self.dirs.archive_dir / store_path
         if missing_ok and not orig_path.exists():
-            log.message("Item to archive not found so moving on: %s", fmt_path(orig_path))
+            log.message("Item to archive not found so moving on: %s", fmt_loc(orig_path))
             return store_path
         move_file(orig_path, archive_path)
         self._remove_references([store_path])
@@ -492,7 +490,7 @@ class FileStore:
     def set_selection(self, selection: List[StorePath]):
         for store_path in selection:
             if not (self.base_dir / store_path).exists():
-                raise FileNotFound(f"Selection not found: {fmt_path(store_path)}")
+                raise FileNotFound(f"Selection not found: {fmt_loc(store_path)}")
 
         self.selection.set(selection)
 
@@ -538,9 +536,9 @@ class FileStore:
             path.abspath(self.base_dir),
             len(self.uniquifier),
         )
-        log.message("Logging to: %s", fmt_path(log_file_path().absolute()))
-        log.message("Media cache: %s", fmt_path(self.base_dir / self.dirs.media_cache_dir))
-        log.message("Content cache: %s", fmt_path(self.base_dir / self.dirs.content_cache_dir))
+        log.message("Logging to: %s", fmt_loc(log_file_path().absolute()))
+        log.message("Media cache: %s", fmt_loc(self.base_dir / self.dirs.media_cache_dir))
+        log.message("Content cache: %s", fmt_loc(self.base_dir / self.dirs.content_cache_dir))
         for warning in self.warnings:
             log.warning("%s", warning)
 
@@ -573,7 +571,7 @@ class FileStore:
         Normalize an item or all items in a folder to make sure contents are in current
         format.
         """
-        log.info("Normalizing item: %s", fmt_path(store_path))
+        log.info("Normalizing item: %s", fmt_loc(store_path))
 
         item = self.load(store_path)
         new_store_path = self.save(item)

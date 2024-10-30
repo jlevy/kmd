@@ -19,13 +19,12 @@ from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.file_formats_model import FileExt, Format
 from kmd.model.media_model import MediaMetadata
 from kmd.model.operations_model import OperationSummary, Source
-from kmd.model.paths_model import fmt_shell_path, fmt_store_path, Locator, StorePath
+from kmd.model.paths_model import fmt_loc, fmt_shell_path, fmt_store_path, Locator, StorePath
 from kmd.text_formatting.markdown_util import markdown_to_html
 from kmd.util.format_utils import (
     abbreviate_on_words,
     abbreviate_phrase_in_middle,
     clean_up_title,
-    fmt_path,
     html_to_plaintext,
     plaintext_to_html,
 )
@@ -279,7 +278,7 @@ class Item:
         if not format:
             format = detect_file_format(path)
         if not format:
-            raise FileFormatError(f"Unrecognized file format: {fmt_path(path)}")
+            raise FileFormatError(f"Unrecognized file format: {fmt_loc(path)}")
 
         item = cls(
             type=item_type,

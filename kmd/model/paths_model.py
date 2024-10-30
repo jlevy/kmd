@@ -239,6 +239,17 @@ class StorePath(BasePath):
         return hash((super().__str__(), self.store_name))
 
 
+Locator = Url | Path | StorePath
+"""
+A reference to an external resource or an item in the store.
+"""
+
+InputArg = Locator | str
+"""
+An argument to a command or action.
+"""
+
+
 def fmt_store_path(store_path: str | Path | StorePath) -> str:
     return fmt_shell_path(StorePath(store_path))
 
@@ -250,15 +261,20 @@ def fmt_shell_path(store_path: str | Path | StorePath) -> str:
         return fmt_path(store_path)
 
 
-Locator = Url | Path | StorePath
-"""
-A reference to an external resource or an item in the store.
-"""
-
-InputArg = Locator | str
-"""
-An argument to a command or action.
-"""
+def fmt_loc(locator: str | Locator) -> str:
+    """
+    Use this to format locators: URLs and paths. This automatically formats StorePaths
+    with an @ prefix, and other Paths with quotes and relative to the working directory.
+    (Use `fmt_path` for plain Paths, but not for StorePaths.)
+    """
+    if isinstance(locator, StorePath):
+        return locator.display_str()
+    elif isinstance(locator, Path):
+        return fmt_path(locator)
+    elif is_url(loc_str := str(locator)):
+        return loc_str
+    else:
+        return fmt_path(locator)
 
 
 def is_store_path(input_arg: InputArg) -> bool:
@@ -329,7 +345,7 @@ def test_store_path():
     # Test that __str__, __repr__, and fmt_path don't raise an exception
     print([str(sp1), str(sp2), str(sp3), str(sp4)])
     print([repr(sp1), repr(sp2), repr(sp3), repr(sp4)])
-    print(fmt_path(StorePath("store/path1")))
+    print(fmt_loc(StorePath("store/path1")))
     print(repr(Path(StorePath("store/path1"))))
 
     # Test some invalid store paths

@@ -31,8 +31,8 @@ from kmd.model.file_formats_model import (
     parse_file_ext,
     read_partial_text,
 )
+from kmd.model.paths_model import fmt_loc
 from kmd.shell.shell_output import format_name_and_description, format_paragraphs, output, Wrap
-from kmd.util.format_utils import fmt_path
 from kmd.util.url import as_file_url, is_url
 
 
@@ -255,7 +255,7 @@ def _detect_view_mode(file_or_url: str) -> ViewMode:
     elif path.is_dir():
         return ViewMode.native
     else:
-        raise FileNotFound(fmt_path(file_or_url))
+        raise FileNotFound(fmt_loc(file_or_url))
 
 
 def view_file_native(
@@ -272,7 +272,7 @@ def view_file_native(
     if not is_url(file_or_url):
         path = Path(file_or_url)
         if not path.exists():
-            raise FileNotFound(fmt_path(path))
+            raise FileNotFound(fmt_loc(path))
 
     if view_mode == ViewMode.auto:
         view_mode = _detect_view_mode(file_or_url)

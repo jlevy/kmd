@@ -10,8 +10,8 @@ from kmd.errors import FileNotFound, InvalidInput
 from kmd.file_storage.store_filenames import parse_item_filename
 from kmd.model.file_formats_model import FileExt
 from kmd.model.media_model import MediaMetadata, MediaService, MediaType, MediaUrlType
+from kmd.model.paths_model import fmt_loc
 from kmd.shell_tools.native_tools import CmdlineTool, tool_check
-from kmd.util.format_utils import fmt_path
 from kmd.util.strif import copyfile_atomic
 from kmd.util.url import Url
 
@@ -84,13 +84,13 @@ class LocalFileMedia(MediaService):
             target_path = target_dir / (path.stem + ".mp3")
             if file_ext == FileExt.mp3:
                 log.message(
-                    "Copying local audio file: %s -> %s", fmt_path(path), fmt_path(target_dir)
+                    "Copying local audio file: %s -> %s", fmt_loc(path), fmt_loc(target_dir)
                 )
                 # If the file is already an MP3 so just copy it.
                 copyfile_atomic(path, target_path)
             else:
                 log.message(
-                    "Converting local audio file: %s -> %s", fmt_path(path), fmt_path(target_dir)
+                    "Converting local audio file: %s -> %s", fmt_loc(path), fmt_loc(target_dir)
                 )
 
                 _run_ffmpeg(["ffmpeg", "-i", str(path), "-f", "mp3", str(target_path)])
@@ -100,7 +100,9 @@ class LocalFileMedia(MediaService):
             audio_target_path = target_dir / (path.stem + ".mp3")
 
             log.message(
-                "Converting local video file: %s -> %s", fmt_path(path), fmt_path(video_target_path)
+                "Converting local video file: %s -> %s",
+                fmt_loc(path),
+                fmt_loc(video_target_path),
             )
             _run_ffmpeg(
                 [
@@ -119,8 +121,8 @@ class LocalFileMedia(MediaService):
 
             log.message(
                 "Extracting audio from video file: %s -> %s",
-                fmt_path(path),
-                fmt_path(audio_target_path),
+                fmt_loc(path),
+                fmt_loc(audio_target_path),
             )
             _run_ffmpeg(
                 [

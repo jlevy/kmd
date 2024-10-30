@@ -8,8 +8,8 @@ from kmd.file_storage.file_cache import FileMtimeCache
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ITEM_FIELDS
 from kmd.model.operations_model import OPERATION_FIELDS
+from kmd.model.paths_model import fmt_loc
 from kmd.text_formatting.doc_formatting import normalize_formatting
-from kmd.util.format_utils import fmt_path
 from kmd.util.log_calls import tally_calls
 from kmd.util.sort_utils import custom_key_sort
 
@@ -119,7 +119,7 @@ def _read_item_uncached(path: Path, base_dir: Optional[Path]) -> Item:
             log.info(
                 "Metadata not present on text file, inferred format `%s`: %s",
                 item.format.value,
-                fmt_path(path),
+                fmt_loc(path),
             )
         item.store_path = store_path
         item.external_path = external_path

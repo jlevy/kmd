@@ -4,10 +4,10 @@ from kmd.config.logger import get_logger
 from kmd.errors import NoMatch
 from kmd.file_storage.workspaces import current_workspace
 from kmd.model.items_model import Item
-from kmd.model.paths_model import StorePath
+from kmd.model.paths_model import fmt_loc, StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_resource
-from kmd.util.format_utils import fmt_lines, fmt_path
+from kmd.util.format_utils import fmt_lines
 from kmd.util.log_calls import log_calls
 from kmd.util.type_utils import not_none
 
@@ -36,7 +36,7 @@ def find_upstream_item(
         log.warning(
             "Detected a loop searching for upstream item with precondition `%s` at %s. Aborting this path.",
             precondition,
-            fmt_path(store_path),
+            fmt_loc(store_path),
         )
         raise NoMatch("Loop detected")
 
@@ -62,14 +62,14 @@ def find_upstream_item(
         if precondition(source_item):
             log.message(
                 "Found source item that matches requirements:\n%s",
-                fmt_lines([fmt_path(source_path)]),
+                fmt_lines([fmt_loc(source_path)]),
             )
             return source_item
         else:
             log.message(
                 "Skipping source item that does not match precondition %s:\n%s",
                 precondition,
-                fmt_lines([fmt_path(source_path)]),
+                fmt_lines([fmt_loc(source_path)]),
             )
 
     for source_item in source_items:

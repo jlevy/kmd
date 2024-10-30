@@ -21,8 +21,8 @@ from kmd.model.actions_model import (
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
-from kmd.model.paths_model import StorePath
-from kmd.util.format_utils import fmt_lines, fmt_path
+from kmd.model.paths_model import fmt_loc, StorePath
+from kmd.util.format_utils import fmt_lines
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none
 
@@ -211,7 +211,7 @@ def run_action(
             for input_store_path in old_inputs:
                 # Note some outputs may be missing if replace_input was used.
                 ws.archive(input_store_path, missing_ok=True)
-                log.message("Archived input item: %s", fmt_path(input_store_path))
+                log.message("Archived input item: %s", fmt_loc(input_store_path))
             archived_store_paths.extend(old_inputs)
 
         # Log info.

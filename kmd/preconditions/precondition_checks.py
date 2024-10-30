@@ -7,9 +7,8 @@ from kmd.errors import SkippableError
 from kmd.file_storage.file_store import FileStore
 from kmd.model.actions_model import Action
 from kmd.model.items_model import Item
-from kmd.model.paths_model import StorePath
+from kmd.model.paths_model import fmt_loc, StorePath
 from kmd.model.preconditions_model import Precondition
-from kmd.util.format_utils import fmt_path
 from kmd.util.log_calls import format_duration
 
 log = get_logger(__name__)
@@ -54,7 +53,7 @@ def items_matching_precondition(
         except SkippableError:
             continue
         except Exception as e:
-            log.info("Ignoring exception loading item %s: %s", fmt_path(store_path), e)
+            log.info("Ignoring exception loading item %s: %s", fmt_loc(store_path), e)
             continue
         if precondition(item):
             yield item

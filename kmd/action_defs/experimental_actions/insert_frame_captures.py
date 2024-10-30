@@ -8,13 +8,13 @@ from kmd.exec.action_registry import kmd_action
 from kmd.file_storage.workspaces import current_workspace
 from kmd.media.video_frames import capture_frames
 from kmd.model import Format, FRAME_CAPTURE, Item, ItemType, MediaType, PerItemAction, Precondition
+from kmd.model.paths_model import fmt_loc
 from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
 from kmd.provenance.source_items import find_upstream_resource
 from kmd.provenance.timestamps import TimestampExtractor
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.text_docs.search_tokens import search_tokens
 from kmd.text_formatting.html_in_md import html_img, md_para
-from kmd.util.format_utils import fmt_path
 from kmd.util.string_replace import insert_multiple, Insertion
 from kmd.util.url import as_file_url
 from kmd.web_content.file_cache_tools import cache_content, cache_resource
@@ -58,7 +58,7 @@ class InsertFrameCaptures(PerItemAction):
         timestamps = [timestamp for timestamp, _index, _offset in timestamp_matches]
         frame_paths = capture_frames(video_path, timestamps, target_dir, prefix=item.title_slug())
 
-        log.message(f"Extracted {len(frame_paths)} frame captures to: {fmt_path(target_dir)}")
+        log.message(f"Extracted {len(frame_paths)} frame captures to: {fmt_loc(target_dir)}")
 
         # Save images in file cache for later as well.
         for frame_path in frame_paths:

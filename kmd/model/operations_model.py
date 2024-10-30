@@ -2,8 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic.dataclasses import dataclass
 
-from kmd.model.paths_model import StorePath
-from kmd.util.format_utils import fmt_path
+from kmd.model.paths_model import fmt_loc, StorePath
 from kmd.util.parse_key_vals import format_key_value
 from kmd.util.parse_shell_args import shell_quote
 
@@ -46,7 +45,7 @@ class Input:
             return cls(path=StorePath(input_str), hash=None)
 
     def path_and_hash(self):
-        return f"{fmt_path(self.path)}@{self.hash}"
+        return f"{fmt_loc(self.path)}@{self.hash}"
 
     # Inputs are equal if the hashes match (even if the paths have changed).
 

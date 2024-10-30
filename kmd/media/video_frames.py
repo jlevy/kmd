@@ -5,7 +5,7 @@ import cv2
 
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, FileNotFound
-from kmd.util.format_utils import fmt_path
+from kmd.model.paths_model import fmt_loc
 from kmd.util.strif import atomic_output_file
 from kmd.util.string_template import StringTemplate
 
@@ -30,12 +30,12 @@ def capture_frames(
     )
     captured_frames = []
 
-    log.message(f"Capturing frames from video: {fmt_path(video_file)}")
+    log.message(f"Capturing frames from video: {fmt_loc(video_file)}")
 
     video = cv2.VideoCapture(str(video_file))
     try:
         if not video.isOpened():
-            raise ContentError(f"Failed to open video file: {fmt_path(video_file)}")
+            raise ContentError(f"Failed to open video file: {fmt_loc(video_file)}")
 
         fps = video.get(cv2.CAP_PROP_FPS)
         total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -64,13 +64,13 @@ def capture_frames(
                 ) as tmp_path:
                     cv2.imwrite(str(tmp_path), frame)
                 log.message(
-                    "Saved captured frame: %s -> %s", fmt_path(video_file), fmt_path(target_path)
+                    "Saved captured frame: %s -> %s", fmt_loc(video_file), fmt_loc(target_path)
                 )
                 captured_frames.append(target_path)
             else:
                 log.error(f"Failed to read frame {frame_number} at timestamp {timestamp}s")
                 raise ContentError(
-                    f"Failed to capture frame {frame_number} at timestamp {timestamp} from {fmt_path(video_file)}"
+                    f"Failed to capture frame {frame_number} at timestamp {timestamp} from {fmt_loc(video_file)}"
                 )
     finally:
         video.release()

@@ -14,8 +14,7 @@ from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.params_model import ParamValues, USER_SETTABLE_PARAMS
-from kmd.model.paths_model import InputArg, StorePath
-from kmd.util.format_utils import fmt_path
+from kmd.model.paths_model import fmt_loc, InputArg, StorePath
 from kmd.util.url import is_url, Url
 from kmd.web_content.file_cache_tools import reset_content_cache_dir
 
@@ -126,7 +125,7 @@ def current_workspace(silent: bool = False) -> FileStore:
     ws_dirs, is_sandbox = current_workspace_info()
     if not ws_dirs:
         raise InvalidState(
-            f"No workspace found in `{fmt_path(Path('.').absolute())}`.\n"
+            f"No workspace found in `{fmt_loc(Path('.').absolute())}`.\n"
             "Create one with the `workspace` command."
         )
 

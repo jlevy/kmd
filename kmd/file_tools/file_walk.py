@@ -6,7 +6,7 @@ from typing import Callable, Generator, List, Optional
 
 from kmd.config.logger import get_logger
 from kmd.errors import FileNotFound
-from kmd.util.format_utils import fmt_path
+from kmd.model.paths_model import fmt_loc
 
 
 log = get_logger(__name__)
@@ -42,12 +42,12 @@ def walk_by_dir(
 
     start_path = start_path.resolve()
     if not start_path.exists():
-        raise FileNotFound(f"Start path not found: {fmt_path(start_path)}")
+        raise FileNotFound(f"Start path not found: {fmt_loc(start_path)}")
 
     if relative_to:
         relative_to = relative_to.resolve()
         if not relative_to.exists():
-            raise FileNotFound(f"Directory not found: {fmt_path(relative_to)}")
+            raise FileNotFound(f"Directory not found: {fmt_loc(relative_to)}")
 
     # Special case of a single file.
     if start_path.is_file():
