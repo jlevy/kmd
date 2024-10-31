@@ -59,7 +59,10 @@ class Format(Enum):
 
     def supports_frontmatter(self) -> bool:
         """
-        Is this format compatible with frontmatter format?
+        Is this format compatible with frontmatter format metadata?
+        PDF and docx unfortunately won't work with frontmatter.
+        CSV does to some degree, depending on the tool, and this is useful so we support it.
+        Perhaps we could include JSON here (assuming it's JSON5), but currently we do not.
         """
         return self in [
             self.url,

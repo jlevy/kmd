@@ -148,13 +148,16 @@ def import_and_load(locator: InputArg) -> Item:
     """
 
     if isinstance(locator, str) and is_url(locator):
+        log.message("Importing locator as URL: %r", locator)
         item = import_url_to_workspace(Url(locator))
     else:
         ws = current_workspace()
         if isinstance(locator, StorePath):
+            log.info("Locator is in the file store: %r", locator)
             # It's already a StorePath.
             item = ws.load(locator)
         else:
+            log.message("Importing locator as local path: %r", locator)
             path = Path(locator)
             if not path.exists():
                 raise InvalidInput(f"File not found: {path}")
@@ -171,11 +174,11 @@ def import_url_to_workspace(url: Url) -> Item:
     """
     canon_url = canonicalize_url(url)
     log.message(
-        "Importing url: %s%s", canon_url, f" canonicalized from {url}" if url != canon_url else ""
+        "Importing URL: %s%s", canon_url, f" canonicalized from {url}" if url != canon_url else ""
     )
     item = Item(ItemType.resource, url=canon_url, format=Format.url)
     workspace = current_workspace()
-    workspace.save(item)
+    workspace.save(item, overwrite=False)  # No need to overwrite an identical URL.
     return item
 
 

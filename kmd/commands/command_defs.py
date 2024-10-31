@@ -411,6 +411,23 @@ def show(
 
 
 @kmd_command
+def item_id(*paths: str) -> None:
+    """
+    Show the item id for the given paths. This is the unique identifier that is used to
+    determine if two items are the same, so action results are cached.
+    """
+    input_paths = assemble_path_args(*paths)
+    for path in input_paths:
+        item = current_workspace().load(StorePath(path))
+        id = item.item_id()
+        cprint(
+            format_name_and_description(fmt_loc(path), str(id), text_wrap=Wrap.INDENT_ONLY),
+            text_wrap=Wrap.NONE,
+        )
+        cprint()
+
+
+@kmd_command
 def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
     """
     Copy the contents of a file (or the first file in the selection) to the OS-native

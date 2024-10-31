@@ -1,11 +1,9 @@
 from kmd.config.logger import get_logger
-from kmd.errors import NoMatch
 from kmd.exec.action_registry import kmd_action
 from kmd.model import DEFAULT_FAST_LLM, Item, LLM, LLMAction, Message, MessageTemplate
-from kmd.preconditions.precondition_defs import has_speaker_ids
-from kmd.provenance.source_items import find_upstream_item
 from kmd.text_docs.diff_filters import changes_whitespace
 from kmd.text_docs.text_diffs import DiffFilter
+from kmd.text_docs.text_doc import TextDoc
 from kmd.text_docs.window_settings import WINDOW_2K_WORDTOKS, WindowSettings
 
 log = get_logger(__name__)
@@ -58,13 +56,24 @@ class BreakIntoParagraphs(LLMAction):
     windowing: WindowSettings = WINDOW_2K_WORDTOKS
 
     def run_item(self, item: Item) -> Item:
-        try:
-            multi_speakers_item = find_upstream_item(item, has_speaker_ids)
-            # Usually not worth editing a transcript into paragraphs if it has multiple speakers.
-            log.warning(
-                "Skipping break_into_paragraphs for doc as it has multiple speakers: %s",
-                multi_speakers_item,
-            )
+        if not item.body:
             return item
-        except NoMatch:
+
+        # Check each paragraph's sentence count to see if we need to do this.
+        MAX_SENTENCES_PER_PARAGRAPH = 7
+        doc = TextDoc.from_text(item.body)
+        log.message("Doc size: %s", doc.size_summary())
+        biggest_para = max(doc.paragraphs, key=lambda p: len(p.sentences))
+        can_skip = len(biggest_para.sentences) <= MAX_SENTENCES_PER_PARAGRAPH
+
+        log.message(
+            "Checking if we need to break into paragraphs: "
+            "biggest paragraph has %d sentences vs max of %d so %s",
+            len(biggest_para.sentences),
+            MAX_SENTENCES_PER_PARAGRAPH,
+            "can skip" if can_skip else "must run",
+        )
+        if can_skip:
+            return item
+        else:
             return super().run_item(item)

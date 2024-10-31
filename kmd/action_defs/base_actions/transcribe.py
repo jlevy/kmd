@@ -7,6 +7,7 @@ from kmd.model import common_params, FileExt, Format, Item, ItemType, ParamList,
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_audio_resource, is_url_item, is_video_resource
 from kmd.text_chunks.parse_divs import parse_divs
+from kmd.util.type_utils import not_none
 from kmd.util.url import as_file_url
 from kmd.workspaces.workspaces import current_workspace
 
@@ -32,7 +33,7 @@ class Transcribe(PerItemAction):
         if item.url:
             url = item.url
         else:
-            url = as_file_url(current_workspace().path_for(item))
+            url = as_file_url(current_workspace().base_dir / not_none(item.store_path))
 
         transcription = cache_and_transcribe(url, language=self.language)
 

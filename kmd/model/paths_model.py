@@ -282,10 +282,9 @@ def is_store_path(input_arg: InputArg) -> bool:
 
 def resolve_at_path(path: str | Path | StorePath) -> Path | StorePath:
     """
-    Resolve any string path that includes an @ prefix into a StorePath.
-    Leaves other paths as Paths or StorePaths.
+    Resolve any string into a path, ensuring that a path that includes an @ prefix
+    becomes a StorePath.
     """
-
     if isinstance(path, StorePath):
         return path
     elif isinstance(path, Path):

@@ -24,6 +24,8 @@ def resolve_path_arg(path_str: str) -> Path | StorePath:
     """
     Resolve a path argument to a Path or StorePath, if it is within the current workspace.
     """
+    if is_url(path_str):
+        raise InvalidInput(f"Expected a path but got a URL: {path_str}")
     path = resolve_at_path(path_str)
     if path.is_absolute():
         return path
@@ -68,12 +70,12 @@ def assemble_store_path_args(*paths: Optional[str]) -> List[StorePath]:
 
 def assemble_action_args(*paths: Optional[str]) -> Tuple[List[InputArg], bool]:
     """
-    Assemble args for an action.
+    Assemble args for an action, as URLs, paths, or store paths.
     """
-    resolved = [resolve_path_arg(path) for path in paths if path]
+    resolved = [resolve_arg(path) for path in paths if path]
     if not resolved:
         try:
-            selection_args = current_workspace().get_selection()
+            selection_args = current_workspace().selection.get()
             return cast(List[InputArg], selection_args), True
         except MissingInput:
             return [], False

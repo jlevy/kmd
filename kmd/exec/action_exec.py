@@ -7,7 +7,7 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.errors import ContentError, InvalidInput, InvalidOutput, NONFATAL_EXCEPTIONS
 from kmd.exec.resolve_args import assemble_action_args
-from kmd.exec.system_actions import fetch_page_metadata, FETCH_PAGE_METADATA_NAME
+from kmd.exec.system_actions import fetch_page_metadata
 from kmd.lang_tools.inflection import plural
 from kmd.model.actions_model import (
     Action,
@@ -34,7 +34,7 @@ def fetch_url_items(item: Item) -> Item:
         return item
 
     if not item.store_path:
-        raise InvalidInput("URL item should already be stored: %s", item)
+        raise InvalidInput(f"URL item should already be stored: {item}")
 
     if item.title and item.description:
         # Already have metadata.
@@ -66,7 +66,7 @@ def run_action(
 
     # Get the current workspace params.
     ws = current_workspace()
-    ws_params = ws.get_param_values()
+    ws_params = ws.params.get_values()
 
     # Fill in the action with any overridden params.
     log.info("Parameters from workspace:\n%s", ws_params.as_str())
@@ -109,7 +109,7 @@ def run_action(
 
     # URLs should have metadata like a title and be valid, so we fetch them.
     # We make an action call to do the fetch so need to avoid recursing.
-    if action.name != FETCH_PAGE_METADATA_NAME:
+    if action.name != fetch_page_metadata.name:
         input_items = [fetch_url_items(item) for item in input_items]
 
     existing_result = None

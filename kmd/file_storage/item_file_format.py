@@ -28,12 +28,11 @@ def write_item(item: Item, path: Path):
     Write a text item to a file with standard frontmatter format YAML.
     Also normalizes formatting of the body text.
     """
+    item.validate()
     if item.is_binary:
         raise ValueError(f"Binary items should be external files: {item}")
-    if not item.format:
-        raise ValueError(f"Item has no format: {item}")
-    elif item.format.supports_frontmatter() and not item.body_text():
-        raise ValueError(f"Text item has no body text (usually this is an error): {item}")
+    if item.format and not item.format.supports_frontmatter():
+        raise ValueError(f"Item format `{item.format.value}` does not support frontmatter: {item}")
 
     # Clear cache before writing.
     _item_cache.delete(path)

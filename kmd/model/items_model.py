@@ -49,6 +49,12 @@ class ItemType(Enum):
     chat = "chat"
     extension = "extension"
 
+    def expects_body(self) -> bool:
+        """
+        Resources don't have a body. On concepts it's optional.
+        """
+        return self.value not in [ItemType.resource.value, ItemType.concept.value]
+
 
 class State(Enum):
     """
@@ -319,6 +325,15 @@ class Item:
             },
         )
 
+    def validate(self):
+        """
+        Sanity check the item to ensure it's consistent and complete enough to be saved.
+        """
+        if not self.format:
+            raise ValueError(f"Item has no format: {self}")
+        if self.type.expects_body() and not self.is_binary and not self.body:
+            raise ValueError(f"Item type `{self.type.value}` is text but has no body: {self}")
+
     def set_created(self, timestamp: float):
         self.created_at = datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
@@ -361,13 +376,13 @@ class Item:
                 return v
 
         # Convert enums and dataclasses to serializable forms.
-        log.info("Item metadata before serialization: %s", item_dict)
+        log.debug("Item metadata before serialization: %s", item_dict)
         item_dict = {
             k: serialize(v)
             for k, v in item_dict.items()
             if v is not None and k not in self.NON_METADATA_FIELDS
         }
-        log.info("Item metadata after serialization: %s", item_dict)
+        log.debug("Item metadata after serialization: %s", abbreviate_obj(item_dict))
 
         # Sometimes it's also better to serialize datetimes as strings.
         if datetime_as_str:

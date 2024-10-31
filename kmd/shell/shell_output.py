@@ -127,9 +127,11 @@ def fill_text(
         raise ValueError(f"Unknown text_wrap value: {text_wrap}")
 
 
-def format_name_and_description(name: str, doc: str, extra_note: Optional[str] = None) -> Text:
+def format_name_and_description(
+    name: str, doc: str, extra_note: Optional[str] = None, text_wrap: Wrap = Wrap.WRAP_INDENT
+) -> Text:
     doc = textwrap.dedent(doc).strip()
-    wrapped = fill_text(doc, text_wrap=Wrap.WRAP_INDENT)
+    wrapped_doc = fill_text(doc, text_wrap=text_wrap)
     return Text.assemble(
         ("`", COLOR_HINT),
         (name, COLOR_KEY),
@@ -137,7 +139,7 @@ def format_name_and_description(name: str, doc: str, extra_note: Optional[str] =
         ((" " + extra_note, COLOR_HINT) if extra_note else ""),
         (": ", COLOR_HINT),
         "\n",
-        wrapped,
+        wrapped_doc,
     )
 
 

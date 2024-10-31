@@ -13,7 +13,6 @@ from kmd.errors import (
     FileNotFound,
     InvalidFilename,
     SkippableError,
-    UnexpectedError,
     UnrecognizedFileFormat,
 )
 from kmd.file_storage.item_file_format import read_item, write_item
@@ -181,12 +180,6 @@ class FileStore:
         else:
             return None
 
-    def path_for(self, item: Item) -> Path:
-        if not item.store_path:
-            log.error("Item has no store path: %s", item)
-            raise UnexpectedError("Cannot resolve item without store path")
-        return self.base_dir / item.store_path
-
     def find_by_id(self, item: Item) -> Optional[StorePath]:
         """
         Best effort to see if an item with the same identity is already in the store.
@@ -218,31 +211,31 @@ class FileStore:
                 return store_path
         return None
 
-    def find_path_for(
+    def store_path_for(
         self, item: Item, as_tmp: bool = False
-    ) -> Tuple[StorePath, Optional[StorePath]]:
+    ) -> Tuple[StorePath, bool, Optional[StorePath]]:
         """
         Return the store path for an item. If the item already has a `store_path`, we use that.
         Otherwise we need to find the store path or generate a new one.
 
-        Returns `store_path, old_store_path` where `old_store_path` is the previous similarly
-        named item (or None there is none). Store path may or may not already exist, depending
-        on whether an item with the same identity has been saved before.
+        Returns `store_path, found, old_store_path` where `found` indicates whether the path was
+        already found (in the item or in the store by checking for identity) and `old_store_path`
+        is the previous similarly named item with a different identity (or None there is none).
         """
         item_id = item.item_id()
         old_filename = None
         if as_tmp:
-            return self._tmp_path_for(item), None
+            return self._tmp_path_for(item), False, None
         elif item.store_path:
-            return StorePath(item.store_path), None
+            return StorePath(item.store_path), True, None
         elif item_id in self.id_map:
             # If this item has an identity and we've saved under that id before, use the same store path.
             store_path = self.id_map[item_id]
             log.info(
                 "Found existing item with same id:\n%s",
-                fmt_lines([store_path, item_id]),
+                fmt_lines([fmt_loc(store_path), item_id]),
             )
-            return store_path, None
+            return store_path, True, None
         else:
             # We need to generate a new filename.
             folder_path = folder_for_type(item.type)
@@ -253,14 +246,14 @@ class FileStore:
             if old_filename and Path(self.base_dir / folder_path / old_filename).exists():
                 old_store_path = StorePath(folder_path / old_filename)
 
-            return StorePath(store_path), old_store_path
+            return StorePath(store_path), False, old_store_path
 
     def _tmp_path_for(self, item: Item) -> StorePath:
         """
         Find a path for an item in the tmp directory.
         """
         if not item.store_path:
-            store_path, _old = self.find_path_for(item, as_tmp=False)
+            store_path, _found, _old = self.store_path_for(item, as_tmp=False)
             return StorePath(self.dirs.tmp_dir / store_path)
         elif (self.base_dir / item.store_path).is_relative_to(self.dirs.tmp_dir):
             return StorePath(item.store_path)
@@ -268,18 +261,25 @@ class FileStore:
             return StorePath(self.dirs.tmp_dir / item.store_path)
 
     @log_calls()
-    def save(self, item: Item, as_tmp: bool = False) -> StorePath:
+    def save(self, item: Item, as_tmp: bool = False, overwrite: bool = True) -> StorePath:
         """
         Save the item. Uses the store_path if it's already set or generates a new one.
         Updates item.store_path.
         """
         # If external file already exists within the workspace, the file is already saved (without metadata).
         if item.external_path and Path(item.external_path).resolve().is_relative_to(self.base_dir):
-            log.info("External file already saved: %s", fmt_loc(item.external_path))
+            log.message("External file already saved: %s", fmt_loc(item.external_path))
             store_path = StorePath(path.relpath(item.external_path, self.base_dir))
+            return store_path
         else:
             # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
-            store_path, old_store_path = self.find_path_for(item, as_tmp=as_tmp)
+            store_path, found, old_store_path = self.store_path_for(item, as_tmp=as_tmp)
+
+            if not overwrite and found:
+                log.message("Skipping save of item already saved: %s", fmt_loc(store_path))
+                item.store_path = str(store_path)
+                return store_path
+
             full_path = self.base_dir / store_path
 
             log.info("Saving item to %s: %s", fmt_loc(full_path), item)
@@ -327,7 +327,7 @@ class FileStore:
         item.store_path = str(store_path)
         self._id_index_item(store_path)
 
-        log.message("%s Saved item: %s", EMOJI_SUCCESS, fmt_loc(store_path))
+        log.message("%s Saved item:\n%s", EMOJI_SUCCESS, fmt_lines([fmt_loc(store_path)]))
         return store_path
 
     @log_calls(level="debug")
@@ -424,7 +424,7 @@ class FileStore:
                 # Binary or other files we just copy over as-is, preserving the name.
                 # We know the extension is recognized.
                 item = Item.from_external_path(path)
-                store_path, _prev = self.find_path_for(item)
+                store_path, _found, _prev = self.store_path_for(item)
                 if self.exists(store_path):
                     raise FileExists(f"Resource already in store: {fmt_loc(store_path)}")
 

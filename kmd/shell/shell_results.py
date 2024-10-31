@@ -81,17 +81,15 @@ def handle_shell_result(res: ShellResult) -> None:
     if res.result and res.show_result:
         cprint()
         shell_print_result(res.result)
-        cprint()
-        cprint(f"({type_str(res.result)} saved as $result)", color=COLOR_HINT)
+        cprint(f"({type_str(res.result)} in $result)", color=COLOR_HINT)
 
     if res.show_selection or res.suggest_actions:
-        selection = current_workspace().get_selection()
+        selection = current_workspace().selection.get()
 
         if selection and res.show_selection:
             cprint()
             shell_print_selection(selection)
-            cprint()
-            cprint("(saved as $selection)", color=COLOR_HINT)
+            cprint("(in $selection)", color=COLOR_HINT)
             cprint()
 
         if selection and res.suggest_actions:

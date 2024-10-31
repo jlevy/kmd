@@ -69,7 +69,7 @@ def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], None]:
 
         set_env("result", res.result)
 
-        selection = current_workspace().get_selection()
+        selection = current_workspace().selection.get()
         set_env("selection", selection)
 
         handle_shell_result(res)
