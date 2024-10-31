@@ -2,13 +2,13 @@ from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
-from kmd.file_storage.workspaces import current_workspace
 from kmd.media.media_tools import cache_and_transcribe
 from kmd.model import common_params, FileExt, Format, Item, ItemType, ParamList, PerItemAction
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_audio_resource, is_url_item, is_video_resource
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.util.url import as_file_url
+from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
 

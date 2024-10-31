@@ -38,11 +38,6 @@ from kmd.exec.resolve_args import (
 )
 from kmd.file_formats.chat_format import tail_chat_history
 from kmd.file_storage.metadata_dirs import MetadataDirs
-from kmd.file_storage.workspaces import (
-    check_strict_workspace_name,
-    current_workspace,
-    resolve_workspace_name,
-)
 from kmd.file_tools.file_sort_filter import collect_files, GroupByOption, parse_since, SortOption
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.help.assistant import assist_system_message, assistance
@@ -91,6 +86,11 @@ from kmd.util.url import Url
 from kmd.version import get_version_name
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 from kmd.web_content import file_cache_tools
+from kmd.workspaces.workspaces import (
+    check_strict_workspace_name,
+    current_workspace,
+    resolve_workspace_name,
+)
 
 log = get_logger(__name__)
 
@@ -333,7 +333,7 @@ def select(*paths: str, stdin: bool = False) -> ShellResult:
 
     if paths:
         store_paths = [StorePath(path) for path in paths]
-        ws.set_selection(store_paths)
+        ws.selection.set(store_paths)
 
     return ShellResult(show_selection=True)
 
@@ -346,11 +346,11 @@ def unselect(*paths: str) -> None:
     """
     ws = current_workspace()
     if not paths:
-        ws.set_selection([])
+        ws.selection.set([])
         print_status("Cleared selection.")
     else:
-        previous_selection = ws.get_selection()
-        new_selection = ws.unselect([StorePath(path) for path in paths])
+        previous_selection = ws.selection.get()
+        new_selection = ws.selection.unselect([StorePath(path) for path in paths])
 
         print_status(
             "Unselected %s %s, %s now selected:\n%s",
@@ -480,7 +480,7 @@ def save(
     :param no_frontmatter: If true, will not include YAML frontmatter in the output.
     """
     ws = current_workspace()
-    store_paths = ws.get_selection()
+    store_paths = ws.selection.get()
 
     def copy_file(store_path: StorePath, target_path: Path):
         path = ws.base_dir / store_path
@@ -613,12 +613,12 @@ def param(*args: str) -> None:
                     f"Unrecognized value for parameter `{key}` (type {param.type.__name__}): `{value}`"
                 )
 
-        current_vals = ws.get_param_values()
+        current_vals = ws.params.get_values()
         new_params = {**current_vals.values, **new_key_vals}
 
         deletes = [key for key, value in new_params.items() if value is None]
         new_params = remove_values(new_params, deletes)
-        ws.set_param(new_params)
+        ws.params.set(new_params)
 
     print_heading("Available Parameters")
 
@@ -626,7 +626,7 @@ def param(*args: str) -> None:
         cprint(format_name_and_description(param.name, param.full_description))
         cprint()
 
-    param_values = ws.get_param_values()
+    param_values = ws.params.get_values()
     if not param_values.values:
         print_status("No parameters are set.")
     else:
@@ -868,7 +868,7 @@ def preconditions() -> None:
     """
 
     ws = current_workspace()
-    selection = ws.get_selection()
+    selection = ws.selection.get()
     if not selection:
         raise InvalidInput("No selection")
 

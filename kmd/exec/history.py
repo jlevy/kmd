@@ -1,8 +1,8 @@
 from typing import Any, Callable
 
 from kmd.file_formats.chat_format import append_chat_message, ChatMessage, ChatRole
-from kmd.file_storage.workspaces import current_workspace
 from kmd.model.commands_model import Command
+from kmd.workspaces.workspaces import current_workspace
 
 
 def record_command(command: Command | str):

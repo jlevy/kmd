@@ -17,7 +17,6 @@ from kmd.file_formats.chat_format import (
     ChatRole,
     tail_chat_history,
 )
-from kmd.file_storage.workspaces import current_workspace, current_workspace_info, get_param_value
 from kmd.llms.llm_completion import llm_template_completion
 from kmd.model.assistant_response_model import AssistantResponse, Confidence
 from kmd.model.language_models import LLM
@@ -38,6 +37,7 @@ from kmd.text_formatting.markdown_normalization import fill_markdown
 from kmd.util.format_utils import fmt_paras
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none
+from kmd.workspaces.workspaces import current_workspace, current_workspace_info, get_param_value
 
 
 log = get_logger(__name__)

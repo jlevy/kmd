@@ -7,7 +7,6 @@ from frontmatter_format import read_yaml_file, to_yaml_string, write_yaml_file
 from kmd.config import colors
 from kmd.config.logger import get_logger
 from kmd.errors import NoMatch
-from kmd.file_storage.workspaces import current_workspace
 from kmd.lang_tools.clean_headings import clean_heading, summary_heading
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
@@ -16,6 +15,7 @@ from kmd.preconditions.precondition_defs import has_thumbnail_url
 from kmd.provenance.source_items import find_upstream_item
 from kmd.util.type_utils import as_dataclass, not_none
 from kmd.web_gen.template_render import render_web_template
+from kmd.workspaces.workspaces import current_workspace
 
 
 log = get_logger(__name__)

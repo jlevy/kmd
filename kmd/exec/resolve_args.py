@@ -3,9 +3,9 @@ from typing import cast, List, Optional, Sequence, Tuple
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, MissingInput
-from kmd.file_storage.workspaces import current_workspace
 from kmd.model.paths_model import InputArg, Locator, resolve_at_path, StorePath
 from kmd.util.url import is_url, Url
+from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
 
@@ -41,7 +41,7 @@ def assemble_path_args(*paths: Optional[str]) -> List[StorePath | Path]:
     resolved = [resolve_path_arg(path) for path in paths if path]
     if not resolved:
         ws = current_workspace()
-        resolved = ws.get_selection()
+        resolved = ws.selection.get()
         if not resolved:
             raise MissingInput("No selection")
     return cast(List[StorePath | Path], resolved)

@@ -44,7 +44,7 @@ class SequenceAction(Action):
 
     def run(self, items: ActionInput) -> ActionResult:
         from kmd.exec.action_exec import run_action
-        from kmd.file_storage.workspaces import current_workspace
+        from kmd.workspaces.workspaces import current_workspace
 
         with task_stack().context(
             self.name, total_parts=len(self.action_names), unit="sequence step"

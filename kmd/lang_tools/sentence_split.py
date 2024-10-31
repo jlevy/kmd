@@ -22,7 +22,7 @@ def split_sentences(text: str, splitter: Optional[Splitter] = None) -> List[str]
     Split sentences. Regex is much faster then Spacy so splitter is specifiable as
     a value or a workspace param.
     """
-    from kmd.file_storage.workspaces import get_param_value
+    from kmd.workspaces.workspaces import get_param_value
 
     if splitter is None:
         splitter = get_sentence_splitter(not_none(get_param_value("sentence_splitter")))

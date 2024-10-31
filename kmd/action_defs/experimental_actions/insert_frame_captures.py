@@ -5,7 +5,6 @@ from pydantic.dataclasses import dataclass
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, InvalidInput
 from kmd.exec.action_registry import kmd_action
-from kmd.file_storage.workspaces import current_workspace
 from kmd.media.video_frames import capture_frames
 from kmd.model import Format, FRAME_CAPTURE, Item, ItemType, MediaType, PerItemAction, Precondition
 from kmd.model.paths_model import fmt_loc
@@ -18,6 +17,7 @@ from kmd.text_formatting.html_in_md import html_img, md_para
 from kmd.util.string_replace import insert_multiple, Insertion
 from kmd.util.url import as_file_url
 from kmd.web_content.file_cache_tools import cache_content, cache_resource
+from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
 

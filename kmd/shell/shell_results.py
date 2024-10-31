@@ -4,12 +4,12 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import COLOR_HINT
 from kmd.errors import is_fatal
 from kmd.exec.command_exec import run_command
-from kmd.file_storage.workspaces import current_workspace
 from kmd.lang_tools.inflection import plural
 from kmd.model.paths_model import fmt_loc, StorePath
 from kmd.model.shell_model import ShellResult
 from kmd.shell.shell_output import console_pager, cprint, print_result, print_selection
 from kmd.util.format_utils import fmt_lines
+from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
 

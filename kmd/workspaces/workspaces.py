@@ -187,7 +187,7 @@ def get_param_value(param_name: str, type: Type[T] = str) -> Optional[T]:
     Get a global parameter value, checking if it is set in the current workspace first.
     """
     try:
-        params = current_workspace().get_param_values()
+        params = current_workspace().params.get_values()
     except InvalidState:
         params = ParamValues({})
 

@@ -18,7 +18,6 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import COLOR_ACTION_TEXT, COLOR_COMMAND_TEXT, EMOJI_TASK
 from kmd.docs.faq_headings import faq_headings
 from kmd.errors import InvalidState
-from kmd.file_storage.workspaces import current_workspace
 from kmd.help.function_param_info import annotate_param_info
 from kmd.model.file_formats_model import is_ignored
 from kmd.model.items_model import Item
@@ -29,6 +28,7 @@ from kmd.preconditions.precondition_checks import items_matching_precondition
 from kmd.util.format_utils import single_line
 from kmd.util.log_calls import log_calls
 from kmd.util.type_utils import not_none
+from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
 

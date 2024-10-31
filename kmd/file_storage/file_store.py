@@ -12,20 +12,17 @@ from kmd.errors import (
     FileExists,
     FileNotFound,
     InvalidFilename,
-    InvalidState,
     SkippableError,
     UnexpectedError,
     UnrecognizedFileFormat,
 )
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import MetadataDirs
-from kmd.file_storage.persisted_yaml import PersistedYaml
 from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_item_filename
 from kmd.file_tools.file_walk import IgnoreFilter, walk_by_dir
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format, is_ignored
 from kmd.model.items_model import Item, ItemId, ItemType
-from kmd.model.params_model import ParamValues
 from kmd.model.paths_model import fmt_loc, Locator, StorePath
 from kmd.query.vector_index import WsVectorIndex
 from kmd.shell.shell_output import cprint
@@ -36,6 +33,8 @@ from kmd.util.log_calls import format_duration, log_calls
 from kmd.util.strif import copyfile_atomic, move_file
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import is_url, Url
+from kmd.workspaces.param_state import ParamState
+from kmd.workspaces.selection_state import SelectionState
 
 log = get_logger(__name__)
 
@@ -67,8 +66,10 @@ class FileStore:
         self.vector_index = WsVectorIndex(self.base_dir / self.dirs.index_dir)
 
         # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
-        self.selection = PersistedYaml(self.base_dir / self.dirs.selection_yml, init_value=[])
-        self.params = PersistedYaml(self.base_dir / self.dirs.params_yml, init_value={})
+        self.selection = SelectionState(
+            self.base_dir / self.dirs.selection_yml, lambda store_path: self.exists(store_path)
+        )
+        self.params = ParamState(self.base_dir / self.dirs.params_yml)
 
         self.end_time = time.time()
 
@@ -486,44 +487,6 @@ class FileStore:
         original_path = self.base_dir / store_path
         move_file(self.dirs.archive_dir / store_path, original_path)
         return StorePath(store_path)
-
-    def set_selection(self, selection: List[StorePath]):
-        for store_path in selection:
-            if not (self.base_dir / store_path).exists():
-                raise FileNotFound(f"Selection not found: {fmt_loc(store_path)}")
-
-        self.selection.set(selection)
-
-    def get_selection(self) -> List[StorePath]:
-        try:
-            store_paths = self.selection.read()
-            filtered_store_paths = [StorePath(path) for path in store_paths if self.exists(path)]
-            if len(filtered_store_paths) != len(store_paths):
-                log.warning(
-                    "Items in selection are missing, so unselecting:\n%s",
-                    fmt_lines(sorted(set(store_paths) - set(filtered_store_paths))),
-                )
-                self.selection.set(filtered_store_paths)
-            return filtered_store_paths
-        except OSError:
-            raise InvalidState("No selection saved in workspace")
-
-    def unselect(self, unselect_paths: List[StorePath]):
-        current_selection = self.get_selection()
-        new_selection = [path for path in current_selection if path not in unselect_paths]
-        self.set_selection(new_selection)
-        return new_selection
-
-    def set_param(self, action_params: dict):
-        """Set a global parameter for this workspace."""
-        self.params.set(action_params)
-
-    def get_param_values(self) -> ParamValues:
-        """Get any parameters set globally for this workspace."""
-        try:
-            return ParamValues(self.params.read())
-        except OSError:
-            return ParamValues({})
 
     def log_store_info(self, once: bool = False):
         if once and self.info_logged:
