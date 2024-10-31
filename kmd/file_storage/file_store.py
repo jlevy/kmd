@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Generator, List, Optional, Tuple
 
 from kmd.config.logger import get_logger, log_file_path
-from kmd.config.text_styles import EMOJI_SUCCESS, EMOJI_WARN
+from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN
 
 from kmd.errors import (
     FileExists,
@@ -327,7 +327,7 @@ class FileStore:
         item.store_path = str(store_path)
         self._id_index_item(store_path)
 
-        log.message("%s Saved item:\n%s", EMOJI_SUCCESS, fmt_lines([fmt_loc(store_path)]))
+        log.message("%s Saved item:\n%s", EMOJI_SAVED, fmt_lines([fmt_loc(store_path)]))
         return store_path
 
     @log_calls(level="debug")

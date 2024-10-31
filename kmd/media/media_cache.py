@@ -109,7 +109,11 @@ class MediaCache(DirStore):
             if set(media_types).issubset(cached_paths.keys()):
                 return cached_paths
             else:
-                log.message("Downloading to get missing formats.")
+                log.message(
+                    "Downloading to get missing formats. Need %s but have %s.",
+                    [t.name for t in media_types],
+                    [t.name for t in cached_paths.keys()],
+                )
 
         log.message("Downloading media: %s", url)
         media_paths = download_media_by_service(url, self.root, media_types)

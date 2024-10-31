@@ -986,6 +986,7 @@ def files(
     *paths: str,
     brief: bool = False,
     recent: bool = False,
+    flat: bool = False,
     pager: bool = False,
     all: bool = False,
     head: int = 0,
@@ -993,7 +994,7 @@ def files(
     sort: Optional[SortOption] = None,
     reverse: bool = False,
     since: Optional[str] = None,
-    groupby: Optional[GroupByOption] = None,
+    groupby: Optional[GroupByOption] = GroupByOption.parent,
     iso_time: bool = False,
 ) -> ShellResult:
     """
@@ -1006,6 +1007,8 @@ def files(
         Same as `--head=20 --groupby=parent`.
     :param recent: Like `--brief`, but shows the most recently modified files in each directory.
         Same as `--head=20 --sort=modified --reverse --groupby=parent`.
+    :param flat: Show files in a flat list, rather than grouped by parent directory.
+        Same as `--groupby=flat`.
     :param pager: Use the pager when displaying the output.
     :param all: Include usually ignored (hidden) files.
     :param head: Limit the first number of items displayed per group (if groupby is used)
@@ -1014,7 +1017,8 @@ def files(
     :param sort: Sort by 'filename','size', 'accessed', 'created', or 'modified'.
     :param reverse: Reverse the sorting order.
     :param since: Filter files modified since a given time (e.g., '1 day', '2 hours').
-    :param groupby: Group results by 'parent' or 'suffix'.
+    :param groupby: Group results. Can be 'flat' (no grouping), 'parent', or 'suffix'.
+         Defaults to 'parent'.
     :param iso_time: Show time in ISO format (default is human-readable age).
     """
 
@@ -1034,6 +1038,8 @@ def files(
         if sort is None:
             sort = SortOption.modified
             reverse = True
+    if flat:
+        groupby = GroupByOption.flat
 
     since_seconds = parse_since(since) if since else 0.0
 
@@ -1082,7 +1088,7 @@ def files(
     files_matching = len(df)
     log.info(f"Total files collected: {files_matching}")
 
-    if groupby:
+    if groupby and groupby != GroupByOption.flat:
         grouped = df.groupby(groupby.value)
     else:
         grouped = [(None, df)]

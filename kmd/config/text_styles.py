@@ -2,6 +2,8 @@
 Settings that define the visual appearance of text outputs.
 """
 
+import re
+
 from kmd.config import colors
 
 ## Settings
@@ -70,6 +72,8 @@ COLOR_HINT = "bright_black"
 
 COLOR_SUCCESSS = "green"
 
+COLOR_SKIP = "green"
+
 COLOR_WARN = "bright_red"
 
 COLOR_ERROR = "bright_red"
@@ -80,7 +84,7 @@ COLOR_SAVED = "blue"
 
 COLOR_TIMING = "blue"
 
-COLOR_CALL = "yellow"
+COLOR_CALL = "bright_yellow"
 
 COLOR_COMMAND_TEXT = "bold default"
 
@@ -150,7 +154,11 @@ EMOJI_SAVED = "⩣"
 
 EMOJI_TIMING = "⏱"
 
-EMOJI_SUCCESS = "✓"
+EMOJI_SUCCESS = "[✓]"
+
+EMOJI_SKIP = "[−]"
+
+EMOJI_FAILURE = "[✗]"
 
 EMOJI_CALL_BEGIN = "≫"
 
@@ -185,9 +193,22 @@ class KmdHighlighter(RegexHighlighter):
 
     base_style = "kmd."
     highlights = [
-        r"(?P<tag_start><)(?P<tag_name>[-\w.:|]*)(?P<tag_contents>[\w\W]*)(?P<tag_end>>)",
-        r'(?P<attrib_name>[\w_-]{1,50})=(?P<attrib_value>"?[\w_]+"?)?',
-        r"(?P<brace>[][{}()])",
+        _combine_regex(
+            # Task stack in logs:
+            f"(?P<task_stack_header>{re.escape(TASK_STACK_HEADER)})",
+            f"(?P<task_stack>{re.escape(EMOJI_TASK)}.*)",
+            f"(?P<task_stack_prefix>{re.escape(EMOJI_MSG_INDENT)})",
+            # Emoji colors:
+            f"(?P<task>{re.escape(EMOJI_TASK)})",
+            f"(?P<success>{re.escape(EMOJI_SUCCESS)})",
+            f"(?P<skip>{re.escape(EMOJI_SKIP)})",
+            f"(?P<failure>{re.escape(EMOJI_FAILURE)})",
+            f"(?P<timing>{re.escape(EMOJI_TIMING)})",
+            f"(?P<warn>{re.escape(EMOJI_WARN)})",
+            f"(?P<saved>{re.escape(EMOJI_SAVED)})",
+            f"(?P<log_call>{re.escape(EMOJI_CALL_BEGIN)}|{re.escape(EMOJI_CALL_END)})",
+            f"(?P<box_chars>{HRULE_CHAR}|{VRULE_CHAR}|{UL_CORNER}|{LL_CORNER})",
+        ),
         _combine_regex(
             # Quantities and times:
             r"\b(?P<age_sec>[0-9.,]+ ?(s|sec) ago)\b",
@@ -204,6 +225,11 @@ class KmdHighlighter(RegexHighlighter):
             r"\b(?P<duration>(?<!\w)\-?[0-9]+\.?[0-9]*(ms|s)\b(?!\-\w))\b",
         ),
         _combine_regex(
+            r"(?P<tag_start><)(?P<tag_name>[-\w.:|]*)(?P<tag_contents>[\w\W]*)(?P<tag_end>>)",
+            r'(?P<attrib_name>[\w_-]{1,50})=(?P<attrib_value>"?[\w_]+"?)?',
+            r"(?P<brace>[][{}()])",
+        ),
+        _combine_regex(
             r"(?P<ellipsis>(\.\.\.|…))",
             r"(?P<at_mention>(?<!\w)@(?=\w))",  # @some/file.txt
             # A subset of the repr-style highlights:
@@ -217,20 +243,6 @@ class KmdHighlighter(RegexHighlighter):
             r"(?<![\\\w])(?P<str>b?'''.*?(?<!\\)'''|b?'.*?(?<!\\)'|b?\"\"\".*?(?<!\\)\"\"\"|b?\".*?(?<!\\)\")",
             r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
             r"(?P<code_span>`[^`\n]+`)",
-        ),
-        _combine_regex(
-            # Task stack in logs:
-            f"(?P<task_stack_header>{TASK_STACK_HEADER})",
-            f"(?P<task_stack>{EMOJI_TASK}.*)",
-            f"(?P<task_stack_prefix>{EMOJI_MSG_INDENT})",
-            # Emoji colors:
-            f"(?P<task>{EMOJI_TASK})",
-            f"(?P<success>{EMOJI_SUCCESS})",
-            f"(?P<timing>{EMOJI_TIMING})",
-            f"(?P<warn>{EMOJI_WARN})",
-            f"(?P<saved>{EMOJI_SAVED})",
-            f"(?P<log_call>{EMOJI_CALL_BEGIN}|{EMOJI_CALL_END})",
-            f"(?P<box_chars>{HRULE_CHAR}|{VRULE_CHAR}|{UL_CORNER}|{LL_CORNER})",
         ),
     ]
 
@@ -289,6 +301,8 @@ RICH_STYLES = {
     # Emoji colors:
     "kmd.task": Style(color=COLOR_TASK, italic=True),
     "kmd.success": Style(color=COLOR_SUCCESSS, bold=True),
+    "kmd.skip": Style(color=COLOR_SKIP, bold=True),
+    "kmd.failure": Style(color=COLOR_ERROR, bold=True),
     "kmd.timing": Style(color=COLOR_TIMING, bold=True),
     "kmd.warn": Style(color=COLOR_VALUE, bold=True),
     "kmd.saved": Style(color=COLOR_SAVED, bold=True),

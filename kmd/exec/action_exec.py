@@ -4,7 +4,11 @@ from typing import List, Optional
 
 from kmd.action_defs import look_up_action
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
+from kmd.config.text_styles import (
+    EMOJI_SKIP,
+    EMOJI_SUCCESS,
+    EMOJI_TIMING,
+)
 from kmd.errors import ContentError, InvalidInput, InvalidOutput, NONFATAL_EXCEPTIONS
 from kmd.exec.resolve_args import assemble_action_args
 from kmd.exec.system_actions import fetch_page_metadata
@@ -98,7 +102,8 @@ def run_action(
     store_paths = [StorePath(not_none(item.store_path)) for item in input_items if item.store_path]
     inputs = [Input(store_path, ws.hash(store_path)) for store_path in store_paths]
     operation = Operation(action_name, inputs, action.param_value_summary())
-    log.message("%s Action: `%s`", EMOJI_CALL_BEGIN, operation.command_line(with_options=False))
+
+    log.message("Action:\n%s", fmt_lines([f"`{operation.command_line(with_options=False)}`"]))
     if len(action.param_value_summary()) > 0:
         log.message("%s", action.param_value_summary_str())
     log.info("Operation is: %s", operation)
@@ -110,6 +115,7 @@ def run_action(
     # URLs should have metadata like a title and be valid, so we fetch them.
     # We make an action call to do the fetch so need to avoid recursing.
     if action.name != fetch_page_metadata.name:
+        log.message("Assembling metadata for input items:\n%s", fmt_lines(input_items))
         input_items = [fetch_url_items(item) for item in input_items]
 
     existing_result = None
@@ -131,7 +137,7 @@ def run_action(
                 log.message("All outputs already exist but running anyway since rerun requested.")
             else:
                 log.message(
-                    "All outputs already exist so skipping action (use --rerun to force run).",
+                    "All outputs already exist! Skipping action (use --rerun to force run).",
                 )
                 existing_items = [ws.load(not_none(store_path)) for store_path in already_present]
                 existing_result = ActionResult(existing_items)
@@ -150,7 +156,7 @@ def run_action(
 
         log.message(
             "%s Action skipped: `%s` completed with %s %s",
-            EMOJI_CALL_END,
+            EMOJI_SKIP,
             action_name,
             len(result.items),
             plural("item", len(result.items)),
@@ -218,7 +224,7 @@ def run_action(
         log.info("Action `%s` result: %s", action_name, result)
         log.message(
             "%s Action done: `%s` completed with %s %s",
-            EMOJI_CALL_END,
+            EMOJI_SUCCESS,
             action_name,
             len(result.items),
             plural("item", len(result.items)),

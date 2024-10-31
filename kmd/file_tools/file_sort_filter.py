@@ -25,6 +25,7 @@ class SortOption(str, Enum):
 
 
 class GroupByOption(str, Enum):
+    flat = "flat"
     parent = "parent"
     suffix = "suffix"
 

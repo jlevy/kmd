@@ -178,7 +178,10 @@ def import_url_to_workspace(url: Url) -> Item:
     )
     item = Item(ItemType.resource, url=canon_url, format=Format.url)
     workspace = current_workspace()
-    workspace.save(item, overwrite=False)  # No need to overwrite an identical URL.
+    # No need to overwrite any resource we already have for the identical URL.
+    store_path = workspace.save(item, overwrite=False)
+    # Load to fill in any metadata we may already have.
+    item = workspace.load(store_path)
     return item
 
 
