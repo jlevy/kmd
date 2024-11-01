@@ -33,7 +33,7 @@ from kmd.util.strif import copyfile_atomic, move_file
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import is_url, Url
 from kmd.workspaces.param_state import ParamState
-from kmd.workspaces.selection_state import SelectionState
+from kmd.workspaces.selections import SelectionHistory
 
 log = get_logger(__name__)
 
@@ -64,10 +64,13 @@ class FileStore:
 
         self.vector_index = WsVectorIndex(self.base_dir / self.dirs.index_dir)
 
-        # TODO: Store historical selections too. So if you run two commands you can go back to previous outputs.
-        self.selection = SelectionState(
-            self.base_dir / self.dirs.selection_yml, lambda store_path: self.exists(store_path)
-        )
+        # Initialize selection with history support
+        self.selections = SelectionHistory.init(self.base_dir / self.dirs.selection_yml)
+
+        # Filter out any non-existent paths from the initial selection
+        if self.selections.history:
+            self._filter_selection_paths()
+
         self.params = ParamState(self.base_dir / self.dirs.params_yml)
 
         self.end_time = time.time()
@@ -441,14 +444,37 @@ class FileStore:
                 copyfile_atomic(path, self.base_dir / store_path, make_parents=True)
             return store_path
 
+    def _filter_selection_paths(self):
+        """
+        Filter out any paths that don't exist from all selections.
+        """
+        non_existent = set()
+        for i, selection in enumerate(reversed(self.selections.history)):
+            non_existent.update(p for p in selection.paths if not self.exists(p))
+
+        if non_existent:
+            log.warning(
+                "Filtering out %s non-existent paths from selection history (%s selections, %s paths).",
+                len(non_existent),
+                len(self.selections.history),
+                len(non_existent),
+            )
+        self.selections.remove_values(non_existent)
+
     def _remove_references(self, store_paths: List[StorePath]):
-        self.selection.remove_values(store_paths)
+        """
+        Remove references to store_paths from selections and id index.
+        """
+        self.selections.remove_values(store_paths)
         for store_path in store_paths:
             self._id_unindex_item(store_path)
         # TODO: Update metadata of all relations that point to this path too.
 
     def _rename_items(self, replacements: List[Tuple[StorePath, StorePath]]):
-        self.selection.replace_values(replacements)
+        """
+        Update references when items are renamed.
+        """
+        self.selections.replace_values(replacements)
         for store_path, new_store_path in replacements:
             self._id_unindex_item(store_path)
             self._id_index_item(new_store_path)

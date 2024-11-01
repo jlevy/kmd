@@ -19,19 +19,19 @@ class PersistedYaml:
     def read(self) -> Any:
         return read_yaml_file(self.filename)
 
-    def set(self, value: Any):
+    def save(self, value: Any):
         write_yaml_file(value, self.filename)
 
     def initialize(self, value: Any):
         if not Path(self.filename).exists():
-            self.set(value)
+            self.save(value)
 
     def remove_values(self, targets: List[Any]):
         value = self.read()
         new_value = remove_values(value, targets)
-        self.set(new_value)
+        self.save(new_value)
 
     def replace_values(self, replacements: List[Tuple[Any, Any]]):
         value = self.read()
         new_value = replace_values(value, replacements)
-        self.set(new_value)
+        self.save(new_value)

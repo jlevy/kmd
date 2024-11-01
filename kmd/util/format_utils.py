@@ -7,8 +7,16 @@ from typing import Any, Iterable, List, Optional
 
 import humanfriendly
 import regex
+from inflect import engine
 
+from kmd.util.lazyobject import lazyobject
 from kmd.util.strif import abbreviate_str
+
+
+@lazyobject
+def inflect():
+    return engine()
+
 
 DEFAULT_INDENT = "    "
 
@@ -252,6 +260,13 @@ def fmt_time(
         if not now:
             now = datetime.now(timezone.utc)
         return fmt_age(now.timestamp() - dt.timestamp(), brief=brief)
+
+
+def fmt_count_items(count: int, name: str = "item") -> str:
+    """
+    Format a count and a name as a pluralized phrase, e.g. "1 item" or "2 items".
+    """
+    return f"{count} {inflect.plural(name, count)}"  # type: ignore
 
 
 ## Tests

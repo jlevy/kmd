@@ -22,8 +22,8 @@ Complex should be possible.*” —Alan Kay
 </div>
 
 *⚠️ Pre-release and experimental!
-[Follow me](https://x.com/ojoshe) for future updates and please DM me if you have use cases
-for Kmd or ideas or feedback.*
+[Follow or DM me](https://x.com/ojoshe) for future updates or if you have ideas or feedback
+or use cases for Kmd.*
 
 {a1_what_is_kmd}
 

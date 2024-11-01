@@ -92,6 +92,12 @@ class InvalidCommand(InvalidInput):
     pass
 
 
+class InvalidOperation(InvalidInput):
+    """Raised when an operation can't be performed."""
+
+    pass
+
+
 class InvalidState(SelfExplanatoryError):
     """Raised when the store or other system state is not in a valid for an operation."""
 

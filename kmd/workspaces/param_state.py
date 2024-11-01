@@ -14,7 +14,7 @@ class ParamState:
 
     def set(self, action_params: dict):
         """Set a global parameter for this workspace."""
-        self.params.set(action_params)
+        self.params.save(action_params)
 
     def get_values(self) -> ParamValues:
         """Get any parameters set globally for this workspace."""

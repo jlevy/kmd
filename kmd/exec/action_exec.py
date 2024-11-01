@@ -4,11 +4,7 @@ from typing import List, Optional
 
 from kmd.action_defs import look_up_action
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import (
-    EMOJI_SKIP,
-    EMOJI_SUCCESS,
-    EMOJI_TIMING,
-)
+from kmd.config.text_styles import EMOJI_SKIP, EMOJI_SUCCESS, EMOJI_TIMING
 from kmd.errors import ContentError, InvalidInput, InvalidOutput, NONFATAL_EXCEPTIONS
 from kmd.exec.resolve_args import assemble_action_args
 from kmd.exec.system_actions import fetch_page_metadata
@@ -28,6 +24,7 @@ from kmd.model.paths_model import fmt_loc, StorePath
 from kmd.util.format_utils import fmt_lines
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none
+from kmd.workspaces.selections import Selection
 from kmd.workspaces.workspaces import current_workspace, import_and_load
 
 log = get_logger(__name__)
@@ -255,12 +252,12 @@ def run_action(
             ]
             if path_op_selection:
                 log.message("Selecting %s items based on action result.", len(path_op_selection))
-                ws.selection.set(path_op_selection)
+                ws.selections.push(Selection(paths=path_op_selection))
         else:
             # Otherwise if no path_ops returned, default behavior is to select the final
             # outputs (omitting any that were archived).
             final_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
-            ws.selection.set(final_outputs)
+            ws.selections.push(Selection(paths=final_outputs))
 
     return result
 

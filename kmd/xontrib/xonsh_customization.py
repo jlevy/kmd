@@ -67,9 +67,14 @@ def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], None]:
         else:
             res = ShellResult(retval)
 
+        # Put result and selections in environment as $result, $selection, and $selections
+        # for convenience for the user to access from the shell if needed.
+
         set_env("result", res.result)
 
-        selection = current_workspace().selection.get()
+        selections = current_workspace().selections
+        selection = selections.current
+        set_env("selections", selections)
         set_env("selection", selection)
 
         handle_shell_result(res)

@@ -29,6 +29,8 @@ from kmd.config.text_styles import (
     COLOR_STATUS,
     CONSOLE_WRAP_WIDTH,
     HRULE,
+    MID_CORNER,
+    VRULE_CHAR,
 )
 from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH
 from kmd.text_formatting.text_wrapping import wrap_paragraph
@@ -311,8 +313,18 @@ def print_markdown(doc_str: str, extra_indent: str = "", rich_markdown_display: 
     cprint(doc, extra_indent=extra_indent)
 
 
-def print_separator():
-    rprint(HRULE)
+def print_hrule(color: Optional[str] = None):
+    """
+    Print a horizontal rule.
+    """
+    rule = HRULE
+    tl_prefix = get_cprint_prefix()
+    if tl_prefix:
+        if tl_prefix.startswith(VRULE_CHAR):
+            rule = MID_CORNER + rule[len(VRULE_CHAR) :]
+        else:
+            rule = tl_prefix + rule[len(tl_prefix) :]
+    rprint(rule, style=color)
 
 
 def print_selection(
@@ -321,14 +333,13 @@ def print_selection(
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
 ):
-    with print_style(Style.BOX, color=COLOR_SELECTION):
-        cprint(
-            message,
-            *args,
-            text_wrap=text_wrap,
-            color=COLOR_SELECTION,
-            extra_indent=extra_indent,
-        )
+    cprint(
+        message,
+        *args,
+        text_wrap=text_wrap,
+        color=COLOR_SELECTION,
+        extra_indent=extra_indent,
+    )
 
 
 def print_status(

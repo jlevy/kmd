@@ -1,14 +1,22 @@
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import COLOR_HINT
+from kmd.config.text_styles import COLOR_HINT, COLOR_SELECTION
 from kmd.errors import is_fatal
 from kmd.exec.command_exec import run_command
-from kmd.lang_tools.inflection import plural
-from kmd.model.paths_model import fmt_loc, StorePath
 from kmd.model.shell_model import ShellResult
-from kmd.shell.shell_output import console_pager, cprint, print_result, print_selection
-from kmd.util.format_utils import fmt_lines
+from kmd.shell.shell_output import (
+    console_pager,
+    cprint,
+    print_hrule,
+    print_result,
+    print_selection,
+    print_style,
+    Style,
+    Wrap,
+)
+from kmd.util.format_utils import fmt_count_items
+from kmd.workspaces.selections import Selection, SelectionHistory
 from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
@@ -16,31 +24,53 @@ log = get_logger(__name__)
 MAX_LINES_WITHOUT_PAGING = 128
 
 
-def type_str(value: Optional[Any]) -> str:
-    if value is None:
-        return "None"
-    elif isinstance(value, str):
-        return f"{len(value)} chars"
-    elif isinstance(value, list):
-        return f"{len(value)} {plural('item', len(value))}"
-    elif isinstance(value, dict):
-        return f"dict size {len(value)}"
-    else:
-        return type(value).__name__
+def shell_print_selection_history(sh: SelectionHistory) -> None:
+    """
+    Print the current selection history.
+    """
+    with print_style(Style.BOX, color=COLOR_SELECTION):
+        n = len(sh.history)
+        if n == 0:
+            print_selection("No selection history.")
+        else:
+            for i, selection in enumerate(sh.history):
+                if not selection.paths:
+                    cprint("No selection.", color=COLOR_SELECTION)
+                else:
+                    is_current = i == sh.current_index
+                    color = COLOR_SELECTION if is_current else COLOR_HINT
+                    if is_current:
+                        cprint("current: ", color=COLOR_SELECTION)
+                    cprint(
+                        "$selections[%s]: %s",
+                        -(n - i),
+                        selection.as_str(),
+                        color=color,
+                        text_wrap=Wrap.NONE,
+                    )
+                if i < n - 1:
+                    print_hrule(color=COLOR_SELECTION)
+    if n > 0:
+        cprint(
+            "(history is in $selections)",
+            color=COLOR_HINT,
+        )
 
 
-def shell_print_selection(selection: List[StorePath]) -> None:
+def shell_print_selection(selection: Selection) -> None:
     """
     Print the current selection.
     """
-    if not selection:
-        print_selection("No selection.")
+    if not selection.paths:
+        with print_style(Style.BOX, color=COLOR_SELECTION):
+            print_selection("No selection.")
     else:
-        print_selection(
-            "Selected %s:\n%s",
-            type_str(selection),
-            fmt_lines(fmt_loc(s) for s in selection),
-        )
+        with print_style(Style.BOX, color=COLOR_SELECTION):
+            print_selection(
+                "Current selection: %s",
+                selection.as_str(),
+            )
+        cprint("(in $selection)", color=COLOR_HINT)
 
 
 def shell_print_result(value: Optional[Any]) -> None:
@@ -81,18 +111,17 @@ def handle_shell_result(res: ShellResult) -> None:
     if res.result and res.show_result:
         cprint()
         shell_print_result(res.result)
-        cprint(f"({type_str(res.result)} in $result)", color=COLOR_HINT)
+        cprint(f"({fmt_count_items(len(res.result), 'item')} in $result)", color=COLOR_HINT)
 
     if res.show_selection or res.suggest_actions:
-        selection = current_workspace().selection.get()
+        selection = current_workspace().selections.current
 
         if selection and res.show_selection:
             cprint()
             shell_print_selection(selection)
-            cprint("(in $selection)", color=COLOR_HINT)
-            cprint()
 
         if selection and res.suggest_actions:
             from kmd.commands import command_defs
 
+            cprint()
             command_defs.suggest_actions()

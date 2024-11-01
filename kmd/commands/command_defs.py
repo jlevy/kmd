@@ -1,5 +1,4 @@
 import os
-import sys
 from datetime import datetime, timezone
 from os.path import basename
 from pathlib import Path
@@ -66,6 +65,7 @@ from kmd.shell.shell_output import (
     print_status,
     Wrap,
 )
+from kmd.shell.shell_results import shell_print_selection_history
 from kmd.shell_tools.native_tools import (
     CmdlineTool,
     edit_files,
@@ -86,6 +86,7 @@ from kmd.util.url import Url
 from kmd.version import get_version_name
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 from kmd.web_content import file_cache_tools
+from kmd.workspaces.selections import Selection
 from kmd.workspaces.workspaces import (
     check_strict_workspace_name,
     current_workspace,
@@ -317,48 +318,102 @@ def reload_workspace() -> None:
 
 
 @kmd_command
-def select(*paths: str, stdin: bool = False) -> ShellResult:
+def select(
+    *paths: str,
+    history: bool = False,
+    previous: bool = False,
+    next: bool = False,
+    pop: bool = False,
+    clear: bool = False,
+) -> ShellResult:
     """
     Get or show the current selection.
+
+    :param history: Show the full selection history.
+    :param previous: Move back in the selection history to the previous selection.
+    :param next: Move forward in the selection history to the next selection.
+    :param pop: Pop the current selection from the history.
+    :param clear: Clear the full selection history.
     """
     ws = current_workspace()
 
     # TODO: It would be nice to be able to read stdin from a pipe but this isn't working rn.
+    # You could then run `... | select --stdin` to select the piped input.
     # Globally we have THREAD_SUBPROCS=False to avoid hard-to-interrupt subprocesses.
     # But xonsh seems to hang with stdin unless we modify the spec to be threadable?
     # https://xon.sh/tutorial.html#callable-aliases
     # https://github.com/xonsh/xonsh/blob/main/xonsh/aliases.py#L1070
-    if stdin:
-        paths = tuple(sys.stdin.read().splitlines())
+    # if stdin:
+    #     paths = tuple(sys.stdin.read().splitlines())
 
     if paths:
-        store_paths = [StorePath(path) for path in paths]
-        ws.selection.set(store_paths)
+        if history or pop or clear:
+            raise InvalidInput("Cannot combine other flags with paths")
 
-    return ShellResult(show_selection=True)
+        store_paths = [StorePath(path) for path in paths]
+        ws.selections.push(Selection(paths=store_paths))
+        return ShellResult(show_selection=False)
+    elif history:
+        shell_print_selection_history(ws.selections)
+        return ShellResult(show_selection=False)
+    elif previous:
+        ws.selections.previous()
+        return ShellResult(show_selection=True)
+    elif next:
+        ws.selections.next()
+        return ShellResult(show_selection=True)
+    elif pop:
+        ws.selections.pop()
+        return ShellResult(show_selection=True)
+    elif clear:
+        ws.selections.clear()
+        return ShellResult(show_selection=True)
+    else:
+        return ShellResult(show_selection=True)
 
 
 @kmd_command
 def unselect(*paths: str) -> None:
     """
-    Remove items from the current selection. Handy if you've selected some items and
+    Remove items from the current selection. Handy if you've just selected some items and
     wish to unselect a few of them.
     """
     ws = current_workspace()
     if not paths:
-        ws.selection.set([])
-        print_status("Cleared selection.")
+        raise InvalidInput("No paths given to unselect")
     else:
-        previous_selection = ws.selection.get()
-        new_selection = ws.selection.unselect([StorePath(path) for path in paths])
+        current_paths = ws.selections.current.paths
+        new_paths = ws.selections.unselect_current([StorePath(path) for path in paths]).paths
 
         print_status(
             "Unselected %s %s, %s now selected:\n%s",
-            len(previous_selection) - len(new_selection),
-            plural("item", len(previous_selection) - len(new_selection)),
-            len(new_selection),
-            fmt_lines(new_selection),
+            len(current_paths) - len(new_paths),
+            plural("item", len(current_paths) - len(new_paths)),
+            len(new_paths),
+            fmt_lines(new_paths),
         )
+
+
+@kmd_command
+def prev_selection() -> ShellResult:
+    """
+    Move back in the selection history to the previous selection.
+    Same as `select --previous`.
+    """
+    ws = current_workspace()
+    ws.selections.previous()
+    return ShellResult(show_selection=True)
+
+
+@kmd_command
+def next_selection() -> ShellResult:
+    """
+    Move forward in the selection history to the next selection.
+    Same as `select --next`.
+    """
+    ws = current_workspace()
+    ws.selections.next()
+    return ShellResult(show_selection=True)
 
 
 @kmd_command
@@ -497,7 +552,7 @@ def save(
     :param no_frontmatter: If true, will not include YAML frontmatter in the output.
     """
     ws = current_workspace()
-    store_paths = ws.selection.get()
+    store_paths = ws.selections.current.paths
 
     def copy_file(store_path: StorePath, target_path: Path):
         path = ws.base_dir / store_path
@@ -885,7 +940,7 @@ def preconditions() -> None:
     """
 
     ws = current_workspace()
-    selection = ws.selection.get()
+    selection = ws.selections.current.paths
     if not selection:
         raise InvalidInput("No selection")
 

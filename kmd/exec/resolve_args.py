@@ -43,7 +43,7 @@ def assemble_path_args(*paths: Optional[str]) -> List[StorePath | Path]:
     resolved = [resolve_path_arg(path) for path in paths if path]
     if not resolved:
         ws = current_workspace()
-        resolved = ws.selection.get()
+        resolved = ws.selections.current.paths
         if not resolved:
             raise MissingInput("No selection")
     return cast(List[StorePath | Path], resolved)
@@ -75,7 +75,7 @@ def assemble_action_args(*paths: Optional[str]) -> Tuple[List[InputArg], bool]:
     resolved = [resolve_arg(path) for path in paths if path]
     if not resolved:
         try:
-            selection_args = current_workspace().selection.get()
+            selection_args = current_workspace().selections.current.paths
             return cast(List[InputArg], selection_args), True
         except MissingInput:
             return [], False
