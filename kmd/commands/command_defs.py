@@ -276,7 +276,7 @@ def clear_assistant() -> None:
 @kmd_command
 def init(path: Optional[str] = None) -> None:
     """
-    Initialize a new workspace at the given path.
+    Initialize a new workspace at the given path, or in the current directory if no path given.
     """
     dir = Path(path) if path else Path(".")
     dirs = MetadataDirs(dir)
@@ -835,7 +835,7 @@ def archive(*paths: str) -> None:
     ws = current_workspace()
     archived_paths = [ws.archive(store_path) for store_path in store_paths]
 
-    print_status(f"Archived:\n{fmt_lines(archived_paths)}")
+    print_status(f"Archived:\n{fmt_lines(fmt_loc(p) for p in archived_paths)}")
     select()
 
 
@@ -845,9 +845,10 @@ def unarchive(*paths: str) -> None:
     Unarchive the items at the given paths.
     """
     ws = current_workspace()
-    for path in paths:
-        store_path = ws.unarchive(StorePath(path))
-        print_status(f"Unarchived: {store_path}")
+    store_paths = assemble_store_path_args(*paths)
+    unarchived_paths = [ws.unarchive(store_path) for store_path in store_paths]
+
+    print_status(f"Unarchived:\n{fmt_lines(fmt_loc(p) for p in unarchived_paths)}")
 
 
 @kmd_command
@@ -1102,7 +1103,7 @@ def files(
     ignore = None if all else is_ignored
     for path in paths_to_show:
         if not all and path and is_ignored(path.name):
-            log.warning(
+            log.info(
                 "Requested path is on default ignore list so disabling ignore: %s",
                 fmt_loc(path),
             )

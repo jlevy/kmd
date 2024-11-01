@@ -348,14 +348,13 @@ def print_status(
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
 ):
-    with print_style(Style.PAD):
-        cprint(
-            message,
-            *args,
-            text_wrap=text_wrap,
-            color=COLOR_STATUS,
-            extra_indent=extra_indent,
-        )
+    cprint(
+        message,
+        *args,
+        text_wrap=text_wrap,
+        color=COLOR_STATUS,
+        extra_indent=extra_indent,
+    )
 
 
 def print_result(

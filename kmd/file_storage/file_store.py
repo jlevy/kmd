@@ -1,9 +1,10 @@
 import os
+import threading
 import time
 from os import path
-from os.path import commonpath, join, relpath
+from os.path import join, relpath
 from pathlib import Path
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, TypeVar
 
 from kmd.config.logger import get_logger, log_file_path
 from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN
@@ -38,18 +39,37 @@ from kmd.workspaces.selections import SelectionHistory
 log = get_logger(__name__)
 
 
+T = TypeVar("T")
+
+
+def synchronized(method: Callable[..., T]) -> Callable[..., T]:
+    """
+    Simple way to synchronize a few methods.
+    """
+
+    def synchronized_method(self, *args: Any, **kwargs: Any) -> T:
+        with self._lock:
+            return method(self, *args, **kwargs)
+
+    return synchronized_method
+
+
 class FileStore:
     """
     The main class to manage files in a workspace, holding settings and files with items.
+    Should be thread safe since file operations are atomic and mutable state is synchronized.
     """
 
     # TODO: Consider using a pluggable filesystem (fsspec AbstractFileSystem).
 
     def __init__(self, base_dir: Path, is_sandbox: bool):
+        self._lock = threading.RLock()
         self.start_time = time.time()
+
         self.base_dir = base_dir.resolve()
         self.name = self.base_dir.name
         self.is_sandbox = is_sandbox
+
         self.info_logged = False
         self.warnings: List[str] = []
 
@@ -99,6 +119,7 @@ class FileStore:
                 f"Found {num_dups} duplicate items in store. See `logs` for details."
             )
 
+    @synchronized
     def _id_index_item(self, store_path: StorePath) -> Optional[StorePath]:
         """
         Update metadata index with a new item.
@@ -129,6 +150,7 @@ class FileStore:
 
         return dup_path
 
+    @synchronized
     def _id_unindex_item(self, store_path: StorePath):
         """
         Remove an item from the metadata index.
@@ -144,6 +166,7 @@ class FileStore:
         except (FileNotFoundError, InvalidFilename):
             pass
 
+    @synchronized
     def _new_filename_for(self, item: Item) -> Tuple[str, Optional[str]]:
         """
         Get a suitable filename for this item that is close to the slugified title yet also unique.
@@ -167,6 +190,7 @@ class FileStore:
         suffix = item.get_full_suffix()
         return StorePath(folder_path / join_suffix(slug, suffix))
 
+    @synchronized
     def reload(self):
         self.__init__(self.base_dir, self.is_sandbox)
 
@@ -183,6 +207,7 @@ class FileStore:
         else:
             return None
 
+    @synchronized
     def find_by_id(self, item: Item) -> Optional[StorePath]:
         """
         Best effort to see if an item with the same identity is already in the store.
@@ -214,6 +239,7 @@ class FileStore:
                 return store_path
         return None
 
+    @synchronized
     def store_path_for(
         self, item: Item, as_tmp: bool = False
     ) -> Tuple[StorePath, bool, Optional[StorePath]]:
@@ -461,6 +487,7 @@ class FileStore:
             )
         self.selections.remove_values(non_existent)
 
+    @synchronized
     def _remove_references(self, store_paths: List[StorePath]):
         """
         Remove references to store_paths from selections and id index.
@@ -470,6 +497,7 @@ class FileStore:
             self._id_unindex_item(store_path)
         # TODO: Update metadata of all relations that point to this path too.
 
+    @synchronized
     def _rename_items(self, replacements: List[Tuple[StorePath, StorePath]]):
         """
         Update references when items are renamed.
@@ -503,15 +531,17 @@ class FileStore:
         archive_path = StorePath(self.dirs.archive_dir / store_path)
         return archive_path
 
-    def unarchive(self, store_path: StorePath):
+    def unarchive(self, store_path: StorePath) -> StorePath:
         """
         Unarchive the item by moving back out of the archive directory.
         Path may be with or without the archive dir prefix.
         """
-        if commonpath([self.dirs.archive_dir, store_path]) == self.dirs.archive_dir:
-            store_path = StorePath(relpath(store_path, self.dirs.archive_dir))
+        full_input_path = (self.base_dir / store_path).resolve()
+        full_archive_path = (self.base_dir / self.dirs.archive_dir).resolve()
+        if full_input_path.is_relative_to(full_archive_path):
+            store_path = StorePath(relpath(full_input_path, full_archive_path))
         original_path = self.base_dir / store_path
-        move_file(self.dirs.archive_dir / store_path, original_path)
+        move_file(full_input_path, original_path)
         return StorePath(store_path)
 
     def log_store_info(self, once: bool = False):
