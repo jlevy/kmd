@@ -24,16 +24,20 @@ log = get_logger(__name__)
 MAX_LINES_WITHOUT_PAGING = 128
 
 
-def shell_print_selection_history(sh: SelectionHistory) -> None:
+def shell_print_selection_history(sh: SelectionHistory, last: Optional[int] = None) -> None:
     """
     Print the current selection history.
     """
     with print_style(Style.BOX, color=COLOR_SELECTION):
         n = len(sh.history)
+        start_idx = max(0, n - last) if last else 0
+        history_slice = sh.history[start_idx:]
+
         if n == 0:
             print_selection("No selection history.")
         else:
-            for i, selection in enumerate(sh.history):
+            for v, selection in enumerate(history_slice):
+                i = v + start_idx
                 is_current = i == sh.current_index
                 color = COLOR_SELECTION if is_current else COLOR_HINT
                 if not selection.paths:

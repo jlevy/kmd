@@ -15,6 +15,9 @@ from kmd.util.log_calls import abbreviate_arg
 log = get_logger(__name__)
 
 
+# TODO: Support diffs of path lists as well, including renames and moves.
+
+
 @dataclass(frozen=True)
 class UnifiedDiff:
     from_name: str
@@ -74,15 +77,22 @@ def unified_diff(
     return UnifiedDiff(from_name, to_name, patch_set_to_str(patch_set), str(patch_set.diffstat()))
 
 
-def unified_diff_items(from_item: Item, to_item: Item) -> Item:
+def unified_diff_items(from_item: Item, to_item: Item, strict: bool = True) -> Item:
     if not from_item.body and not to_item.body:
         raise ContentError(f"No body to diff for {from_item} and {to_item}")
     if not from_item.store_path or not to_item.store_path:
         raise ContentError("No store path on items; save before diffing")
-    if from_item.format != to_item.format:
-        log.warning(
-            "Diffing items of different formats: %s != %s", from_item.format, to_item.format
+    diff_items = [item for item in [from_item, to_item] if item.format == Format.diff]
+    if len(diff_items) == 1:
+        raise ContentError(
+            f"Cannot compare diffs to non-diffs: {from_item.format}, {to_item.format}"
         )
+    if len(diff_items) > 0 or from_item.format != to_item.format:
+        msg = f"Diffing items of incompatible format: {from_item.format}, {to_item.format}"
+        if strict:
+            raise ContentError(msg)
+        else:
+            log.warning("%s", msg)
 
     from_path, to_path = StorePath(from_item.store_path), StorePath(to_item.store_path)
 

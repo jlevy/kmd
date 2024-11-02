@@ -27,7 +27,7 @@ from kmd.config.text_styles import (
     PROMPT_ASSIST,
     SPINNER,
 )
-from kmd.errors import InvalidInput, InvalidState
+from kmd.errors import InvalidInput, InvalidOperation, InvalidState
 from kmd.exec.resolve_args import (
     assemble_path_args,
     assemble_store_path_args,
@@ -323,10 +323,12 @@ def reload_workspace() -> None:
 def select(
     *paths: str,
     history: bool = False,
+    last: int = 0,
     previous: bool = False,
     next: bool = False,
     pop: bool = False,
     clear: bool = False,
+    clear_future: bool = False,
 ) -> ShellResult:
     """
     Set or show the current selection.
@@ -339,10 +341,12 @@ def select(
     They must be used individually (and without paths).
 
     :param history: Show the full selection history.
+    :param last: Show the last `last` selections in the history.
     :param previous: Move back in the selection history to the previous selection.
     :param next: Move forward in the selection history to the next selection.
     :param pop: Pop the current selection from the history.
     :param clear: Clear the full selection history.
+    :param clear_future: Clear all selections from history after the current one.
     """
     ws = current_workspace()
 
@@ -355,8 +359,8 @@ def select(
     # if stdin:
     #     paths = tuple(sys.stdin.read().splitlines())
 
-    exclusive_flags = [history, pop, clear, previous, next]
-    if sum(exclusive_flags) > 1:
+    exclusive_flags = [history, last, previous, next, pop, clear, clear_future]
+    if sum(bool(f) for f in exclusive_flags) > 1:
         raise InvalidInput("Cannot combine multiple flags")
     if paths and any(exclusive_flags):
         raise InvalidInput("Cannot combine paths with other flags")
@@ -367,6 +371,9 @@ def select(
         return ShellResult(show_selection=False)
     elif history:
         shell_print_selection_history(ws.selections)
+        return ShellResult(show_selection=False)
+    elif last:
+        shell_print_selection_history(ws.selections, last=last)
         return ShellResult(show_selection=False)
     elif previous:
         ws.selections.previous()
@@ -379,6 +386,9 @@ def select(
         return ShellResult(show_selection=True)
     elif clear:
         ws.selections.clear()
+        return ShellResult(show_selection=True)
+    elif clear_future:
+        ws.selections.clear_future()
         return ShellResult(show_selection=True)
     else:
         return ShellResult(show_selection=True)
@@ -657,37 +667,36 @@ def file_info(
 
 
 @kmd_command
-def diff(*paths: str, stat: bool = False, save: bool = False) -> ShellResult:
+def diff(*paths: str, stat: bool = False, save: bool = False, force: bool = True) -> ShellResult:
     """
-    Show the unified diff between the given files.
+    Show the unified diff between the given files. It's helpful to maintain metadata on
+    diffs, so we only support diffing stored items. But the sandbox can be used for
+    files not in another store.
+
+    :param stat: Only show the diffstat summary.
+    :param force: If true, will diff even if the items are of different formats.
     """
+    ws = current_workspace()
     if len(paths) == 2:
         [path1, path2] = paths
     else:
-        selections = current_workspace().selections
-        if len(selections.history) < 2:
-            raise InvalidInput("Need two selections in his or exactly two paths to diff")
-        paths1 = selections.history[-2].paths
-        paths2 = selections.history[-1].paths
-        if len(paths1) != 1 or len(paths2) != 1:
+        try:
+            last_selections = ws.selections.previous_n(2, expected_size=1)
+        except InvalidOperation:
             raise InvalidInput(
-                f"Diff only works for single files; current selection has length {len(paths1)} and previous selection has length {len(paths2)}"
+                "Need two selections of single files in history or exactly two paths to diff"
             )
-        path1, path2 = paths1[0], paths2[0]
+        [path1] = last_selections[0].paths
+        [path2] = last_selections[1].paths
 
-    # We want to maintain metadata on diffs, so we only support diffing stored items.
-    # A user can use the sandbox if needed.
     [store_path1, store_path2] = import_locator_args(path1, path2)
+    item1, item2 = ws.load(store_path1), ws.load(store_path2)
 
-    ws = current_workspace()
-    store_path1, store_path2 = StorePath(path1), StorePath(path2)
-    item1 = ws.load(store_path1)
-    item2 = ws.load(store_path2)
-
-    diff_item = unified_diff_items(item1, item2)
+    diff_item = unified_diff_items(item1, item2, strict=not force)
 
     if stat:
         cprint(diff.diffstat, text_wrap=Wrap.NONE)
+        return ShellResult(show_selection=False)
     elif save:
         diff_store_path = ws.save(diff_item, as_tmp=False)
         select(diff_store_path)

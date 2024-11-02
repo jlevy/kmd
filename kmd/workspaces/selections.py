@@ -1,12 +1,12 @@
 from functools import wraps
 from pathlib import Path
-from typing import Callable, List, Sequence, Tuple, TypeVar
+from typing import Callable, List, Optional, Sequence, Tuple, TypeVar
 
 from frontmatter_format import new_yaml, yaml_util
 from pydantic import BaseModel, Field, field_serializer, field_validator, PrivateAttr
 
 from kmd.config.logger import get_logger
-from kmd.errors import InvalidOperation
+from kmd.errors import InvalidInput, InvalidOperation
 from kmd.model.paths_model import fmt_loc, StorePath
 from kmd.util.format_utils import fmt_count_items, fmt_lines
 
@@ -118,14 +118,14 @@ class SelectionHistory(BaseModel):
         instance._max_history = max_history
         return instance
 
-    def save(self) -> None:
+    def _save(self) -> None:
         """
-        Save the current state.
+        Save the current full history.
         """
         data = self.model_dump()
         yaml_util.write_yaml_file(data, str(self._save_path))
 
-    @persist_after(save)
+    @persist_after(_save)
     def clear(self) -> None:
         """
         Clear the history.
@@ -133,10 +133,14 @@ class SelectionHistory(BaseModel):
         self.history.clear()
         self.current_index = 0
 
-    def _clear_future(self) -> None:
+    @persist_after(_save)
+    def clear_future(self) -> None:
         """
         Clear history beyond the current position.
         """
+        self._clear_future()
+
+    def _clear_future(self) -> None:
         del self.history[self.current_index + 1 :]
 
     def _truncate(self) -> None:
@@ -155,10 +159,18 @@ class SelectionHistory(BaseModel):
         """
         if not self.history:
             return Selection(paths=[])
+        elif self.current_index < 0 or self.current_index >= len(self.history):
+            fixed_index = max(0, len(self.history) - 1)
+            log.warning(
+                "Updating invalid selection index: %s -> %s", self.current_index, fixed_index
+            )
+            self.current_index = fixed_index
+            self._save()
+            return Selection(paths=[])
         else:
             return self.history[self.current_index]
 
-    @persist_after(save)
+    @persist_after(_save)
     def set_current(self, store_paths: List[StorePath]) -> None:
         """
         Set the current selection. If history is empty, adds a new selection.
@@ -168,7 +180,7 @@ class SelectionHistory(BaseModel):
         else:
             self.history[self.current_index] = Selection(paths=store_paths)
 
-    @persist_after(save)
+    @persist_after(_save)
     def unselect_current(self, paths: Sequence[StorePath]) -> Selection:
         """
         Remove specified paths from the current selection.
@@ -179,7 +191,7 @@ class SelectionHistory(BaseModel):
             self.history[self.current_index].remove_values(paths)
             return self.history[self.current_index]
 
-    @persist_after(save)
+    @persist_after(_save)
     def push(self, selection: Selection) -> None:
         """
         Append a new selection to history. If current_index is not at the end,
@@ -207,7 +219,7 @@ class SelectionHistory(BaseModel):
         self.current_index = len(self.history) - 1
         self._truncate()
 
-    @persist_after(save)
+    @persist_after(_save)
     def pop(self) -> Selection:
         """
         Remove the current selection from history and return it.
@@ -219,7 +231,7 @@ class SelectionHistory(BaseModel):
             self.current_index = max(0, self.current_index - 1)
             return selection
 
-    @persist_after(save)
+    @persist_after(_save)
     def previous(self) -> Selection:
         """
         Move to the previous selection in history and return it.
@@ -229,7 +241,7 @@ class SelectionHistory(BaseModel):
         self.current_index -= 1
         return self.history[self.current_index]
 
-    @persist_after(save)
+    @persist_after(_save)
     def next(self) -> Selection:
         """
         Move to the next selection in history and return it.
@@ -239,7 +251,7 @@ class SelectionHistory(BaseModel):
         self.current_index += 1
         return self.history[self.current_index]
 
-    @persist_after(save)
+    @persist_after(_save)
     def remove_values(self, targets: Sequence[StorePath]) -> None:
         """
         Remove specified paths from all selections.
@@ -259,10 +271,36 @@ class SelectionHistory(BaseModel):
             else:
                 i += 1
 
-    @persist_after(save)
+    @persist_after(_save)
     def replace_values(self, replacements: Sequence[Tuple[StorePath, StorePath]]) -> None:
         """
         Replace paths in all selections according to the replacement pairs.
         """
         for selection in self.history:
             selection.replace_values(replacements)
+
+    def previous_n(self, n: int, expected_size: Optional[int] = None) -> List[Selection]:
+        """
+        Get the `n` previous selections (backwards and including the current position),
+        with validation. If `expected_size` is provided, validates that each selection
+        contains exactly `expected_size` paths.
+        """
+        if len(self.history) < n:
+            raise InvalidOperation(
+                f"Need {n} selections in history but only have {len(self.history)}"
+            )
+
+        if self.current_index + 1 < n:
+            raise InvalidOperation(f"Need {n} selections before current position")
+
+        selections = self.history[self.current_index - n + 1 : self.current_index + 1]
+
+        if expected_size:
+            for idx, selection in enumerate(selections):
+                if len(selection.paths) != expected_size:
+                    rel_idx = idx - n + 1  # Convert to relative index from current
+                    raise InvalidInput(
+                        f"Selection at position {rel_idx} has {len(selection.paths)} paths; exactly one path required"
+                    )
+
+        return selections
