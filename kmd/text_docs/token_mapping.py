@@ -2,8 +2,8 @@ from textwrap import dedent
 from typing import Dict, List, Optional
 
 from kmd.config.text_styles import SYMBOL_SEP
-from kmd.text_docs.text_diffs import diff_wordtoks, OpType, TextDiff
 from kmd.text_docs.text_doc import TextDoc
+from kmd.text_docs.token_diffs import diff_wordtoks, OpType, TokenDiff
 from kmd.text_docs.wordtoks import raw_text_to_wordtoks
 
 
@@ -16,7 +16,7 @@ class TokenMapping:
         self,
         wordtoks1: List[str],
         wordtoks2: List[str],
-        diff: Optional[TextDiff] = None,
+        diff: Optional[TokenDiff] = None,
         min_wordtoks: int = 10,
         max_diff_frac: float = 0.4,
     ):

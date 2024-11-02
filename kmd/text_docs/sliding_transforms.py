@@ -13,8 +13,8 @@ from kmd.model.actions_model import ExecContext
 from kmd.model.file_formats_model import Format
 from kmd.text_docs.diff_filters import accept_all
 from kmd.text_docs.sliding_windows import sliding_para_window, sliding_word_window
-from kmd.text_docs.text_diffs import diff_docs, DiffFilter, find_best_alignment
 from kmd.text_docs.text_doc import Paragraph, TextDoc, TextUnit
+from kmd.text_docs.token_diffs import diff_docs, DiffFilter, find_best_alignment
 from kmd.text_docs.window_settings import WINDOW_BR, WINDOW_BR_SEP, WindowSettings
 from kmd.text_docs.wordtoks import join_wordtoks
 from kmd.text_formatting.markdown_normalization import normalize_markdown

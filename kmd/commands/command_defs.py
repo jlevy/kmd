@@ -31,6 +31,7 @@ from kmd.errors import InvalidInput, InvalidState
 from kmd.exec.resolve_args import (
     assemble_path_args,
     assemble_store_path_args,
+    import_locator_args,
     resolvable_paths,
     resolve_arg,
     resolve_path_arg,
@@ -76,6 +77,7 @@ from kmd.shell_tools.native_tools import (
     ViewMode,
 )
 from kmd.text_chunks.parse_divs import parse_divs
+from kmd.text_docs.unified_diffs import unified_diff_items
 from kmd.text_formatting.doc_formatting import normalize_text_file
 from kmd.util.format_utils import fmt_lines, fmt_time
 from kmd.util.obj_utils import remove_values
@@ -327,7 +329,14 @@ def select(
     clear: bool = False,
 ) -> ShellResult:
     """
-    Get or show the current selection.
+    Set or show the current selection.
+
+    If no arguments are given, show the current selection.
+
+    If paths are given, the new selection is pushed to the selection history.
+
+    If any other flags are given, they show or modify the selection history.
+    They must be used individually (and without paths).
 
     :param history: Show the full selection history.
     :param previous: Move back in the selection history to the previous selection.
@@ -346,10 +355,13 @@ def select(
     # if stdin:
     #     paths = tuple(sys.stdin.read().splitlines())
 
-    if paths:
-        if history or pop or clear:
-            raise InvalidInput("Cannot combine other flags with paths")
+    exclusive_flags = [history, pop, clear, previous, next]
+    if sum(exclusive_flags) > 1:
+        raise InvalidInput("Cannot combine multiple flags")
+    if paths and any(exclusive_flags):
+        raise InvalidInput("Cannot combine paths with other flags")
 
+    if paths:
         store_paths = [StorePath(path) for path in paths]
         ws.selections.push(Selection(paths=store_paths))
         return ShellResult(show_selection=False)
@@ -645,6 +657,48 @@ def file_info(
 
 
 @kmd_command
+def diff(*paths: str, stat: bool = False, save: bool = False) -> ShellResult:
+    """
+    Show the unified diff between the given files.
+    """
+    if len(paths) == 2:
+        [path1, path2] = paths
+    else:
+        selections = current_workspace().selections
+        if len(selections.history) < 2:
+            raise InvalidInput("Need two selections in his or exactly two paths to diff")
+        paths1 = selections.history[-2].paths
+        paths2 = selections.history[-1].paths
+        if len(paths1) != 1 or len(paths2) != 1:
+            raise InvalidInput(
+                f"Diff only works for single files; current selection has length {len(paths1)} and previous selection has length {len(paths2)}"
+            )
+        path1, path2 = paths1[0], paths2[0]
+
+    # We want to maintain metadata on diffs, so we only support diffing stored items.
+    # A user can use the sandbox if needed.
+    [store_path1, store_path2] = import_locator_args(path1, path2)
+
+    ws = current_workspace()
+    store_path1, store_path2 = StorePath(path1), StorePath(path2)
+    item1 = ws.load(store_path1)
+    item2 = ws.load(store_path2)
+
+    diff_item = unified_diff_items(item1, item2)
+
+    if stat:
+        cprint(diff.diffstat, text_wrap=Wrap.NONE)
+    elif save:
+        diff_store_path = ws.save(diff_item, as_tmp=False)
+        select(diff_store_path)
+        return ShellResult(show_selection=True)
+    else:
+        diff_store_path = ws.save(diff_item, as_tmp=True)
+        show(diff_store_path)
+        return ShellResult(show_selection=False)
+
+
+@kmd_command
 def relations(*paths: str) -> None:
     """
     Show the relations for the current selection, including items that are upstream,
@@ -772,9 +826,7 @@ def import_item(
     store_paths = []
 
     locators = [resolve_arg(r) for r in files_or_urls]
-    for locator in locators:
-        store_path = ws.import_item(locator, as_type=type, reimport=inplace)
-        store_paths.append(store_path)
+    store_paths = ws.import_items(*locators, as_type=type, reimport=inplace)
 
     print_status(
         "Imported %s %s:\n%s",

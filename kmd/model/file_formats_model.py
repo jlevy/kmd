@@ -29,6 +29,7 @@ class Format(Enum):
     html = "html"
     """`markdown` should be simple and clean Markdown that we can use with LLMs."""
     yaml = "yaml"
+    diff = "diff"
     python = "python"
 
     json = "json"
@@ -53,6 +54,7 @@ class Format(Enum):
             self.md_html,
             self.html,
             self.yaml,
+            self.diff,
             self.json,
             self.python,
         ]
@@ -71,6 +73,7 @@ class Format(Enum):
             self.md_html,
             self.html,
             self.yaml,
+            self.diff,
             self.python,
             self.csv,
         ]
@@ -83,6 +86,7 @@ class Format(Enum):
             Format.md_html: MediaType.text,
             Format.html: MediaType.webpage,
             Format.yaml: MediaType.text,
+            Format.diff: MediaType.text,
             Format.python: MediaType.text,
             Format.json: MediaType.text,
             Format.csv: MediaType.text,
@@ -113,6 +117,7 @@ class Format(Enum):
             FileExt.md.value: Format.markdown,
             FileExt.html.value: Format.html,
             FileExt.yml.value: None,  # We will need to look at a YAML file to determine format.
+            FileExt.diff.value: Format.diff,
             FileExt.json.value: Format.json,
             FileExt.csv.value: Format.csv,
             FileExt.py.value: Format.python,
@@ -182,6 +187,7 @@ class FileExt(Enum):
     md = "md"
     html = "html"
     yml = "yml"
+    diff = "diff"
     json = "json"
     csv = "csv"
     py = "py"
@@ -215,6 +221,7 @@ class FileExt(Enum):
             Format.html.value: FileExt.html,
             Format.plaintext.value: FileExt.txt,
             Format.yaml.value: FileExt.yml,
+            Format.diff.value: FileExt.diff,
             Format.json.value: FileExt.json,
             Format.csv.value: FileExt.csv,
             Format.python.value: FileExt.py,
@@ -252,6 +259,7 @@ def canonicalize_file_ext(ext: str) -> str:
         "htm": "html",
         "yaml": "yml",
         "jpeg": "jpg",
+        "patch": "diff",
     }
     ext = ext.lower().lstrip(".")
     return ext_map.get(ext, ext)

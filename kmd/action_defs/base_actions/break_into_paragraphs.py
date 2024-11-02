@@ -2,8 +2,8 @@ from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.model import DEFAULT_FAST_LLM, Item, LLM, LLMAction, Message, MessageTemplate
 from kmd.text_docs.diff_filters import changes_whitespace
-from kmd.text_docs.text_diffs import DiffFilter
 from kmd.text_docs.text_doc import TextDoc
+from kmd.text_docs.token_diffs import DiffFilter
 from kmd.text_docs.window_settings import WINDOW_2K_WORDTOKS, WindowSettings
 
 log = get_logger(__name__)

@@ -58,6 +58,7 @@ openai = "^1.53.0"
 deepgram-sdk = "^3.7.5"
 firecrawl-py = "^1.4.0"
 exa-py = "^1.5.1"
+patch-ng = "^1.18.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"

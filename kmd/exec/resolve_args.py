@@ -3,6 +3,7 @@ from typing import cast, List, Optional, Sequence, Tuple
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, MissingInput
+from kmd.model.items_model import ItemType
 from kmd.model.paths_model import InputArg, Locator, resolve_at_path, StorePath
 from kmd.util.url import is_url, Url
 from kmd.workspaces.workspaces import current_workspace
@@ -10,22 +11,27 @@ from kmd.workspaces.workspaces import current_workspace
 log = get_logger(__name__)
 
 
-def resolve_arg(locator: str) -> Locator:
+def resolve_arg(locator: str | StorePath | Path) -> Locator:
     """
+    Most general resolver for arguments to Locators.
     Resolve a path or URL argument to a Path, StorePath, or Url.
     """
-    if is_url(locator):
+    if isinstance(locator, StorePath):
+        return locator
+    elif not isinstance(locator, Path) and is_url(locator):
         return Url(locator)
     else:
         return resolve_path_arg(locator)
 
 
-def resolve_path_arg(path_str: str) -> Path | StorePath:
+def resolve_path_arg(path_str: str | Path | StorePath) -> Path | StorePath:
     """
-    Resolve a path argument to a Path or StorePath, if it is within the current workspace.
+    Resolve a string to a Path or if it is within the current workspace,
+    a StorePath. Leaves already-resolved StorePaths and Paths unchanged.
     """
-    if is_url(path_str):
+    if isinstance(path_str, str) and is_url(path_str):
         raise InvalidInput(f"Expected a path but got a URL: {path_str}")
+
     path = resolve_at_path(path_str)
     if path.is_absolute():
         return path
@@ -37,8 +43,8 @@ def resolve_path_arg(path_str: str) -> Path | StorePath:
 
 def assemble_path_args(*paths: Optional[str]) -> List[StorePath | Path]:
     """
-    Assemble paths or store paths from the current workspace, or the current selection if
-    no paths are given.
+    Assemble paths or store paths from the current workspace, or the current
+    selection if no paths are given.
     """
     resolved = [resolve_path_arg(path) for path in paths if path]
     if not resolved:
@@ -47,6 +53,19 @@ def assemble_path_args(*paths: Optional[str]) -> List[StorePath | Path]:
         if not resolved:
             raise MissingInput("No selection")
     return cast(List[StorePath | Path], resolved)
+
+
+def import_locator_args(
+    *locator_strs: str | StorePath | Path,
+    as_type: ItemType = ItemType.resource,
+    reimport: bool = False,
+) -> List[StorePath]:
+    """
+    Import locators into the current workspace.
+    """
+    locators = [resolve_arg(locator_str) for locator_str in locator_strs]
+    ws = current_workspace()
+    return ws.import_items(*locators, as_type=as_type, reimport=reimport)
 
 
 # TODO: Get more commands to work on files outside the workspace by importing them first.

@@ -103,7 +103,7 @@ Diff filter that accepts all diff operations.
 
 
 @dataclass
-class TextDiff:
+class TokenDiff:
     """
     A diff of two texts as a sequence of EQUAL, INSERT, and DELETE operations on wordtoks.
     """
@@ -144,7 +144,7 @@ class TextDiff:
 
         return result
 
-    def filter(self, accept_fn: DiffFilter) -> Tuple["TextDiff", "TextDiff"]:
+    def filter(self, accept_fn: DiffFilter) -> Tuple["TokenDiff", "TokenDiff"]:
         """
         Return two diffs, one that only has accepted operations and one that only has
         rejected operations.
@@ -169,7 +169,7 @@ class TextDiff:
         assert len(accepted_ops) == len(self.ops)
         assert len(accepted_ops) == len(rejected_ops)
 
-        accepted_diff, rejected_diff = TextDiff(accepted_ops), TextDiff(rejected_ops)
+        accepted_diff, rejected_diff = TokenDiff(accepted_ops), TokenDiff(rejected_ops)
 
         assert accepted_diff.left_size() == self.left_size()
         assert rejected_diff.left_size() == self.left_size()
@@ -205,7 +205,7 @@ class TextDiff:
         return self.as_diff_str()
 
 
-def diff_docs(doc1: TextDoc, doc2: TextDoc) -> TextDiff:
+def diff_docs(doc1: TextDoc, doc2: TextDoc) -> TokenDiff:
     """
     Calculate the LCS-style diff between two documents based on words.
     """
@@ -220,7 +220,7 @@ def diff_docs(doc1: TextDoc, doc2: TextDoc) -> TextDiff:
 
 
 @tally_calls(level="warning", min_total_runtime=5)
-def diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
+def diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TokenDiff:
     """
     Perform an LCS-style diff on two lists of wordtoks.
     """
@@ -244,10 +244,10 @@ def diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> TextDiff:
         elif tag == "replace":
             diff.append(DiffOp(OpType.REPLACE, wordtoks1[i1:i2], wordtoks2[j1:j2]))
 
-    return TextDiff(diff)
+    return TokenDiff(diff)
 
 
-ScoredDiff = Tuple[float, TextDiff]
+ScoredDiff = Tuple[float, TokenDiff]
 
 
 def scored_diff_wordtoks(wordtoks1: List[str], wordtoks2: List[str]) -> ScoredDiff:

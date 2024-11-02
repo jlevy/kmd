@@ -1,7 +1,7 @@
 from kmd.exec.action_registry import kmd_action
 from kmd.model import LLMAction, Message, MessageTemplate
 from kmd.text_docs.diff_filters import adds_headings
-from kmd.text_docs.text_diffs import DiffFilter
+from kmd.text_docs.token_diffs import DiffFilter
 from kmd.text_docs.window_settings import WINDOW_128_PARA, WindowSettings
 
 

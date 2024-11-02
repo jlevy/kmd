@@ -15,6 +15,10 @@ log = get_logger(__name__)
 SH = TypeVar("SH", bound="SelectionHistory")
 T = TypeVar("T")
 
+SELECTION_HISTORY_MAX = 50
+
+SELECTION_DISPLAY_MAX = 20
+
 
 def persist_after(save_method: Callable[[SH], None]):
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
@@ -54,7 +58,7 @@ class Selection(BaseModel):
         """
         Remove specified paths from the current selection.
         """
-        self.paths = [p for p in self.paths if p not in targets]
+        self.paths[:] = [p for p in self.paths if p not in targets]
 
     def replace_values(self, replacements: Sequence[Tuple[StorePath, StorePath]]) -> None:
         """
@@ -65,7 +69,7 @@ class Selection(BaseModel):
                 if current_path == old_path:
                     self.paths[idx] = new_path
 
-    def as_str(self, max_lines: int = 20) -> str:
+    def as_str(self, max_lines: int = SELECTION_DISPLAY_MAX) -> str:
         lines = [
             f"{fmt_count_items(len(self.paths), 'item')}:",
             fmt_lines(fmt_loc(s) for s in self.paths[:max_lines]),
@@ -73,6 +77,12 @@ class Selection(BaseModel):
         if len(self.paths) > max_lines:
             lines.append(f"\n… and {len(self.paths) - max_lines} more items")
         return "\n".join(lines)
+
+    def as_brief_str(self) -> str:
+        return f"Selection({', '.join(fmt_loc(p) for p in self.paths)})"
+
+    def __str__(self) -> str:
+        return self.as_brief_str()
 
 
 class SelectionHistory(BaseModel):
@@ -91,7 +101,7 @@ class SelectionHistory(BaseModel):
     }
 
     @classmethod
-    def init(cls, save_path: Path, max_history: int = 50) -> "SelectionHistory":
+    def init(cls, save_path: Path, max_history: int = SELECTION_HISTORY_MAX) -> "SelectionHistory":
         """
         Initialize selection history, loading from save_path if it exists.
         """
@@ -173,13 +183,27 @@ class SelectionHistory(BaseModel):
     def push(self, selection: Selection) -> None:
         """
         Append a new selection to history. If current_index is not at the end,
-        discard the "future" history after the current position.
+        discard the "future" history after the current position. If the current
+        selection is empty, replace it instead of adding a new selection to history.
         """
         if not isinstance(selection, Selection):
             raise ValueError(f"Expected Selection, got {type(selection)}")
 
         self._clear_future()
-        self.history.append(selection)
+
+        if len(selection.paths) == 0:
+            log.info("Ignoring push of empty selection to history")
+            return
+        elif len(self.history) > 0 and self.history[-1] == selection:
+            log.info(
+                "Ignoring push of duplicate selection to history: %s", selection.as_brief_str()
+            )
+            return
+        elif len(self.history) > 0 and len(self.history[-1].paths) == 0:
+            log.info("Replacing empty current selection in history: %s", selection.as_brief_str())
+            self.history[-1] = selection
+        else:
+            self.history.append(selection)
         self.current_index = len(self.history) - 1
         self._truncate()
 
@@ -222,6 +246,18 @@ class SelectionHistory(BaseModel):
         """
         for selection in self.history:
             selection.remove_values(targets)
+
+        # Remove empty selections entirely. This happens for example if
+        # we created a temporary item and then archived it.
+        # Also adjust current_index if necessary so it stays valid.
+        i = 0
+        while i < len(self.history):
+            if not self.history[i].paths:
+                del self.history[i]
+                if i <= self.current_index:
+                    self.current_index = max(0, self.current_index - 1)
+            else:
+                i += 1
 
     @persist_after(save)
     def replace_values(self, replacements: Sequence[Tuple[StorePath, StorePath]]) -> None:

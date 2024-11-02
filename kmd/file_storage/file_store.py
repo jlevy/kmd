@@ -197,10 +197,13 @@ class FileStore:
     def exists(self, store_path: StorePath) -> bool:
         return (self.base_dir / store_path).exists()
 
-    def resolve_path(self, path: Path) -> Optional[StorePath]:
+    def resolve_path(self, path: Path | StorePath) -> Optional[StorePath]:
         """
         Return a StorePath if the given path is within the store, otherwise None.
+        If it is already a StorePath, return it unchanged.
         """
+        if isinstance(path, StorePath):
+            return path
         resolved = path.resolve()
         if resolved.is_relative_to(self.base_dir):
             return StorePath(resolved.relative_to(self.base_dir))
@@ -394,7 +397,7 @@ class FileStore:
         self, locator: Locator, as_type: ItemType = ItemType.resource, reimport: bool = False
     ) -> StorePath:
         """
-        Add a resource from a file or URL. If it's string or Path path, copy it into
+        Add resources from a files or URLs. If a locator is a string or Path, copy it into
         the store. If it's already there, just return the store path.
         """
         if is_url(str(locator)):
@@ -409,7 +412,7 @@ class FileStore:
         elif isinstance(locator, StorePath) and not reimport:
             # TODO: Maybe check if we need to insert metadata, in case it's a regular file just
             # sitting in the store.
-            log.message("Store path already imported: %s", fmt_loc(locator))
+            log.info("Store path already imported: %s", fmt_loc(locator))
             return locator
         else:
             # We have a path, possibly outside of or inside of the store.
@@ -469,6 +472,11 @@ class FileStore:
                 log.message("Importing resource: %s -> %s", fmt_loc(path), fmt_loc(store_path))
                 copyfile_atomic(path, self.base_dir / store_path, make_parents=True)
             return store_path
+
+    def import_items(
+        self, *locators: Locator, as_type: ItemType = ItemType.resource, reimport: bool = False
+    ) -> List[StorePath]:
+        return [self.import_item(locator, as_type, reimport) for locator in locators]
 
     def _filter_selection_paths(self):
         """

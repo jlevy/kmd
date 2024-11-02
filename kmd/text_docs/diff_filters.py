@@ -1,8 +1,8 @@
 from typing import Callable, List, Optional
 
 from kmd.lang_tools.inflection import lemmatize, lemmatized_equal
-from kmd.text_docs.text_diffs import DiffFilter, DiffOp, OpType
 from kmd.text_docs.text_doc import TextDoc
+from kmd.text_docs.token_diffs import DiffFilter, DiffOp, OpType
 from kmd.text_docs.wordtoks import (
     is_break_or_space,
     is_tag_close,
@@ -183,7 +183,7 @@ def accept_all(diff_op: DiffOp) -> bool:
 
 
 def test_filter_br_and_space():
-    from kmd.text_docs.text_diffs import _short_text1, _short_text2, _short_text3, diff_wordtoks
+    from kmd.text_docs.token_diffs import _short_text1, _short_text2, _short_text3, diff_wordtoks
 
     wordtoks1 = list(TextDoc.from_text(_short_text1).as_wordtoks())
     wordtoks2 = list(TextDoc.from_text(_short_text2).as_wordtoks())

@@ -34,11 +34,11 @@ def shell_print_selection_history(sh: SelectionHistory) -> None:
             print_selection("No selection history.")
         else:
             for i, selection in enumerate(sh.history):
+                is_current = i == sh.current_index
+                color = COLOR_SELECTION if is_current else COLOR_HINT
                 if not selection.paths:
-                    cprint("No selection.", color=COLOR_SELECTION)
+                    cprint("No selection.", color=color)
                 else:
-                    is_current = i == sh.current_index
-                    color = COLOR_SELECTION if is_current else COLOR_HINT
                     if is_current:
                         cprint("current: ", color=COLOR_SELECTION)
                     cprint(

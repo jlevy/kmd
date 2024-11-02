@@ -49,7 +49,7 @@ def write_item(item: Item, path: Path):
     format = Format(item.format)
     if format == Format.html:
         fm_style = FmStyle.html
-    elif format in [Format.python, Format.csv]:
+    elif format in [Format.python, Format.diff, Format.csv]:
         fm_style = FmStyle.hash
     elif format == Format.json:
         fm_style = FmStyle.slash
