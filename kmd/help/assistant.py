@@ -135,7 +135,10 @@ def assist_system_message(skip_api: bool = False) -> Message:
 def print_assistant_response(response: AssistantResponse, model: LLM) -> None:
     with print_style(Style.PAD):
         assistant_name = Text(f"{EMOJI_ASSISTANT} Kmd Assistant", style=COLOR_HEADING)
-        info = Text(f"({model}) [{response.confidence.value}]", style=COLOR_HINT)
+        info = Text(
+            f"({model}) [intent `{response.intent_class.value}`, confidence `{response.confidence.value}`]",
+            style=COLOR_HINT,
+        )
         cprint(assistant_name + " " + info)
         cprint()
 
@@ -181,7 +184,7 @@ def assistance(input: str, fast: bool = False) -> None:
     log.info("User request to assistant: %s", input)
     append_chat_message(assistant_history_file, ChatMessage(ChatRole.user, input))
 
-    # Get the assistant's response, including history.
+    # Get the assistant's response, including history
     response = llm_template_completion(
         model,
         system_message=system_message,
