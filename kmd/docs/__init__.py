@@ -62,11 +62,11 @@ def api_docs() -> str:
 @lazyobject
 def assistant_instructions() -> str:
     template = StringTemplate(
-        _load_help_src("markdown/assistant_instructions_template"), ["assistant_response_model"]
+        _load_help_src("markdown/assistant_instructions_template"), ["assistant_model"]
     )
-    model_src = load_source_code().assistant_response_model_src
+    model_src = load_source_code().assistant_model_src
     model_src_lines = len(model_src.strip().splitlines())
-    instructions = template.format(assistant_response_model=model_src)
+    instructions = template.format(assistant_model=model_src)
     instructions_lines = len(instructions.strip().splitlines())
     log.info(
         "Loaded assistant instructions: %s lines, assistant model: %s lines",

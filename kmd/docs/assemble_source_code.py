@@ -64,8 +64,8 @@ class SourceCode:
     model_src: str
     """The source code for the kmd framework model."""
 
-    assistant_response_model_src: str
-    """The source code for the assistant response model."""
+    assistant_model_src: str
+    """The source code for the assistant model."""
 
     base_action_defs_src: str
     """The source code for all the base action definitions."""
@@ -87,8 +87,9 @@ class SourceCode:
 def load_source_code() -> SourceCode:
     code = SourceCode(
         model_src=read_source_code(kmd_base_path / "model"),
-        assistant_response_model_src=read_source_code(
-            kmd_base_path / "model" / "assistant_response_model.py"
+        assistant_model_src=read_source_code(
+            kmd_base_path / "model" / "assistant_commands_model.py",
+            kmd_base_path / "model" / "assistant_response_model.py",
         ),
         base_action_defs_src=read_source_code(kmd_base_path / "action_defs" / "base_actions"),
         text_tool_src=read_source_code(

@@ -40,7 +40,7 @@ You will provide the answer in an AssistantResponse structure.
 Here is a description of how to structure your response, in the form of a Pydantic
 class with documentation on how to use each field:
 
-{assistant_response_model}
+{assistant_model}
 
 In addition to suggesting commands in a script, you can also suggest them inline with
 Markdown code markers, like `strip_html` or `summarize_as_bullets`.

@@ -70,6 +70,7 @@ from kmd.shell.shell_results import shell_print_selection_history
 from kmd.shell_tools.native_tools import (
     CmdlineTool,
     edit_files,
+    native_trash,
     tail_file,
     terminal_show_image,
     tool_check,
@@ -928,10 +929,9 @@ def trash(*paths: str) -> None:
     """
     Trash the items at the given paths. Uses OS-native trash or recycle bin on Mac, Windows, or Linux.
     """
-    from send2trash import send2trash
 
     resolved_paths = assemble_path_args(*paths)
-    send2trash(list(resolved_paths))
+    native_trash(*resolved_paths)
     print_status(f"Deleted (check trash or recycling bin to recover):\n{fmt_lines(resolved_paths)}")
 
 

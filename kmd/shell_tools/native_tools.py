@@ -346,3 +346,9 @@ def edit_files(*filenames: str | Path):
 
     editor = os.getenv("EDITOR", global_settings().default_editor)
     subprocess.run([editor] + list(filenames))
+
+
+def native_trash(*paths: str | Path):
+    from send2trash import send2trash
+
+    send2trash(list(Path(p) for p in paths))

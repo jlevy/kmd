@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, Privat
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, InvalidOperation
 from kmd.model.paths_model import fmt_loc, StorePath
+from kmd.shell_tools.native_tools import native_trash
 from kmd.util.format_utils import fmt_count_items, fmt_lines
 
 log = get_logger(__name__)
@@ -106,16 +107,22 @@ class SelectionHistory(BaseModel):
         Initialize selection history, loading from save_path if it exists.
         """
         instance = cls()
+        instance._save_path = save_path
+        instance._max_history = max_history
         if save_path.exists():
             try:
                 with save_path.open("r") as f:
                     data = new_yaml().load(f)
                 instance = cls.model_validate(data)
+                instance._save_path = save_path
+                instance._max_history = max_history
             except Exception as e:
-                log.warning(f"Error loading selection history, so will clear selections: {e}")
+                log.warning(
+                    f"Selection history can't be loaded, so will discard it (see trash): {save_path}: {e}"
+                )
+                native_trash(save_path)
+                instance._save()
 
-        instance._save_path = save_path
-        instance._max_history = max_history
         return instance
 
     def _save(self) -> None:
