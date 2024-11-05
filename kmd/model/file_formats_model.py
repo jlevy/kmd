@@ -345,6 +345,16 @@ def is_full_html_page(content: str) -> bool:
     return bool(re.search(r"<!DOCTYPE html>|<html>|<body>|<head>", content, re.IGNORECASE))
 
 
+_yaml_header_pattern = re.compile(r"^---\n\w+:", re.MULTILINE)
+
+
+def multipart_yaml_count(content: str) -> int:
+    """
+    Count the apparent number of YAML breaks in the content.
+    """
+    return len(_yaml_header_pattern.findall(content))
+
+
 def is_html(content: str) -> bool:
     """
     Check if the content is HTML.
@@ -375,7 +385,8 @@ def read_partial_text(
 
 def detect_mime_type(filename: str | Path) -> Optional[str]:
     """
-    Get the mime type of a file using heuristics for HTML and Markdown and libmagic.
+    Get the mime type of a file using libmagic heuristics plus more careful
+    detection of HTML, Markdown, and multipart YAML.
     """
     mime = magic.Magic(mime=True)
     mime_type = mime.from_file(str(filename))
@@ -383,10 +394,13 @@ def detect_mime_type(filename: str | Path) -> Optional[str]:
     if (not mime_type or mime_type == "text/plain") and path.is_file():
         # Also try detecting HTML and Markdown directly to discriminate these from plaintext.
         content = read_partial_text(path)
-        if content and is_html(content):
-            mime_type = "text/html"
-        elif content and is_markdown(content):
-            mime_type = "text/markdown"
+        if content:
+            if multipart_yaml_count(content) >= 2:
+                mime_type = "application/yaml"
+            elif is_html(content):
+                mime_type = "text/html"
+            elif is_markdown(content):
+                mime_type = "text/markdown"
 
     return mime_type
 

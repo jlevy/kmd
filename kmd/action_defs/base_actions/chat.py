@@ -18,7 +18,7 @@ from kmd.model import (
 from kmd.model.args_model import ONE_OR_NO_ARGS
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_chat
-from kmd.shell.shell_output import print_assistance, print_response, print_style, Style
+from kmd.shell.shell_output import print_assistance, print_response, print_style, Style, Wrap
 
 
 @kmd_action
@@ -50,7 +50,8 @@ class Chat(Action):
             size_desc = "empty chat history"
 
         print_response(
-            f"Beginning chat with {size_desc}.\nPress enter (or type `exit`) to end chat."
+            f"Beginning chat with {size_desc}. Press enter (or type `exit`) to end chat.",
+            text_wrap=Wrap.WRAP_FULL,
         )
 
         while True:

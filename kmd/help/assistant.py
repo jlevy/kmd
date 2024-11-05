@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from typing import Callable
 
 from cachetools import cached
@@ -39,6 +40,7 @@ from kmd.shell.shell_output import (
 )
 from kmd.text_formatting.markdown_normalization import fill_markdown, normalize_markdown
 from kmd.util.format_utils import fmt_paras
+from kmd.util.log_calls import log_calls
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none
 from kmd.workspaces.workspaces import current_workspace, current_workspace_info, get_param_value
@@ -70,6 +72,7 @@ def _insert_output(func: Callable, name: str) -> str:
     return f"(output from command`{name}`:)\n\n{output}"
 
 
+@log_calls(level="warning", if_slower_than=0.5)
 def assist_current_state() -> Message:
     from kmd.commands.command_defs import (
         applicable_actions,
@@ -125,6 +128,7 @@ def assist_current_state() -> Message:
     return current_state_message
 
 
+@log_calls(level="info")
 def assist_system_message(skip_api: bool = False) -> Message:
     return Message(
         f"""
@@ -160,6 +164,27 @@ def print_assistant_response(response: AssistantResponse, model: LLM) -> None:
             cprint(formatted_see_also, color=COLOR_STATUS, text_wrap=Wrap.WRAP_INDENT)
 
 
+def assistant_history_file() -> Path:
+    ws = current_workspace()
+    return ws.base_dir / ws.dirs.assistant_history_yml
+
+
+def assistant_chat_history(include_system_message: bool, fast: bool = False) -> ChatHistory:
+    assistant_history = ChatHistory()
+    try:
+        assistant_history = tail_chat_history(assistant_history_file(), max_records=20)
+    except FileNotFoundError:
+        log.info("No assistant history file found: %s", assistant_history_file)
+    except (InvalidState, ValueError) as e:
+        log.warning("Couldn't load assistant history, so skipping it: %s", e)
+
+    if include_system_message:
+        system_message = assist_system_message(skip_api=fast)
+        assistant_history.messages.insert(0, ChatMessage(ChatRole.system, system_message))
+
+    return assistant_history
+
+
 def assistance(input: str, fast: bool = False) -> None:
     # TODO: Stream response.
 
@@ -170,27 +195,20 @@ def assistance(input: str, fast: bool = False) -> None:
 
     system_message = assist_system_message(skip_api=fast)
 
-    assistant_history = ChatHistory()
-    try:
-        ws = current_workspace()
-        assistant_history_file = ws.base_dir / ws.dirs.assistant_history_yml
-        assistant_history = tail_chat_history(assistant_history_file, max_records=20)
-    except FileNotFoundError:
-        log.info("No assistant history file found: %s", assistant_history_file)
-    except (InvalidState, ValueError) as e:
-        log.warning("Couldn't load assistant history, so skipping it: %s", e)
+    history_file = assistant_history_file()
+    history = assistant_chat_history(include_system_message=False, fast=fast)
 
     # Get and record the user's message.
     input = shell_unquote(input)
     log.info("User request to assistant: %s", input)
-    append_chat_message(assistant_history_file, ChatMessage(ChatRole.user, input))
+    append_chat_message(history_file, ChatMessage(ChatRole.user, input))
 
     # Get the assistant's response, including history.
     response = llm_template_completion(
         model,
         system_message=system_message,
         input=input,
-        previous_messages=assistant_history.as_chat_completion(),
+        previous_messages=history.as_chat_completion(),
         save_objects=global_settings().debug_assistant,
         response_format=AssistantResponse,
     )
@@ -206,7 +224,7 @@ def assistance(input: str, fast: bool = False) -> None:
 
     # Record the assistant's response, in structured format.
     append_chat_message(
-        assistant_history_file, ChatMessage(ChatRole.assistant, assistant_response.model_dump())
+        history_file, ChatMessage(ChatRole.assistant, assistant_response.model_dump())
     )
 
     print_assistant_response(assistant_response, model)

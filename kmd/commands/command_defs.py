@@ -11,7 +11,6 @@ from frontmatter_format import (
     fmf_strip_frontmatter,
     to_yaml_string,
 )
-from humanize import naturalsize
 from rich import get_console
 
 from kmd.action_defs import load_all_actions
@@ -46,7 +45,6 @@ from kmd.media import media_tools
 from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import (
     detect_file_format,
-    detect_mime_type,
     Format,
     is_ignored,
     join_filename,
@@ -81,7 +79,7 @@ from kmd.shell_tools.native_tools import (
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.text_docs.unified_diffs import unified_diff_items
 from kmd.text_formatting.doc_formatting import normalize_text_file
-from kmd.util.format_utils import fmt_lines, fmt_time
+from kmd.util.format_utils import fmt_file_size, fmt_lines, fmt_time
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_key_vals import format_key_value, parse_key_value
 from kmd.util.strif import copyfile_atomic
@@ -628,7 +626,7 @@ def strip_frontmatter(*paths: str) -> None:
 def _dual_format_size(size: int):
     readable_size_str = ""
     if size > 1000000:
-        readable_size = naturalsize(size, gnu=True)
+        readable_size = fmt_file_size(size)
         readable_size_str += f" ({readable_size})"
     return f"{size} bytes{readable_size_str}"
 
@@ -645,7 +643,7 @@ def file_info(
     :param slow: Normally uses a fast, approximate method to count sentences.
         This enables slower Spacy sentence segmentation.
     :param size_summary: Only show size summary (words, sentences, paragraphs for a text document).
-    :param mime_type: Only show detected mime type.
+    :param format: Only show detected file format.
     """
     if not size_summary and not format:
         size_summary = format = True
@@ -653,14 +651,15 @@ def file_info(
     input_paths = assemble_path_args(*paths)
     cprint()
     for input_path in input_paths:
-        cprint(f"{fmt_loc(input_path)}:", color=COLOR_EMPH)
+        cprint(f"{fmt_loc(input_path)}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
 
         if format:
-            mime_type_str = detect_mime_type(input_path) or "unknown"
-            cprint(f"{mime_type_str}", text_wrap=Wrap.INDENT_ONLY)
+            detected_format = detect_file_format(input_path)
+            format_str = detected_format.value if detected_format else "unknown"
+            cprint(f"format: {format_str}", text_wrap=Wrap.INDENT_ONLY)
 
         size = Path(input_path).stat().st_size
-        cprint(_dual_format_size(size), text_wrap=Wrap.INDENT_ONLY)
+        cprint(f"size: {_dual_format_size(size)}", text_wrap=Wrap.INDENT_ONLY)
 
         try:
             _frontmatter_str, offset = fmf_read_frontmatter_raw(input_path)
@@ -669,7 +668,7 @@ def file_info(
         except UnicodeDecodeError:
             pass
 
-        if size_summary and mime_type_str.startswith("text"):
+        if size_summary and detected_format and detected_format.supports_frontmatter():
             body, frontmatter = fmf_read(input_path)
 
             if body:
@@ -1259,8 +1258,7 @@ def files(
                 display_df = group_df
 
             for idx, row in display_df.iterrows():
-                # gnu is briefer, uses B instead of Bytes.
-                file_size = naturalsize(row["size"], gnu=True)
+                file_size = fmt_file_size(row["size"])
                 file_mod_time = fmt_time(row["modified"], iso_time, now=now, brief=True)
 
                 # If we are listing from within a workspace, we include the paths as store paths
@@ -1293,17 +1291,17 @@ def files(
             )
 
         cprint(
-            f"{total_displayed} files ({naturalsize(total_displayed_size)}) shown",
+            f"{total_displayed} files ({fmt_file_size(total_displayed_size)}) shown",
             color=COLOR_EMPH,
         )
         if file_listing.files_total > file_listing.files_matching > total_displayed:
             cprint(
-                f"of {file_listing.files_matching} files ({naturalsize(file_listing.size_matching)}) matching criteria",
+                f"of {file_listing.files_matching} files ({fmt_file_size(file_listing.size_matching)}) matching criteria",
                 color=COLOR_EMPH,
             )
         if file_listing.files_total > total_displayed:
             cprint(
-                f"from {file_listing.files_total} total files ({naturalsize(file_listing.size_total)})",
+                f"from {file_listing.files_total} total files ({fmt_file_size(file_listing.size_total)})",
                 color=COLOR_EMPH,
             )
         if file_listing.files_ignored or file_listing.dirs_ignored:

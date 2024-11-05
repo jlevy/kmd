@@ -7,6 +7,7 @@ from typing import Any, Iterable, List, Optional
 
 import humanfriendly
 import regex
+from humanize import naturalsize
 from inflect import engine
 
 from kmd.util.lazyobject import lazyobject
@@ -260,6 +261,14 @@ def fmt_time(
         if not now:
             now = datetime.now(timezone.utc)
         return fmt_age(now.timestamp() - dt.timestamp(), brief=brief)
+
+
+def fmt_file_size(size: int) -> str:
+    """
+    Format a file size in bytes as a human-readable string, e.g. "1.2MB".
+    """
+    # gnu is briefer, uses B instead of Bytes.
+    return naturalsize(size, gnu=True)
 
 
 def fmt_count_items(count: int, name: str = "item") -> str:
