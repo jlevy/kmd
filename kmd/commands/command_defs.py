@@ -33,7 +33,7 @@ from kmd.exec.resolve_args import (
     assemble_store_path_args,
     import_locator_args,
     resolvable_paths,
-    resolve_arg,
+    resolve_locator_arg,
     resolve_path_arg,
 )
 from kmd.file_formats.chat_format import tail_chat_history
@@ -95,6 +95,8 @@ from kmd.workspaces.workspaces import (
     check_strict_workspace_name,
     current_workspace,
     resolve_workspace_name,
+    sandbox_dir,
+    sandbox_workspace,
 )
 
 log = get_logger(__name__)
@@ -124,6 +126,18 @@ def clear_logs() -> None:
         os.makedirs(obj_dir, exist_ok=True)
 
     print_status("Logs cleared:\n%s", fmt_lines([fmt_loc(log_path)]))
+
+
+@kmd_command
+def clear_sandbox() -> None:
+    """
+    Clear the entire sandbox by moving it to the trash.
+    Use with caution!
+    """
+    trash(sandbox_dir())
+    ws = sandbox_workspace()
+    ws.reload()
+    ws.log_store_info()
 
 
 @kmd_command
@@ -168,7 +182,7 @@ def cache_content(*urls_or_paths: str) -> None:
     """
     cprint()
     for url_or_path in urls_or_paths:
-        locator = resolve_arg(url_or_path)
+        locator = resolve_locator_arg(url_or_path)
         cache_path, was_cached = file_cache_tools.cache_content(locator)
         cache_str = " (already cached)" if was_cached else ""
         cprint(f"{fmt_loc(url_or_path)}{cache_str}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
@@ -836,7 +850,7 @@ def import_item(
     ws = current_workspace()
     store_paths = []
 
-    locators = [resolve_arg(r) for r in files_or_urls]
+    locators = [resolve_locator_arg(r) for r in files_or_urls]
     store_paths = ws.import_items(*locators, as_type=type, reimport=inplace)
 
     print_status(
@@ -1220,7 +1234,7 @@ def files(
             body=df.to_csv(index=False),
         )
         ws = current_workspace()
-        store_path = ws.save(item, as_tmp=True)
+        store_path = ws.save(item, as_tmp=False)
         log.message("File listing saved to: %s", fmt_loc(store_path))
 
         select(store_path)

@@ -8,7 +8,7 @@ from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidActionDefinition, InvalidInput
-from kmd.model.args_model import ArgCount, InputArg, NO_ARGS, ONE_ARG
+from kmd.model.args_model import ArgCount, ArgType, CommandArg, NO_ARGS, ONE_ARG, Signature
 from kmd.model.items_model import Item, ItemType, UNTITLED
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.operations_model import Operation, Source
@@ -131,6 +131,11 @@ class Action(ABC):
     an action is applicable to an item.
     """
 
+    arg_type: ArgType = ArgType.Locator
+    """
+    The type of the arguments.
+    """
+
     expected_args: ArgCount = ONE_ARG
     """
     The expected number of arguments. When an action is run per-item, this should
@@ -195,7 +200,10 @@ class Action(ABC):
                     f"Action `{self.name}` has parameter `{param.name}` but no corresponding field defined"
                 )
 
-    def validate_args(self, args: Sequence[InputArg]) -> None:
+    def signature(self) -> Signature:
+        return Signature(self.arg_type, self.expected_args)
+
+    def validate_args(self, args: Sequence[CommandArg]) -> None:
         self.validate_sanity()
 
         if self.run_per_item:

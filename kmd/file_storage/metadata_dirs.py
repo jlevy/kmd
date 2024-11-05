@@ -24,6 +24,7 @@ STORE_VERSION = "sv1"
 @dataclass(frozen=True)
 class MetadataDirs:
     base_dir: Path
+    dot_dir: StorePath = StorePath(DOT_DIR)
 
     metadata_yml: StorePath = StorePath(f"{DOT_DIR}/metadata.yml")
 
@@ -53,7 +54,7 @@ class MetadataDirs:
         Create the directory and all metadata subdirectories and metadata file.
         Idempotent.
         """
-        self.base_dir.mkdir(parents=True, exist_ok=True)
+        (self.base_dir / self.dot_dir).mkdir(parents=True, exist_ok=True)
         # Initialize metadata file.
         metadata_path = self.base_dir / self.metadata_yml
         if not metadata_path.exists():

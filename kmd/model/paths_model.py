@@ -250,6 +250,9 @@ def resolve_at_path(path: str | Path | StorePath) -> Path | StorePath:
     Resolve any string into a path, ensuring that a path that includes an @ prefix
     becomes a StorePath. Leaves already-resolved StorePaths and Paths unchanged.
     """
+    if "*" in str(path):
+        # Would be nice to have resolution here instead of at the shell level?
+        raise NotImplementedError("Glob resolution not yet implemented for StorePaths")
     if isinstance(path, StorePath):
         return path
     elif isinstance(path, Path):

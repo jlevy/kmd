@@ -55,6 +55,7 @@ class ItemType(Enum):
     export = "export"
     chat = "chat"
     extension = "extension"
+    script = "script"
 
     def expects_body(self) -> bool:
         """
@@ -479,9 +480,12 @@ class Item:
         Get the full file extension suffix (e.g. "note.md") for this item.
         """
 
-        # Python files cannot have more than one . in them.
         if self.type == ItemType.extension:
+            # Python files cannot have more than one . in them.
             return f"{FileExt.py.value}"
+        elif self.type == ItemType.script:
+            # Same for kmd scripts.
+            return f"{self.type.value}.{FileExt.ksh.value}"
         else:
             return f"{self.type.value}.{self.get_file_ext().value}"
 

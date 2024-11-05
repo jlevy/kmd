@@ -16,8 +16,8 @@ from kmd.model.actions_model import (
 from kmd.model.args_model import (
     ANY_ARGS,
     ArgCount,
+    CommandArg,
     fmt_loc,
-    InputArg,
     is_store_path,
     Locator,
     NO_ARGS,

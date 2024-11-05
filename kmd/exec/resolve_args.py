@@ -3,7 +3,7 @@ from typing import cast, List, Optional, Sequence, Tuple
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, MissingInput
-from kmd.model.args_model import InputArg, Locator
+from kmd.model.args_model import CommandArg, Locator
 from kmd.model.items_model import ItemType
 from kmd.model.paths_model import resolve_at_path, StorePath
 from kmd.util.url import is_url, Url
@@ -12,20 +12,30 @@ from kmd.workspaces.workspaces import current_workspace
 log = get_logger(__name__)
 
 
-def resolve_arg(locator: str | StorePath | Path) -> Locator:
+# "Resolved" means that the argument has been converted to a known argument
+# type, like Path, StorePath, or Url.
+# "Unresolved" means it is a string or a resolved type, so that resolving an
+# argument of a string or any argument-compatible type is idempotent.
+
+UnresolvedPath = str | Path | StorePath
+
+UnresolvedLocator = str | Locator
+
+
+def resolve_locator_arg(locator_or_str: UnresolvedLocator) -> Locator:
     """
     Most general resolver for arguments to Locators.
     Resolve a path or URL argument to a Path, StorePath, or Url.
     """
-    if isinstance(locator, StorePath):
-        return locator
-    elif not isinstance(locator, Path) and is_url(locator):
-        return Url(locator)
+    if isinstance(locator_or_str, StorePath):
+        return locator_or_str
+    elif not isinstance(locator_or_str, Path) and is_url(locator_or_str):
+        return Url(locator_or_str)
     else:
-        return resolve_path_arg(locator)
+        return resolve_path_arg(locator_or_str)
 
 
-def resolve_path_arg(path_str: str | Path | StorePath) -> Path | StorePath:
+def resolve_path_arg(path_str: UnresolvedPath) -> Path | StorePath:
     """
     Resolve a string to a Path or if it is within the current workspace,
     a StorePath. Leaves already-resolved StorePaths and Paths unchanged.
@@ -42,12 +52,12 @@ def resolve_path_arg(path_str: str | Path | StorePath) -> Path | StorePath:
         return path
 
 
-def assemble_path_args(*paths: Optional[str]) -> List[StorePath | Path]:
+def assemble_path_args(*paths_or_strs: Optional[UnresolvedPath]) -> List[StorePath | Path]:
     """
     Assemble paths or store paths from the current workspace, or the current
     selection if no paths are given.
     """
-    resolved = [resolve_path_arg(path) for path in paths if path]
+    resolved = [resolve_path_arg(p) for p in paths_or_strs if p]
     if not resolved:
         ws = current_workspace()
         resolved = ws.selections.current.paths
@@ -57,14 +67,14 @@ def assemble_path_args(*paths: Optional[str]) -> List[StorePath | Path]:
 
 
 def import_locator_args(
-    *locator_strs: str | StorePath | Path,
+    *locators_or_strs: UnresolvedLocator,
     as_type: ItemType = ItemType.resource,
     reimport: bool = False,
 ) -> List[StorePath]:
     """
     Import locators into the current workspace.
     """
-    locators = [resolve_arg(locator_str) for locator_str in locator_strs]
+    locators = [resolve_locator_arg(loc) for loc in locators_or_strs]
     ws = current_workspace()
     return ws.import_items(*locators, as_type=as_type, reimport=reimport)
 
@@ -81,26 +91,28 @@ def _check_store_paths(paths: Sequence[StorePath | Path]) -> List[StorePath]:
     return [StorePath(str(path)) for path in paths]
 
 
-def assemble_store_path_args(*paths: Optional[str]) -> List[StorePath]:
+def assemble_store_path_args(*paths_or_strs: Optional[UnresolvedPath]) -> List[StorePath]:
     """
     Assemble store paths from the current workspace.
     """
-    return _check_store_paths(assemble_path_args(*paths))
+    return _check_store_paths(assemble_path_args(*paths_or_strs))
 
 
-def assemble_action_args(*paths: Optional[str]) -> Tuple[List[InputArg], bool]:
+def assemble_action_args(
+    *paths_or_strs: Optional[UnresolvedPath],
+) -> Tuple[List[CommandArg], bool]:
     """
     Assemble args for an action, as URLs, paths, or store paths.
     """
-    resolved = [resolve_arg(path) for path in paths if path]
+    resolved = [resolve_locator_arg(p) for p in paths_or_strs if p]
     if not resolved:
         try:
             selection_args = current_workspace().selections.current.paths
-            return cast(List[InputArg], selection_args), True
+            return cast(List[CommandArg], selection_args), True
         except MissingInput:
             return [], False
     else:
-        return cast(List[InputArg], resolved), False
+        return cast(List[CommandArg], resolved), False
 
 
 def resolvable_paths(paths: Sequence[StorePath | Path]) -> List[StorePath]:

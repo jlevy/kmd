@@ -160,7 +160,7 @@ class CommentedCommand(BaseModel):
     def clean_comment(cls, v: str) -> str:
         return single_line(v)
 
-    def full_str(self) -> str:
+    def script_str(self) -> str:
         if self.comment:
             return "\n".join(
                 [

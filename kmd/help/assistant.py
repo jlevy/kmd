@@ -17,11 +17,15 @@ from kmd.file_formats.chat_format import (
     ChatRole,
     tail_chat_history,
 )
+from kmd.lang_tools.capitalization import capitalize_cms
 from kmd.llms.llm_completion import llm_template_completion
 from kmd.model.args_model import fmt_loc
 from kmd.model.assistant_response_model import AssistantResponse, Confidence
+from kmd.model.file_formats_model import Format
+from kmd.model.items_model import Item, ItemType
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message
+from kmd.model.script_model import Script
 from kmd.shell.shell_output import (
     cprint,
     output_as_string,
@@ -33,7 +37,7 @@ from kmd.shell.shell_output import (
     Style,
     Wrap,
 )
-from kmd.text_formatting.markdown_normalization import fill_markdown
+from kmd.text_formatting.markdown_normalization import fill_markdown, normalize_markdown
 from kmd.util.format_utils import fmt_paras
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none
@@ -146,7 +150,7 @@ def print_assistant_response(response: AssistantResponse, model: LLM) -> None:
                 print_assistance(fill_markdown(response.response_text))
 
         if response.suggested_commands:
-            formatted_commands = "\n\n".join(c.full_str() for c in response.suggested_commands)
+            formatted_commands = "\n\n".join(c.script_str() for c in response.suggested_commands)
             print_small_heading("Suggested commands:")
             print_code_block(formatted_commands)
 
@@ -196,13 +200,31 @@ def assistance(input: str, fast: bool = False) -> None:
         assistant_response = AssistantResponse.model_validate(response_data)
         log.debug("Assistant response: %s", assistant_response)
 
-        # Record the assistant's response, in structured format.
-        append_chat_message(
-            assistant_history_file, ChatMessage(ChatRole.assistant, assistant_response.model_dump())
-        )
-
-        print_assistant_response(assistant_response, model)
-
     except (ValidationError, json.JSONDecodeError) as e:
         log.error("Error parsing assistant response: %s", e)
         raise e
+
+    # Record the assistant's response, in structured format.
+    append_chat_message(
+        assistant_history_file, ChatMessage(ChatRole.assistant, assistant_response.model_dump())
+    )
+
+    print_assistant_response(assistant_response, model)
+
+    if assistant_response.suggested_commands:
+        response_text = normalize_markdown(assistant_response.response_text)
+
+        script = Script(
+            commands=assistant_response.suggested_commands,
+            description=None,  # Let's put the response text in the item description instead.
+            signature=None,  # TODO Infer from first command.
+        )
+        item = Item(
+            type=ItemType.script,
+            title=f"Assistant Answer: {capitalize_cms(input)}",
+            description=response_text,
+            format=Format.kmd_script,
+            body=script.script_str(),
+        )
+        ws = current_workspace()
+        ws.save(item, as_tmp=True)

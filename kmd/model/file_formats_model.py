@@ -31,7 +31,8 @@ class Format(Enum):
     yaml = "yaml"
     diff = "diff"
     python = "python"
-
+    kmd_script = "kmd_script"
+    """Our own format for Kmd scripts."""
     json = "json"
     csv = "csv"
     pdf = "pdf"
@@ -57,6 +58,7 @@ class Format(Enum):
             self.diff,
             self.json,
             self.python,
+            self.kmd_script,
         ]
 
     def supports_frontmatter(self) -> bool:
@@ -75,6 +77,7 @@ class Format(Enum):
             self.yaml,
             self.diff,
             self.python,
+            self.kmd_script,
             self.csv,
         ]
 
@@ -88,6 +91,7 @@ class Format(Enum):
             Format.yaml: MediaType.text,
             Format.diff: MediaType.text,
             Format.python: MediaType.text,
+            Format.kmd_script: MediaType.text,
             Format.json: MediaType.text,
             Format.csv: MediaType.text,
             Format.pdf: MediaType.text,
@@ -121,6 +125,7 @@ class Format(Enum):
             FileExt.json.value: Format.json,
             FileExt.csv.value: Format.csv,
             FileExt.py.value: Format.python,
+            FileExt.ksh.value: Format.kmd_script,
             FileExt.pdf.value: Format.pdf,
             FileExt.docx.value: Format.docx,
             FileExt.jpg.value: Format.jpeg,
@@ -191,6 +196,7 @@ class FileExt(Enum):
     json = "json"
     csv = "csv"
     py = "py"
+    ksh = "ksh"  # Borrowing from old Korn shell for our Kmd scripts.
     pdf = "pdf"
     docx = "docx"
     jpg = "jpg"
@@ -207,6 +213,7 @@ class FileExt(Enum):
             self.yml,
             self.json,
             self.py,
+            self.ksh,
         ]
 
     @classmethod

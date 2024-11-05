@@ -10,7 +10,7 @@ from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.media.media_tools import reset_media_cache_dir
-from kmd.model.args_model import fmt_loc, InputArg
+from kmd.model.args_model import CommandArg, fmt_loc
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
@@ -118,10 +118,35 @@ def _get_file_store(base_dir: Path, is_sandbox: bool) -> FileStore:
     return FileStore(base_dir, is_sandbox)
 
 
+def switch_current_workspace(
+    ws_dirs: MetadataDirs, is_sandbox: bool, silent: bool = False
+) -> FileStore:
+    """
+    Switch the current workspace to the given directory.
+    Updates logging and cache directories to be within that workspace.
+    Does not reload the workspace if it's already loaded.
+    """
+    reset_logging(ws_dirs.base_dir)
+    reset_media_cache_dir(ws_dirs.media_cache_dir)
+    reset_content_cache_dir(ws_dirs.content_cache_dir)
+
+    ws = _get_file_store(ws_dirs.base_dir, is_sandbox)
+    if not silent:
+        ws.log_store_info(once=True)
+
+    return ws
+
+
+def sandbox_workspace() -> FileStore:
+    """
+    Get the sandbox workspace.
+    """
+    return _get_file_store(sandbox_dir(), True)
+
+
 def current_workspace(silent: bool = False) -> FileStore:
     """
-    Get the current workspace. Also updates logging and cache directories to be within that
-    workspace, if it has changed.
+    Get the current workspace. Also
     """
     ws_dirs, is_sandbox = current_workspace_info()
     if not ws_dirs:
@@ -130,20 +155,10 @@ def current_workspace(silent: bool = False) -> FileStore:
             "Create one with the `workspace` command."
         )
 
-    reset_logging(ws_dirs.base_dir)
-    reset_media_cache_dir(ws_dirs.media_cache_dir)
-    reset_content_cache_dir(ws_dirs.content_cache_dir)
-    ws = _get_file_store(ws_dirs.base_dir, is_sandbox)
-
-    global _last_workspace_dir
-
-    if not silent:
-        ws.log_store_info(once=True)
-
-    return ws
+    return switch_current_workspace(ws_dirs, is_sandbox, silent)
 
 
-def import_and_load(locator: InputArg) -> Item:
+def import_and_load(locator: CommandArg) -> Item:
     """
     Ensure that the URL or Item is saved to the workspace.
     """
@@ -196,6 +211,6 @@ def get_param_value(param_name: str, type: Type[T] = str) -> Optional[T]:
     try:
         params = current_workspace().params.get_values()
     except InvalidState:
-        params = ParamValues({})
+        params = ParamValues()
 
     return params.get(param_name, type=type, defaults_info=USER_SETTABLE_PARAMS)

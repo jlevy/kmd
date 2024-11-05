@@ -64,13 +64,18 @@ class FileStore:
     # TODO: Consider using a pluggable filesystem (fsspec AbstractFileSystem).
 
     def __init__(self, base_dir: Path, is_sandbox: bool):
-        self._lock = threading.RLock()
-        self.start_time = time.time()
-
         self.base_dir = base_dir.resolve()
         self.name = self.base_dir.name
         self.is_sandbox = is_sandbox
+        self._lock = threading.RLock()
+        self.reload()
 
+    @synchronized
+    def reload(self):
+        """
+        Load or reload all state.
+        """
+        self.start_time = time.time()
         self.info_logged = False
         self.warnings: List[str] = []
 
@@ -190,10 +195,6 @@ class FileStore:
         slug = item.title_slug()
         suffix = item.get_full_suffix()
         return StorePath(folder_path / join_suffix(slug, suffix))
-
-    @synchronized
-    def reload(self):
-        self.__init__(self.base_dir, self.is_sandbox)
 
     def exists(self, store_path: StorePath) -> bool:
         return (self.base_dir / store_path).exists()

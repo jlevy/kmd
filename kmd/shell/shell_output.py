@@ -64,7 +64,11 @@ class Wrap(Enum):
 
 
 def fill_text(
-    text: str, text_wrap=Wrap.WRAP, extra_indent: str = "", empty_indent: str = ""
+    text: str,
+    text_wrap=Wrap.WRAP,
+    extra_indent: str = "",
+    empty_indent: str = "",
+    width=CONSOLE_WRAP_WIDTH,
 ) -> str:
     if text_wrap in [Wrap.NONE, Wrap.INDENT_ONLY]:
         indent = extra_indent + DEFAULT_INDENT if text_wrap == Wrap.INDENT_ONLY else extra_indent
@@ -82,7 +86,7 @@ def fill_text(
                 wrapped_paragraphs.append(
                     wrap_paragraph(
                         paragraph,
-                        width=CONSOLE_WRAP_WIDTH,
+                        width=width,
                         initial_indent=extra_indent,
                         subsequent_indent=extra_indent,
                         empty_indent=extra_indent.strip(),
@@ -93,7 +97,7 @@ def fill_text(
                 wrapped_paragraphs.append(
                     wrap_paragraph(
                         paragraph,
-                        width=CONSOLE_WRAP_WIDTH,
+                        width=width,
                         initial_indent=extra_indent,
                         subsequent_indent=extra_indent,
                         empty_indent=extra_indent.strip(),
@@ -104,7 +108,7 @@ def fill_text(
                 wrapped_paragraphs.append(
                     wrap_paragraph(
                         paragraph,
-                        width=CONSOLE_WRAP_WIDTH - len(extra_indent + DEFAULT_INDENT),
+                        width=width - len(extra_indent + DEFAULT_INDENT),
                         initial_indent=extra_indent + DEFAULT_INDENT,
                         subsequent_indent=extra_indent + DEFAULT_INDENT,
                         empty_indent=extra_indent.strip(),
@@ -115,7 +119,7 @@ def fill_text(
                 wrapped_paragraphs.append(
                     wrap_paragraph(
                         paragraph,
-                        width=CONSOLE_WRAP_WIDTH - len(extra_indent + DEFAULT_INDENT),
+                        width=width - len(extra_indent + DEFAULT_INDENT),
                         # Hang the first line of the first paragraph. All other paragraphs are indented.
                         initial_indent=extra_indent + DEFAULT_INDENT if i > 0 else extra_indent,
                         subsequent_indent=extra_indent + DEFAULT_INDENT,
