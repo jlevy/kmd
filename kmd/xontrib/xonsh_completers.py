@@ -18,6 +18,7 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import COLOR_ACTION_TEXT, COLOR_COMMAND_TEXT, EMOJI_TASK
 from kmd.docs.faq_headings import faq_headings
 from kmd.errors import InvalidState
+from kmd.exec.system_actions import assistant_chat
 from kmd.help.function_param_info import annotate_param_info
 from kmd.model.file_formats_model import is_ignored
 from kmd.model.items_model import Item
@@ -490,13 +491,15 @@ def add_key_bindings() -> None:
         buf = event.app.current_buffer
         text = buf.text.strip()
 
-        # Wrap everything after '?' in quotes, preserving existing whitespace
         question_text = text[1:].strip()
         if not question_text:
-            return None  # Don't let the user submit an empty question.
-
-        buf.delete_before_cursor(len(buf.text))
-        buf.insert_text(f"? {repr(question_text)}")
+            # If the user enters an empty assistant request, treat it as a shortcut to go to the assistant chat.
+            buf.delete_before_cursor(len(buf.text))
+            buf.insert_text(assistant_chat.name)
+        else:
+            # Wrap everything after '?' in quotes, preserving existing whitespace
+            buf.delete_before_cursor(len(buf.text))
+            buf.insert_text(f"? {repr(question_text)}")
 
         buf.validate_and_handle()
 

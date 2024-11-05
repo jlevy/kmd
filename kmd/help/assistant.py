@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
 
 from cachetools import cached
 from pydantic import ValidationError
@@ -63,7 +63,7 @@ def assist_preamble(skip_api: bool = False, base_actions_only: bool = False) -> 
 def _insert_output(func: Callable, name: str) -> str:
     try:
         output = output_as_string(func)
-    except (KmdRuntimeError, ValueError) as e:
+    except (KmdRuntimeError, ValueError, FileNotFoundError) as e:
         log.info("Skipping assistant input for %s: %s", name, e)
         output = f"(No {name} available)"
 
@@ -140,11 +140,15 @@ def assist_system_message(skip_api: bool = False) -> Message:
     )
 
 
+def print_assistant_heading(model: LLM) -> None:
+    assistant_name = Text(f"{EMOJI_ASSISTANT} Kmd Assistant", style=COLOR_HEADING)
+    info = Text(f"({model})", style=COLOR_HINT)
+    cprint(assistant_name + " " + info)
+
+
 def print_assistant_response(response: AssistantResponse, model: LLM) -> None:
     with print_style(Style.PAD):
-        assistant_name = Text(f"{EMOJI_ASSISTANT} Kmd Assistant", style=COLOR_HEADING)
-        info = Text(f"({model}) [{response.confidence.value}]", style=COLOR_HINT)
-        cprint(assistant_name + " " + info)
+        print_assistant_heading(model)
         cprint()
 
         if response.response_text:
@@ -185,13 +189,17 @@ def assistant_chat_history(include_system_message: bool, fast: bool = False) -> 
     return assistant_history
 
 
-def assistance(input: str, fast: bool = False) -> None:
+def assistance(
+    input: str, fast: bool = False, silent: bool = False, model: Optional[LLM] = None
+) -> None:
     # TODO: Stream response.
 
-    assistant_model = "assistant_model_fast" if fast else "assistant_model"
-    model = not_none(get_param_value(assistant_model, type=LLM))
+    if not model:
+        assistant_model = "assistant_model_fast" if fast else "assistant_model"
+        model = not_none(get_param_value(assistant_model, type=LLM))
 
-    cprint(f"Getting assistance (model {model})…")
+    if not silent:
+        cprint(f"Getting assistance (model {model})…")
 
     system_message = assist_system_message(skip_api=fast)
 

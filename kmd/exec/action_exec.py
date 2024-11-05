@@ -44,7 +44,9 @@ def fetch_url_items(item: Item) -> Item:
 
     item.url = canonicalize_url(item.url)
     log.message("No metadata for URL, will fetch: %s", item.url)
-    enriched_item = run_action(fetch_page_metadata, item.store_path, internal_call=True)
+    enriched_item = run_action(
+        fetch_page_metadata, StorePath(item.store_path).display_str(), internal_call=True
+    )
     return enriched_item.items[0]
 
 

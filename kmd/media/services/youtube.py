@@ -146,6 +146,7 @@ class YouTube(MediaService):
             thumbnail_url = self.thumbnail_url(Url(url))
             # thumbnail_url = best_thumbnail(yt_result)  # Alternate approach, but messier.
 
+            # FIXME: upload_date not working?
             # Apparently upload_date is in full video metadata but not channel metadata.
             upload_date_str = yt_result.get("upload_date")
             upload_date = parse_date(upload_date_str) if upload_date_str else None
