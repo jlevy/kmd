@@ -142,6 +142,8 @@ SYMBOL_SENT = "S"
 
 PROMPT_MAIN = "❯"
 
+PROMPT_FORM = "❯❯"
+
 PROMPT_ASSIST = "(help) ❯"
 
 EMOJI_HINT = "👉"

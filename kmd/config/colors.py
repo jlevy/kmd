@@ -1,58 +1,79 @@
+from colour import Color
+
+
+def hsl_to_hex(hsl_string: str) -> str:
+    """
+    Convert an HSL string to an RGB hex string.
+    "hsl(134, 43%, 60%)" -> "#6dbd6d"
+    """
+    hsl_values = hsl_string.replace("hsl(", "").replace(")", "").replace("%", "").split(",")
+    hue, saturation, lightness = (float(value.strip()) for value in hsl_values)
+
+    saturation /= 100
+    lightness /= 100
+
+    color = Color(hsl=(hue / 360, saturation, lightness))
+    return color.hex_l
+
+
 # Based on:
 # https://rootloops.sh?sugar=8&colors=7&sogginess=5&flavor=2&fruit=9&milk=1
 
+# Some tools only like hex colors so convert them at once.
+
 # black
-black_dark = "hsl(0, 0%, 10%)"
-black_light = "hsl(0, 0%, 73%)"
-black_lighter = "hsl(0, 0%, 90%)"
+black_dark = hsl_to_hex("hsl(0, 0%, 10%)")
+black_light = hsl_to_hex("hsl(0, 0%, 73%)")
+black_lighter = hsl_to_hex("hsl(0, 0%, 90%)")
 
 # red
-red_dark = "hsl(7, 73%, 72%)"
-red_light = "hsl(7, 87%, 85%)"
-red_lighter = "hsl(7, 95%, 94%)"
+red_dark = hsl_to_hex("hsl(7, 73%, 72%)")
+red_light = hsl_to_hex("hsl(7, 87%, 85%)")
+red_lighter = hsl_to_hex("hsl(7, 95%, 94%)")
 
 # green
-green_dark = "hsl(134, 43%, 60%)"
-green_light = "hsl(134, 53%, 73%)"
-green_lighter = "hsl(134, 70%, 90%)"
+green_dark = hsl_to_hex("hsl(134, 43%, 60%)")
+green_light = hsl_to_hex("hsl(134, 53%, 73%)")
+green_lighter = hsl_to_hex("hsl(134, 70%, 90%)")
 
 # yellow
-yellow_dark = "hsl(44, 54%, 55%)"
-yellow_light = "hsl(44, 74%, 76%)"
-yellow_lighter = "hsl(44, 80%, 90%)"
+yellow_dark = hsl_to_hex("hsl(44, 54%, 55%)")
+yellow_light = hsl_to_hex("hsl(44, 74%, 76%)")
+yellow_lighter = hsl_to_hex("hsl(44, 80%, 90%)")
 
 # blue
-blue_dark = "hsl(225, 71%, 76%)"
-blue_light = "hsl(225, 86%, 88%)"
-blue_lighter = "hsl(225, 90%, 94%)"
+blue_dark = hsl_to_hex("hsl(225, 71%, 76%)")
+blue_light = hsl_to_hex("hsl(225, 86%, 88%)")
+blue_lighter = hsl_to_hex("hsl(225, 90%, 94%)")
 
 # magenta
-magenta_dark = "hsl(305, 54%, 71%)"
-magenta_light = "hsl(305, 68%, 85%)"
-magenta_lighter = "hsl(305, 96%, 95%)"
+magenta_dark = hsl_to_hex("hsl(305, 54%, 71%)")
+magenta_light = hsl_to_hex("hsl(305, 68%, 85%)")
+magenta_lighter = hsl_to_hex("hsl(305, 96%, 95%)")
 
 # cyan
-cyan_dark = "hsl(188, 58%, 57%)"
-cyan_light = "hsl(188, 52%, 76%)"
-cyan_lighter = "hsl(188, 52%, 92%)"
+cyan_dark = hsl_to_hex("hsl(188, 58%, 57%)")
+cyan_light = hsl_to_hex("hsl(188, 52%, 76%)")
+cyan_lighter = hsl_to_hex("hsl(188, 52%, 92%)")
 
 # white
-white_dark = "hsl(240, 6%, 87%)"
-white_light = "hsl(240, 6%, 94%)"
-white_lighter = "hsl(240, 6%, 98%)"
+white_dark = hsl_to_hex("hsl(240, 6%, 87%)")
+white_light = hsl_to_hex("hsl(240, 6%, 94%)")
+white_lighter = hsl_to_hex("hsl(240, 6%, 98%)")
 
 # Additional colors. These are compatible with terminal preferences too.
 
 foreground = "#fff"
 background = "#000"
 
-border = "hsl(231, 17%, 16%)"
+border = hsl_to_hex("hsl(231, 17%, 16%)")
 
-cursor = "hsl(305, 84%, 68%)"
+cursor = hsl_to_hex("hsl(305, 84%, 68%)")
 selection = "hsla(305, 32%, 82%, 0.50)"
 
-input = "#fee6fc"
+input = hsl_to_hex("hsl(305, 92%, 95%)")
 
+input_form = cyan_light
 
 # Logical colors
 

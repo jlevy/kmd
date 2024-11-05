@@ -59,6 +59,8 @@ deepgram-sdk = "^3.7.5"
 firecrawl-py = "^1.4.0"
 exa-py = "^1.5.1"
 patch-ng = "^1.18.1"
+inquirerpy = "^0.3.4"
+colour = "^0.1.5"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"

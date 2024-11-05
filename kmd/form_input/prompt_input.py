@@ -1,32 +1,42 @@
-from prompt_toolkit import PromptSession
-from prompt_toolkit.styles import Style
+from InquirerPy.prompts.input import InputPrompt
+from InquirerPy.utils import InquirerPyStyle
 
-from kmd.config.text_styles import PROMPT_CHAT_COLOR, PROMPT_MAIN
+from kmd.config import colors
+from kmd.config.text_styles import PROMPT_FORM
 
-# TODO: Harmonize prompt_toolkit colors with rich text colors.
-custom_style = Style.from_dict(
+custom_style = InquirerPyStyle(
     {
-        # "dialog": "bg:#1a1a1a #ddddde",
-        # "dialog frame.label": "bg:#ec9384 #ddddde bold",
-        # "dialog.body": "bg:#1a1a1a #ddddde",
-        # "dialog shadow": "bg:#bbbbbb",
-        # "dialog.body text-area": "bg:#1a1a1a #ddddde",
-        # "dialog.body text-area.cursor": "bg:#ddddde #1a1a1a",
-        # "dialog frame.button": "bg:#ec9384 #ddddde",
-        # "dialog frame.button.focused": "bg:#6cc581 #1a1a1a bold",
+        "questionmark": colors.green_light,
+        "answermark": colors.black_light,
+        "answer": colors.input,
+        "input": colors.input,
+        "question": colors.green_light,
+        "answered_question": colors.black_light,
+        "instruction": colors.black_light,
+        "long_instruction": colors.black_light,
+        "pointer": colors.cursor,
+        "checkbox": colors.green_dark,
+        "separator": "",
+        "skipped": colors.black_light,
+        "validator": "",
+        "marker": colors.yellow_dark,
+        "fuzzy_prompt": colors.magenta_dark,
+        "fuzzy_info": colors.white_dark,
+        "fuzzy_border": colors.black_dark,
+        "fuzzy_match": colors.magenta_dark,
+        "spinner_pattern": colors.green_light,
+        "spinner_text": "",
     }
 )
 
 
-def prompt_simple_string(prompt_text: str = "", prompt_symbol: str = f"{PROMPT_MAIN}") -> str:
+def prompt_simple_string(prompt_text: str = "", prompt_symbol: str = f"{PROMPT_FORM}") -> str:
     """
     Simple prompt from the user for a simple string.
     """
-    session = PromptSession(style=custom_style)
-    messages = []
-    if prompt_text:
-        messages.append((PROMPT_CHAT_COLOR, prompt_text.strip() + "\n\n"))
-    messages.append((PROMPT_CHAT_COLOR, prompt_symbol.strip() + " "))
-    user_input = session.prompt(messages)
-
-    return user_input
+    prompt_message = f"{prompt_text.strip()} {prompt_symbol} "
+    try:
+        response = InputPrompt(message=prompt_message, style=custom_style).execute()
+    except EOFError:
+        return ""
+    return response

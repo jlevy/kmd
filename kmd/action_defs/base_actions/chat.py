@@ -18,7 +18,7 @@ from kmd.model import (
 from kmd.model.args_model import ONE_OR_NO_ARGS
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_chat
-from kmd.shell.shell_output import print_assistance, print_response
+from kmd.shell.shell_output import print_assistance, print_response, print_style, Style
 
 
 @kmd_action
@@ -50,13 +50,13 @@ class Chat(Action):
             size_desc = "empty chat history"
 
         print_response(
-            f"Beginning chat with {size_desc}. Press enter (or type `exit`) to end chat."
+            f"Beginning chat with {size_desc}.\nPress enter (or type `exit`) to end chat."
         )
 
         while True:
             try:
                 user_message = prompt_simple_string(self.model.value)
-            except (KeyboardInterrupt, EOFError):
+            except KeyboardInterrupt:
                 break
 
             user_message = user_message.strip()
@@ -70,7 +70,8 @@ class Chat(Action):
                 messages=chat_history.as_chat_completion(),
             )
 
-            print_assistance("%s", llm_response)
+            with print_style(Style.PAD):
+                print_assistance("%s", llm_response.content)
 
             # TODO: Why does the response have trailing whitespace on lines? Makes the YAML ugly.
             stripped_response = "\n".join(
