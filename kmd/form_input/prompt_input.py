@@ -1,7 +1,7 @@
 from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
 
-from kmd.config.text_styles import COLOR_PROMPT, PROMPT_MAIN
+from kmd.config.text_styles import PROMPT_CHAT_COLOR, PROMPT_MAIN
 
 # TODO: Harmonize prompt_toolkit colors with rich text colors.
 custom_style = Style.from_dict(
@@ -25,8 +25,8 @@ def prompt_simple_string(prompt_text: str = "", prompt_symbol: str = f"{PROMPT_M
     session = PromptSession(style=custom_style)
     messages = []
     if prompt_text:
-        messages.append((COLOR_PROMPT, "\n" + prompt_text.strip() + "\n\n"))
-    messages.append((COLOR_PROMPT, prompt_symbol.strip() + " "))
+        messages.append((PROMPT_CHAT_COLOR, prompt_text.strip() + "\n\n"))
+    messages.append((PROMPT_CHAT_COLOR, prompt_symbol.strip() + " "))
     user_input = session.prompt(messages)
 
     return user_input

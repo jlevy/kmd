@@ -83,6 +83,9 @@ class Selection(BaseModel):
     def as_brief_str(self) -> str:
         return f"Selection({', '.join(fmt_loc(p) for p in self.paths)})"
 
+    def __bool__(self) -> bool:
+        return bool(self.paths)
+
     def __str__(self) -> str:
         return self.as_brief_str()
 

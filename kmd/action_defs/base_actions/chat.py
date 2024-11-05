@@ -13,9 +13,11 @@ from kmd.model import (
     Item,
     ItemType,
     LLM,
-    NO_ARGS,
     ParamList,
 )
+from kmd.model.args_model import ONE_OR_NO_ARGS
+from kmd.model.preconditions_model import Precondition
+from kmd.preconditions.precondition_defs import is_chat
 from kmd.shell.shell_output import print_assistance, print_response
 
 
@@ -26,7 +28,7 @@ class Chat(Action):
 
     description: str = "Chat with an LLM."
 
-    expected_args: ArgCount = NO_ARGS
+    expected_args: ArgCount = ONE_OR_NO_ARGS
 
     interactive_input: bool = True
 
@@ -34,12 +36,22 @@ class Chat(Action):
 
     params: ParamList = common_params("model")
 
+    precondition: Precondition = is_chat
+
     model: LLM = DEFAULT_CAREFUL_LLM
 
     def run(self, items: ActionInput) -> ActionResult:
-        chat_history = ChatHistory()
+        if items:
+            chat_history = ChatHistory.from_item(items[0])
+            size_desc = f"{chat_history.size_summary()} in chat history"
 
-        print_response("Beginning chat. Press enter (or type `exit`) to end chat.")
+        else:
+            chat_history = ChatHistory()
+            size_desc = "empty chat history"
+
+        print_response(
+            f"Beginning chat with {size_desc}. Press enter (or type `exit`) to end chat."
+        )
 
         while True:
             try:

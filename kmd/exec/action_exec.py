@@ -113,8 +113,9 @@ def run_action(
     # URLs should have metadata like a title and be valid, so we fetch them.
     # We make an action call to do the fetch so need to avoid recursing.
     if action.name != fetch_page_metadata.name:
-        log.message("Assembling metadata for input items:\n%s", fmt_lines(input_items))
-        input_items = [fetch_url_items(item) for item in input_items]
+        if input_items:
+            log.message("Assembling metadata for input items:\n%s", fmt_lines(input_items))
+            input_items = [fetch_url_items(item) for item in input_items]
 
     existing_result = None
 

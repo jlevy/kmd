@@ -96,6 +96,7 @@ from typing import Any, Dict, List, Union
 from frontmatter_format import from_yaml_string, new_yaml, to_yaml_string
 from pydantic.dataclasses import dataclass
 
+from kmd.model.items_model import Item, ItemType
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.sort_utils import custom_key_sort
 
@@ -188,6 +189,14 @@ class ChatHistory:
         ]
         return cls(messages=messages)
 
+    @classmethod
+    def from_item(cls, item: Item) -> "ChatHistory":
+        if item.type != ItemType.chat:
+            raise ValueError(f"Expected chat item, got {item.type}")
+        if not item.body:
+            raise ValueError("Chat item has no body")
+        return ChatHistory.from_yaml(item.body)
+
     def as_chat_completion(self) -> List[Dict[str, str]]:
         return [message.as_chat_completion() for message in self.messages]
 
@@ -198,6 +207,14 @@ class ChatHistory:
         stream.write("---\n")
         yaml.dump_all([message.as_dict() for message in self.messages], stream)
         return stream.getvalue()
+
+    def size_summary(self) -> str:
+        role_counts = {}
+        for msg in self.messages:
+            role_counts[msg.role.value] = role_counts.get(msg.role.value, 0) + 1
+
+        counts = [f"{count} {role}" for role, count in role_counts.items()]
+        return f"{len(self.messages)} messages ({', '.join(counts)})"
 
     def as_str(self) -> str:
         return self.to_yaml()

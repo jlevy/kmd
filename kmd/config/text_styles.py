@@ -23,13 +23,17 @@ BAT_STYLE = "header-filename,header-filesize,grid,changes"
 LOGO = "⎪K⎪M⎪D⎪"
 
 
-## Prompt coplors
+## Prompt colors
 
 PROMPT_COLOR_NORMAL = "BOLD_GREEN"
 
 PROMPT_COLOR_WARN = "INTENSE_YELLOW"
 
-INPUT_COLOR = colors.input
+PROMPT_CHAT_COLOR = "#e0f2f5"
+
+PROMPT_ASSISTANT_COLOR = "#c6d3fb"
+
+PROMPT_INPUT_COLOR = colors.input
 
 
 ## Colors
@@ -49,8 +53,6 @@ COLOR_SELECTION = "bright_yellow"
 COLOR_STATUS = "yellow"
 
 COLOR_RESULT = "default"
-
-COLOR_PROMPT = "yellow"
 
 COLOR_HELP = "bright_blue"
 
