@@ -8,9 +8,9 @@ from urllib.parse import urlparse
 from kmd.config.logger import get_log_file_stream, get_logger
 from kmd.errors import FileNotFound, InvalidInput
 from kmd.file_storage.store_filenames import parse_item_filename
+from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import FileExt
 from kmd.model.media_model import MediaMetadata, MediaService, MediaType, MediaUrlType
-from kmd.model.paths_model import fmt_loc
 from kmd.shell_tools.native_tools import CmdlineTool, tool_check
 from kmd.util.strif import copyfile_atomic
 from kmd.util.url import Url

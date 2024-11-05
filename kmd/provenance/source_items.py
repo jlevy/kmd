@@ -2,8 +2,9 @@ from typing import Optional, Set
 
 from kmd.config.logger import get_logger
 from kmd.errors import NoMatch
+from kmd.model.args_model import fmt_loc
 from kmd.model.items_model import Item
-from kmd.model.paths_model import fmt_loc, StorePath
+from kmd.model.paths_model import StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_resource
 from kmd.util.format_utils import fmt_lines

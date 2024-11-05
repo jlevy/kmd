@@ -20,10 +20,11 @@ from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_item_filename
 from kmd.file_tools.file_walk import IgnoreFilter, walk_by_dir
+from kmd.model.args_model import fmt_loc, Locator
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format, is_ignored
 from kmd.model.items_model import Item, ItemId, ItemType
-from kmd.model.paths_model import fmt_loc, Locator, StorePath
+from kmd.model.paths_model import StorePath
 from kmd.query.vector_index import WsVectorIndex
 from kmd.shell.shell_output import cprint
 from kmd.util.format_utils import fmt_lines

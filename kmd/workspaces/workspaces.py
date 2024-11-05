@@ -10,11 +10,12 @@ from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.media.media_tools import reset_media_cache_dir
+from kmd.model.args_model import fmt_loc, InputArg
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.params_model import ParamValues, USER_SETTABLE_PARAMS
-from kmd.model.paths_model import fmt_loc, InputArg, StorePath
+from kmd.model.paths_model import StorePath
 from kmd.util.url import is_url, Url
 from kmd.web_content.file_cache_tools import reset_content_cache_dir
 

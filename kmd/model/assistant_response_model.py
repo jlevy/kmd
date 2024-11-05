@@ -3,7 +3,7 @@ from typing import List
 
 from pydantic import BaseModel
 
-from kmd.model.assistant_commands_model import SuggestedCommand
+from kmd.model.commands_model import CommentedCommand
 
 
 class Confidence(str, Enum):
@@ -65,7 +65,7 @@ class AssistantResponse(BaseModel):
     If the assistant is unsure of how to respond, confidence should be `unsure`.
     """
 
-    suggested_commands: List[SuggestedCommand]
+    suggested_commands: List[CommentedCommand]
     """
     Commands that the assistant suggests to solve the user's request.
     These should be in the order the user could execute them.

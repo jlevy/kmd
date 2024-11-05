@@ -306,6 +306,7 @@ def atomic_output_file(
         shutil.move(tmp_path, dest_path)
 
 
+@contextmanager
 def temp_output_file(
     prefix: str = "tmp",
     suffix: str = "",
@@ -343,6 +344,7 @@ def temp_output_file(
         clean()
 
 
+@contextmanager
 def temp_output_dir(
     prefix: str = "tmp",
     suffix: str = "",

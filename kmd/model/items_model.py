@@ -15,11 +15,12 @@ from slugify import slugify
 
 from kmd.config.logger import get_logger
 from kmd.errors import FileFormatError
+from kmd.model.args_model import fmt_loc, Locator
 from kmd.model.canon_concept import canonicalize_concept
 from kmd.model.file_formats_model import FileExt, Format
 from kmd.model.media_model import MediaMetadata
 from kmd.model.operations_model import OperationSummary, Source
-from kmd.model.paths_model import fmt_loc, fmt_store_path, Locator, StorePath
+from kmd.model.paths_model import fmt_store_path, StorePath
 from kmd.text_formatting.markdown_util import markdown_to_html
 from kmd.util.format_utils import (
     abbreviate_on_words,

@@ -7,9 +7,8 @@ from frontmatter_format import add_default_yaml_representer
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
-from kmd.util.format_utils import fmt_path
 from kmd.util.parse_shell_args import shell_quote
-from kmd.util.url import is_url, Url
+from kmd.util.url import is_url
 
 
 # Determine the base class for StorePath based on the operating system
@@ -239,45 +238,11 @@ class StorePath(BasePath):
         return hash((super().__str__(), self.store_name))
 
 
-Locator = Url | Path | StorePath
-"""
-A reference to an external resource or an item in the store.
-"""
-
-InputArg = Locator | str
-"""
-An argument to a command or action.
-"""
-
-
 def fmt_store_path(store_path: str | Path | StorePath) -> str:
-    return fmt_loc(StorePath(store_path))
-
-
-def fmt_loc(locator: str | Locator) -> str:
     """
-    Use this to format URLs and paths. This automatically formats StorePaths
-    with an @ prefix, other Paths with quotes and relative to the working directory.
-    It handles everything else like a string. (Note for code not involving
-    StorePaths, you can use `fmt_path` directly for plain Paths.)
+    Format a store path as a string.
     """
-    if isinstance(locator, StorePath):
-        return locator.display_str()
-    elif isinstance(locator, Path):
-        return fmt_path(locator)
-    elif is_url(loc_str := str(locator)):
-        return loc_str
-    else:
-        return fmt_path(locator)
-
-
-def is_store_path(input_arg: InputArg) -> bool:
-    if isinstance(input_arg, StorePath):
-        return True
-    elif isinstance(input_arg, Path):
-        return False
-    else:
-        return not is_url(input_arg)
+    return StorePath(store_path).display_str()
 
 
 def resolve_at_path(path: str | Path | StorePath) -> Path | StorePath:
@@ -306,6 +271,7 @@ add_default_yaml_representer(StorePath, _represent_store_path)
 
 
 def test_store_path():
+
     # Test creation with relative path
     sp1 = StorePath("some/relative/path")
     sp2 = StorePath("@some/relative/path")
@@ -338,7 +304,7 @@ def test_store_path():
     # Test that __str__, __repr__, and fmt_path don't raise an exception
     print([str(sp1), str(sp2), str(sp3), str(sp4)])
     print([repr(sp1), repr(sp2), repr(sp3), repr(sp4)])
-    print(fmt_loc(StorePath("store/path1")))
+    print(fmt_store_path(StorePath("store/path1")))
     print(repr(Path(StorePath("store/path1"))))
 
     # Test some invalid store paths

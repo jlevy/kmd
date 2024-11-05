@@ -8,16 +8,22 @@ from kmd.model.actions_model import (
     Action,
     ActionInput,
     ActionResult,
-    ANY_ARGS,
-    ArgCount,
-    NO_ARGS,
-    ONE_ARG,
-    ONE_OR_MORE_ARGS,
-    ONE_OR_NO_ARGS,
     PathOp,
     PathOpType,
     PerItemAction,
     TitleTemplate,
+)
+from kmd.model.args_model import (
+    ANY_ARGS,
+    ArgCount,
+    fmt_loc,
+    InputArg,
+    is_store_path,
+    Locator,
+    NO_ARGS,
+    ONE_ARG,
+    ONE_OR_MORE_ARGS,
+    ONE_OR_NO_ARGS,
     TWO_ARGS,
     TWO_OR_MORE_ARGS,
 )
@@ -90,5 +96,5 @@ from kmd.model.params_model import (
     RUNTIME_ACTION_PARAMS,
     USER_SETTABLE_PARAMS,
 )
-from kmd.model.paths_model import InputArg, is_store_path, Locator, StorePath
+from kmd.model.paths_model import StorePath
 from kmd.model.preconditions_model import Precondition, precondition

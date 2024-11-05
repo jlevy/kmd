@@ -88,7 +88,6 @@ def load_source_code() -> SourceCode:
     code = SourceCode(
         model_src=read_source_code(kmd_base_path / "model"),
         assistant_model_src=read_source_code(
-            kmd_base_path / "model" / "assistant_commands_model.py",
             kmd_base_path / "model" / "assistant_response_model.py",
         ),
         base_action_defs_src=read_source_code(kmd_base_path / "action_defs" / "base_actions"),

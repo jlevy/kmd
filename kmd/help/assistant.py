@@ -18,10 +18,10 @@ from kmd.file_formats.chat_format import (
     tail_chat_history,
 )
 from kmd.llms.llm_completion import llm_template_completion
+from kmd.model.args_model import fmt_loc
 from kmd.model.assistant_response_model import AssistantResponse, Confidence
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message
-from kmd.model.paths_model import fmt_loc
 from kmd.shell.shell_output import (
     cprint,
     output_as_string,

@@ -2,7 +2,9 @@ from typing import Any, Dict, List, Optional
 
 from pydantic.dataclasses import dataclass
 
-from kmd.model.paths_model import fmt_loc, StorePath
+from kmd.model.args_model import fmt_loc
+
+from kmd.model.paths_model import StorePath
 from kmd.util.parse_key_vals import format_key_value
 from kmd.util.parse_shell_args import shell_quote
 

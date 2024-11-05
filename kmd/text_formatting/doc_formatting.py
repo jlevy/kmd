@@ -4,8 +4,8 @@ from typing import Optional
 from frontmatter_format import fmf_read, fmf_write
 
 from kmd.errors import InvalidInput
+from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import detect_file_format, Format
-from kmd.model.paths_model import fmt_loc
 from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH, normalize_markdown
 from kmd.text_formatting.text_wrapping import wrap_paragraph
 from kmd.util.type_utils import not_none

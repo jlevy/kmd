@@ -9,7 +9,8 @@ from pydantic.dataclasses import dataclass
 from kmd.config.logger import get_logger
 from kmd.config.settings import CONTENT_CACHE_NAME, DOT_DIR, MEDIA_CACHE_NAME
 from kmd.file_storage.persisted_yaml import PersistedYaml
-from kmd.model.paths_model import fmt_loc, StorePath
+from kmd.model.args_model import fmt_loc
+from kmd.model.paths_model import StorePath
 
 
 log = get_logger(__name__)

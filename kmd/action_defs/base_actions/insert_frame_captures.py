@@ -6,8 +6,16 @@ from kmd.config.logger import get_logger
 from kmd.errors import ContentError, InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.media.video_frames import capture_frames
-from kmd.model import Format, FRAME_CAPTURE, Item, ItemType, MediaType, PerItemAction, Precondition
-from kmd.model.paths_model import fmt_loc
+from kmd.model import (
+    fmt_loc,
+    Format,
+    FRAME_CAPTURE,
+    Item,
+    ItemType,
+    MediaType,
+    PerItemAction,
+    Precondition,
+)
 from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
 from kmd.provenance.source_items import find_upstream_resource
 from kmd.provenance.timestamps import TimestampExtractor

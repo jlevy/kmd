@@ -32,6 +32,8 @@ def shell_unquote(arg: str) -> str:
     """
     Unquote a string using Python conventions, but allow unquoted strings to
     pass through.
+
+    Note this is Pythonic style so *not* as complex as shlex.unquote().
     """
     if arg.startswith(("'", '"')) and arg.endswith(arg[0]):
         try:
@@ -81,15 +83,41 @@ def shell_split(command_str: str) -> List[str]:
     return tokens
 
 
-def format_command_str(command: str, args: Iterable[str], options: Dict[str, str | bool]) -> str:
+StrBoolOptions = Dict[str, str | bool]
+"""
+A sorted dict of options, where keys are option names and values are either strings or
+boolean flags.
+"""
+
+
+def format_command_str(command: str, args: Iterable[str], options: StrBoolOptions) -> str:
     """
     Format a command string using simplified shell conventions (compatible with Python and xonsh).
     """
     args_str = " ".join(shell_quote(arg) for arg in args)
-    options_str = " ".join(
-        f"--{k}={shell_quote(v)}" if isinstance(v, str) else f"--{k}" for k, v in options.items()
-    )
+    options_str = " ".join(format_options(options))
     return " ".join(filter(bool, [command, args_str, options_str]))
+
+
+def format_option(key: str, value: str | bool) -> str | None:
+    """
+    Format a command option string.
+    """
+    if isinstance(value, str):
+        return f"--{key}={shell_quote(value)}"
+    elif isinstance(value, bool) and value:
+        return f"--{key}"
+    elif isinstance(value, bool) and not value:
+        return None
+    else:
+        raise ValueError(f"Unexpected option value type: {repr(value)}")
+
+
+def format_options(options: StrBoolOptions) -> List[str]:
+    """
+    Format a list of command options.
+    """
+    return list(filter(None, (format_option(k, v) for k, v in options.items())))
 
 
 def parse_option(key_value_str: str) -> Tuple[str, str | bool]:
@@ -107,7 +135,7 @@ def parse_option(key_value_str: str) -> Tuple[str, str | bool]:
     return key, value
 
 
-def parse_command_str(command_str: str) -> Tuple[str, List[str], Dict[str, str | bool]]:
+def parse_command_str(command_str: str) -> Tuple[str, List[str], StrBoolOptions]:
     """
     Parse a command string into a command name, arguments, and options, using simplified
     shell conventions (compatible with Python and xonsh).
@@ -147,7 +175,7 @@ class ShellArgs:
     """
 
     args: List[str]
-    options: Dict[str, str | bool]
+    options: StrBoolOptions
     show_help: bool = False
 
 
@@ -167,7 +195,7 @@ def parse_shell_args(args_and_opts: List[str]) -> ShellArgs:
       -> ShellArgs(args=["foo"], options={}, show_help=True)
     """
     args: List[str] = []
-    options: Dict[str, str | bool] = {}
+    options: StrBoolOptions = {}
     show_help: bool = False
 
     i = 0

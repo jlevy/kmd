@@ -3,8 +3,9 @@ from typing import cast, List, Optional, Sequence, Tuple
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, MissingInput
+from kmd.model.args_model import InputArg, Locator
 from kmd.model.items_model import ItemType
-from kmd.model.paths_model import InputArg, Locator, resolve_at_path, StorePath
+from kmd.model.paths_model import resolve_at_path, StorePath
 from kmd.util.url import is_url, Url
 from kmd.workspaces.workspaces import current_workspace
 

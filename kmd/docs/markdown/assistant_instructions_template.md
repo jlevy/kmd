@@ -52,10 +52,10 @@ the previous command.
 For example:
 
 ```
-# A short transcription:
-transcribe 'https://www.youtube.com/watch?v=XRQnWomofIY'
+# A short transcription.
+transcribe https://www.youtube.com/watch?v=XRQnWomofIY
 
-# Take a look at the output:
+# Take a look at the output.
 show
 ```
 

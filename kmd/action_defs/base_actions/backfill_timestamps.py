@@ -5,10 +5,16 @@ from typing import List
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, InvalidInput, UnexpectedError
 from kmd.exec.action_registry import kmd_action
-from kmd.model import Format, Item, ItemType, PerItemAction
-from kmd.model.params_model import common_param, Param
-from kmd.model.paths_model import fmt_loc
-from kmd.model.preconditions_model import Precondition
+from kmd.model import (
+    common_param,
+    fmt_loc,
+    Format,
+    Item,
+    ItemType,
+    Param,
+    PerItemAction,
+    Precondition,
+)
 from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
 from kmd.provenance.source_items import find_upstream_item, find_upstream_resource
 from kmd.provenance.timestamps import TimestampExtractor

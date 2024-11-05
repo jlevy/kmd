@@ -43,6 +43,7 @@ from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.help.assistant import assist_system_message, assistance
 from kmd.lang_tools.inflection import plural
 from kmd.media import media_tools
+from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import (
     detect_file_format,
     detect_mime_type,
@@ -53,7 +54,7 @@ from kmd.model.file_formats_model import (
 )
 from kmd.model.items_model import Item, ItemType
 from kmd.model.params_model import USER_SETTABLE_PARAMS
-from kmd.model.paths_model import fmt_loc, fmt_store_path, resolve_at_path, StorePath
+from kmd.model.paths_model import fmt_store_path, resolve_at_path, StorePath
 from kmd.model.shell_model import ShellResult
 from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths

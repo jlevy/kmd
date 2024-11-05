@@ -17,10 +17,11 @@ from kmd.model.actions_model import (
     PathOpType,
     PerItemAction,
 )
+from kmd.model.args_model import fmt_loc
 from kmd.model.canon_url import canonicalize_url
 from kmd.model.items_model import Item, State
 from kmd.model.operations_model import Input, Operation, Source
-from kmd.model.paths_model import fmt_loc, StorePath
+from kmd.model.paths_model import StorePath
 from kmd.util.format_utils import fmt_lines
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none

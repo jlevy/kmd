@@ -7,7 +7,8 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, Privat
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, InvalidOperation
-from kmd.model.paths_model import fmt_loc, StorePath
+from kmd.model.args_model import fmt_loc
+from kmd.model.paths_model import StorePath
 from kmd.shell_tools.native_tools import native_trash
 from kmd.util.format_utils import fmt_count_items, fmt_lines
 

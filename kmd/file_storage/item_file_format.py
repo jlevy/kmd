@@ -5,10 +5,10 @@ from frontmatter_format import fmf_read, fmf_write, FmStyle
 
 from kmd.config.logger import get_logger
 from kmd.file_storage.file_cache import FileMtimeCache
+from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ITEM_FIELDS
 from kmd.model.operations_model import OPERATION_FIELDS
-from kmd.model.paths_model import fmt_loc
 from kmd.text_formatting.doc_formatting import normalize_formatting
 from kmd.util.log_calls import tally_calls
 from kmd.util.sort_utils import custom_key_sort

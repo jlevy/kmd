@@ -7,8 +7,8 @@ from kmd.errors import FileNotFound, InvalidInput, UnexpectedError
 from kmd.media.audio_processing import downsample_to_16khz
 from kmd.media.media_services import canonicalize_media_url, download_media_by_service
 from kmd.media.speech_transcription import deepgram_transcribe_audio
+from kmd.model.args_model import fmt_loc
 from kmd.model.media_model import MediaType
-from kmd.model.paths_model import fmt_loc
 from kmd.util.format_utils import fmt_lines
 from kmd.util.strif import atomic_output_file
 from kmd.util.url import as_file_url, is_url, Url

@@ -6,8 +6,9 @@ from kmd.config.logger import get_logger
 from kmd.errors import SkippableError
 from kmd.file_storage.file_store import FileStore
 from kmd.model.actions_model import Action
+from kmd.model.args_model import fmt_loc
 from kmd.model.items_model import Item
-from kmd.model.paths_model import fmt_loc, StorePath
+from kmd.model.paths_model import StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.util.log_calls import format_duration
 

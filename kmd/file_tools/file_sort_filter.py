@@ -10,7 +10,7 @@ from pydantic.dataclasses import dataclass
 from kmd.config.logger import get_logger
 from kmd.errors import FileNotFound, InvalidInput
 from kmd.file_tools.file_walk import IgnoreFilter, walk_by_dir
-from kmd.model.paths_model import fmt_loc
+from kmd.model.args_model import fmt_loc
 
 
 log = get_logger(__name__)

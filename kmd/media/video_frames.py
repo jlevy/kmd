@@ -5,7 +5,7 @@ import cv2
 
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, FileNotFound
-from kmd.model.paths_model import fmt_loc
+from kmd.model.args_model import fmt_loc
 from kmd.util.strif import atomic_output_file
 from kmd.util.string_template import StringTemplate
 

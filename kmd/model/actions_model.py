@@ -8,11 +8,12 @@ from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidActionDefinition, InvalidInput
+from kmd.model.args_model import ArgCount, InputArg, NO_ARGS, ONE_ARG
 from kmd.model.items_model import Item, ItemType, UNTITLED
 from kmd.model.messages_model import Message, MessageTemplate
 from kmd.model.operations_model import Operation, Source
 from kmd.model.params_model import ALL_COMMON_PARAMS, Param, ParamList, ParamValues
-from kmd.model.paths_model import InputArg, StorePath
+from kmd.model.paths_model import StorePath
 from kmd.model.preconditions_model import Precondition
 from kmd.model.shell_model import ShellResult
 from kmd.shell.shell_output import fill_text
@@ -25,21 +26,6 @@ from kmd.util.parse_key_vals import format_key_value
 from kmd.util.string_template import StringTemplate
 
 log = get_logger(__name__)
-
-
-@dataclass(frozen=True)
-class ArgCount:
-    min_args: Optional[int]
-    max_args: Optional[int]
-
-
-ANY_ARGS = ArgCount(0, None)
-NO_ARGS = ArgCount(0, 0)
-ONE_OR_NO_ARGS = ArgCount(0, 1)
-ONE_OR_MORE_ARGS = ArgCount(1, None)
-ONE_ARG = ArgCount(1, 1)
-TWO_OR_MORE_ARGS = ArgCount(2, None)
-TWO_ARGS = ArgCount(2, 2)
 
 
 @dataclass(frozen=True)

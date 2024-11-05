@@ -25,13 +25,13 @@ from kmd.config.text_styles import (
     EMOJI_TRUE,
 )
 from kmd.errors import FileNotFound, SetupError
+from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import (
     detect_mime_type,
     is_full_html_page,
     parse_file_ext,
     read_partial_text,
 )
-from kmd.model.paths_model import fmt_loc
 from kmd.shell.shell_output import cprint, format_name_and_description, format_paragraphs, Wrap
 from kmd.util.url import as_file_url, is_url
 
