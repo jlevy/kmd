@@ -5,7 +5,17 @@ from kmd.model.commands_model import Command
 from kmd.workspaces.workspaces import current_workspace
 
 
-def record_command(command: Command | str):
+_IGNORE_COMMANDS = ["history", "clear_history", "show", "help"]
+
+
+def _history_ignore(command: Command) -> bool:
+    return command.name in _IGNORE_COMMANDS
+
+
+def record_command(command: Command):
+    if _history_ignore(command):
+        return
+
     ws = current_workspace(silent=True)
     history_file = ws.base_dir / ws.dirs.shell_history_yml
     if isinstance(command, str):

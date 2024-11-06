@@ -24,8 +24,10 @@ help
 # Confirm kmd is set up correctly with right tools:
 check_tools
 
-# The assistant is built into the shell, so you can just ask questions:
-how do I get started with a new workspace?
+# The assistant is built into the shell, so you can just ask questions on the
+# command line. Note you can just press Space twice and it will insert the question
+# mark for you:
+? how do I get started with a new workspace
 
 # Set up a workspace to test things out (we'll use fitness as an example):
 workspace fitness
@@ -33,10 +35,12 @@ workspace fitness
 # A short transcription (use this one or pick any video on YouTube):
 transcribe https://www.youtube.com/watch?v=KLSRg2s3SSY
 
-# Take a look at the output:
+# Note there is a selection indicated.
+# We can then look at the selected item easily, because commands often
+# will just work on the selection automatically:
 show
 
-# Now manipulate that transcription. Note we are using the outputs
+# Now let's manipulate that transcription. Note we are using the outputs
 # of each previous command, which are auto-selected as input to each
 # subsequent command. You can always run `show` to see the last result.
 
@@ -44,7 +48,9 @@ show
 strip_html
 show
 
-# Break the text into paragraphs:
+# Break the text into paragraphs. Note this is smart enough to "filter"
+# the diff so even if the LLM modifies the text, we only let it insert
+# newlines.
 break_into_paragraphs
 show
 
@@ -55,6 +61,25 @@ show
 backfill_timestamps
 show
 
+# How about we add some headings?
+insert_section_headings
+
+# How about we compare what we just did with what there was there
+# previously? 
+diff
+
+# If you're wondering how that works, it is an example of a command
+# that looks at the selection history.
+select --history
+
+# And add some summary bullets and a description:
+add_summary_bullets
+add_description
+
+# Note we are just using Markdown still but inserting <div> tags to
+# add needed structure.
+show
+
 # Render it as a PDF:
 create_pdf
 
@@ -62,26 +87,49 @@ create_pdf
 show
 
 # Cool. But it would be nice to have some frame captures from the video.
-are there any actions to get screen captures from the video?
+? are there any actions to get screen captures from the video
 
 # Oh yep, there is!
 # But we're going to want to run it on the previous doc, not the PDF.
-# Let's see what the files were.
+# Let's see what the files are so far.
 files
 
-# And select that file and confirm it looks like it has timestamps.
-# (Pick the right name, the one with backfill_timestamps in it.)
-select docs/training_for_life_step06_backfill_timestamps.doc.md
+# Note we could select the file like this before we run the next command
+# with `select <some-file>.doc.md`. But actually we can see the history
+# of items we've selected:
+select --history
+
+# And just back up to the previous one.
+select --previous
+
+# Look at it again. Yep, there should be timestamps in the text.
 show
 
-# Okay let's try it.
+# As a side note, not all actions work on all items. So we also have
+# a way to check preconditions to see what attributes a given item has.
+# Note that for this doc `has_timestamps` is true.
+preconditions
+
+# And there is a way to see what commands are compatible with the current
+# selection based on these preconditions.
+suggest_actions
+
+# Okay let's try it. (If you're using a shell that supports Kmd well,
+# you can just click the command name!)
 insert_frame_captures
+
+# Note the screen capture images go to the assets folder as assets.
+files
 
 # Let's look at that as a web page.
 show_as_webpage
 
-# (Note that's a bit of a trick, since that action is running other
-# actions that convert the document into a nicer HTML format.)
+# Note that works because unlike regular `show`, that command
+# runs actions to convert a pretty HTML format.
+show_as_webpage --help
+
+# And you can actually how this works by looking at its source:
+action_source show_as_webpage
 
 # What if something isn't working right?
 # Sometimes we may want to browse more detailed system logs:
@@ -94,7 +142,8 @@ show
 
 # We can create more advanced commands that combine sequences of actions.
 # This command does everything we just did above: transcribe, format,
-# and include timestamps for each paragraph.
+# include timestamps for each paragraph, etc.
+transcribe_format --help
 transcribe_format https://www.youtube.com/watch?v=_8djNYprRDI
 
 # Getting a little fancier, this one adds little paragraph annotations and
@@ -103,12 +152,19 @@ transcribe_annotate_summarize https://www.youtube.com/watch?v=_8djNYprRDI
 
 # A few more possibilities...
 
+# Note it's fine to rerun commands on the same argumetns and whenever
+# possible intermediate results are cached. The philosophy is actions
+# should be cached and idempotent when possible (a bit like a makefile).
+
 # Let's now look at the concepts discussed in that video (adjust the filename
 # if needed):
-find_concepts docs/how_to_train_your_peter_attia_step14_add_description_1.doc.md
+transcribe_format https://www.youtube.com/watch?v=_8djNYprRDI
+find_concepts
+
+# This is the list of concepts:
 show
 
-# And save them as items:
+# But we can actually save them as items:
 save_concepts
 
 # We now have about 40 concepts. But maybe some are near duplicates (like

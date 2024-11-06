@@ -682,14 +682,14 @@ def file_info(
 
 
 @kmd_command
-def diff(*paths: str, stat: bool = False, save: bool = False, force: bool = True) -> ShellResult:
+def diff(*paths: str, stat: bool = False, save: bool = False, strict: bool = False) -> ShellResult:
     """
     Show the unified diff between the given files. It's helpful to maintain metadata on
     diffs, so we only support diffing stored items. But the sandbox can be used for
     files not in another store.
 
     :param stat: Only show the diffstat summary.
-    :param force: If true, will diff even if the items are of different formats.
+    :param strict: If true, will abort if the items are of different formats.
     """
     ws = current_workspace()
     if len(paths) == 2:
@@ -707,7 +707,7 @@ def diff(*paths: str, stat: bool = False, save: bool = False, force: bool = True
     [store_path1, store_path2] = import_locator_args(path1, path2)
     item1, item2 = ws.load(store_path1), ws.load(store_path2)
 
-    diff_item = unified_diff_items(item1, item2, strict=not force)
+    diff_item = unified_diff_items(item1, item2, strict=strict)
 
     if stat:
         cprint(diff.diffstat, text_wrap=Wrap.NONE)

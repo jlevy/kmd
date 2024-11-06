@@ -1,5 +1,7 @@
 # Generate README.md from the doc files.
 
+reformat --inplace kmd/docs/markdown/topics/* kmd/docs/markdown/readme_template.md
+
 format_markdown_template \
   kmd/docs/markdown/topics/a1_what_is_kmd.md \
   kmd/docs/markdown/topics/a2_philosophy_of_kmd.md \

@@ -210,6 +210,8 @@ def run_action(
             StorePath(item.store_path) for item in result.items if item.store_path
         ]
         old_inputs = sorted(set(input_store_paths) - set(result_store_paths))
+        log.info("result_store_paths:\n%s", fmt_lines(result_store_paths))
+        log.info("old_inputs:\n%s", fmt_lines(old_inputs))
 
         # If there is a hint that the action replaces the input, archive any inputs that are not in the result.
         ws = current_workspace()
@@ -218,7 +220,10 @@ def run_action(
             for input_store_path in old_inputs:
                 # Note some outputs may be missing if replace_input was used.
                 ws.archive(input_store_path, missing_ok=True)
-                log.message("Archived input item: %s", fmt_loc(input_store_path))
+            log.message(
+                "Archived old input items since action replaces input: %s",
+                fmt_lines(old_inputs),
+            )
             archived_store_paths.extend(old_inputs)
 
         # Log info.
@@ -261,6 +266,7 @@ def run_action(
             # Otherwise if no path_ops returned, default behavior is to select the final
             # outputs (omitting any that were archived).
             final_outputs = sorted(set(result_store_paths) - set(archived_store_paths))
+            log.info("final_outputs:\n%s", fmt_lines(final_outputs))
             ws.selections.push(Selection(paths=final_outputs))
 
     return result

@@ -303,8 +303,11 @@ class FileStore:
         # If external file already exists within the workspace, the file is already saved (without metadata).
         if item.external_path and Path(item.external_path).resolve().is_relative_to(self.base_dir):
             log.message("External file already saved: %s", fmt_loc(item.external_path))
-            store_path = StorePath(path.relpath(item.external_path, self.base_dir))
-            return store_path
+            rel_path = Path(item.external_path).relative_to(self.base_dir)
+            # Indicate this is really an item with a store path, not an external path.
+            item.store_path = str(rel_path)
+            item.external_path = None
+            return StorePath(rel_path)
         else:
             # Otherwise it's still in memory or in a file outside the workspace and we need to save it.
             store_path, found, old_store_path = self.store_path_for(item, as_tmp=as_tmp)
