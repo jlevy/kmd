@@ -66,6 +66,7 @@ from kmd.shell.shell_output import (
     Wrap,
 )
 from kmd.shell.shell_results import shell_print_selection_history
+from kmd.shell_tools.git_tools import add_to_git_ignore
 from kmd.shell_tools.native_tools import (
     CmdlineTool,
     edit_files,
@@ -293,14 +294,18 @@ def clear_assistant() -> None:
 def init(path: Optional[str] = None) -> None:
     """
     Initialize a new workspace at the given path, or in the current directory if no path given.
+    Idempotent.
     """
     dir = Path(path) if path else Path(".")
     dirs = MetadataDirs(dir)
     if dirs.is_initialized():
-        raise InvalidInput("Workspace already exists: %s", fmt_loc(dir))
-    if not dir.exists():
-        dir.mkdir()
-    dirs.initialize()
+        log.warning("Workspace metadata already initialized: %s", fmt_loc(dirs.dot_dir))
+    else:
+        if not dir.exists():
+            dir.mkdir()
+        dirs.initialize()
+
+    add_to_git_ignore(dir, [".kmd/"])
 
     current_workspace(silent=True).log_store_info()
 
