@@ -9,7 +9,7 @@ import subprocess
 import webbrowser
 from enum import Enum
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 
 from cachetools import cached, TTLCache
 from pydantic.dataclasses import dataclass
@@ -23,6 +23,7 @@ from kmd.config.text_styles import (
     COLOR_HINT,
     EMOJI_FALSE,
     EMOJI_TRUE,
+    EMOJI_WARN,
 )
 from kmd.errors import FileNotFound, SetupError
 from kmd.model.args_model import fmt_loc
@@ -44,17 +45,17 @@ class CmdlineTool(Enum):
     External tools that we like to use.
     """
 
-    less = "less"
-    tail = "tail"
-    pygmentize = "pygmentize"
-    ripgrep = "rg"
-    bat = "bat"
-    ffmpeg = "ffmpeg"
+    less = ("less",)
+    tail = ("tail",)
+    pygmentize = ("pygmentize",)
+    ripgrep = ("rg",)
+    bat = ("batcat", "bat")  # Try batcat first (for Debian/Ubuntu), then bat.
+    ffmpeg = ("ffmpeg",)
 
 
 @dataclass(frozen=True)
 class CmdlineTools:
-    tools: dict[CmdlineTool, str]
+    tools: dict[CmdlineTool, Optional[str]]
 
     def has(self, *tools: CmdlineTool) -> bool:
         return all(self.tools[tool] is not None for tool in tools)
@@ -65,12 +66,15 @@ class CmdlineTools:
                 raise SetupError(f"`{tool.value}` ({tool.name}) needed but not found in path")
 
     def warn_if_missing(self, *tools: CmdlineTool):
+        if not tools:
+            tools = tuple(CmdlineTool)
         for tool in tools:
             if not self.has(tool):
-                log.warning(
-                    "`%s` (%s) not found in path; it is recommended to install it for better functionality.",
-                    tool.value,
+                cprint(
+                    "%s %s (%s) was not found in path; it is recommended to install it for better functionality.",
+                    EMOJI_WARN,
                     tool.name,
+                    " or ".join(f"`{name}`" for name in tool.value),
                 )
 
     def formatted(self):
@@ -90,9 +94,9 @@ _tools_cache = TTLCache(maxsize=1, ttl=5.0)
 
 @cached(_tools_cache)
 def tool_check() -> CmdlineTools:
-    tools = {}
+    tools: dict[CmdlineTool, Optional[str]] = {}
     for tool in CmdlineTool:
-        tools[tool] = shutil.which(tool.value)
+        tools[tool] = next(filter(None, (shutil.which(name) for name in tool.value)), None)
     return CmdlineTools(tools)
 
 

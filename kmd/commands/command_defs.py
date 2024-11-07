@@ -230,14 +230,17 @@ def assistant_system_message(skip_api: bool = False) -> ShellResult:
 
 
 @kmd_command
-def check_tools() -> None:
+def check_tools(warn_only: bool = False) -> None:
     """
     Check that all tools are installed.
     """
-    cprint("Checking for recommended tools:")
-    cprint()
-    cprint(tool_check().formatted())
-    cprint()
+    if warn_only:
+        tool_check().warn_if_missing()
+    else:
+        cprint("Checking for required tools:")
+        cprint()
+        cprint(tool_check().formatted())
+        cprint()
 
 
 @kmd_command
@@ -1159,6 +1162,8 @@ def files(
     """
 
     # TODO: Consider adding a --flat or --depth option.
+    # TODO: Add a --full option with line and word counts and file_info details
+    # and enable by default for --save.
 
     if len(paths) == 0:
         paths_to_show = [Path(".")]

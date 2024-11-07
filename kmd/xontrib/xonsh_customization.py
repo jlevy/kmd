@@ -17,6 +17,7 @@ from kmd.shell.shell_results import handle_shell_result, shell_before_exec
 from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
+from kmd.shell_tools.native_tools import tool_check
 from kmd.version import get_version_name
 from kmd.workspaces.workspaces import current_workspace
 from kmd.xontrib.xonsh_completers import load_completers
@@ -209,12 +210,12 @@ def customize_xonsh():
 
     if _is_interactive:
         help_commands.welcome()  # Do first since init could take a few seconds.
-
     _initialize()
 
     _post_initialize()
 
     if _is_interactive:
         _shell_setup()
+        tool_check().warn_if_missing()
 
     log.info("kmd %s loaded", get_version_name())
