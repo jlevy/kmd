@@ -346,6 +346,8 @@ def select(
     *paths: str,
     history: bool = False,
     last: int = 0,
+    back: int = 0,
+    forward: int = 0,
     previous: bool = False,
     next: bool = False,
     pop: bool = False,
@@ -364,6 +366,8 @@ def select(
 
     :param history: Show the full selection history.
     :param last: Show the last `last` selections in the history.
+    :param back: Move back in the selection history by `back` steps.
+    :param forward: Move forward in the selection history by `forward` steps.
     :param previous: Move back in the selection history to the previous selection.
     :param next: Move forward in the selection history to the next selection.
     :param pop: Pop the current selection from the history.
@@ -381,7 +385,7 @@ def select(
     # if stdin:
     #     paths = tuple(sys.stdin.read().splitlines())
 
-    exclusive_flags = [history, last, previous, next, pop, clear, clear_future]
+    exclusive_flags = [history, last, back, forward, previous, next, pop, clear, clear_future]
     if sum(bool(f) for f in exclusive_flags) > 1:
         raise InvalidInput("Cannot combine multiple flags")
     if paths and any(exclusive_flags):
@@ -397,6 +401,12 @@ def select(
     elif last:
         shell_print_selection_history(ws.selections, last=last)
         return ShellResult(show_selection=False)
+    elif back:
+        ws.selections.previous(back)
+        return ShellResult(show_selection=True)
+    elif forward:
+        ws.selections.next(forward)
+        return ShellResult(show_selection=True)
     elif previous:
         ws.selections.previous()
         return ShellResult(show_selection=True)

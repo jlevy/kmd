@@ -5,6 +5,7 @@ from pydantic.dataclasses import dataclass
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError, InvalidInput
 from kmd.exec.action_registry import kmd_action
+from kmd.media.image_similarity import filter_similar_frames
 from kmd.media.video_frames import capture_frames
 from kmd.model import (
     fmt_loc,
@@ -13,10 +14,12 @@ from kmd.model import (
     Item,
     ItemType,
     MediaType,
+    Param,
+    ParamList,
     PerItemAction,
     Precondition,
 )
-from kmd.preconditions.precondition_defs import has_timestamps, is_text_doc
+from kmd.preconditions.precondition_defs import has_frame_captures, has_timestamps, is_text_doc
 from kmd.provenance.source_items import find_upstream_resource
 from kmd.provenance.timestamps import TimestampExtractor
 from kmd.text_chunks.parse_divs import parse_divs
@@ -40,7 +43,18 @@ class InsertFrameCaptures(PerItemAction):
         Look for timestamped video links and insert frame captures after each one.
         """
 
-    precondition: Precondition = is_text_doc & has_timestamps
+    precondition: Precondition = is_text_doc & has_timestamps & ~has_frame_captures
+
+    params: ParamList = (
+        Param(
+            "threshold",
+            "The similarity threshold for filtering consecutive frames.",
+            default_value=0.6,
+            type=float,
+        ),
+    )
+
+    threshold: float = 0.6
 
     def run_item(self, item: Item) -> Item:
         if not item.body:
@@ -66,21 +80,38 @@ class InsertFrameCaptures(PerItemAction):
         timestamps = [timestamp for timestamp, _index, _offset in timestamp_matches]
         frame_paths = capture_frames(video_path, timestamps, target_dir, prefix=item.title_slug())
 
-        log.message(f"Extracted {len(frame_paths)} frame captures to: {fmt_loc(target_dir)}")
-
         # Save images in file cache for later as well.
         for frame_path in frame_paths:
             cache_content(frame_path)
         log.message(f"Saved {len(frame_paths)} frame captures to cache.")
 
+        # Filter out similar consecutive frames.
+        unique_indices = filter_similar_frames(frame_paths, self.threshold)
+        unique_frame_paths = [frame_paths[i] for i in unique_indices]
+        unique_matches = [timestamp_matches[i] for i in unique_indices]
+
+        log.message(
+            f"Filtered out {len(frame_paths) - len(unique_frame_paths)}/{len(frame_paths)} similar frames."
+        )
+        log.message(
+            f"Extracted {len(unique_frame_paths)} unique frame captures to: {fmt_loc(target_dir)}"
+        )
+
+        # Create a set of indices that were kept.
+        kept_indices = set(unique_indices)
+
         # Prepare insertions.
         log.message(
             "Inserting %s frame captures, have %s wordtoks",
-            len(timestamp_matches),
+            len(unique_matches),
             len(extractor.offsets),
         )
         insertions: List[Insertion] = []
-        for (timestamp, index, offset), frame_path in zip(timestamp_matches, frame_paths):
+        for i, (timestamp, index, offset) in enumerate(timestamp_matches):
+            # Only process timestamps whose frames weren't filtered out
+            if i not in kept_indices:
+                continue
+
             try:
                 insert_index = (
                     search_tokens(extractor.wordtoks)
@@ -95,6 +126,7 @@ class InsertFrameCaptures(PerItemAction):
                 )
 
             new_offset = extractor.offsets[insert_index]
+            frame_path = frame_paths[i]
             insertions.append(
                 (
                     new_offset,

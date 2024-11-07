@@ -1,7 +1,7 @@
 import re
 
 from kmd.media.media_services import get_media_id, youtube
-from kmd.model.doc_elements import ANNOTATED_PARA, CHUNK
+from kmd.model.doc_elements import ANNOTATED_PARA, CHUNK, FRAME_CAPTURE
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.preconditions_model import precondition
@@ -155,6 +155,11 @@ def has_many_paragraphs(item: Item) -> bool:
 @precondition
 def has_timestamps(item: Item) -> bool:
     return bool(item.body and has_timestamp(item.body))
+
+
+@precondition
+def has_frame_captures(item: Item) -> bool:
+    return bool(item.body and item.body.find(f'<img class="{FRAME_CAPTURE}">') != -1)
 
 
 @precondition

@@ -37,8 +37,8 @@ commands.
 Each one is optional.
 
 You will provide the answer in an AssistantResponse structure.
-Here is a description of how to structure your response, in the form of a Pydantic
-class with documentation on how to use each field:
+Here is a description of how to structure your response, in the form of a Pydantic class
+with documentation on how to use each field:
 
 {assistant_model}
 

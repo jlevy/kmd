@@ -85,7 +85,7 @@ def cache_resource(item: Item) -> Dict[MediaType, Path]:
         result = {detect_media_type(path): path}
 
     log.message(
-        "Cached copy of item %s:\n%s",
+        "Cached resource %s:\n%s",
         item.as_str_brief(),
         fmt_lines(
             f"{media_type.value}: {fmt_path(media_path)}"

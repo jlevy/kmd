@@ -152,7 +152,7 @@ transcribe_annotate_summarize https://www.youtube.com/watch?v=_8djNYprRDI
 
 # A few more possibilities...
 
-# Note it's fine to rerun commands on the same argumetns and whenever
+# Note it's fine to rerun commands on the same arguments and whenever
 # possible intermediate results are cached. The philosophy is actions
 # should be cached and idempotent when possible (a bit like a makefile).
 

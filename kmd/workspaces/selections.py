@@ -243,23 +243,29 @@ class SelectionHistory(BaseModel):
             return selection
 
     @persist_after(_save)
-    def previous(self) -> Selection:
+    def previous(self, n: int = 1) -> Selection:
         """
         Move to the previous selection in history and return it.
         """
-        if self.current_index - 1 < 0:
-            raise InvalidOperation("No previous selection")
-        self.current_index -= 1
+        if self.current_index - n < 0:
+            if n == 1:
+                raise InvalidOperation("No previous selection")
+            else:
+                raise InvalidOperation(f"No selection back {n} steps")
+        self.current_index -= n
         return self.history[self.current_index]
 
     @persist_after(_save)
-    def next(self) -> Selection:
+    def next(self, n: int = 1) -> Selection:
         """
         Move to the next selection in history and return it.
         """
-        if self.current_index + 1 >= len(self.history):
-            raise InvalidOperation("No next selection")
-        self.current_index += 1
+        if self.current_index + n >= len(self.history):
+            if n == 1:
+                raise InvalidOperation("No next selection")
+            else:
+                raise InvalidOperation(f"No selection forward {n} steps")
+        self.current_index += n
         return self.history[self.current_index]
 
     @persist_after(_save)
