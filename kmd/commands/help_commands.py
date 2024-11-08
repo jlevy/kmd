@@ -177,4 +177,4 @@ def action_source(action_name: str) -> None:
         raise FileNotFound(f"No source path found for action `{action_name}`")
 
     source_code = read_source_code(source_path)
-    print_code_block(source_code, format_name="python")
+    print_code_block(source_code, format="python")

@@ -13,12 +13,27 @@ from typing import Dict, Iterable, List, Tuple
 _shell_unsafe_re = re.compile(r"[^\w@%+=:,./~-]", re.ASCII)
 
 
-def shell_quote(arg: str) -> str:
+def is_shell_quoted(arg: str) -> bool:
+    """
+    Is this a valid, quoted string?
+    """
+    if arg.startswith(("'", '"')) and arg.endswith(arg[0]):
+        try:
+            ast.literal_eval(arg)
+            return True
+        except (SyntaxError, ValueError):
+            return False
+    return False
+
+
+def shell_quote(arg: str, idempotent: bool = False) -> str:
     """
     Quote a string for shell usage, if needed, using simplified shell conventions
     compatible with Python and xonsh. This means simple text words without spaces
     are left unquoted. Prefers single quotes in cases where either could work.
     """
+    if idempotent and is_shell_quoted(arg):
+        return arg
     has_unsafe = _shell_unsafe_re.search(arg)
     if arg and not has_unsafe:
         return arg
@@ -94,7 +109,7 @@ def format_command_str(command: str, args: Iterable[str], options: StrBoolOption
     """
     Format a command string using simplified shell conventions (compatible with Python and xonsh).
     """
-    args_str = " ".join(shell_quote(arg) for arg in args)
+    args_str = " ".join(shell_quote(arg, idempotent=True) for arg in args)
     options_str = " ".join(format_options(options))
     return " ".join(filter(bool, [command, args_str, options_str]))
 
@@ -215,6 +230,27 @@ def parse_shell_args(args_and_opts: List[str]) -> ShellArgs:
 
 
 ## Tests
+
+
+def test_shell_quote_unquote():
+    assert is_shell_quoted("'hello world'") == True
+    assert is_shell_quoted('"hello\' world"') == True
+    assert is_shell_quoted("hello world") == False
+    assert is_shell_quoted("'unclosed") == False
+    assert is_shell_quoted("'invalid'quote'") == False
+    assert is_shell_quoted("already 'quoted'") == False
+
+    assert shell_quote("simple") == "simple"  # No quotes needed
+    assert shell_quote("hello world") == "'hello world'"  # Needs quotes due to space
+    assert shell_quote("don't") == '"don\'t"'  # Contains single quote
+    assert shell_quote("partly 'quoted'") == "\"partly 'quoted'\""  # Needs proper quoting
+    assert shell_quote("'hello'", idempotent=True) == "'hello'"  # Already properly quoted
+    assert shell_unquote(shell_quote("'hello'", idempotent=False)) == "'hello'"
+
+    assert shell_unquote("'hello world'") == "hello world"
+    assert shell_unquote('"hello world"') == "hello world"
+    assert shell_unquote("unquoted") == "unquoted"  # Passes through
+    assert shell_unquote("'invalid'quote'") == "'invalid'quote'"  # Invalid quotes pass through
 
 
 def test_shell_split():

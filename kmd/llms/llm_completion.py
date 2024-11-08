@@ -115,6 +115,7 @@ def llm_template_completion(
             *previous_messages,
             {"role": "user", "content": user_message},
         ],
+        save_objects=save_objects,
         response_format=response_format,
         **kwargs,
     )

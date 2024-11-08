@@ -188,6 +188,9 @@ class ChatHistory:
     def append(self, message: ChatMessage) -> None:
         self.messages.append(message)
 
+    def extend(self, messages: List[ChatMessage]) -> None:
+        self.messages.extend(messages)
+
     @classmethod
     def from_dicts(cls, message_dicts: List[Dict[str, Any]]) -> "ChatHistory":
         messages = [ChatMessage.from_dict(message_dict) for message_dict in message_dicts]

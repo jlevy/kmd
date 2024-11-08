@@ -35,10 +35,10 @@ class BackfillSourceTimestamps(PerItemAction):
     name: str = "backfill_timestamps"
 
     description: str = """
-      Backfill timestamps from a source document.
-      Seeks through the document this doc is derived from for timestamps and inserts them
-      into the text of the current doc. Source must have similar tokens.
-      """
+        Backfill timestamps from a source document.
+        Seeks through the document this doc is derived from for timestamps and inserts them
+        into the text of the current doc. Source must have similar tokens.
+        """
 
     precondition: Precondition = is_text_doc & ~has_timestamps
 

@@ -1,14 +1,12 @@
 import json
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Dict, List, Optional
 
 from cachetools import cached
 from pydantic import ValidationError
-from rich.text import Text
 
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings
-from kmd.config.text_styles import COLOR_HEADING, COLOR_HINT, COLOR_STATUS, EMOJI_ASSISTANT
 from kmd.docs import api_docs, assistant_instructions
 from kmd.errors import InvalidState, KmdRuntimeError
 from kmd.file_formats.chat_format import (
@@ -19,26 +17,17 @@ from kmd.file_formats.chat_format import (
     tail_chat_history,
 )
 from kmd.lang_tools.capitalization import capitalize_cms
-from kmd.llms.llm_completion import llm_template_completion
+from kmd.llms.llm_completion import llm_completion
 from kmd.model.args_model import fmt_loc
-from kmd.model.assistant_response_model import AssistantResponse, Confidence
+from kmd.model.assistant_response_model import AssistantResponse
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message
 from kmd.model.script_model import Script
-from kmd.shell.shell_output import (
-    cprint,
-    output_as_string,
-    print_assistance,
-    print_code_block,
-    print_small_heading,
-    print_style,
-    print_text_block,
-    Style,
-    Wrap,
-)
-from kmd.text_formatting.markdown_normalization import fill_markdown, normalize_markdown
+from kmd.shell.assistant_output import print_assistant_response
+from kmd.shell.shell_output import cprint, output_as_string
+from kmd.text_formatting.markdown_normalization import normalize_markdown
 from kmd.util.format_utils import fmt_paras
 from kmd.util.log_calls import log_calls
 from kmd.util.parse_shell_args import shell_unquote
@@ -129,7 +118,7 @@ def assist_current_state() -> Message:
 
 
 @log_calls(level="info")
-def assist_system_message(skip_api: bool = False) -> Message:
+def assist_system_message_with_state(skip_api: bool = False) -> Message:
     return Message(
         f"""
         {assist_preamble(skip_api=skip_api)}
@@ -138,34 +127,6 @@ def assist_system_message(skip_api: bool = False) -> Message:
         """
         # TODO: Include selection history, command history, any other info about files in the workspace.
     )
-
-
-def print_assistant_heading(model: LLM) -> None:
-    assistant_name = Text(f"{EMOJI_ASSISTANT} Kmd Assistant", style=COLOR_HEADING)
-    info = Text(f"({model})", style=COLOR_HINT)
-    cprint(assistant_name + " " + info)
-
-
-def print_assistant_response(response: AssistantResponse, model: LLM) -> None:
-    with print_style(Style.PAD):
-        print_assistant_heading(model)
-        cprint()
-
-        if response.response_text:
-            if response.confidence in {Confidence.direct_answer, Confidence.partial_answer}:
-                print_text_block(fill_markdown(response.response_text))
-            else:
-                print_assistance(fill_markdown(response.response_text))
-
-        if response.suggested_commands:
-            formatted_commands = "\n\n".join(c.script_str() for c in response.suggested_commands)
-            print_small_heading("Suggested commands:")
-            print_code_block(formatted_commands)
-
-        if response.see_also:
-            formatted_see_also = ", ".join(f"`{cmd}`" for cmd in response.see_also)
-            print_small_heading("See also:")
-            cprint(formatted_see_also, color=COLOR_STATUS, text_wrap=Wrap.WRAP_INDENT)
 
 
 def assistant_history_file() -> Path:
@@ -183,40 +144,22 @@ def assistant_chat_history(include_system_message: bool, fast: bool = False) -> 
         log.warning("Couldn't load assistant history, so skipping it: %s", e)
 
     if include_system_message:
-        system_message = assist_system_message(skip_api=fast)
+        system_message = assist_system_message_with_state(skip_api=fast)
         assistant_history.messages.insert(0, ChatMessage(ChatRole.system, system_message))
 
     return assistant_history
 
 
-def assistance(
-    input: str, fast: bool = False, silent: bool = False, model: Optional[LLM] = None
-) -> None:
+def general_assistance(
+    model: LLM,
+    messages: List[Dict[str, str]],
+) -> AssistantResponse:
     # TODO: Stream response.
 
-    if not model:
-        assistant_model = "assistant_model_fast" if fast else "assistant_model"
-        model = not_none(get_param_value(assistant_model, type=LLM))
-
-    if not silent:
-        cprint(f"Getting assistance (model {model})…")
-
-    system_message = assist_system_message(skip_api=fast)
-
-    history_file = assistant_history_file()
-    history = assistant_chat_history(include_system_message=False, fast=fast)
-
-    # Get and record the user's message.
-    input = shell_unquote(input)
-    log.info("User request to assistant: %s", input)
-    append_chat_message(history_file, ChatMessage(ChatRole.user, input))
-
     # Get the assistant's response, including history.
-    response = llm_template_completion(
+    response = llm_completion(
         model,
-        system_message=system_message,
-        input=input,
-        previous_messages=history.as_chat_completion(),
+        messages=messages,
         save_objects=global_settings().debug_assistant,
         response_format=AssistantResponse,
     )
@@ -225,11 +168,45 @@ def assistance(
         response_data = json.loads(response.content)
         assistant_response = AssistantResponse.model_validate(response_data)
         log.debug("Assistant response: %s", assistant_response)
-
     except (ValidationError, json.JSONDecodeError) as e:
         log.error("Error parsing assistant response: %s", e)
         raise e
 
+    return assistant_response
+
+
+def shell_context_assistance(
+    input: str, fast: bool = False, silent: bool = False, model: Optional[LLM] = None
+) -> None:
+
+    if not model:
+        assistant_model = "assistant_model_fast" if fast else "assistant_model"
+        model = not_none(get_param_value(assistant_model, type=LLM))
+
+    if not silent:
+        cprint(f"Getting assistance (model {model})…")
+
+    # Get shell chat history.
+    history_file = assistant_history_file()
+    history = assistant_chat_history(include_system_message=False, fast=fast)
+
+    # Insert the system message.
+    system_message = assist_system_message_with_state(skip_api=fast)
+    history.messages.insert(0, ChatMessage(ChatRole.system, system_message))
+
+    # Record the user's message.
+    input = shell_unquote(input)
+    log.info("User request to assistant: %s", input)
+    user_message = ChatMessage(ChatRole.user, input)
+    history.append(user_message)
+    log.info("Assistant history context (including new message): %s", history.size_summary())
+
+    # Get the assistant's response.
+    assistant_response = general_assistance(model, history.as_chat_completion())
+
+    # Save the user message to the history after a response. That way if the
+    # use changes their mind right away and cancels it's not left in the file.
+    append_chat_message(history_file, user_message)
     # Record the assistant's response, in structured format.
     append_chat_message(
         history_file, ChatMessage(ChatRole.assistant, assistant_response.model_dump())

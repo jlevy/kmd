@@ -5,12 +5,12 @@ from typing import Any, Dict, Iterable, List, Optional, TYPE_CHECKING
 from pydantic import BaseModel, field_validator
 
 from kmd.util.format_utils import single_line
-from kmd.util.log_calls import quote_if_needed
 from kmd.util.parse_shell_args import (
     format_command_str,
     format_options,
     parse_command_str,
     parse_option,
+    shell_quote,
     StrBoolOptions,
 )
 
@@ -34,7 +34,7 @@ def assist_request_str(request: str) -> str:
     """
     Command string to call the assistant.
     """
-    return f"? {quote_if_needed(request)}"
+    return f"? {shell_quote(request, idempotent=True)}"
 
 
 def stringify_non_bool(value: Any) -> str | bool:

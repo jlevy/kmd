@@ -24,14 +24,17 @@ log = get_logger(__name__)
 MAX_LINES_WITHOUT_PAGING = 128
 
 
-def shell_print_selection_history(sh: SelectionHistory, last: Optional[int] = None) -> None:
+def shell_print_selection_history(
+    sh: SelectionHistory, last: Optional[int] = None, after_cur: int = 2
+) -> None:
     """
     Print the current selection history.
     """
     with print_style(Style.BOX, color=COLOR_SELECTION):
         n = len(sh.history)
-        start_idx = max(0, n - last) if last else 0
-        history_slice = sh.history[start_idx:]
+        start_idx = max(0, sh.current_index - last) if last else 0
+        end_idx = min(n, sh.current_index + after_cur) if last else n
+        history_slice = sh.history[start_idx:end_idx]
 
         if n == 0:
             print_selection("No selection history.")
@@ -120,7 +123,7 @@ def handle_shell_result(res: ShellResult) -> None:
     if res.show_selection or res.suggest_actions:
         selection = current_workspace().selections.current
 
-        if selection and res.show_selection:
+        if res.show_selection:
             cprint()
             shell_print_selection(selection)
 

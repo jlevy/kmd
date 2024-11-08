@@ -144,7 +144,7 @@ PROMPT_MAIN = "❯"
 
 PROMPT_FORM = "❯❯"
 
-PROMPT_ASSIST = "(help) ❯"
+PROMPT_ASSIST = "(assistant) ❯"
 
 EMOJI_HINT = "👉"
 

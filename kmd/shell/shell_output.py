@@ -393,10 +393,10 @@ def print_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_ind
 def print_code_block(
     message: str,
     *args,
-    format_name="",
+    format: str = "",
     extra_indent: str = "",
 ):
-    markdown = Markdown(f"```{format_name}\n{message}\n```")
+    markdown = Markdown(f"```{format}\n{message}\n```")
     cprint(markdown, *args, text_wrap=Wrap.NONE, extra_indent=extra_indent)
 
 

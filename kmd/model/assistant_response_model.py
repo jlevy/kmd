@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -70,6 +70,13 @@ class AssistantResponse(BaseModel):
     Commands that the assistant suggests to solve the user's request.
     These should be in the order the user could execute them.
     Only list these if the intent is relatively clear.
+    If the answer is Python, use `python_code` instead.
+    """
+
+    python_code: Optional[str]
+    """
+    If the assistant is suggesting a Python code snippet, put it here.
+    Only use this for Python code!
     """
 
     see_also: List[str]

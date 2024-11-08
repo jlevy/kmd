@@ -101,7 +101,8 @@ def load_source_code() -> SourceCode:
         ),
         file_formats_src=read_source_code(kmd_base_path / "file_formats"),
         example_action_src=read_source_code(
-            kmd_base_path / "action_defs" / "base_actions" / "strip_html.py"
+            kmd_base_path / "action_defs" / "base_actions" / "strip_html.py",
+            kmd_base_path / "action_defs" / "base_actions" / "describe_briefly.py",
         ),
     )
     log.info("Loaded sources: %s", str(code))

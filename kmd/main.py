@@ -23,7 +23,7 @@ from kmd.config.logger import get_console, get_logger
 from kmd.config.settings import APP_NAME
 from kmd.config.setup import setup
 from kmd.config.text_styles import PROMPT_INPUT_COLOR, SPINNER
-from kmd.help.assistant import assistance
+from kmd.help.assistant import shell_context_assistance
 from kmd.model.commands_model import is_assist_request_str
 from kmd.shell.shell_output import cprint
 from kmd.version import get_version
@@ -103,7 +103,7 @@ class CustomInteractiveShell(PromptToolkitShell):  # PromptToolkitShell or Readl
         if assist_query:
             try:
                 with get_console().status("Thinking…", spinner=SPINNER):
-                    assistance(assist_query)
+                    shell_context_assistance(assist_query)
             except Exception as e:
                 log.error(f"Sorry, could not get assistance: {e}")
                 log.info(e, exc_info=True)
@@ -118,7 +118,7 @@ def not_found(cmd: List[str]):
     if len(cmd) >= 2:
         cprint("Command not found. Getting assistance…")
         with get_console().status("", spinner=SPINNER):
-            assistance(
+            shell_context_assistance(
                 f"""
                 The user just typed the following command, but it was not found:
 

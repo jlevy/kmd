@@ -12,6 +12,7 @@ from frontmatter_format import (
     to_yaml_string,
 )
 from rich import get_console
+from rich.text import Text
 
 from kmd.action_defs import load_all_actions
 from kmd.commands.command_registry import kmd_command
@@ -39,7 +40,7 @@ from kmd.file_formats.chat_format import ChatHistory, tail_chat_history
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_tools.file_sort_filter import collect_files, GroupByOption, parse_since, SortOption
 from kmd.form_input.prompt_input import prompt_simple_string
-from kmd.help.assistant import assist_system_message, assistance
+from kmd.help.assistant import assist_system_message_with_state, shell_context_assistance
 from kmd.lang_tools.inflection import plural
 from kmd.media import media_tools
 from kmd.model.args_model import fmt_loc
@@ -204,7 +205,7 @@ def assist(input: Optional[str] = None) -> None:
             help()
             return
     with get_console().status("Thinking…", spinner=SPINNER):
-        assistance(input)
+        shell_context_assistance(input)
 
 
 @kmd_command
@@ -217,7 +218,7 @@ def assistant_system_message(skip_api: bool = False) -> ShellResult:
         type=ItemType.export,
         title="Assistant System Message",
         format=Format.markdown,
-        body=assist_system_message(skip_api=skip_api),
+        body=assist_system_message_with_state(skip_api=skip_api),
     )
     ws = current_workspace()
     store_path = ws.save(item, as_tmp=True)
@@ -261,7 +262,11 @@ def history(max: int = 30, raw: bool = False) -> None:
     else:
         n = len(chat_history.messages)
         for i, message in enumerate(chat_history.messages):
-            cprint("% 4d: %s", i - n, message.content, text_wrap=Wrap.NONE)
+            cprint(
+                Text("% 4d:" % (i - n), style=COLOR_HINT)
+                + Text(f" `{message.content}`", style=COLOR_SUGGESTION),
+                text_wrap=Wrap.NONE,
+            )
 
 
 @kmd_command
@@ -449,14 +454,30 @@ def unselect(*paths: str) -> None:
 
 
 @kmd_command
+def selections(
+    last: int = 3,
+    clear: bool = False,
+    clear_future: bool = False,
+) -> ShellResult:
+    """
+    Show the recent selection history. Same as `select --last=3` by default.
+    """
+    exclusive_flags = [clear, clear_future]
+    exclusive_flag_count = sum(bool(f) for f in exclusive_flags)
+    if exclusive_flag_count > 1:
+        raise InvalidInput("Cannot combine multiple flags")
+    if exclusive_flag_count:
+        last = 0
+    return select(last=last, clear=clear, clear_future=clear_future)
+
+
+@kmd_command
 def prev_selection() -> ShellResult:
     """
     Move back in the selection history to the previous selection.
     Same as `select --previous`.
     """
-    ws = current_workspace()
-    ws.selections.previous()
-    return ShellResult(show_selection=True)
+    return select(previous=True)
 
 
 @kmd_command
@@ -465,9 +486,7 @@ def next_selection() -> ShellResult:
     Move forward in the selection history to the next selection.
     Same as `select --next`.
     """
-    ws = current_workspace()
-    ws.selections.next()
-    return ShellResult(show_selection=True)
+    return select(next=True)
 
 
 @kmd_command
@@ -717,7 +736,6 @@ def file_info(
                 cprint(f"body: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
             else:
                 cprint("body: None", text_wrap=Wrap.INDENT_ONLY)
-                # Frontmatter info.
 
         else:
             if offset:

@@ -241,7 +241,8 @@ def _detect_view_mode(file_or_url: str) -> ViewMode:
             return ViewMode.browser
 
         info = file_format_info(path)
-        log.message("File format: %s", info)
+        log.info("File format detected: %s", info)
+
         if info.is_text:
             return ViewMode.console
         if info.is_image:
