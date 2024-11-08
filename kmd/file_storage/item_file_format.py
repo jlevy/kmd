@@ -19,7 +19,7 @@ log = get_logger(__name__)
 ITEM_FIELD_SORT = custom_key_sort(OPERATION_FIELDS + ITEM_FIELDS)
 
 # Initialize the file modification time cache with Item type
-_item_cache = FileMtimeCache[Item](max_size=2000)
+_item_cache = FileMtimeCache[Item](max_size=2000, name="Item")
 
 
 @tally_calls()
@@ -31,7 +31,7 @@ def write_item(item: Item, path: Path):
     item.validate()
     if item.is_binary:
         raise ValueError(f"Binary items should be external files: {item}")
-    if item.format and not item.format.supports_frontmatter():
+    if item.format and not item.format.supports_frontmatter:
         raise ValueError(f"Item format `{item.format.value}` does not support frontmatter: {item}")
 
     # Clear cache before writing.
@@ -114,7 +114,7 @@ def _read_item_uncached(path: Path, base_dir: Optional[Path]) -> Item:
     else:
         # No frontmatter, so infer from the file and content.
         item = Item.from_external_path(path)
-        if item.format and item.format.supports_frontmatter():
+        if item.format and item.format.supports_frontmatter:
             log.info(
                 "Metadata not present on text file, inferred format `%s`: %s",
                 item.format.value,

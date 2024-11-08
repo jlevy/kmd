@@ -99,13 +99,14 @@ def assemble_store_path_args(*paths_or_strs: Optional[UnresolvedPath]) -> List[S
 
 
 def assemble_action_args(
-    *paths_or_strs: Optional[UnresolvedPath],
+    *paths_or_strs: Optional[UnresolvedPath], use_selection: bool = True
 ) -> Tuple[List[CommandArg], bool]:
     """
     Assemble args for an action, as URLs, paths, or store paths.
+    If indicated, use the current selection as fallback to find input paths.
     """
     resolved = [resolve_locator_arg(p) for p in paths_or_strs if p]
-    if not resolved:
+    if not resolved and use_selection:
         try:
             selection_args = current_workspace().selections.current.paths
             return cast(List[CommandArg], selection_args), True

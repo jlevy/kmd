@@ -9,7 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
-from frontmatter_format import from_yaml_string
+from frontmatter_format import from_yaml_string, new_yaml
 from pydantic.dataclasses import dataclass
 from slugify import slugify
 
@@ -29,6 +29,7 @@ from kmd.util.format_utils import (
     html_to_plaintext,
     plaintext_to_html,
 )
+from kmd.util.log_calls import log_calls
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.strif import format_iso_timestamp
 from kmd.util.url import Url
@@ -57,6 +58,7 @@ class ItemType(Enum):
     extension = "extension"
     script = "script"
 
+    @property
     def expects_body(self) -> bool:
         """
         Resources don't have a body. On concepts it's optional.
@@ -88,9 +90,19 @@ class IdType(Enum):
 @dataclass(frozen=True)
 class ItemId:
     """
-    Represents the identity of an item. Used as a key to determine when to treat two items as
-    the same object. This could be the same URL, the same concept, or the same source, by which
-    we mean the item is the output of the same action on the exact same inputs).
+    Represents the identity of an item. The id is used as a shortcut to determine
+    if an object already exists.
+
+    The identity of an entity like a URL or a concept is just itself.
+
+    The identity of some items is their source, i.e. the process by which
+    they were created, e.g. a transcription of a URL.
+    We can decide if an item already exists if we have an output of the same
+    action on the exact same inputs, and the action is cacheable (i.e. we consider
+    it deterministic).
+
+    If the item is something like a chat with the user, it has no item id because
+    every chat is unique (a chat action would be non-cacheable).
     """
 
     type: ItemType
@@ -112,8 +124,13 @@ class ItemId:
             item_id = ItemId(item.type, IdType.url, canonicalize_url(item.url))
         elif item.type == ItemType.concept and item.title:
             item_id = ItemId(item.type, IdType.concept, canonicalize_concept(item.title))
-        elif item.source:
+        elif item.source and item.source.cacheable:
+            # We know the source of this and if the action was cacheable, we can create
+            # an identity based on the source.
             item_id = ItemId(item.type, IdType.source, item.source.as_str())
+        else:
+            # If we got here, the item has no identity.
+            item_id = None
 
         return item_id
 
@@ -163,7 +180,6 @@ class Item:
     # Text items are in body. Large or binary items may be stored externally.
     body: Optional[str] = None
     external_path: Optional[str] = None
-    is_binary: bool = False
 
     # Path to the item in the store, if it has been saved.
     store_path: Optional[str] = None
@@ -185,7 +201,7 @@ class Item:
 
     # These fields we don't want in YAML frontmatter.
     # We don't include store_path as it's redundant with the filename.
-    NON_METADATA_FIELDS = ["file_ext", "body", "external_path", "is_binary", "store_path"]
+    NON_METADATA_FIELDS = ["file_ext", "body", "external_path", "store_path"]
 
     def __post_init__(self):
         assert isinstance(self.type, ItemType)
@@ -340,8 +356,12 @@ class Item:
         """
         if not self.format:
             raise ValueError(f"Item has no format: {self}")
-        if self.type.expects_body() and not self.is_binary and not self.body:
+        if self.type.expects_body and self.format.has_body and not self.body:
             raise ValueError(f"Item type `{self.type.value}` is text but has no body: {self}")
+
+    @property
+    def is_binary(self) -> bool:
+        return bool(self.format and self.format.is_binary)
 
     def set_created(self, timestamp: float):
         self.created_at = datetime.fromtimestamp(timestamp, tz=timezone.utc)
@@ -349,9 +369,10 @@ class Item:
     def set_modified(self, timestamp: float):
         self.modified_at = datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
-    def doc_id(self) -> str:
+    def external_id(self) -> str:
         """
-        Semi-permanent id for the document. Currently just the store path.
+        Semi-permanent external id for the document (for indexing etc.).
+        Currently just the store path.
         """
         if not self.store_path:
             raise ValueError("Cannot get doc id for an item that has not been saved")
@@ -410,19 +431,18 @@ class Item:
             self.title
             or self.url
             or self.description
-            or (not self.is_binary and self.body)
+            or (not self.is_binary and self.abbrev_body(max_len))
             or UNTITLED
         )
 
         suffix = ""
-        if add_ops_suffix:
+        if add_ops_suffix and self.type not in [ItemType.concept, ItemType.resource]:
             # For notes, exports, etc but not for concepts, add a parenthical note
             # indicating the last operation, if there was one. This makes filename slugs
             # more readable.
-            with_last_op = self.type not in [ItemType.concept, ItemType.resource]
-            last_op = with_last_op and self.history and self.history[-1].action_name
-            step_num = len(self.history) + 1 if self.history else 1
+            last_op = self.history and self.history[-1].action_name
             if last_op:
+                step_num = len(self.history) + 1 if self.history else 1
                 suffix = f" (step{step_num:02d}, {last_op})"
 
         shorter_len = min(max_len, max(max_len - len(suffix), 20))
@@ -435,6 +455,25 @@ class Item:
             final_text += suffix
 
         return final_text
+
+    @log_calls(level="warning")
+    def abbrev_body(self, max_len: int) -> str:
+        """
+        Get a cut off version of the body text. Must not be a binary Item.
+        Abbreviates YAML bodies like {"role": "user", "content": "Hello"} to "user Hello".
+        """
+        body_text = self.body_text()[:max_len]
+
+        # Just for aesthetics especially for titles of chat files.
+        if self.type in [ItemType.chat, ItemType.config] or self.format == Format.yaml:
+            try:
+                yaml_obj = list(new_yaml().load_all(self.body_text()))
+                if len(yaml_obj) > 0:
+                    body_text = " ".join(str(v) for v in yaml_obj[0].values())
+            except Exception as e:
+                log.warning("Error parsing YAML body: %s", e)
+
+        return body_text[:max_len]
 
     def title_slug(self, max_len: int = SLUG_MAX_LEN) -> str:
         """

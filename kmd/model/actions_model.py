@@ -142,6 +142,12 @@ class Action(ABC):
     be ONE_ARG.
     """
 
+    uses_selection: bool = True
+    """
+    The normal behavior is that an action can be run without arguments and it will
+    fall back to the current selection for its input arguments.
+    """
+
     output_type: ItemType = ItemType.doc
     """
     The type of the output item(s), which for now are all assumed to be of the same type.
@@ -347,7 +353,9 @@ class Action(ABC):
         if self.title_template:
             item.title = self.title_template.format(title=primary_input.title or UNTITLED)
 
-        item.update_history(Source(operation=operation, output_num=output_num))
+        item.update_history(
+            Source(operation=operation, output_num=output_num, cacheable=self.cacheable)
+        )
 
         return item
 
@@ -359,14 +367,15 @@ class Action(ABC):
 
         For now, this only applies to actions with a single output, if self.cacheable is True.
         """
+        can_preassemble = self.cacheable and self.expected_outputs == ONE_ARG
         log.info(
             "Preassemble check for `%s` is %s (%s with cacheable=%s)",
             self.name,
-            self.cacheable and self.expected_outputs == ONE_ARG,
+            can_preassemble,
             self.expected_outputs,
             self.cacheable,
         )
-        if self.cacheable and self.expected_outputs == ONE_ARG:
+        if can_preassemble:
             return ActionResult(
                 [self._preassemble_one(operation, items, output_num=0, type=self.output_type)]
             )

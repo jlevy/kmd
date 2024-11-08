@@ -1,3 +1,4 @@
+from kmd.config.logger import get_logger
 from kmd.exec.action_registry import kmd_action
 from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.form_input.prompt_input import prompt_simple_string
@@ -13,12 +14,16 @@ from kmd.model import (
     Item,
     ItemType,
     LLM,
+    ONE_OR_NO_ARGS,
     ParamList,
+    Precondition,
+    ShellResult,
 )
-from kmd.model.args_model import ONE_OR_NO_ARGS
-from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_chat
 from kmd.shell.shell_output import print_assistance, print_response, print_style, Style, Wrap
+
+
+log = get_logger(__name__)
 
 
 @kmd_action
@@ -26,9 +31,16 @@ class Chat(Action):
 
     name: str = "chat"
 
-    description: str = "Chat with an LLM."
+    description: str = (
+        """
+        Chat with an LLM. By default, starts a new chat session. If provided a chat
+        history item, will continue an existing chat.
+        """
+    )
 
     expected_args: ArgCount = ONE_OR_NO_ARGS
+
+    uses_selection: bool = False
 
     interactive_input: bool = True
 
@@ -44,7 +56,6 @@ class Chat(Action):
         if items:
             chat_history = ChatHistory.from_item(items[0])
             size_desc = f"{chat_history.size_summary()} in chat history"
-
         else:
             chat_history = ChatHistory()
             size_desc = "empty chat history"
@@ -90,4 +101,5 @@ class Chat(Action):
 
             return ActionResult([item])
         else:
-            return ActionResult([])
+            log.warning("Empty chat! Not saving anything.")
+            return ActionResult([], shell_result=ShellResult(show_selection=False))

@@ -35,7 +35,7 @@ from kmd.exec.resolve_args import (
     resolve_locator_arg,
     resolve_path_arg,
 )
-from kmd.file_formats.chat_format import tail_chat_history
+from kmd.file_formats.chat_format import ChatHistory, tail_chat_history
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_tools.file_sort_filter import collect_files, GroupByOption, parse_since, SortOption
 from kmd.form_input.prompt_input import prompt_simple_string
@@ -550,7 +550,7 @@ def cbcopy(path: Optional[str] = None, raw: bool = False) -> None:
     input_path = input_paths[0]
 
     format = detect_file_format(input_path)
-    if not format or not format.is_text():
+    if not format or not format.is_text:
         raise InvalidInput(f"Cannot copy non-text files to clipboard: {fmt_loc(input_path)}")
 
     if raw:
@@ -669,32 +669,59 @@ def file_info(
     input_paths = assemble_path_args(*paths)
     cprint()
     for input_path in input_paths:
+
         cprint(f"{fmt_loc(input_path)}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
 
+        # Format info.
         if format:
             detected_format = detect_file_format(input_path)
             format_str = detected_format.value if detected_format else "unknown"
             cprint(f"format: {format_str}", text_wrap=Wrap.INDENT_ONLY)
 
+        # Size info.
         size = Path(input_path).stat().st_size
         cprint(f"size: {_dual_format_size(size)}", text_wrap=Wrap.INDENT_ONLY)
 
+        # Raw frontmatter info.
         try:
             _frontmatter_str, offset = fmf_read_frontmatter_raw(input_path)
-            if offset:
-                cprint(f"frontmatter: {_dual_format_size(offset)}", text_wrap=Wrap.INDENT_ONLY)
-        except UnicodeDecodeError:
-            pass
 
-        if size_summary and detected_format and detected_format.supports_frontmatter():
+        except UnicodeDecodeError:
+            offset = None
+
+        # Structured frontmatter and content info.
+        if size_summary and detected_format and detected_format.supports_frontmatter:
             body, frontmatter = fmf_read(input_path)
 
+            if frontmatter:
+                if offset:
+                    cprint(
+                        f"frontmatter: {len(frontmatter)} keys, {_dual_format_size(offset)}",
+                        text_wrap=Wrap.INDENT_ONLY,
+                    )
+                item_type = frontmatter.get("type")
+                if item_type:
+                    cprint(f"item type: {item_type}", text_wrap=Wrap.INDENT_ONLY)
             if body:
+                # Show chat history info.
+                if item_type == ItemType.chat.value:
+                    try:
+                        chat_history = ChatHistory.from_yaml(body)
+                        size_summary_str = chat_history.size_summary()
+                        cprint(f"chat history: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
+                    except Exception:
+                        pass
+                # Parse text body.
                 parsed_body = parse_divs(body)
                 size_summary_str = parsed_body.size_summary(fast=not slow)
                 cprint(f"body: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
             else:
-                cprint("No text body", text_wrap=Wrap.INDENT_ONLY)
+                cprint("body: None", text_wrap=Wrap.INDENT_ONLY)
+                # Frontmatter info.
+
+        else:
+            if offset:
+                cprint(f"frontmatter: {_dual_format_size(offset)}", text_wrap=Wrap.INDENT_ONLY)
 
         cprint()
 

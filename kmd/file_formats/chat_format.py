@@ -131,14 +131,14 @@ class ChatMessage:
     @classmethod
     def from_dict(cls, message_dict: Dict[str, Any]) -> "ChatMessage":
         try:
-            role_str = message_dict.pop("role")
+            message_copy = message_dict.copy()
+            role_str = message_copy.pop("role")
             if isinstance(role_str, str):
                 role = ChatRole(role_str)
             else:
                 role = role_str
-            content = message_dict.pop("content")
-            metadata = message_dict
-
+            content = message_copy.pop("content")
+            metadata = message_copy
             return cls(role=role, content=content, metadata=metadata)
         except LookupError as e:
             raise ValueError("Could not parse chat message") from e
@@ -151,15 +151,19 @@ class ChatMessage:
         data.update(self.metadata)
         return data
 
-    @classmethod
-    def from_yaml(cls, yaml_string: str) -> "ChatMessage":
-        return cls.from_dict(from_yaml_string(yaml_string))
-
     def as_chat_completion(self) -> Dict[str, str]:
+        """
+        Convert to a format that can be used as a standard chat completion, with
+        the content field holding JSON-serialized data if it is structured.
+        """
         return {
             "role": self.role.value,
             "content": json.dumps(self.content) if isinstance(self.content, dict) else self.content,
         }
+
+    @classmethod
+    def from_yaml(cls, yaml_string: str) -> "ChatMessage":
+        return cls.from_dict(from_yaml_string(yaml_string))
 
     def to_yaml(self) -> str:
         return to_yaml_string(self.as_dict(), key_sort=_custom_key_sort)
@@ -183,6 +187,11 @@ class ChatHistory:
 
     def append(self, message: ChatMessage) -> None:
         self.messages.append(message)
+
+    @classmethod
+    def from_dicts(cls, message_dicts: List[Dict[str, Any]]) -> "ChatHistory":
+        messages = [ChatMessage.from_dict(message_dict) for message_dict in message_dicts]
+        return cls(messages=messages)
 
     @classmethod
     def from_yaml(cls, yaml_string: str) -> "ChatHistory":
@@ -339,6 +348,21 @@ def test_chat_history_serialization():
     yaml = test_long_message.to_yaml()
     assert len(yaml.splitlines()) > 10
     assert "content: |" in yaml
+
+
+def test_from_dict():
+    """Test basic dictionary parsing functionality."""
+    message_dict = {
+        "role": "assistant",
+        "content": "Hello world",
+        "temperature": 0.7,
+    }
+
+    message = ChatMessage.from_dict(message_dict)
+    assert message.role == ChatRole.assistant
+    assert message.content == "Hello world"
+    assert message.metadata == {"temperature": 0.7}
+    assert message.as_dict() == message_dict
 
 
 def test_structured_content():

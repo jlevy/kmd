@@ -10,7 +10,7 @@ custom_style = InquirerPyStyle(
         "answermark": colors.black_light,
         "answer": colors.input,
         "input": colors.input,
-        "question": colors.green_light,
+        "question": f"{colors.green_light} bold",
         "answered_question": colors.black_light,
         "instruction": colors.black_light,
         "long_instruction": colors.black_light,
@@ -34,7 +34,9 @@ def prompt_simple_string(prompt_text: str = "", prompt_symbol: str = f"{PROMPT_F
     """
     Simple prompt from the user for a simple string.
     """
-    prompt_message = f"{prompt_text.strip()} {prompt_symbol} "
+    prompt_text = prompt_text.strip()
+    sep = "\n" if len(prompt_text) > 15 else " "
+    prompt_message = f"{prompt_text}{sep}{prompt_symbol}"
     try:
         response = InputPrompt(message=prompt_message, style=custom_style).execute()
     except EOFError:

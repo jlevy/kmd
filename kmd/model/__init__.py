@@ -98,3 +98,4 @@ from kmd.model.params_model import (
 )
 from kmd.model.paths_model import StorePath
 from kmd.model.preconditions_model import Precondition, precondition
+from kmd.model.shell_model import ShellResult

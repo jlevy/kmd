@@ -88,7 +88,7 @@ class WsVectorIndex:
                 item_meta = drop_non_atomic(flatten_dict(item.metadata(datetime_as_str=True)))
 
                 document = Document(text=item.body, extra_info=item_meta)
-                document.id_ = not_none(item.doc_id())
+                document.id_ = not_none(item.external_id())
                 documents.append(document)
 
                 log.message("Adding doc: %s", document.id_)
@@ -102,7 +102,7 @@ class WsVectorIndex:
         self._setup()
 
         for item in items:
-            self.vector_index.delete_ref_doc(item.doc_id())
+            self.vector_index.delete_ref_doc(item.external_id())
 
     def retrieve(self, query: str):
         self._setup()

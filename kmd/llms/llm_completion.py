@@ -13,9 +13,7 @@ from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.llms.fuzzy_parsing import is_no_results
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message, MessageTemplate
-from kmd.util.format_utils import fmt_lines
 from kmd.util.log_calls import log_calls
-from kmd.util.strif import abbreviate_str
 
 
 log = get_logger(__name__)
@@ -29,14 +27,24 @@ class LLMCompletionResult:
 
 @log_calls(level="info")
 def llm_completion(
-    model: str | LLM,
+    model: LLM,
     messages: List[Dict[str, str]],
+    save_objects: bool = True,
     response_format: Optional[Union[dict, Type[BaseModel]]] = None,
     **kwargs,
 ) -> LLMCompletionResult:
     """
     Perform an LLM completion with LiteLLM.
     """
+
+    chat_history = ChatHistory.from_dicts(messages)
+    log.info("LLM completion from %s on %s", model, chat_history.size_summary())
+    # log.info(
+    #     "LLM completion input to model %s:\n%s",
+    #     model,
+    #     indent(chat_history.to_yaml(), prefix="    "),
+    # )
+
     model_name = model if isinstance(model, str) else model.value
 
     llm_output = cast(
@@ -63,6 +71,17 @@ def llm_completion(
         f"LLM completion from {model}: input {total_input_len} chars in {len(messages)} messages, output {len(content)} chars"
     )
 
+    if save_objects:
+        chat_history.messages.append(ChatMessage(role=ChatRole.assistant, content=content))
+        model_slug = slugify(model.value, separator="_")
+        log.save_object(
+            "LLM response",
+            f"llm.{model_slug}",
+            chat_history.to_yaml(),
+            level=LogLevel.message,
+            file_ext="yml",
+        )
+
     return LLMCompletionResult(message=message, content=content)
 
 
@@ -85,24 +104,6 @@ def llm_template_completion(
         template = MessageTemplate("{body}")
 
     user_message = template.format(body=input)
-    model_slug = slugify(model.value, separator="_")
-
-    log.info(
-        "LLM completion from %s on %s+%s chars system+user input…",
-        model,
-        len(system_message),
-        len(user_message),
-    )
-    log.info(
-        "LLM completion input to model %s:\n%s",
-        model,
-        fmt_lines(
-            [
-                abbreviate_str(f"System message: {str(system_message)}"),
-                abbreviate_str(f"User message: {user_message}"),
-            ]
-        ),
-    )
 
     if not previous_messages:
         previous_messages = []
@@ -121,20 +122,5 @@ def llm_template_completion(
     if check_no_results and is_no_results(result.content):
         log.message("No results for LLM transform, will ignore: %r", result.content)
         result.content = ""
-
-    if save_objects:
-        messages = ChatHistory(
-            [
-                ChatMessage(ChatRole.system, str(system_message)),
-                ChatMessage(ChatRole.user, user_message),
-                ChatMessage(ChatRole.assistant, result.content),
-            ]
-        )
-        log.save_object(
-            "LLM response",
-            f"llm.{model_slug}",
-            messages.to_yaml(),
-            level=LogLevel.message,
-        )
 
     return result

@@ -27,14 +27,9 @@ from kmd.config.text_styles import (
 )
 from kmd.errors import FileNotFound, SetupError
 from kmd.model.args_model import fmt_loc
-from kmd.model.file_formats_model import (
-    detect_mime_type,
-    is_full_html_page,
-    parse_file_ext,
-    read_partial_text,
-)
+from kmd.model.file_formats_model import file_format_info, is_full_html_page, read_partial_text
 from kmd.shell.shell_output import cprint, format_name_and_description, format_paragraphs, Wrap
-from kmd.util.url import as_file_url, is_url
+from kmd.util.url import as_file_url, is_file_url, is_url
 
 
 log = get_logger(__name__)
@@ -236,7 +231,7 @@ class ViewMode(Enum):
 def _detect_view_mode(file_or_url: str) -> ViewMode:
     # As a heuristic, we use the browser for URLs and for local files that are
     # clearly full HTML pages (since HTML fragments are fine on console).
-    if is_url(file_or_url):
+    if is_url(file_or_url) and not is_file_url(file_or_url):
         return ViewMode.browser
 
     path = Path(file_or_url)
@@ -245,17 +240,14 @@ def _detect_view_mode(file_or_url: str) -> ViewMode:
         if content and is_full_html_page(content):
             return ViewMode.browser
 
-        mime_type = detect_mime_type(path)
-        ext = parse_file_ext(path)
-        is_text = (ext and ext.is_text()) or mime_type and mime_type.startswith("text")
-
-        if is_text or (mime_type and mime_type.startswith("text")):
+        info = file_format_info(path)
+        log.message("File format: %s", info)
+        if info.is_text:
             return ViewMode.console
-
-        if mime_type and mime_type.startswith("image"):
+        if info.is_image:
             return ViewMode.terminal_image
-
-        return ViewMode.native
+        else:
+            return ViewMode.native
     elif path.is_dir():
         return ViewMode.native
     else:

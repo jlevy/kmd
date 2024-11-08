@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import cast, List, Optional, Tuple
 
 import magic
+from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidFilename
@@ -21,7 +22,10 @@ class Format(Enum):
     it is the format of the resource (url, media, etc.).
     """
 
+    # Formats with no body (content is in frontmatter).
     url = "url"
+
+    # Text formats.
     plaintext = "plaintext"
     markdown = "markdown"
     md_html = "md_html"
@@ -35,6 +39,8 @@ class Format(Enum):
     """Our own format for Kmd scripts."""
     json = "json"
     csv = "csv"
+
+    # Binary formats.
     pdf = "pdf"
     docx = "docx"
     jpeg = "jpeg"
@@ -42,9 +48,17 @@ class Format(Enum):
     mp3 = "mp3"
     m4a = "m4a"
     mp4 = "mp4"
-
     binary = "binary"
+    """Catch-all format for binary files that are unrecognized."""
 
+    @property
+    def has_body(self) -> bool:
+        """
+        Does this format have a body, or is it stored in metadata.
+        """
+        return self not in [self.url]
+
+    @property
     def is_text(self) -> bool:
         """
         Can this format be read into a string and processed by text tools?
@@ -56,11 +70,21 @@ class Format(Enum):
             self.html,
             self.yaml,
             self.diff,
-            self.json,
             self.python,
+            self.json,
             self.kmd_script,
+            self.csv,
         ]
 
+    @property
+    def is_image(self) -> bool:
+        return self in [self.jpeg, self.png]
+
+    @property
+    def is_binary(self) -> bool:
+        return self.has_body and not self.is_text
+
+    @property
     def supports_frontmatter(self) -> bool:
         """
         Is this format compatible with frontmatter format metadata?
@@ -120,7 +144,7 @@ class Format(Enum):
             FileExt.txt.value: Format.plaintext,
             FileExt.md.value: Format.markdown,
             FileExt.html.value: Format.html,
-            FileExt.yml.value: None,  # We will need to look at a YAML file to determine format.
+            FileExt.yml.value: Format.yaml,
             FileExt.diff.value: Format.diff,
             FileExt.json.value: Format.json,
             FileExt.csv.value: Format.csv,
@@ -144,6 +168,8 @@ class Format(Enum):
             "text/markdown": Format.markdown,
             "text/x-markdown": Format.markdown,
             "text/html": Format.html,
+            "text/diff": Format.diff,
+            "text/x-diff": Format.diff,
             "application/yaml": Format.yaml,
             "application/x-yaml": Format.yaml,
             "text/x-python": Format.python,
@@ -205,6 +231,7 @@ class FileExt(Enum):
     m4a = "m4a"
     mp4 = "mp4"
 
+    @property
     def is_text(self) -> bool:
         return self in [
             self.txt,
@@ -215,6 +242,10 @@ class FileExt(Enum):
             self.py,
             self.ksh,
         ]
+
+    @property
+    def is_image(self) -> bool:
+        return self in [self.jpg, self.png]
 
     @classmethod
     def for_format(cls, format: str | Format) -> Optional["FileExt"]:
@@ -342,7 +373,7 @@ def is_full_html_page(content: str) -> bool:
     """
     A full HTML document that is probably best rendered in a browser.
     """
-    return bool(re.search(r"<!DOCTYPE html>|<html>|<body>|<head>", content, re.IGNORECASE))
+    return bool(re.search(r"<!DOCTYPE html>|<html>|<body>|<head>", content[:2048], re.IGNORECASE))
 
 
 _yaml_header_pattern = re.compile(r"^---\n\w+:", re.MULTILINE)
@@ -383,7 +414,7 @@ def read_partial_text(
         return None
 
 
-def detect_mime_type(filename: str | Path) -> Optional[str]:
+def _detect_mime_type(filename: str | Path) -> Optional[str]:
     """
     Get the mime type of a file using libmagic heuristics plus more careful
     detection of HTML, Markdown, and multipart YAML.
@@ -405,23 +436,66 @@ def detect_mime_type(filename: str | Path) -> Optional[str]:
     return mime_type
 
 
-def detect_file_format(path: str | Path) -> Optional[Format]:
+@dataclass(frozen=True)
+class FileFormatInfo:
+    file_ext: Optional[FileExt]
+    """File extension, if recognized."""
+
+    format: Optional[Format]
+    """Format, if recognized."""
+
+    mime_type: Optional[str]
+    """Raw mime type, which may include more formats than the ones above."""
+
+    def is_text(self) -> bool:
+        return bool(
+            self.file_ext
+            and self.file_ext.is_text
+            or self.format
+            and self.format.is_text
+            or self.mime_type
+            and (
+                self.mime_type.startswith("text")
+                or self.mime_type.startswith("application/yaml")
+                or self.mime_type.startswith("application/json")
+            )
+        )
+
+    def is_image(self) -> bool:
+        return bool(
+            self.file_ext
+            and self.file_ext.is_image
+            or self.format
+            and self.format.is_image
+            or self.mime_type
+            and self.mime_type.startswith("image")
+        )
+
+    def best_guess(self) -> Optional[Format]:
+        choice = None
+        if self.file_ext:
+            choice = Format.guess_by_file_ext(self.file_ext)
+        if not choice:
+            choice = self.format
+        if not choice and self.mime_type:
+            choice = Format.from_mime_type(self.mime_type)
+        return choice
+
+
+def file_format_info(path: str | Path) -> FileFormatInfo:
     """
-    Get file format based on file extension and file content (libmagic and heuristics).
+    Full info on the file format path and content (file extension and file content).
     """
     path = Path(path)
+    mime_type = _detect_mime_type(path)
+    return FileFormatInfo(parse_file_ext(path), Format.from_mime_type(mime_type), mime_type)
 
-    # First, try by filename.
-    ext = parse_file_ext(path)
-    fmt = None
-    if ext:
-        fmt = Format.guess_by_file_ext(ext)
 
-    # Next, try by mime type.
-    if not fmt:
-        fmt = Format.from_mime_type(detect_mime_type(path))
-
-    return fmt
+def detect_file_format(path: str | Path) -> Optional[Format]:
+    """
+    Detect best guess at file format based on file extension and file content.
+    """
+    return file_format_info(path).best_guess()
 
 
 def detect_media_type(filename: str | Path) -> MediaType:
@@ -433,26 +507,22 @@ def detect_media_type(filename: str | Path) -> MediaType:
     return media_format
 
 
-def file_ext_from_content(path: Path) -> Optional[FileExt]:
-    """
-    Recognize known file extensions from the content.
-    """
-    fmt = detect_file_format(path)
-    return FileExt.for_format(fmt) if fmt else None
-
-
 def choose_file_ext(url_or_path: Url | Path) -> Optional[FileExt]:
     """
     Pick a suffix to reflect the type of the content. Recognizes known file
-    extensions, then tries libmagic, then gives up (returns None).
+    extensions, then tries libmagic, then gives up.
     """
 
+    def file_ext_for(path: Path) -> Optional[FileExt]:
+        fmt = detect_file_format(path)
+        return FileExt.for_format(fmt) if fmt else None
+
     if isinstance(url_or_path, Path):
-        ext = parse_file_ext(url_or_path) or file_ext_from_content(url_or_path)
+        ext = parse_file_ext(url_or_path) or file_ext_for(url_or_path)
     elif is_file_url(url_or_path):
         path = parse_file_url(url_or_path)
         if path:
-            ext = parse_file_ext(path) or file_ext_from_content(path)
+            ext = parse_file_ext(path) or file_ext_for(path)
     else:
         ext = parse_file_ext(url_or_path)
 

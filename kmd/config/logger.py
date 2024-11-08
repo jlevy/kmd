@@ -179,9 +179,13 @@ class CustomLogger:
         prefix_slug: Optional[str],
         obj: Any,
         level: LogLevel = LogLevel.info,
+        file_ext: str = "txt",
     ):
         prefix = prefix_slug + "." if prefix_slug else ""
-        filename = f"{prefix}{slugify(description, separator='_')}.{new_timestamped_uid()}.txt"
+        filename = (
+            f"{prefix}{slugify(description, separator='_')}."
+            f"{new_timestamped_uid()}.{file_ext.lstrip('.')}"
+        )
         path = log_objects_dir() / filename
         with atomic_output_file(path) as tmp_filename:
             if isinstance(obj, bytes):

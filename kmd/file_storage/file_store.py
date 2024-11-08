@@ -231,7 +231,7 @@ class FileStore:
                     if old_item.item_id() == item_id:
                         log.message(
                             "Item with the same id already saved (disk check):\n%s",
-                            fmt_lines([default_path, item_id]),
+                            fmt_lines([fmt_loc(default_path), item_id]),
                         )
                         store_path = default_path
                         self.id_map[item_id] = default_path
@@ -239,7 +239,7 @@ class FileStore:
             if store_path and self.exists(store_path):
                 log.message(
                     "Item with the same id already saved (disk check):\n%s",
-                    fmt_lines([store_path, item_id]),
+                    fmt_lines([fmt_loc(store_path), item_id]),
                 )
                 return store_path
         return None
@@ -374,7 +374,7 @@ class FileStore:
         """
         _name, item_type, format, file_ext = parse_item_filename(store_path)
 
-        if file_ext.is_text() or (format and format.supports_frontmatter()):
+        if file_ext.is_text or (format and format.supports_frontmatter):
             # This is a known text format or a YAML file, so we can read the whole thing.
             return read_item(self.base_dir / store_path, self.base_dir)
         else:
@@ -436,7 +436,7 @@ class FileStore:
 
             if filename_item_type:
                 as_type = filename_item_type
-            if format and format.supports_frontmatter():
+            if format and format.supports_frontmatter:
                 log.message("Importing text file: %s", fmt_loc(path))
                 # This will read the file with or without frontmatter.
                 # We are importing so we want to drop the external path so we save the body.

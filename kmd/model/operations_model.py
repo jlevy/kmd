@@ -142,19 +142,30 @@ class Source:
     """
 
     operation: Operation
+    """The operation that produced the output."""
+
     output_num: int
+    """If the action produces multiple outputs, this is the index of the output that was used."""
+
+    cacheable: bool = True
+    """
+    If False, the output is not cacheable, i.e. it relied on something external, like
+    input from a user.
+    """
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "Source":
         return cls(
             operation=Operation.from_dict(d["operation"]),
             output_num=d["output_num"],
+            cacheable=d.get("cacheable", True),
         )
 
     def as_dict(self):
         return {
             "operation": self.operation.as_dict(),
             "output_num": self.output_num,
+            "cacheable": self.cacheable,
         }
 
     def as_str(self):

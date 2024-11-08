@@ -47,7 +47,7 @@ def normalize_text_file(
     """
 
     format = format or detect_file_format(path)
-    if not format or not format.is_text():
+    if not format or not format.is_text:
         raise InvalidInput(f"Cannot format non-text files: {fmt_loc(path)}")
 
     content, metadata = fmf_read(path)

@@ -76,6 +76,9 @@ class SourceCode:
     file_formats_src: str
     """Documentation and source for common file formats."""
 
+    example_action_src: str
+    """Source code for an example action."""
+
     def __str__(self) -> str:
         sizes = ", ".join(
             f"{k} {len(v.splitlines())} lines ({lenb(v)})" for k, v in self.__dict__.items()
@@ -97,6 +100,9 @@ def load_source_code() -> SourceCode:
             kmd_base_path / "text_docs" / "text_doc.py",
         ),
         file_formats_src=read_source_code(kmd_base_path / "file_formats"),
+        example_action_src=read_source_code(
+            kmd_base_path / "action_defs" / "base_actions" / "strip_html.py"
+        ),
     )
     log.info("Loaded sources: %s", str(code))
     return code

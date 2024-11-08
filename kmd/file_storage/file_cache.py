@@ -27,11 +27,12 @@ class FileMtimeCache(Generic[T]):
     A simple in-memory cache that stores loaded values from files.
     """
 
-    def __init__(self, max_size, log_freq: int = 500):
+    def __init__(self, max_size, name: str, log_freq: int = 500):
         self.cache: LRUCache[str, Tuple[str, T]] = LRUCache(maxsize=max_size)
         self.lock = threading.Lock()
         self.stats = CacheStats()
         self.prev_stats = CacheStats()  # Initialize prev_stats with CacheStats
+        self.name = name
         self.log_freq = log_freq
 
     def _cache_key(self, path: Path) -> str:
@@ -89,7 +90,7 @@ class FileMtimeCache(Generic[T]):
         """
         if self._stats_changed(self.log_freq):
             log.info(
-                f"{self.__class__.__name__} stats: hits: {self.stats.hits}, misses: {self.stats.misses}, "
+                f"{self.name} file cache stats: hits: {self.stats.hits}, misses: {self.stats.misses}, "
                 f"updates: {self.stats.updates}, deletes: {self.stats.deletes}"
             )
             self.prev_stats = copy.deepcopy(self.stats)

@@ -189,6 +189,10 @@ TASK_STACK_HEADER = "Task stack:"
 from rich.highlighter import _combine_regex, RegexHighlighter
 from rich.style import Style
 
+URL_CHARS = r"-0-9a-zA-Z$_+!`(),.?/;:&=%#~"
+
+ITEM_ID_CHARS = URL_CHARS + r"@\[\]"
+
 
 class KmdHighlighter(RegexHighlighter):
     """
@@ -229,6 +233,7 @@ class KmdHighlighter(RegexHighlighter):
             r"\b(?P<duration>(?<!\w)\-?[0-9]+\.?[0-9]*(ms|s)\b(?!\-\w))\b",
         ),
         _combine_regex(
+            rf"\b(?P<item_id_prefix>id:\w+:[{ITEM_ID_CHARS}]+)",
             r"(?P<tag_start><)(?P<tag_name>[-\w.:|]*)(?P<tag_contents>[\w\W]*)(?P<tag_end>>)",
             r'(?P<attrib_name>[\w_-]{1,50})=(?P<attrib_value>"?[\w_]+"?)?',
             r"(?P<brace>[][{}()])",
@@ -245,7 +250,7 @@ class KmdHighlighter(RegexHighlighter):
             r"(?P<path>\B(/[-\w._+]+)*\/)(?P<filename>[-\w._+]*)?",
             # r"(?P<relpath>\B([\w._+][-\w._+]*)*(/\w[-\w._+]*)+)*\.(html|htm|pdf|yaml|yml|md|txt)",
             r"(?<![\\\w])(?P<str>b?'''.*?(?<!\\)'''|b?'.*?(?<!\\)'|b?\"\"\".*?(?<!\\)\"\"\"|b?\".*?(?<!\\)\")",
-            r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)",
+            rf"(?P<url>(file|https|http|ws|wss)://[{URL_CHARS}]*)",
             r"(?P<code_span>`[^`\n]+`)",
         ),
     ]
@@ -276,6 +281,7 @@ RICH_STYLES = {
     "kmd.attrib_value": Style(color=COLOR_VALUE, italic=False),
     # "kmd.number": Style(color=COLOR_KEY, italic=False),
     "kmd.duration": Style(color=COLOR_KEY, italic=False),
+    "kmd.item_id_prefix": Style(color=COLOR_HINT, italic=False),
     "kmd.part_count": Style(italic=True),
     "kmd.time_ago": Style(color=COLOR_KEY, italic=False),
     "kmd.file_size": Style(color=COLOR_VALUE, italic=False),

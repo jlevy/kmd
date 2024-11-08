@@ -76,10 +76,11 @@ def run_action(
     action = action.with_param_values(ws_params, strict=False, overwrite=False)
 
     # Collect args from the provided args or otherwise the current selection.
-    args, from_selection = assemble_action_args(*provided_args)
+    args, from_selection = assemble_action_args(*provided_args, use_selection=action.uses_selection)
 
     # As a special case for convenience, if the action expects no args, ignore any pre-selected inputs.
     if action.expected_args == NO_ARGS and from_selection:
+        log.message("Ignoring selection since action `%s` expects no args.", action_name)
         args.clear()
 
     if args:
@@ -179,7 +180,7 @@ def run_action(
                 this_op = replace(operation, arguments=[operation.arguments[i]])
             else:
                 this_op = operation
-            item.update_history(Source(operation=this_op, output_num=i))
+            item.update_history(Source(operation=this_op, output_num=i, cacheable=action.cacheable))
 
         # Override the state if requested (this handles marking items as transient).
         if override_state:
