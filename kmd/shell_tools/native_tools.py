@@ -20,7 +20,6 @@ from kmd.config.text_styles import (
     BAT_STYLE,
     BAT_THEME,
     COLOR_ERROR,
-    COLOR_HINT,
     EMOJI_FALSE,
     EMOJI_TRUE,
     EMOJI_WARN,
@@ -29,6 +28,8 @@ from kmd.errors import FileNotFound, SetupError
 from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import file_format_info, is_full_html_page, read_partial_text
 from kmd.shell.shell_output import cprint, format_name_and_description, format_paragraphs, Wrap
+from kmd.shell_tools.terminal_images import terminal_show_image
+from kmd.util.log_calls import log_calls
 from kmd.util.url import as_file_url, is_file_url, is_url
 
 
@@ -140,86 +141,6 @@ def _terminal_supports_sixel() -> bool:
     return term_supports and term_program_supports
 
 
-@cached({})
-def _terminal_is_kitty():
-    return os.environ.get("TERM") == "xterm-kitty"
-
-
-@cached({})
-def _terminal_supports_osc8() -> bool:
-    """
-    Attempt to detect if the terminal supports OSC 8 hyperlinks.
-    """
-    term_program = os.environ.get("TERM_PROGRAM", "")
-    term = os.environ.get("TERM", "")
-
-    if term_program in ["iTerm.app", "WezTerm", "Hyper"]:
-        return True
-    if "kitty" in term or "xterm" in term:
-        return True
-    if "vscode" in term_program.lower():
-        return True
-
-    return False
-
-
-def _terminal_show_image_sixel(image_path: str | Path, width: int = 800, height: int = 480) -> None:
-    if shutil.which("magick") is None:
-        raise SetupError("ImageMagick `magick` not found in path; check it is installed?")
-    if not _terminal_supports_sixel():
-        raise SetupError("Terminal does not support Sixel graphics ({os.environ.get('TERM'})")
-
-    try:
-        cmd = ["magick", str(image_path), "-geometry", f"{width}x{height}", "sixel:-"]
-        subprocess.run(cmd, check=True)
-    except subprocess.CalledProcessError as e:
-        raise SetupError(f"Failed to display image: {e}")
-
-
-def _terminal_show_image_kitty(filename: str | Path):
-    filename = str(filename)
-    try:
-        subprocess.run(["kitty", "+kitten", "icat", filename])
-    except subprocess.CalledProcessError as e:
-        raise SetupError(f"Failed to display image with kitty: {e}")
-
-
-def terminal_show_image(filename: str | Path):
-    """
-    Try to display an image in the terminal, using kitty or sixel.
-    Raise `SetupError` if not supported.
-    """
-    if _terminal_is_kitty():
-        _terminal_show_image_kitty(filename)
-    elif _terminal_supports_sixel():
-        _terminal_show_image_sixel(filename)
-    else:
-        raise SetupError("Image display in this terminal doesn't seem to be supported")
-
-
-def terminal_show_image_graceful(filename: str | Path):
-    try:
-        terminal_show_image(filename)
-    except SetupError:
-        cprint(f"[Image: {filename}]", color=COLOR_HINT)
-
-
-def terminal_link(url: str, text: str, id: str = "") -> str:
-    """
-    Generate clickable text for terminal emulators supporting OSC 8.
-    Id is optional.
-    """
-    if _terminal_supports_osc8():
-        escape_start = f"\x1b]8;id={id};" if id else "\x1b]8;;"  # OSC 8 ; id=ID ; or OSC 8 ; ;
-        escape_end = "\x1b]8;;\x1b\\"  # OSC 8 ; ; \
-
-        # Construct the clickable text
-        clickable_text = f"{escape_start}{url}{escape_end}{text}{escape_end}"
-        return clickable_text
-    else:
-        return text
-
-
 class ViewMode(Enum):
     auto = "auto"
     console = "console"
@@ -228,6 +149,7 @@ class ViewMode(Enum):
     terminal_image = "terminal_image"
 
 
+@log_calls(level="info")
 def _detect_view_mode(file_or_url: str) -> ViewMode:
     # As a heuristic, we use the browser for URLs and for local files that are
     # clearly full HTML pages (since HTML fragments are fine on console).
@@ -246,6 +168,7 @@ def _detect_view_mode(file_or_url: str) -> ViewMode:
         if info.is_text:
             return ViewMode.console
         if info.is_image:
+            log.info("Detected image file, will display in terminal")
             return ViewMode.terminal_image
         else:
             return ViewMode.native
@@ -284,7 +207,8 @@ def view_file_native(
     elif view_mode == ViewMode.terminal_image:
         try:
             terminal_show_image(path)
-        except SetupError:
+        except SetupError as e:
+            log.info("%s: %s", e, path)
             native_open(path)
     elif view_mode == ViewMode.native:
         native_open(file_or_url)

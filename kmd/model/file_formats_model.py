@@ -447,6 +447,7 @@ class FileFormatInfo:
     mime_type: Optional[str]
     """Raw mime type, which may include more formats than the ones above."""
 
+    @property
     def is_text(self) -> bool:
         return bool(
             self.file_ext
@@ -461,6 +462,7 @@ class FileFormatInfo:
             )
         )
 
+    @property
     def is_image(self) -> bool:
         return bool(
             self.file_ext

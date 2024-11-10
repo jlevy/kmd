@@ -5,14 +5,7 @@ from kmd.errors import ApiResultError
 from kmd.exec.action_registry import kmd_action
 from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.help.assistant import assist_preamble, general_assistance
-from kmd.model import (
-    ArgCount,
-    Format,
-    ItemType,
-    Message,
-    Precondition,
-    TitleTemplate,
-)
+from kmd.model import ArgCount, Format, ItemType, Message, Precondition, TitleTemplate
 from kmd.model.actions_model import ONE_ARG, PerItemAction
 from kmd.model.items_model import Item
 from kmd.model.language_models import LLM
