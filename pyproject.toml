@@ -65,6 +65,7 @@ patch-ng = "^1.18.1"
 inquirerpy = "^0.3.4"
 colour = "^0.1.5"
 scikit-image = "^0.24.0"
+orjson = "3.10.10"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"
