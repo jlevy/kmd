@@ -69,15 +69,14 @@ from kmd.shell.shell_output import (
 from kmd.shell.shell_results import shell_print_selection_history
 from kmd.shell_tools.git_tools import add_to_git_ignore
 from kmd.shell_tools.native_tools import (
-    CmdlineTool,
     edit_files,
     native_trash,
     tail_file,
     terminal_show_image,
-    tool_check,
     view_file_native,
     ViewMode,
 )
+from kmd.shell_tools.tool_deps import Tool, tool_check
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.text_docs.unified_diffs import unified_diff_items
 from kmd.text_formatting.doc_formatting import normalize_text_file
@@ -242,6 +241,7 @@ def check_tools(warn_only: bool = False) -> None:
         cprint()
         cprint(tool_check().formatted())
         cprint()
+        tool_check().warn_if_missing()
 
 
 @kmd_command
@@ -1395,7 +1395,7 @@ def search(
     :param sort: How to sort results. Can be `path` or `modified` or `created` (as with `rg`).
     :param ignore_case: Ignore case when searching.
     """
-    tool_check().require(CmdlineTool.ripgrep)
+    tool_check().require(Tool.ripgrep)
     from ripgrepy import RipGrepNotFound, Ripgrepy
 
     resolved_paths = assemble_path_args(*paths)

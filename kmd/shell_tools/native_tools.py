@@ -4,96 +4,30 @@ Platform-specific tools and utilities.
 
 import os
 import shlex
-import shutil
 import subprocess
 import webbrowser
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple
 
-from cachetools import cached, TTLCache
-from pydantic.dataclasses import dataclass
-from xonsh.platform import ON_DARWIN, ON_LINUX, ON_WINDOWS
 
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import (
     BAT_STYLE,
     BAT_THEME,
     COLOR_ERROR,
-    EMOJI_FALSE,
-    EMOJI_TRUE,
-    EMOJI_WARN,
 )
 from kmd.errors import FileNotFound, SetupError
 from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import file_format_info, is_full_html_page, read_partial_text
-from kmd.shell.shell_output import cprint, format_name_and_description, format_paragraphs, Wrap
+from kmd.shell.shell_output import cprint, Wrap
 from kmd.shell_tools.terminal_images import terminal_show_image
+from kmd.shell_tools.tool_deps import Tool, OSPlatform, detect_platform, tool_check
 from kmd.util.log_calls import log_calls
 from kmd.util.url import as_file_url, is_file_url, is_url
 
 
 log = get_logger(__name__)
-
-
-class CmdlineTool(Enum):
-    """
-    External tools that we like to use.
-    """
-
-    less = ("less",)
-    tail = ("tail",)
-    pygmentize = ("pygmentize",)
-    ripgrep = ("rg",)
-    bat = ("batcat", "bat")  # Try batcat first (for Debian/Ubuntu), then bat.
-    ffmpeg = ("ffmpeg",)
-
-
-@dataclass(frozen=True)
-class CmdlineTools:
-    tools: dict[CmdlineTool, Optional[str]]
-
-    def has(self, *tools: CmdlineTool) -> bool:
-        return all(self.tools[tool] is not None for tool in tools)
-
-    def require(self, *tools: CmdlineTool):
-        for tool in tools:
-            if not self.has(tool):
-                raise SetupError(f"`{tool.value}` ({tool.name}) needed but not found in path")
-
-    def warn_if_missing(self, *tools: CmdlineTool):
-        if not tools:
-            tools = tuple(CmdlineTool)
-        for tool in tools:
-            if not self.has(tool):
-                cprint(
-                    "%s %s (%s) was not found in path; it is recommended to install it for better functionality.",
-                    EMOJI_WARN,
-                    tool.name,
-                    " or ".join(f"`{name}`" for name in tool.value),
-                )
-
-    def formatted(self):
-        texts = []
-        for tool, path in self.tools.items():
-            if path:
-                doc = f"{EMOJI_TRUE} Found: `{path}`"
-            else:
-                doc = f"{EMOJI_FALSE} Not found! Consider installing this tool."
-            texts.append(format_name_and_description(tool.name, doc))
-
-        return format_paragraphs(*texts)
-
-
-_tools_cache = TTLCache(maxsize=1, ttl=5.0)
-
-
-@cached(_tools_cache)
-def tool_check() -> CmdlineTools:
-    tools: dict[CmdlineTool, Optional[str]] = {}
-    for tool in CmdlineTool:
-        tools[tool] = next(filter(None, (shutil.which(name) for name in tool.value)), None)
-    return CmdlineTools(tools)
 
 
 def file_size_check(
@@ -116,29 +50,15 @@ def file_size_check(
 def native_open(filename: str | Path):
     filename = str(filename)
     log.message("Opening file: %s", filename)
-    if ON_DARWIN:
+    platform = detect_platform()
+    if platform == OSPlatform.macos:
         subprocess.run(["open", filename])
-    elif ON_LINUX:
+    elif platform == OSPlatform.linux:
         subprocess.run(["xdg-open", filename])
-    elif ON_WINDOWS:
+    elif platform == OSPlatform.windows:
         subprocess.run(["start", shlex.quote(filename)], shell=True)
     else:
         raise NotImplementedError("Unsupported platform")
-
-
-@cached({})
-def _terminal_supports_sixel() -> bool:
-    # This can't be determined easily, so we check for some common terminals.
-    term = os.environ.get("TERM", "")
-    term_program = os.environ.get("TERM_PROGRAM", "")
-    supported_terms = ["xterm", "xterm-256color", "screen.xterm-256color", "kitty", "iTerm.app"]
-
-    term_supports = any(supported_term in term for supported_term in supported_terms)
-
-    # TODO: Not working currently. Get hyper-k Hyper plugin to fix this?
-    term_program_supports = term_program not in ["Hyper"]
-
-    return term_supports and term_program_supports
 
 
 class ViewMode(Enum):
@@ -222,9 +142,9 @@ def tail_file(filename: str | Path):
     quoted_filename = shlex.quote(filename)
 
     # Use bat if available.
-    tool_check().require(CmdlineTool.less)
-    tool_check().warn_if_missing(CmdlineTool.bat, CmdlineTool.tail)
-    if tool_check().has(CmdlineTool.bat, CmdlineTool.tail, CmdlineTool.less):
+    tool_check().require(Tool.less)
+    tool_check().warn_if_missing(Tool.bat, Tool.tail)
+    if tool_check().has(Tool.bat, Tool.tail, Tool.less):
         # Note bat doesn't have efficient seek functionality like `less +G` so we use less and bat.
         command = f"tail -10000 {quoted_filename} | bat --color=always --paging=never --style=plain --theme={BAT_THEME} -l log | less -R +G"
     else:
@@ -243,12 +163,12 @@ def view_file_console(filename: str | Path, use_pager: bool = True):
 
     # TODO: Visualize YAML frontmatter with different syntax/style than Markdown content.
 
-    tool_check().require(CmdlineTool.less)
-    if tool_check().has(CmdlineTool.bat):
+    tool_check().require(Tool.less)
+    if tool_check().has(Tool.bat):
         pager_str = "--pager=always --pager=less " if use_pager else ""
         command = f"bat {pager_str}--color=always --style={BAT_STYLE} --theme={BAT_THEME} {quoted_filename}"
     else:
-        tool_check().require(CmdlineTool.pygmentize)
+        tool_check().require(Tool.pygmentize)
         command = f"pygmentize -g {quoted_filename}"
         if use_pager:
             command = f"{command} | less -R"

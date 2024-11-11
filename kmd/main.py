@@ -18,13 +18,13 @@ from xonsh.main import events, postmain, premain
 from xonsh.shell import Shell
 from xonsh.xontribs import xontribs_load
 
+# Keeping initial imports/deps minimal.
 from kmd.config.lazy_imports import import_start_time
 from kmd.config.logger import get_console, get_logger
 from kmd.config.settings import APP_NAME
 from kmd.config.setup import setup
 from kmd.config.text_styles import PROMPT_INPUT_COLOR, SPINNER
-from kmd.help.assistant import shell_context_assistance
-from kmd.model.commands_model import is_assist_request_str
+from kmd.shell.shell_syntax import is_assist_request_str
 from kmd.shell.shell_output import cprint
 from kmd.version import get_version
 
@@ -99,6 +99,8 @@ class CustomInteractiveShell(PromptToolkitShell):  # PromptToolkitShell or Readl
     """
 
     def default(self, line, raw_line=None):
+        from kmd.help.assistant import shell_context_assistance
+
         assist_query = is_assist_request_str(line)
         if assist_query:
             try:
@@ -114,6 +116,8 @@ class CustomInteractiveShell(PromptToolkitShell):  # PromptToolkitShell or Readl
 
 @events.on_command_not_found
 def not_found(cmd: List[str]):
+    from kmd.help.assistant import shell_context_assistance
+
     # Don't call assistant on one-word typos. It's annoying.
     if len(cmd) >= 2:
         cprint("Command not found. Getting assistance…")

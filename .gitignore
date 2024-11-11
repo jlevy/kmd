@@ -4,6 +4,7 @@
 trash/
 stash/
 tmp/
+*.bak
 
 # kmd data directories.
 *.kb/

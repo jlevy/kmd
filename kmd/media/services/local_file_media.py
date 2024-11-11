@@ -11,7 +11,7 @@ from kmd.file_storage.store_filenames import parse_item_filename
 from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import FileExt
 from kmd.model.media_model import MediaMetadata, MediaService, MediaType, MediaUrlType
-from kmd.shell_tools.native_tools import CmdlineTool, tool_check
+from kmd.shell_tools.tool_deps import Tool, tool_check
 from kmd.util.strif import copyfile_atomic
 from kmd.util.url import Url
 
@@ -19,7 +19,7 @@ log = get_logger(__name__)
 
 
 def _run_ffmpeg(cmdline: List[str]) -> None:
-    tool_check().require(CmdlineTool.ffmpeg)
+    tool_check().require(Tool.ffmpeg)
     log.message("Running: %s", " ".join([shlex.quote(arg) for arg in cmdline]))
     subprocess.run(
         cmdline,

@@ -310,7 +310,8 @@ These are needed to run:
 - Poetry
 
 - `ffmpeg` (for video conversions), `ripgrep` (for search), `bat` (for prettier file
-  display), `libmagic`
+  display), `imagemagick` (for image display in modern terminals), `libmagic` (for file type
+  detection)
 
 Cheat sheets to get these set up, if you're not already:
 
@@ -319,7 +320,7 @@ For macOS, I recommend using brew:
 ```shell
 # Install pyenv, pipx, and other tools:
 brew update
-brew install pyenv pipx ffmpeg ripgrep bat libmagic
+brew install pyenv pipx ffmpeg ripgrep bat imagemagick libmagic
 ```
 
 For Ubuntu:
@@ -327,7 +328,7 @@ For Ubuntu:
 ```shell
 # Install pyenv and other tools:
 curl https://pyenv.run | bash
-apt install pipx ffmpeg ripgrep bat libmagic1
+apt install pipx ffmpeg ripgrep bat imagemagick libmagic
 ```
 
 Now install a recent Python and Poetry:
@@ -557,7 +558,7 @@ transcribe_annotate_summarize https://www.youtube.com/watch?v=_8djNYprRDI
 
 # A few more possibilities...
 
-# Note it's fine to rerun commands on the same argumetns and whenever
+# Note it's fine to rerun commands on the same arguments and whenever
 # possible intermediate results are cached. The philosophy is actions
 # should be cached and idempotent when possible (a bit like a makefile).
 

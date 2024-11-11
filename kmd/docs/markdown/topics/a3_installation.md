@@ -20,7 +20,8 @@ These are needed to run:
 - Poetry
 
 - `ffmpeg` (for video conversions), `ripgrep` (for search), `bat` (for prettier file
-  display), `libmagic`
+  display), `imagemagick` (for image display in modern terminals), `libmagic` (for file type
+  detection)
 
 Cheat sheets to get these set up, if you're not already:
 
@@ -29,7 +30,7 @@ For macOS, I recommend using brew:
 ```shell
 # Install pyenv, pipx, and other tools:
 brew update
-brew install pyenv pipx ffmpeg ripgrep bat libmagic
+brew install pyenv pipx ffmpeg ripgrep bat imagemagick libmagic
 ```
 
 For Ubuntu:
@@ -37,7 +38,7 @@ For Ubuntu:
 ```shell
 # Install pyenv and other tools:
 curl https://pyenv.run | bash
-apt install pipx ffmpeg ripgrep bat libmagic1
+apt install pipx ffmpeg ripgrep bat imagemagick libmagic
 ```
 
 Now install a recent Python and Poetry:

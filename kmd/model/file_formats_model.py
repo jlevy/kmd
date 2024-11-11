@@ -4,12 +4,12 @@ from enum import Enum
 from pathlib import Path
 from typing import cast, List, Optional, Tuple
 
-import magic
 from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidFilename
 from kmd.model.media_model import MediaType
+from kmd.shell_tools.tool_deps import Tool, tool_check
 from kmd.util.url import is_file_url, parse_file_url, Url
 
 log = get_logger(__name__)
@@ -419,6 +419,9 @@ def _detect_mime_type(filename: str | Path) -> Optional[str]:
     Get the mime type of a file using libmagic heuristics plus more careful
     detection of HTML, Markdown, and multipart YAML.
     """
+    tool_check().require(Tool.libmagic)
+    import magic
+
     mime = magic.Magic(mime=True)
     mime_type = mime.from_file(str(filename))
     path = Path(filename)
