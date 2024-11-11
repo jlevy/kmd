@@ -13,7 +13,8 @@ APP_NAME = "kmd"
 
 DOT_DIR = ".kmd"
 
-SANDBOX_KB_PATH = "~/.local/kmd/sandbox.kb"
+SANDBOX_NAME = "sandbox"
+SANDBOX_KB_PATH = f"~/.local/kmd/{SANDBOX_NAME}.kb"
 
 GLOBAL_CACHE_NAME = "kmd_cache"
 MEDIA_CACHE_NAME = "media"

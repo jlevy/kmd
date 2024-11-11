@@ -169,7 +169,7 @@ def _kmd_xonsh_prompt():
     # Could do this faster with current_workspace_info() but actually it's nicer to load
     # and log info about the whole workspace after a cd so we do that.
     ws = current_workspace()
-    ws_name = ws.base_dir.name
+    ws_name = ws.name
     is_sandbox = ws.is_sandbox
 
     # Workspace name, colored differently if sandbox.

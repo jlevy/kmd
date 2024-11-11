@@ -25,7 +25,8 @@ from kmd.util.format_utils import fmt_lines
 from kmd.util.task_stack import task_stack
 from kmd.util.type_utils import not_none
 from kmd.workspaces.selections import Selection
-from kmd.workspaces.workspaces import current_workspace, import_and_load
+from kmd.workspaces.workspace_importing import import_and_load
+from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
 
@@ -94,7 +95,7 @@ def run_action(
 
     # Ensure input items are already saved in the workspace and load the corresponding items.
     # This also imports any URLs.
-    input_items = [import_and_load(arg) for arg in args]
+    input_items = [import_and_load(ws, arg) for arg in args]
 
     # Now make a note of the the operation we will perform.
     # If the inputs are paths, record the input paths with hashes.

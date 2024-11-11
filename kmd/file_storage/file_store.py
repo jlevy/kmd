@@ -36,6 +36,7 @@ from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import is_url, Url
 from kmd.workspaces.param_state import ParamState
 from kmd.workspaces.selections import SelectionHistory
+from kmd.workspaces.workspace_names import workspace_name
 
 log = get_logger(__name__)
 
@@ -65,7 +66,7 @@ class FileStore:
 
     def __init__(self, base_dir: Path, is_sandbox: bool):
         self.base_dir = base_dir.resolve()
-        self.name = self.base_dir.name
+        self.name = workspace_name(self.base_dir)
         self.is_sandbox = is_sandbox
         self._lock = threading.RLock()
         self.reload()

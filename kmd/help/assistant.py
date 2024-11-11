@@ -32,7 +32,7 @@ from kmd.util.format_utils import fmt_paras
 from kmd.util.log_calls import log_calls
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none
-from kmd.workspaces.workspaces import current_workspace, current_workspace_info, get_param_value
+from kmd.workspaces.workspaces import current_workspace, workspace_param_value
 
 
 log = get_logger(__name__)
@@ -70,8 +70,9 @@ def assist_current_state() -> Message:
         select,
     )  # Avoid circular imports.
 
-    ws_dirs, is_sandbox = current_workspace_info()
-    ws_base_dir = ws_dirs.base_dir if ws_dirs else None
+    ws = current_workspace()
+    ws_base_dir = ws.base_dir
+    is_sandbox = ws.is_sandbox
 
     if ws_base_dir and not is_sandbox:
         ws_info = f"Based on the current directory, the current workspace is: {ws_base_dir.name} at {fmt_loc(ws_base_dir)}"
@@ -181,7 +182,7 @@ def shell_context_assistance(
 
     if not model:
         assistant_model = "assistant_model_fast" if fast else "assistant_model"
-        model = not_none(get_param_value(assistant_model, type=LLM))
+        model = not_none(workspace_param_value(assistant_model, type=LLM))
 
     if not silent:
         cprint(f"Getting assistance (model {model})…")

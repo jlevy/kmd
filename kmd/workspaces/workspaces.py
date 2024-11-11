@@ -1,23 +1,20 @@
 import os
-import re
 from pathlib import Path
 from typing import Optional, Tuple, Type, TypeVar
 
 from cachetools import cached
 
 from kmd.config.logger import get_logger, reset_logging
+from kmd.config.settings import SANDBOX_NAME
 from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.media.media_tools import reset_media_cache_dir
-from kmd.model.args_model import CommandArg, fmt_loc
-from kmd.model.canon_url import canonicalize_url
-from kmd.model.file_formats_model import Format
-from kmd.model.items_model import Item, ItemType
+from kmd.model.args_model import fmt_loc
 from kmd.model.params_model import ParamValues, USER_SETTABLE_PARAMS
-from kmd.model.paths_model import StorePath
-from kmd.util.url import is_url, Url
+from kmd.util.log_calls import log_calls
 from kmd.web_content.file_cache_tools import reset_content_cache_dir
+from kmd.workspaces.workspace_registry import get_workspace_registry
 
 log = get_logger(__name__)
 
@@ -26,11 +23,17 @@ log = get_logger(__name__)
 KB_SUFFIX = ".kb"
 
 
-def check_strict_workspace_name(ws_name: str):
-    if not re.match(r"^[\w-]+$", ws_name):
-        raise InvalidInput(
-            f"Use an alphanumeric name (no spaces or special characters) for the workspace name: `{ws_name}`"
-        )
+def workspace_name(path_or_name: str | Path) -> str:
+    """
+    Get the workspace name from a path or name.
+    """
+    path_or_name = str(path_or_name).strip().rstrip("/")
+    if not path_or_name:
+        raise InvalidInput("Workspace name is required.")
+
+    path = Path(path_or_name)
+    name = path.name.rstrip("/").removesuffix(KB_SUFFIX)
+    return name
 
 
 def is_workspace_dir(path: Path) -> bool:
@@ -38,10 +41,24 @@ def is_workspace_dir(path: Path) -> bool:
     return (path.is_dir() and str(path).endswith(KB_SUFFIX)) or dirs.is_initialized()
 
 
-def resolve_workspace_name(name: str | Path) -> Tuple[str, Path]:
+def enclosing_workspace_dir(path: Path = Path(".")) -> Optional[Path]:
+    """
+    Get the workspace directory enclosing the given path (itself or a parent or None).
+    """
+    path = path.absolute()
+    while path != Path("/"):
+        if is_workspace_dir(path):
+            return path
+        path = path.parent
+
+    return None
+
+
+@log_calls(level="info")
+def resolve_workspace(name: str | Path) -> Tuple[str, Path, bool]:
     """
     Parse and resolve the given workspace path or name and return a tuple containing
-    the workspace name and directory path.
+    the workspace name and a resolved directory path.
 
     "example" -> "example", Path("example.kb")  [if example does not exist]
     "example" -> "example", Path("example")  [if example already exists]
@@ -54,6 +71,8 @@ def resolve_workspace_name(name: str | Path) -> Tuple[str, Path]:
 
     name = str(name).strip().rstrip("/")
 
+    # Check if name is a full path. Otherwise, we'll resolve it relative to the
+    # current directory.
     if "/" in name or name.startswith("."):
         resolved = Path(name).resolve()
         parent_dir = resolved.parent
@@ -62,27 +81,24 @@ def resolve_workspace_name(name: str | Path) -> Tuple[str, Path]:
         parent_dir = Path(".").resolve()
 
     if (parent_dir / name).exists():
-        ws_name = name
+        ws_name = workspace_name(name)
         ws_path = parent_dir / name
     else:
-        ws_name = name.removesuffix(KB_SUFFIX)
-        name_with_suffix = name if name.endswith(KB_SUFFIX) else f"{name}{KB_SUFFIX}"
-        ws_path = parent_dir / name_with_suffix
+        ws_name = workspace_name(name)
+        # By default we add the .kb suffix to the workspace name for clarity for new workspaces.
+        ws_path = parent_dir / f"{ws_name}{KB_SUFFIX}"
 
-    return ws_name, ws_path
+    is_sandbox = ws_name.lower() == SANDBOX_NAME
+
+    return ws_name, ws_path, is_sandbox
 
 
-def find_workspace_dir(path: Path = Path(".")) -> Optional[Path]:
+def get_workspace(name: str | Path) -> FileStore:
     """
-    Get the current workspace directory.
+    Get a workspace by name or path and register the FileStore so we reuse it.
     """
-    path = path.absolute()
-    while path != Path("/"):
-        if is_workspace_dir(path):
-            return path
-        path = path.parent
-
-    return None
+    ws_name, ws_path, is_sandbox = resolve_workspace(name)
+    return get_workspace_registry().load(ws_name, ws_path, is_sandbox)
 
 
 @cached({})
@@ -96,115 +112,64 @@ def sandbox_dir() -> Path:
     return kb_path
 
 
-def current_workspace_info() -> Tuple[Optional[MetadataDirs], bool]:
+def get_sandbox_workspace() -> FileStore:
     """
-    Get the name of the current workspace (name.kb) or sandbox, or None if not in a workspace
-    and sandbox is not being used.
+    Get the sandbox workspace.
     """
+    return get_workspace_registry().load(SANDBOX_NAME, sandbox_dir(), True)
+
+
+def _infer_workspace_info() -> Tuple[Optional[Path], bool]:
     from kmd.config.settings import global_settings
 
-    dir = find_workspace_dir()
+    dir = enclosing_workspace_dir()
     is_sandbox = False
     if global_settings().use_sandbox:
         is_sandbox = not dir
         if is_sandbox:
             dir = sandbox_dir()
-    return MetadataDirs(dir) if dir else None, is_sandbox
+    return dir, is_sandbox
 
 
-# Cache the file store per directory, since it takes a little while to load.
-@cached({})
-def _get_file_store(base_dir: Path, is_sandbox: bool) -> FileStore:
-    return FileStore(base_dir, is_sandbox)
-
-
-def switch_current_workspace(
-    ws_dirs: MetadataDirs, is_sandbox: bool, silent: bool = False
-) -> FileStore:
+def _switch_current_workspace(base_dir: Path, silent: bool = False) -> FileStore:
     """
     Switch the current workspace to the given directory.
     Updates logging and cache directories to be within that workspace.
     Does not reload the workspace if it's already loaded.
     """
+    ws_name, ws_path, is_sandbox = resolve_workspace(base_dir)
+    ws_dirs = MetadataDirs(ws_path)
+
     reset_logging(ws_dirs.base_dir)
     reset_media_cache_dir(ws_dirs.media_cache_dir)
     reset_content_cache_dir(ws_dirs.content_cache_dir)
 
-    ws = _get_file_store(ws_dirs.base_dir, is_sandbox)
+    ws = get_workspace_registry().load(ws_name, ws_path, is_sandbox)
     if not silent:
         ws.log_store_info(once=True)
 
     return ws
 
 
-def sandbox_workspace() -> FileStore:
-    """
-    Get the sandbox workspace.
-    """
-    return _get_file_store(sandbox_dir(), True)
-
-
 def current_workspace(silent: bool = False) -> FileStore:
     """
-    Get the current workspace. Also
+    Get the current workspace based on the current working directory.
+    Also updates logging and cache directories if this has changed.
     """
-    ws_dirs, is_sandbox = current_workspace_info()
-    if not ws_dirs:
+    base_dir, is_sandbox = _infer_workspace_info()
+    if not base_dir:
         raise InvalidState(
-            f"No workspace found in `{fmt_loc(Path('.').absolute())}`.\n"
+            f"No workspace found in {fmt_loc(Path('.').absolute())}.\n"
             "Create one with the `workspace` command."
         )
 
-    return switch_current_workspace(ws_dirs, is_sandbox, silent)
-
-
-def import_and_load(locator: CommandArg) -> Item:
-    """
-    Ensure that the URL or Item is saved to the workspace.
-    """
-
-    if isinstance(locator, str) and is_url(locator):
-        log.message("Importing locator as URL: %r", locator)
-        item = import_url_to_workspace(Url(locator))
-    else:
-        ws = current_workspace()
-        if isinstance(locator, StorePath):
-            log.info("Locator is in the file store: %r", locator)
-            # It's already a StorePath.
-            item = ws.load(locator)
-        else:
-            log.message("Importing locator as local path: %r", locator)
-            path = Path(locator)
-            if not path.exists():
-                raise InvalidInput(f"File not found: {path}")
-
-            store_path = ws.import_item(path)
-            item = ws.load(store_path)
-
-    return item
-
-
-def import_url_to_workspace(url: Url) -> Item:
-    """
-    Import a URL as a resource. Should call fetch_page to fill in metadata.
-    """
-    canon_url = canonicalize_url(url)
-    log.message(
-        "Importing URL: %s%s", canon_url, f" canonicalized from {url}" if url != canon_url else ""
-    )
-    item = Item(ItemType.resource, url=canon_url, format=Format.url)
-    workspace = current_workspace()
-    # No need to overwrite any resource we already have for the identical URL.
-    store_path = workspace.save(item, overwrite=False)
-    # Load to fill in any metadata we may already have.
-    item = workspace.load(store_path)
-    return item
+    return _switch_current_workspace(base_dir, silent)
 
 
 T = TypeVar("T")
 
 
-def get_param_value(param_name: str, type: Type[T] = str) -> Optional[T]:
+def workspace_param_value(param_name: str, type: Type[T] = str) -> Optional[T]:
     """
     Get a global parameter value, checking if it is set in the current workspace first.
     """

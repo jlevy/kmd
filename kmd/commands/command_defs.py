@@ -90,12 +90,12 @@ from kmd.version import get_version_name
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 from kmd.web_content import file_cache_tools
 from kmd.workspaces.selections import Selection
+from kmd.workspaces.workspace_names import check_strict_workspace_name
 from kmd.workspaces.workspaces import (
-    check_strict_workspace_name,
     current_workspace,
-    resolve_workspace_name,
+    get_sandbox_workspace,
+    resolve_workspace,
     sandbox_dir,
-    sandbox_workspace,
 )
 
 log = get_logger(__name__)
@@ -134,7 +134,7 @@ def clear_sandbox() -> None:
     Use with caution!
     """
     trash(sandbox_dir())
-    ws = sandbox_workspace()
+    ws = get_sandbox_workspace()
     ws.reload()
     ws.log_store_info()
 
@@ -325,11 +325,10 @@ def workspace(workspace_name: Optional[str] = None) -> None:
     creating it if it doesn't exist. Equivalent to `mkdir some_name.kb`.
     """
     if workspace_name:
-        ws_name, ws_path = resolve_workspace_name(workspace_name)
-
+        ws_name, ws_path, is_sandbox = resolve_workspace(workspace_name)
         if not ws_path.exists():
             # Enforce reasonable naming on new workspaces.
-            check_strict_workspace_name(ws_name)
+            ws_name = check_strict_workspace_name(ws_name)
 
         os.makedirs(ws_path, exist_ok=True)
         os.chdir(ws_path)
