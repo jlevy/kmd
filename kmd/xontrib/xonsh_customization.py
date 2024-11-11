@@ -18,6 +18,7 @@ from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
 from kmd.shell_tools.native_tools import tool_check
+from kmd.shell_tools.tool_deps import check_terminal_features
 from kmd.version import get_version_name
 from kmd.workspaces.workspaces import current_workspace
 from kmd.xontrib.xonsh_completers import load_completers
@@ -140,7 +141,7 @@ def _load_xonsh_actions():
     update_aliases(kmd_actions)
 
 
-def _initialize():
+def _initialize_commands():
     if _is_interactive:
         # Try to seem a little faster starting up.
         def load():
@@ -162,12 +163,6 @@ def _initialize():
     else:
         _load_xonsh_commands()
         _load_xonsh_actions()
-
-
-def _post_initialize():
-    if _is_interactive:
-        current_workspace()  # Validates and logs info for user.
-        cprint()
 
 
 def _kmd_xonsh_prompt():
@@ -210,12 +205,16 @@ def customize_xonsh():
 
     if _is_interactive:
         help_commands.welcome()  # Do first since init could take a few seconds.
-    _initialize()
 
-    _post_initialize()
+    _initialize_commands()
 
     if _is_interactive:
+        check_terminal_features().print_term_info()
+        current_workspace()  # Validates and logs info for user.
+        cprint()
+
         _shell_setup()
+
         tool_check().warn_if_missing()
 
     log.info("kmd %s loaded", get_version_name())

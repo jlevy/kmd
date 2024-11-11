@@ -24,8 +24,8 @@ from kmd.config.logger import get_console, get_logger
 from kmd.config.settings import APP_NAME
 from kmd.config.setup import setup
 from kmd.config.text_styles import PROMPT_INPUT_COLOR, SPINNER
-from kmd.shell.shell_syntax import is_assist_request_str
 from kmd.shell.shell_output import cprint
+from kmd.shell.shell_syntax import is_assist_request_str
 from kmd.version import get_version
 
 

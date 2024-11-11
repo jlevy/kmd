@@ -42,6 +42,14 @@ COLOR_LOGO = "bold magenta"
 
 COLOR_PLAIN = "default"
 
+COLOR_SUCCESS = "green"
+
+COLOR_FAILURE = "bright_red"
+
+COLOR_WARN = "bright_red"
+
+COLOR_ERROR = "bright_red"
+
 COLOR_HEADING = "bold bright_green"
 
 COLOR_EMPH = "bright_green"
@@ -72,13 +80,7 @@ COLOR_PATH = "cyan"
 
 COLOR_HINT = "bright_black"
 
-COLOR_SUCCESSS = "green"
-
 COLOR_SKIP = "green"
-
-COLOR_WARN = "bright_red"
-
-COLOR_ERROR = "bright_red"
 
 COLOR_TASK = "magenta"
 
@@ -170,13 +172,17 @@ EMOJI_CALL_END = "≪"
 
 EMOJI_ASSISTANT = "🤖"
 
+EMOJI_MSG_INDENT = "⋮"
+
+EMOJI_BREADCRUMB_SEP = "›"
+
 EMOJI_TRUE = "✓"
 
 EMOJI_FALSE = "✗"
 
-EMOJI_MSG_INDENT = "⋮"
 
-EMOJI_BREADCRUMB_SEP = "›"
+def emoji_bool(value: bool) -> str:
+    return EMOJI_TRUE if value else EMOJI_FALSE
 
 
 ## Special headings
@@ -310,7 +316,7 @@ RICH_STYLES = {
     "kmd.task_stack_prefix": Style(color=COLOR_HINT, italic=False),
     # Emoji colors:
     "kmd.task": Style(color=COLOR_TASK, italic=True),
-    "kmd.success": Style(color=COLOR_SUCCESSS, bold=True),
+    "kmd.success": Style(color=COLOR_SUCCESS, bold=True),
     "kmd.skip": Style(color=COLOR_SKIP, bold=True),
     "kmd.failure": Style(color=COLOR_ERROR, bold=True),
     "kmd.timing": Style(color=COLOR_TIMING, bold=True),

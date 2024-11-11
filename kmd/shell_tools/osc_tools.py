@@ -4,7 +4,7 @@ from cachetools import cached
 
 
 @cached({})
-def _terminal_supports_osc8() -> bool:
+def terminal_supports_osc8() -> bool:
     """
     Attempt to detect if the terminal supports OSC 8 hyperlinks.
     """
@@ -50,7 +50,7 @@ def osc8_link_graceful(url: str, text: str, id: str = "") -> str:
     Generate clickable text for terminal emulators supporting OSC 8 with a fallback
     for non-supporting terminals.
     """
-    if _terminal_supports_osc8():
+    if terminal_supports_osc8():
         metadata_str = f"id={id}" if id else ""
         return osc8_link(url, text, metadata_str)
     else:

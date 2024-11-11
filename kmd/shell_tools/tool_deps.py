@@ -2,22 +2,29 @@
 Platform-specific tools and utilities.
 """
 
+import os
 import shutil
 from enum import Enum
 from typing import Callable, Optional
 
 from cachetools import cached, TTLCache
 from pydantic.dataclasses import dataclass
+
+from rich.text import Text
 from xonsh.platform import ON_DARWIN, ON_LINUX, ON_WINDOWS
 
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import (
-    EMOJI_FALSE,
-    EMOJI_TRUE,
-    EMOJI_WARN,
-)
+from kmd.config.text_styles import EMOJI_WARN
 from kmd.errors import SetupError
-from kmd.shell.shell_output import Wrap, cprint, format_name_and_description, format_paragraphs
+from kmd.shell.shell_output import (
+    cprint,
+    format_name_and_description,
+    format_paragraphs,
+    format_success_or_failure,
+    Wrap,
+)
+from kmd.shell_tools.osc_tools import terminal_supports_osc8
+from kmd.shell_tools.terminal_images import terminal_supports_sixel
 
 
 log = get_logger(__name__)
@@ -159,10 +166,9 @@ class InstalledTools:
     def formatted(self):
         texts = []
         for tool, path in self.tools.items():
-            if path:
-                doc = f"{EMOJI_TRUE} Found: `{path}`"
-            else:
-                doc = f"{EMOJI_FALSE} Not found!"
+            doc = format_success_or_failure(
+                bool(path), true_str=f"Found: `{path}`", false_str="Not found!"
+            )
             texts.append(format_name_and_description(tool.name, doc))
 
         return format_paragraphs(*texts)
@@ -218,3 +224,39 @@ def tool_check() -> InstalledTools:
         tools[tool] = which_tool(tool) or check_tool(tool)
 
     return InstalledTools(tools)
+
+
+@dataclass(frozen=True)
+class TerminalInfo:
+    term: str
+    term_program: str
+    supports_sixel: bool
+    supports_osc8: bool
+
+    def as_text(self) -> Text:
+        return Text.assemble(
+            format_success_or_failure(
+                self.supports_sixel, true_str="Sixel images", false_str="No Sixel images"
+            ),
+            ", ",
+            format_success_or_failure(
+                self.supports_osc8, true_str="OSC 8 hyperlinks", false_str="No OSC 8 hyperlinks"
+            ),
+        )
+
+    def print_term_info(self):
+        cprint(
+            Text.assemble(
+                f"Terminal is {self.term} ({self.term_program}): ",
+                self.as_text(),
+            )
+        )
+
+
+def check_terminal_features() -> TerminalInfo:
+    return TerminalInfo(
+        term=os.environ.get("TERM", ""),
+        term_program=os.environ.get("TERM_PROGRAM", ""),
+        supports_sixel=terminal_supports_sixel(),
+        supports_osc8=terminal_supports_osc8(),
+    )

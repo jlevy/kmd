@@ -20,6 +20,7 @@ from kmd.config.text_styles import (
     BOX_PREFIX,
     BOX_TOP,
     COLOR_ASSISTANCE,
+    COLOR_FAILURE,
     COLOR_HEADING,
     COLOR_HELP,
     COLOR_HINT,
@@ -27,7 +28,9 @@ from kmd.config.text_styles import (
     COLOR_RESPONSE,
     COLOR_SELECTION,
     COLOR_STATUS,
+    COLOR_SUCCESS,
     CONSOLE_WRAP_WIDTH,
+    emoji_bool,
     HRULE,
     MID_CORNER,
     VRULE_CHAR,
@@ -134,10 +137,16 @@ def fill_text(
 
 
 def format_name_and_description(
-    name: str, doc: str, extra_note: Optional[str] = None, text_wrap: Wrap = Wrap.WRAP_INDENT
+    name: str, doc: str | Text, extra_note: Optional[str] = None, text_wrap: Wrap = Wrap.WRAP_INDENT
 ) -> Text:
-    doc = textwrap.dedent(doc).strip()
-    wrapped_doc = fill_text(doc, text_wrap=text_wrap)
+    def do_fill(text: str) -> str:
+        return fill_text(textwrap.dedent(text).strip(), text_wrap=text_wrap)
+
+    if isinstance(doc, Text):
+        doc.plain = do_fill(doc.plain)
+    else:
+        doc = do_fill(doc)
+
     return Text.assemble(
         ("`", COLOR_HINT),
         (name, COLOR_KEY),
@@ -145,7 +154,7 @@ def format_name_and_description(
         ((" " + extra_note, COLOR_HINT) if extra_note else ""),
         (": ", COLOR_HINT),
         "\n",
-        wrapped_doc,
+        doc,
     )
 
 
@@ -157,6 +166,14 @@ def format_paragraphs(*paragraphs: str | Text):
         text.append(paragraph)
 
     return Text.assemble(*text)
+
+
+def format_success_or_failure(value: bool, true_str: str = "", false_str: str = "") -> Text:
+    emoji = Text(emoji_bool(value), style=COLOR_SUCCESS if value else COLOR_FAILURE)
+    if true_str or false_str:
+        return Text.assemble(emoji, " ", true_str if value else false_str)
+    else:
+        return emoji
 
 
 # Allow output stream to be redirected if desired.
