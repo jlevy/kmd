@@ -1,3 +1,4 @@
+import os
 import threading
 from contextlib import contextmanager
 from enum import Enum
@@ -16,9 +17,52 @@ DOT_DIR = ".kmd"
 SANDBOX_NAME = "sandbox"
 SANDBOX_KB_PATH = f"~/.local/kmd/{SANDBOX_NAME}.kb"
 
+
 GLOBAL_CACHE_NAME = "kmd_cache"
 MEDIA_CACHE_NAME = "media"
 CONTENT_CACHE_NAME = "content"
+
+LOCAL_SERVER_LOG_FILE = "~/.local/kmd/logs/server.log"
+LOCAL_SERVER_PORT = 4477
+"""The port to run the local server on. 4477 is not currently used by anything else."""
+
+
+def resolve_and_create_dirs(path: Path | str, is_dir: bool = False) -> Path:
+    """
+    Resolve a path to an absolute path, handling ~ for the home directory
+    and creating any missing parent directories.
+    """
+    full_path = Path(path).expanduser().resolve()
+    if not full_path.exists():
+        if is_dir:
+            os.makedirs(full_path, exist_ok=True)
+        else:
+            os.makedirs(full_path.parent, exist_ok=True)
+    return full_path
+
+
+def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
+    """
+    Find the first existing Path (or None) for a given filename in the current directory or its parents.
+    """
+    if isinstance(filename, str):
+        filename = Path(filename)
+    path = Path(".").absolute()
+    while path != Path("/"):
+        file_path = path / filename
+        if file_path.exists():
+            return file_path
+        path = path.parent
+    return None
+
+
+@cached(cache={})
+def _global_cache_dir(name: str) -> Path:
+    cache_dir = find_in_cwd_or_parents(GLOBAL_CACHE_NAME)
+    if not cache_dir:
+        cache_dir = Path(".").absolute() / GLOBAL_CACHE_NAME
+
+    return cache_dir / name
 
 
 class LogLevel(Enum):
@@ -67,29 +111,11 @@ class Settings:
     file_log_level: LogLevel
     """The log level for file-based logging."""
 
+    local_server_host: str
+    """The local hostname to run the local server on."""
 
-def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
-    """
-    Find the first existing Path (or None) for a given filename in the current directory or its parents.
-    """
-    if isinstance(filename, str):
-        filename = Path(filename)
-    path = Path(".").absolute()
-    while path != Path("/"):
-        file_path = path / filename
-        if file_path.exists():
-            return file_path
-        path = path.parent
-    return None
-
-
-@cached(cache={})
-def _global_cache_dir(name: str) -> Path:
-    cache_dir = find_in_cwd_or_parents(GLOBAL_CACHE_NAME)
-    if not cache_dir:
-        cache_dir = Path(".").absolute() / GLOBAL_CACHE_NAME
-
-    return cache_dir / name
+    local_server_port: int
+    """The port to run the local server on."""
 
 
 # Initial default settings.
@@ -102,6 +128,8 @@ _settings = Settings(
     use_sandbox=True,
     file_log_level=LogLevel.info,
     console_log_level=LogLevel.warning,
+    local_server_host="127.0.0.1",
+    local_server_port=LOCAL_SERVER_PORT,
 )
 
 

@@ -57,6 +57,8 @@ from kmd.model.paths_model import fmt_store_path, resolve_at_path, StorePath
 from kmd.model.shell_model import ShellResult
 from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths
+from kmd.server import local_server
+from kmd.server.local_urls import ws_formatter
 from kmd.shell.shell_output import (
     console_pager,
     cprint,
@@ -86,7 +88,6 @@ from kmd.util.parse_key_vals import format_key_value, parse_key_value
 from kmd.util.strif import copyfile_atomic
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
-from kmd.version import get_version_name
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
 from kmd.web_content import file_cache_tools
 from kmd.workspaces.selections import Selection
@@ -1261,6 +1262,9 @@ def files(
     )
 
     ws = current_workspace()
+
+    # Check if this listing is within the current workspace.
+    active_ws_name = ws.name if base_path.resolve().is_relative_to(ws.base_dir.resolve()) else None
     base_is_ws = ws.base_dir.resolve() == base_path.resolve()
 
     log.info("Collected %s files.", file_listing.files_total)
@@ -1312,67 +1316,79 @@ def files(
     indent = " " * (12 + 8 + 4)
 
     with console_pager(use_pager=pager):
-        for group_name, group_df in grouped:
-            if group_name:
-                cprint(f"\n{group_name} ({len(group_df)} files)", color=COLOR_EMPH)
+        with ws_formatter(active_ws_name) as fmt:
+            for group_name, group_df in grouped:
+                if group_name:
+                    cprint(f"\n{group_name} ({len(group_df)} files)", color=COLOR_EMPH)
 
-            if head:
-                display_df = group_df.head(head)
-            else:
-                display_df = group_df
+                if head:
+                    display_df = group_df.head(head)
+                else:
+                    display_df = group_df
 
-            for idx, row in display_df.iterrows():
-                file_size = fmt_file_size(row["size"])
-                file_mod_time = fmt_time(row["modified"], iso_time, now=now, brief=True)
+                for idx, row in display_df.iterrows():
+                    file_size = fmt_file_size(row["size"])
+                    file_mod_time = fmt_time(row["modified"], iso_time, now=now, brief=True)
 
-                # If we are listing from within a workspace, we include the paths as store paths
-                # (with an @ prefix). Otherwise, use regular paths.
-                rel_path = row["relative_path"]
-                display_name = fmt_store_path(rel_path) if base_is_ws else fmt_loc(rel_path)
+                    rel_path = row["relative_path"]
 
+                    # If we are listing from within a workspace, we include the paths as
+                    # store paths (with an @ prefix). Otherwise, use regular paths.
+                    # We could link to the full StorePath display the relative path within
+                    # the listing but for simplicity not doing this for now, since usually
+                    # you're listing items from the root of the workspace dir.
+                    if active_ws_name and base_is_ws:
+                        display_path = StorePath(rel_path)  # Add a local server link.
+                    else:
+                        display_path = Path(rel_path)
+
+                    cprint(
+                        format_str,
+                        file_mod_time,
+                        file_size,
+                        fmt.path_link(display_path),
+                        text_wrap=Wrap.NONE,
+                        raw=True,  # Needed for OSC8 links.
+                    )
+                    total_displayed += 1
+                    total_displayed_size += row["size"]
+
+                # Indicate if items are omitted.
+                if groupby and head and len(group_df) > head:
+                    cprint(
+                        f"{indent}… {len(group_df) - head} more files not shown",
+                        text_wrap=Wrap.NONE,
+                    )
+                else:
+                    cprint()
+
+            if not groupby and head and files_matching > head:
                 cprint(
-                    format_str,
-                    file_mod_time,
-                    file_size,
-                    display_name,
+                    f"{indent}… {files_matching - head} more files not shown",
                     text_wrap=Wrap.NONE,
                 )
-                total_displayed += 1
-                total_displayed_size += row["size"]
 
-            # Indicate if items are omitted.
-            if groupby and head and len(group_df) > head:
+            cprint(
+                f"{total_displayed} files ({fmt_file_size(total_displayed_size)}) shown",
+                color=COLOR_EMPH,
+            )
+            if file_listing.files_total > file_listing.files_matching > total_displayed:
                 cprint(
-                    f"{indent}… {len(group_df) - head} more files not shown",
-                    text_wrap=Wrap.NONE,
+                    f"of {file_listing.files_matching} files "
+                    f"({fmt_file_size(file_listing.size_matching)}) matching criteria",
+                    color=COLOR_EMPH,
                 )
-            else:
-                cprint()
-        if not groupby and head and files_matching > head:
-            cprint(
-                f"{indent}… {files_matching - head} more files not shown",
-                text_wrap=Wrap.NONE,
-            )
-
-        cprint(
-            f"{total_displayed} files ({fmt_file_size(total_displayed_size)}) shown",
-            color=COLOR_EMPH,
-        )
-        if file_listing.files_total > file_listing.files_matching > total_displayed:
-            cprint(
-                f"of {file_listing.files_matching} files ({fmt_file_size(file_listing.size_matching)}) matching criteria",
-                color=COLOR_EMPH,
-            )
-        if file_listing.files_total > total_displayed:
-            cprint(
-                f"from {file_listing.files_total} total files ({fmt_file_size(file_listing.size_total)})",
-                color=COLOR_EMPH,
-            )
-        if file_listing.files_ignored or file_listing.dirs_ignored:
-            cprint(
-                f"with {file_listing.files_ignored + file_listing.dirs_ignored} paths ignored",
-                color=COLOR_EMPH,
-            )
+            if file_listing.files_total > total_displayed:
+                cprint(
+                    f"from {file_listing.files_total} total files "
+                    f"({fmt_file_size(file_listing.size_total)})",
+                    color=COLOR_EMPH,
+                )
+            if file_listing.files_ignored or file_listing.dirs_ignored:
+                cprint(
+                    f"with {file_listing.files_ignored + file_listing.dirs_ignored} paths ignored",
+                    color=COLOR_EMPH,
+                )
 
     return ShellResult()
 
@@ -1510,11 +1526,41 @@ def reformat(*paths: str, inplace: bool = False) -> ShellResult:
 
 
 @kmd_command
+def start_server() -> None:
+    """
+    Start the kmd local server.
+    """
+    from kmd.server.local_server import start_server
+
+    start_server()
+
+
+@kmd_command
+def stop_server() -> None:
+    """
+    Stop the kmd local server.
+    """
+    from kmd.server.local_server import stop_server
+
+    stop_server()
+
+
+@kmd_command
+def server_logs() -> None:
+    """
+    Show the logs from the kmd local server.
+    """
+    tail_file(local_server.log_file_path())
+
+
+@kmd_command
 def version() -> None:
     """
     Show the version of kmd.
     """
-    cprint("kmd %s", get_version_name())
+    from kmd.main import APP_VERSION
+
+    cprint(APP_VERSION)
 
 
 # TODO:

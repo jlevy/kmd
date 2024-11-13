@@ -245,7 +245,7 @@ class TerminalInfo:
         )
 
     def print_term_info(self):
-        cprint(
+        log.message(
             Text.assemble(
                 f"Terminal is {self.term} ({self.term_program}): ",
                 self.as_text(),

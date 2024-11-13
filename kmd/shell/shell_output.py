@@ -265,15 +265,33 @@ def output_as_string(func: Callable, *args: Any, **kwargs: Any) -> str:
     return buffer.getvalue()
 
 
-def rprint(*args, width: Optional[int] = None, **kwargs):
-    """Print to global console, unless output stream is redirected."""
+def rprint(*args, width: Optional[int] = None, raw: bool = False, **kwargs):
+    """
+    Print to global console, unless output stream is redirected.
 
+    With `raw` True, we bypass rich formatting entirely.
+    """
+
+    global console
     stream = getattr(_output_context, "stream", None)
-    if stream:
-        rich.print(*args, **kwargs, file=stream)
+
+    if raw:
+        text = " ".join(str(arg) for arg in args)
+        end = kwargs.get("end", "\n")
+        if stream:
+            stream.write(text)
+            stream.write(end)
+            stream.flush()
+        else:
+            console._write_buffer()  # Flush any pending rich content first.
+            console.file.write(text)
+            console.file.write(end)
+            console.file.flush()
     else:
-        global console
-        console.print(*args, width=width, **kwargs)
+        if stream:
+            rich.print(*args, **kwargs, file=stream)
+        else:
+            console.print(*args, width=width, **kwargs)
 
 
 def cprint(
@@ -285,6 +303,7 @@ def cprint(
     extra_indent: str = "",
     end="\n",
     width: Optional[int] = None,
+    raw: bool = False,
 ):
     """
     Main way to print to the shell. Wraps `rprint` with all our formatting options.
@@ -301,6 +320,9 @@ def cprint(
     if not isinstance(message, (Text, Markdown)):
         message = str(message)
 
+    if raw and (not isinstance(message, str) or color):
+        raise ValueError("Can't write non-string or colored content in raw mode")
+
     if message:
         if isinstance(message, str):
             text = message % args if args else message
@@ -311,9 +333,14 @@ def cprint(
                     extra_indent=extra_indent,
                     empty_indent=empty_indent,
                 )
-                rprint(Text(filled_text, color) if color else filled_text, end=end, width=width)
+                rprint(
+                    Text(filled_text, color) if color else filled_text,
+                    end=end,
+                    width=width,
+                    raw=raw,
+                )
             elif extra_indent:
-                rprint(extra_indent, end=end)
+                rprint(extra_indent, end=end, raw=raw)
         else:
             rprint(extra_indent, end="")
             rprint(message, end=end, width=width)

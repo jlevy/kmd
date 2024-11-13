@@ -12,6 +12,7 @@ from kmd.config.text_styles import PROMPT_COLOR_NORMAL, PROMPT_COLOR_WARN, PROMP
 from kmd.exec.history import wrap_with_history
 from kmd.model.actions_model import Action
 from kmd.model.shell_model import ShellResult
+from kmd.server.local_server import start_server
 from kmd.shell.shell_output import cprint
 from kmd.shell.shell_results import handle_shell_result, shell_before_exec
 from kmd.shell_tools.action_wrapper import ShellCallableAction
@@ -210,6 +211,9 @@ def customize_xonsh():
 
     if _is_interactive:
         check_terminal_features().print_term_info()
+
+        start_server()
+
         current_workspace()  # Validates and logs info for user.
         cprint()
 

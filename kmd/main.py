@@ -36,6 +36,8 @@ log = get_logger(__name__)
 
 __version__ = get_version()
 
+APP_VERSION = f"{APP_NAME} {__version__}"
+
 # If true use the kmd-customized xonsh shell. This is now the recommended way to run kmd since
 # it then supports custom parsing of shell input to include LLM-based assistance, etc.
 # Alternatively, we can run a regular xonsh shell and have it load kmd commands via the
@@ -284,7 +286,7 @@ def parse_args():
     # Do our own arg parsing since everything except these two options
     # should be handled as a kmd command.
     if sys.argv[1:] == ["--version"]:
-        print(f"{sys.argv[0]} {__version__}")
+        print(APP_VERSION)
         sys.exit(0)
     elif sys.argv[1:] == ["--help"]:
         print_help()

@@ -1,18 +1,16 @@
-import os
 from pathlib import Path
 from typing import Optional, Tuple, Type, TypeVar
 
 from cachetools import cached
 
 from kmd.config.logger import get_logger, reset_logging
-from kmd.config.settings import SANDBOX_NAME
+from kmd.config.settings import resolve_and_create_dirs, SANDBOX_KB_PATH, SANDBOX_NAME
 from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.media.media_tools import reset_media_cache_dir
 from kmd.model.args_model import fmt_loc
 from kmd.model.params_model import ParamValues, USER_SETTABLE_PARAMS
-from kmd.util.log_calls import log_calls
 from kmd.web_content.file_cache_tools import reset_content_cache_dir
 from kmd.workspaces.workspace_registry import get_workspace_registry
 
@@ -54,7 +52,6 @@ def enclosing_workspace_dir(path: Path = Path(".")) -> Optional[Path]:
     return None
 
 
-@log_calls(level="info")
 def resolve_workspace(name: str | Path) -> Tuple[str, Path, bool]:
     """
     Parse and resolve the given workspace path or name and return a tuple containing
@@ -103,11 +100,7 @@ def get_workspace(name: str | Path) -> FileStore:
 
 @cached({})
 def sandbox_dir() -> Path:
-    from kmd.config.settings import SANDBOX_KB_PATH
-
-    kb_path = Path(SANDBOX_KB_PATH).expanduser().resolve()
-    if not kb_path.exists():
-        os.makedirs(kb_path, exist_ok=True)
+    kb_path = resolve_and_create_dirs(SANDBOX_KB_PATH, is_dir=True)
     log.info("Sandbox KB path: %s", kb_path)
     return kb_path
 

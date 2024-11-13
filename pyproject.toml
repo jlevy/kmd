@@ -42,10 +42,19 @@ requests = "^2.32.3"
 pydub = "^0.25.1"
 humanfriendly = "^10.0"
 curl-cffi = "^0.7.3"
+patch-ng = "^1.18.1"
+inquirerpy = "^0.3.4"
+colour = "^0.1.5"
+scikit-image = "^0.24.0"
+python-fasthtml = "^0.9.1"
+fastapi = "^0.115.4"
+uvicorn = "^0.32.0"
 # yt-dlp = "^2024.8.6"
 # Temp support for new Apple Podcasts format, until yt-dlp is updated:
 # https://github.com/yt-dlp/yt-dlp/pull/10903
 yt-dlp = { git = "https://github.com/coreywright/yt-dlp.git", branch = "ie/applepodcasts/Fix_after_website_rewrite" }
+# orjson pinned for now since 3.10.11 had install issues:
+orjson = "3.10.10"
 xonsh = "^0.18.3"
 tiktoken = "^0.7.0"
 scipy = "^1.14.1"
@@ -61,11 +70,7 @@ openai = "^1.53.0"
 deepgram-sdk = "^3.7.5"
 firecrawl-py = "^1.4.0"
 exa-py = "^1.5.1"
-patch-ng = "^1.18.1"
-inquirerpy = "^0.3.4"
-colour = "^0.1.5"
-scikit-image = "^0.24.0"
-orjson = "3.10.10"
+
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"
