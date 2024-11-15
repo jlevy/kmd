@@ -1,30 +1,27 @@
 import asyncio
 import threading
 from pathlib import Path
-from typing import Optional
 
-import uvicorn
 from cachetools import cached
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 
 from kmd.config.logger import get_logger
-from kmd.config.settings import global_settings, LOCAL_SERVER_LOG_FILE, resolve_and_create_dirs
+from kmd.config.settings import (
+    global_settings,
+    LOCAL_SERVER_LOG_FILE,
+    resolve_and_create_dirs,
+    update_global_settings,
+)
 from kmd.server import server_routes
-from kmd.server.port_tools import wait_for_local_port
+from kmd.server.port_tools import find_available_local_port
 from kmd.util.format_utils import fmt_path
 
 
 log = get_logger(__name__)
 
-app = FastAPI()
-
-app.include_router(server_routes.router)
-
-server_instance: Optional[uvicorn.Server] = None
 should_exit = threading.Event()
 
 server_lock = threading.Lock()
+server_instance = None
 
 
 @cached({})
@@ -32,23 +29,46 @@ def log_file_path() -> Path:
     return resolve_and_create_dirs(LOCAL_SERVER_LOG_FILE)
 
 
-# Map common exceptions to HTTP codes.
-@app.exception_handler(FileNotFoundError)
-async def file_not_found_exception_handler(request: Request, exc: FileNotFoundError):
-    return JSONResponse(
-        status_code=404,
-        content={"message": f"File not found: {exc}"},
-    )
+@cached({})
+def _server_setup():
+    from fastapi import FastAPI, Request
+    from fastapi.responses import JSONResponse
+
+    global app
+    app = FastAPI()
+
+    app.include_router(server_routes.router)
+
+    # Map common exceptions to HTTP codes.
+    @app.exception_handler(FileNotFoundError)
+    async def file_not_found_exception_handler(request: Request, exc: FileNotFoundError):
+        return JSONResponse(
+            status_code=404,
+            content={"message": f"File not found: {exc}"},
+        )
 
 
-def run_server():
+def _run_server():
+    import uvicorn
+
     global server_instance
 
     settings = global_settings()
+    host = settings.local_server_host
+    port = find_available_local_port(
+        host,
+        range(
+            settings.local_server_ports_start,
+            settings.local_server_ports_start + settings.local_server_ports_max,
+        ),
+    )
+    with update_global_settings() as settings:
+        settings.local_server_port = port
+
     config = uvicorn.Config(
         app,
-        host=settings.local_server_host,
-        port=settings.local_server_port,
+        host=host,
+        port=port,
         log_config={
             "version": 1,
             "disable_existing_loggers": False,
@@ -78,11 +98,10 @@ def run_server():
 
     async def serve():
         try:
-            wait_for_local_port(settings.local_server_host, settings.local_server_port)
             log.message(
                 "Starting local server on %s:%s",
-                settings.local_server_host,
-                settings.local_server_port,
+                host,
+                port,
             )
             log.message("Local server logs: %s", fmt_path(log_file_path()))
             await server.serve()
@@ -99,13 +118,15 @@ def run_server():
 
 
 def start_server():
+    _server_setup()
+
     with server_lock:
         if server_instance:
             log.info("Server already running: %s", server_instance)
             return
 
         should_exit.clear()
-        server_thread = threading.Thread(target=run_server, daemon=True)
+        server_thread = threading.Thread(target=_run_server, daemon=True)
         server_thread.start()
         log.info("Created new local server: %s", server_instance)
 

@@ -23,8 +23,8 @@ MEDIA_CACHE_NAME = "media"
 CONTENT_CACHE_NAME = "content"
 
 LOCAL_SERVER_LOG_FILE = "~/.local/kmd/logs/server.log"
-LOCAL_SERVER_PORT = 4477
-"""The port to run the local server on. 4477 is not currently used by anything else."""
+LOCAL_SERVER_PORT_START = 4470
+LOCAL_SERVER_PORTS_MAX = 30
 
 
 def resolve_and_create_dirs(path: Path | str, is_dir: bool = False) -> Path:
@@ -114,8 +114,14 @@ class Settings:
     local_server_host: str
     """The local hostname to run the local server on."""
 
+    local_server_ports_start: int
+    """The start of the range of ports to try to run the local server on."""
+
+    local_server_ports_max: int
+    """The maximum number of ports to try to run the local server on."""
+
     local_server_port: int
-    """The port to run the local server on."""
+    """Actual port number the local server is running on."""
 
 
 # Initial default settings.
@@ -129,7 +135,9 @@ _settings = Settings(
     file_log_level=LogLevel.info,
     console_log_level=LogLevel.warning,
     local_server_host="127.0.0.1",
-    local_server_port=LOCAL_SERVER_PORT,
+    local_server_ports_start=LOCAL_SERVER_PORT_START,
+    local_server_ports_max=LOCAL_SERVER_PORTS_MAX,
+    local_server_port=0,
 )
 
 
