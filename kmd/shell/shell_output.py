@@ -11,7 +11,9 @@ from io import StringIO
 from typing import Any, Callable, List, Optional
 
 import rich
+from rich.console import Group
 from rich.markdown import Markdown
+from rich.padding import Padding
 from rich.text import Text
 
 from kmd.config.logger import get_console, get_logger
@@ -269,7 +271,9 @@ def output_as_string(func: Callable, *args: Any, **kwargs: Any) -> str:
     return buffer.getvalue()
 
 
-def rprint(*args, width: Optional[int] = None, raw: bool = False, **kwargs):
+def rprint(
+    *args, width: Optional[int] = None, left_pad: Optional[int] = None, raw: bool = False, **kwargs
+):
     """
     Print to global console, unless output stream is redirected.
 
@@ -280,6 +284,7 @@ def rprint(*args, width: Optional[int] = None, raw: bool = False, **kwargs):
     stream = getattr(_output_context, "stream", None)
 
     if raw:
+        # Leave raw mode as is; indent not supported
         text = " ".join(str(arg) for arg in args)
         end = kwargs.get("end", "\n")
         if stream:
@@ -292,10 +297,16 @@ def rprint(*args, width: Optional[int] = None, raw: bool = False, **kwargs):
             console.file.write(end)
             console.file.flush()
     else:
-        if stream:
-            rich.print(*args, **kwargs, file=stream)
+        if left_pad:
+            renderable = Group(*args) if len(args) != 1 else args[0]
+            renderable = Padding(renderable, (0, 0, 0, left_pad))
         else:
-            console.print(*args, width=width, **kwargs)
+            renderable = Group(*args) if len(args) != 1 else args[0]
+
+        if stream:
+            rich.print(renderable, **kwargs, file=stream)
+        else:
+            console.print(renderable, width=width, **kwargs)
 
 
 def cprint(
@@ -343,8 +354,10 @@ def cprint(
             elif extra_indent:
                 rprint(extra_indent, end=end, raw=raw)
         else:
-            rprint(extra_indent, end="")
-            rprint(message, end=end, width=width)
+            # TODO: We don't support text_wrap and non-space extra_indent right now for
+            # Text objects.
+            left_pad = len(extra_indent) if extra_indent else None
+            rprint(message, end=end, width=width, left_pad=left_pad)
     else:
         rprint(empty_indent)
 

@@ -48,7 +48,7 @@ def reset_content_cache_dir(path: Path):
             log.info("Using web cache: %s", fmt_path(path))
 
 
-def cache_content(url_or_path: Url | Path) -> tuple[Path, bool]:
+def cache_file(url_or_path: Url | Path) -> tuple[Path, bool]:
     """
     Fetch the given URL and return a local cached copy. Raises requests.HTTPError
     if the URL is not reachable. If a local file path is given, it is cached
@@ -71,12 +71,12 @@ def cache_resource(item: Item) -> Dict[MediaType, Path]:
         if is_media_url(item.url):
             result = cache_media(item.url)
         else:
-            path, _was_cached = cache_content(item.url)
+            path, _was_cached = cache_file(item.url)
     elif item.external_path:
         path = Path(item.external_path)
         if not path.is_file():
             raise FileNotFound(f"External path not found: {path}")
-        path, _was_cached = cache_content(path)
+        path, _was_cached = cache_file(path)
     else:
         raise ValueError("Item has no URL or external path")
 

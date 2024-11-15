@@ -1,8 +1,10 @@
 from typing import List
 
+from rich.text import Text
+
 from kmd.commands.command_registry import all_commands
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import COLOR_EMPH
+from kmd.config.text_styles import COLOR_HINT
 from kmd.docs import (
     development,
     faq,
@@ -13,19 +15,21 @@ from kmd.docs import (
     what_is_kmd,
     workspace_and_file_formats,
 )
-from kmd.help.command_help import print_action_help, print_command_function_help
-from kmd.shell.shell_output import cprint, print_heading, print_markdown, Wrap
+from kmd.shell.shell_output import cprint, print_heading, print_markdown, print_small_heading, Wrap
 
 log = get_logger(__name__)
 
 
 def print_builtin_commands_help() -> None:
+    from kmd.help.command_help import print_command_function_help
+
     for command in all_commands().values():
         print_command_function_help(command, verbose=False)
 
 
 def print_actions_help(base_actions_only: bool = False) -> None:
     from kmd.action_defs import load_all_actions
+    from kmd.help.command_help import print_action_help
 
     actions = load_all_actions(base_only=base_actions_only)
     for action in actions.values():
@@ -40,10 +44,18 @@ def quote_item(item: str) -> str:
 
 
 def print_see_also(commands_or_questions: List[str]) -> None:
-    cprint()
-    cprint("See also:", color=COLOR_EMPH)
-    for item in commands_or_questions:
-        cprint(quote_item(item), text_wrap=Wrap.INDENT_ONLY)
+    from kmd.server.local_urls import ws_formatter
+
+    with ws_formatter() as fmt:
+        cprint()
+        print_small_heading("See also:")
+        cprint(
+            Text.join(
+                Text(", ", COLOR_HINT), (fmt.command_link(item) for item in commands_or_questions)
+            ),
+            text_wrap=Wrap.INDENT_ONLY,
+            extra_indent="    ",
+        )
 
 
 def print_manual(base_actions_only: bool = False) -> None:

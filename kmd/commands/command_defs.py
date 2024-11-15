@@ -89,7 +89,7 @@ from kmd.util.strif import copyfile_atomic
 from kmd.util.type_utils import not_none
 from kmd.util.url import Url
 from kmd.viz.graph_view import assemble_workspace_graph, open_graph_view
-from kmd.web_content import file_cache_tools
+from kmd.web_content.file_cache_tools import cache_file
 from kmd.workspaces.selections import Selection
 from kmd.workspaces.workspace_names import check_strict_workspace_name
 from kmd.workspaces.workspaces import (
@@ -183,7 +183,7 @@ def cache_content(*urls_or_paths: str) -> None:
     cprint()
     for url_or_path in urls_or_paths:
         locator = resolve_locator_arg(url_or_path)
-        cache_path, was_cached = file_cache_tools.cache_content(locator)
+        cache_path, was_cached = cache_file(locator)
         cache_str = " (already cached)" if was_cached else ""
         cprint(f"{fmt_loc(url_or_path)}{cache_str}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
         cprint(f"{cache_path}", text_wrap=Wrap.INDENT_ONLY)
@@ -491,7 +491,11 @@ def next_selection() -> ShellResult:
 
 @kmd_command
 def show(
-    path: Optional[str] = None, console: bool = False, native: bool = False, browser: bool = False
+    path: Optional[str] = None,
+    console: bool = False,
+    native: bool = False,
+    thumbnail: bool = False,
+    browser: bool = False,
 ) -> None:
     """
     Show the contents of a file if one is given, or the first file if multiple files
@@ -503,6 +507,7 @@ def show(
 
     :param console: Force display to console (not browser or native apps).
     :param native: Force display with a native app (depending on your system configuration).
+    :param thumbnail: If there is a thumbnail image, show it too.
     :param browser: Force display with your default web browser.
     """
     view_mode = (
@@ -519,9 +524,9 @@ def show(
             ws = current_workspace()
 
             item = ws.load(input_path)
-            if item.thumbnail_url:
+            if thumbnail and item.thumbnail_url:
                 try:
-                    local_path, _was_cached = cache_content(item.thumbnail_url)
+                    local_path, _was_cached = cache_file(item.thumbnail_url)
                     terminal_show_image(local_path)
                 except Exception as e:
                     log.info("Had trouble showing thumbnail image (will skip): %s", e)

@@ -27,7 +27,7 @@ from kmd.text_docs.search_tokens import search_tokens
 from kmd.text_formatting.html_in_md import html_img, md_para
 from kmd.util.string_replace import insert_multiple, Insertion
 from kmd.util.url import as_file_url
-from kmd.web_content.file_cache_tools import cache_content, cache_resource
+from kmd.web_content.file_cache_tools import cache_file, cache_resource
 from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
@@ -82,7 +82,7 @@ class InsertFrameCaptures(PerItemAction):
 
         # Save images in file cache for later as well.
         for frame_path in frame_paths:
-            cache_content(frame_path)
+            cache_file(frame_path)
         log.message(f"Saved {len(frame_paths)} frame captures to cache.")
 
         # Filter out similar consecutive frames.

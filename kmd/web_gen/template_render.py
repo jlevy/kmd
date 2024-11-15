@@ -23,5 +23,5 @@ def render_web_template(template_file: str, data: dict, autoescape: bool = True)
         "colors": {name: value for name, value in vars(colors).items() if not name.startswith("__")}
     }
 
-    rendered_html = template.render(data, **additional_vars)
+    rendered_html = template.render({**data, **additional_vars})
     return rendered_html

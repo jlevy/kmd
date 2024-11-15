@@ -8,7 +8,7 @@ from kmd.model.canon_url import thumbnail_url
 from kmd.util.log_calls import log_calls
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.url import Url
-from kmd.web_content.file_cache_tools import cache_content, fetch
+from kmd.web_content.file_cache_tools import cache_file, fetch
 
 log = get_logger(__name__)
 
@@ -39,7 +39,7 @@ def fetch_extract(url: Url, use_cache: bool = True) -> PageData:
     # Example: https://www.inc.com/atish-davda/5-questions-you-should-ask-before-taking-a-start-up-job-offer.html
 
     if use_cache:
-        path, _was_cached = cache_content(url)
+        path, _was_cached = cache_file(url)
         with open(path, "rb") as file:
             content = file.read()
         page_data = _extract_page_data_from_html(url, content)

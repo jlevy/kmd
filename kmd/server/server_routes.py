@@ -92,7 +92,7 @@ def view_item(store_path: str, ws_name: str):
 
 
 @router.get(Route.explain)
-def explain(text: str, ws_name: str):
+def explain(text: str):
     help_str = explain_command(text, use_assistant=True)
     if not help_str:
         raise HTTPException(status_code=404, detail="Explanation not found")

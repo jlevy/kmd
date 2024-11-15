@@ -1,6 +1,7 @@
 from rich.text import Text
 
-from kmd.config.text_styles import COLOR_HEADING, COLOR_HINT, COLOR_STATUS, EMOJI_ASSISTANT
+from kmd.config.text_styles import COLOR_HEADING, COLOR_HINT, EMOJI_ASSISTANT
+from kmd.help.help_page import print_see_also
 from kmd.model.assistant_response_model import AssistantResponse, Confidence
 from kmd.model.language_models import LLM
 from kmd.shell.shell_output import (
@@ -11,7 +12,6 @@ from kmd.shell.shell_output import (
     print_style,
     print_text_block,
     Style,
-    Wrap,
 )
 from kmd.text_formatting.markdown_normalization import fill_markdown
 
@@ -43,6 +43,4 @@ def print_assistant_response(response: AssistantResponse, model: LLM) -> None:
             print_code_block(response.python_code, format="python")
 
         if response.see_also:
-            formatted_see_also = ", ".join(f"`{cmd}`" for cmd in response.see_also)
-            print_small_heading("See also:")
-            cprint(formatted_see_also, color=COLOR_STATUS, text_wrap=Wrap.WRAP_INDENT)
+            print_see_also(response.see_also)
