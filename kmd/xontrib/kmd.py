@@ -8,6 +8,8 @@ Sets up all commands and actions for use in xonsh.
 Can run from the custom kmd shell (main.py) or from a regular xonsh shell.
 """
 
+import kmd.util.rich_patch  # noqa: F401 # Monkey-patch must go first.
+
 # Using absolute imports to avoid polluting the user's shell namespace.
 import kmd.action_defs
 import kmd.commands.command_registry

@@ -18,6 +18,8 @@ from xonsh.main import events, postmain, premain
 from xonsh.shell import Shell
 from xonsh.xontribs import xontribs_load
 
+import kmd.util.rich_patch  # noqa: F401  # Monkey-patch must go first.
+
 # Keeping initial imports/deps minimal.
 from kmd.config.lazy_imports import import_start_time
 from kmd.config.logger import get_console, get_logger

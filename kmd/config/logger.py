@@ -106,8 +106,12 @@ def logging_setup():
     _console_handler.setFormatter(Formatter("%(message)s"))
 
     # Manually adjust logging for a few packages, removing previous verbose default handlers.
+
+    import litellm
     from litellm import _logging  # noqa: F401
     from weasyprint import LOGGER, PROGRESS_LOGGER  # noqa: F401
+
+    litellm.suppress_debug_info = True  # Suppress overly prominent exception messages.
 
     log_levels = {
         None: INFO,

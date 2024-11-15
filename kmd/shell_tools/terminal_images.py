@@ -82,7 +82,7 @@ def terminal_is_kitty():
     return os.environ.get("TERM") == "xterm-kitty"
 
 
-def _terminal_show_image_sixel(image_path: str | Path, width: int = 800, height: int = 480) -> None:
+def _terminal_show_image_sixel(image_path: str | Path, width: int = 600, height: int = 400) -> None:
     if shutil.which("magick") is None:
         raise SetupError("ImageMagick `magick` not found in path; check it is installed?")
 
@@ -92,7 +92,7 @@ def _terminal_show_image_sixel(image_path: str | Path, width: int = 800, height:
             str(image_path),
             "-depth",
             "8",
-            "-geometry",
+            "-resize",
             f"{width}x{height}",
             "sixel:-",
         ]
