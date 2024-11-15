@@ -712,6 +712,7 @@ def file_info(
         if size_summary and detected_format and detected_format.supports_frontmatter:
             body, frontmatter = fmf_read(input_path)
 
+            item_type = None
             if frontmatter:
                 if offset:
                     cprint(
@@ -723,7 +724,7 @@ def file_info(
                     cprint(f"item type: {item_type}", text_wrap=Wrap.INDENT_ONLY)
             if body:
                 # Show chat history info.
-                if item_type == ItemType.chat.value:
+                if item_type and item_type == ItemType.chat.value:
                     try:
                         chat_history = ChatHistory.from_yaml(body)
                         size_summary_str = chat_history.size_summary()
@@ -1045,31 +1046,36 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
     if not applicable_actions:
         cprint("No applicable actions for selection.")
         return
-
-    if brief:
-        action_names = [action.name for action in applicable_actions]
-        cprint("Applicable actions:", color=COLOR_SUGGESTION)
-        cprint(
-            ", ".join(f"`{name}`" for name in action_names),
-            extra_indent="    ",
-            color=COLOR_SUGGESTION,
-        )
-        cprint()
-    else:
-        cprint("Applicable actions for items:\n %s", fmt_lines(store_paths), color=COLOR_SUGGESTION)
-
-        for action in applicable_actions:
-            precondition_str = (
-                f"(matches precondition {action.precondition })"
-                if action.precondition
-                else "(no precondition)"
-            )
+    with ws_formatter(ws.name) as fmt:
+        if brief:
+            action_names = [action.name for action in applicable_actions]
+            cprint("Applicable actions:", color=COLOR_SUGGESTION)
             cprint(
-                format_name_and_description(
-                    action.name, action.description, extra_note=precondition_str
-                )
+                Text.join(
+                    Text(", ", style=COLOR_HINT),
+                    (fmt.command_link(name) for name in action_names),
+                ),
+                extra_indent="    ",
             )
             cprint()
+        else:
+            cprint(
+                "Applicable actions for items:\n %s", fmt_lines(store_paths), color=COLOR_SUGGESTION
+            )
+            for action in applicable_actions:
+                precondition_str = (
+                    f"(matches precondition {action.precondition })"
+                    if action.precondition
+                    else "(no precondition)"
+                )
+                cprint(
+                    format_name_and_description(
+                        fmt.command_link(action.name),
+                        action.description,
+                        extra_note=precondition_str,
+                    ),
+                )
+                cprint()
 
 
 @kmd_command

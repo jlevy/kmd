@@ -4,7 +4,7 @@ from kmd.config.logger import get_logger
 from kmd.errors import ApiResultError
 from kmd.exec.action_registry import kmd_action
 from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
-from kmd.help.assistant import assist_preamble, general_assistance
+from kmd.help.assistant import assist_preamble, structured_assistance
 from kmd.model import ArgCount, Format, ItemType, Message, Precondition, TitleTemplate
 from kmd.model.actions_model import ONE_ARG, PerItemAction
 from kmd.model.items_model import Item
@@ -96,10 +96,7 @@ class WriteNewAction(PerItemAction):
         )
 
         model = self.model or DEFAULT_CAREFUL_LLM
-        assistant_response = general_assistance(
-            model,
-            messages=chat_history.as_chat_completion(),
-        )
+        assistant_response = structured_assistance(chat_history.as_chat_completion(), model)
 
         print_assistant_response(assistant_response, model)
 

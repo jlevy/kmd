@@ -14,6 +14,17 @@ def simple_word_splitter(text: str) -> List[str]:
     return text.split()
 
 
+# We could use character length, but cell_len is more accurate for OSC8
+# links if we use our patched version of rich.
+# wrap_length_fn = len
+from kmd.util.rich_patch import cell_len
+
+wrap_length_fn = cell_len
+"""
+Length function to use for wrapping.
+"""
+
+
 class _SmarterWordSplitter:
     def __init__(self):
         # Sequences of whitespace-delimited words that should be coalesced and treated
@@ -83,6 +94,9 @@ def wrap_text(
     :param replace_whitespace: Replace all whitespace with single spaces.
     :param drop_whitespace: Drop leading and trailing whitespace from lines.
     """
+    global wrap_length_fn
+    len_fn = wrap_length_fn
+
     if replace_whitespace:
         text = re.sub(r"\s+", " ", text)
 
@@ -90,10 +104,10 @@ def wrap_text(
 
     lines: List[str] = []
     current_line: List[str] = []
-    current_width = len(initial_indent)
+    current_width = len_fn(initial_indent)
 
     for word in words:
-        word_width = len(word)
+        word_width = len_fn(word)
 
         space_width = 1 if current_line else 0
         if current_width + word_width + space_width <= width:
@@ -106,7 +120,7 @@ def wrap_text(
                     line = line.strip()
                 lines.append((initial_indent if not lines else subsequent_indent) + line)
             current_line = [word]
-            current_width = len(subsequent_indent) + word_width
+            current_width = len_fn(subsequent_indent) + word_width
 
     if current_line:
         line = " ".join(current_line)
@@ -247,3 +261,16 @@ def test_wrap_width():
     print(wrapped)
     print([len(line) for line in wrapped])
     assert all(len(line) <= width for line in wrapped)
+
+
+def test_osc8_link():
+    from kmd.shell_tools.osc_tools import osc8_link
+
+    link = osc8_link("https://example.com/" + "x" * 50, "Example")
+    assert cell_len(link) == 7
+    text = (link + " ") * 50
+    wrapped = wrap_paragraph(text, width=80).splitlines()
+    print([cell_len(line) for line in wrapped])
+    print([len(line) for line in wrapped])
+    assert all(cell_len(line) <= 80 for line in wrapped)
+    assert all(len(line) >= 800 for line in wrapped)

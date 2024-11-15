@@ -5,7 +5,8 @@ While not required, these tools can make using Kmd easier or more fun.
 ### Choosing a Terminal
 
 You can use any favorite terminal to run Kmd, but I recommend trying
-[Hyper](https://hyper.is/) with the [Hyper-K](https://github.com/jlevy/hyper-k) plugin.
+[the latest release of Hyper](https://github.com/vercel/hyper/releases) (use v4.0+)
+with the [Hyper-K](https://github.com/jlevy/hyper-k) plugin.
 
 I tried half a dozen different popular terminals on Mac (Terminal, Warp, Kitty, etc.), and
 none were as easy to customize as I'd like.

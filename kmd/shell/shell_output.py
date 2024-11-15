@@ -137,7 +137,10 @@ def fill_text(
 
 
 def format_name_and_description(
-    name: str, doc: str | Text, extra_note: Optional[str] = None, text_wrap: Wrap = Wrap.WRAP_INDENT
+    name: str | Text,
+    doc: str | Text,
+    extra_note: Optional[str] = None,
+    text_wrap: Wrap = Wrap.WRAP_INDENT,
 ) -> Text:
     def do_fill(text: str) -> str:
         return fill_text(textwrap.dedent(text).strip(), text_wrap=text_wrap)
@@ -147,10 +150,11 @@ def format_name_and_description(
     else:
         doc = do_fill(doc)
 
+    if isinstance(name, str):
+        name = Text(name, style=COLOR_KEY)
+
     return Text.assemble(
-        ("`", COLOR_HINT),
-        (name, COLOR_KEY),
-        ("`", COLOR_HINT),
+        name,
         ((" " + extra_note, COLOR_HINT) if extra_note else ""),
         (": ", COLOR_HINT),
         "\n",
@@ -158,7 +162,7 @@ def format_name_and_description(
     )
 
 
-def format_paragraphs(*paragraphs: str | Text):
+def format_paragraphs(*paragraphs: str | Text) -> Text:
     text: List[str | Text] = []
     for paragraph in paragraphs:
         if text:
@@ -319,9 +323,6 @@ def cprint(
 
     if not isinstance(message, (Text, Markdown)):
         message = str(message)
-
-    if raw and (not isinstance(message, str) or color):
-        raise ValueError("Can't write non-string or colored content in raw mode")
 
     if message:
         if isinstance(message, str):

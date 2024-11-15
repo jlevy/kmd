@@ -42,6 +42,8 @@ COLOR_LOGO = "bold magenta"
 
 COLOR_PLAIN = "default"
 
+COLOR_LINK = "cyan"
+
 COLOR_SUCCESS = "green"
 
 COLOR_FAILURE = "bright_red"

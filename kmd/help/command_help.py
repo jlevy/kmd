@@ -1,12 +1,23 @@
 from typing import List, Optional
 
-from kmd.commands.command_registry import CommandFunction
+from kmd.action_defs import look_up_action
+from kmd.commands.command_registry import CommandFunction, look_up_command
+from kmd.errors import InvalidInput
+from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
+from kmd.help.assistant import assist_preamble, unstructured_assistance
 from kmd.help.docstrings import parse_docstring
 from kmd.help.function_param_info import annotate_param_info
 from kmd.model.actions_model import Action
+from kmd.model.messages_model import Message
 from kmd.model.params_model import Param, RUNTIME_ACTION_PARAMS
 from kmd.model.preconditions_model import Precondition
-from kmd.shell.shell_output import cprint, format_name_and_description, print_help, Wrap
+from kmd.shell.shell_output import (
+    cprint,
+    format_name_and_description,
+    output_as_string,
+    print_help,
+    Wrap,
+)
 from kmd.util.format_utils import DEFAULT_INDENT
 
 
@@ -16,7 +27,7 @@ GENERAL_HELP = (
 )
 
 
-def _output_command_help(
+def _print_command_help(
     name: str,
     description: Optional[str] = None,
     param_info: Optional[List[Param]] = None,
@@ -87,7 +98,7 @@ def _output_command_help(
 def print_command_function_help(command: CommandFunction, verbose: bool = True):
     param_info = annotate_param_info(command)
 
-    _output_command_help(
+    _print_command_help(
         command.__name__,
         command.__doc__ if command.__doc__ else "",
         param_info=param_info,
@@ -100,10 +111,49 @@ def print_action_help(action: Action, verbose: bool = True):
     if verbose:
         params = list(action.params) + list(RUNTIME_ACTION_PARAMS.values())
 
-    _output_command_help(
+    _print_command_help(
         action.name,
         action.description,
         param_info=params,
         precondition=action.precondition,
         verbose=verbose,
     )
+
+
+def explain_command(text: str, use_assistant: bool = False) -> Optional[str]:
+    """
+    Explain a command or action or give a brief explanation of something.
+    """
+    text = text.strip()
+
+    help_str = None
+    try:
+        command = look_up_command(text)
+        help_str = output_as_string(lambda: print_command_function_help(command))
+    except InvalidInput:
+        pass
+
+    if not help_str:
+        try:
+            action = look_up_action(text)
+            help_str = output_as_string(lambda: print_action_help(action))
+        except InvalidInput:
+            pass
+
+    if not help_str and use_assistant:
+        chat_history = ChatHistory()
+
+        # Give the LLM full context on kmd APIs.
+        # But we do this here lazily to prevent circular dependencies.
+        system_message = Message(assist_preamble(skip_api=False, base_actions_only=False))
+        chat_history.extend(
+            [
+                ChatMessage(ChatRole.system, system_message),
+                ChatMessage(ChatRole.user, f"Can you explain this succinctly: {text}"),
+            ]
+        )
+
+        response = unstructured_assistance(chat_history.as_chat_completion())
+        help_str = response.content
+
+    return help_str

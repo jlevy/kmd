@@ -6,7 +6,7 @@ from functools import lru_cache
 from typing import Callable
 
 import rich.cells
-from rich.cells import get_character_cell_size, _is_single_cell_widths
+from rich.cells import _is_single_cell_widths, get_character_cell_size
 
 
 def strip_control_sequences(text: str) -> str:
@@ -59,9 +59,6 @@ rich.cells.cached_cell_len = cached_cell_len
 rich.cells.cell_len = cell_len
 
 
-print("Monkey-patched Rich cell_len!")
-
-
 ## Tests
 
 
@@ -83,8 +80,12 @@ def test_old_cell_len_bug():
         f"long_osc_link={old_cell_len(_long_osc_link)}"
     )
     assert old_cell_len(_plain_text) == 6
-    assert old_cell_len(_short_osc_link) == 35  # Wrong!
-    assert old_cell_len(_long_osc_link) == 135  # Wrong!
+    # Without patching:
+    # assert old_cell_len(_short_osc_link) == 35  # Wrong!
+    # assert old_cell_len(_long_osc_link) == 135  # Wrong!
+    # If this patch is loaded:
+    assert old_cell_len(_short_osc_link) == cell_len(_short_osc_link)
+    assert old_cell_len(_long_osc_link) == cell_len(_long_osc_link)
 
 
 def test_cell_len():

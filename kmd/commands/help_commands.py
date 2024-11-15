@@ -15,8 +15,16 @@ from kmd.config.text_styles import (
 )
 from kmd.docs.assemble_source_code import read_source_code
 from kmd.errors import FileNotFound
+from kmd.help.command_help import explain_command
 from kmd.help.help_page import print_see_also
-from kmd.shell.shell_output import console_pager, cprint, print_code_block, print_markdown, Wrap
+from kmd.shell.shell_output import (
+    console_pager,
+    cprint,
+    print_assistance,
+    print_code_block,
+    print_markdown,
+    Wrap,
+)
 from kmd.version import get_version_name
 
 log = get_logger(__name__)
@@ -178,3 +186,16 @@ def action_source(action_name: str) -> None:
 
     source_code = read_source_code(source_path)
     print_code_block(source_code, format="python")
+
+
+@kmd_command
+def explain(text: str, use_assistant: bool = False) -> None:
+    """
+    Give help on a command or action.  If `use_assistant` is True then will also use the assistant
+    if the command or text is not recognized.
+    """
+    help_str = explain_command(text, use_assistant=use_assistant)
+    if help_str:
+        print_assistance(help_str)
+    else:
+        print("Command not recognized. Use `help` for more information.")

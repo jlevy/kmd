@@ -17,7 +17,7 @@ from kmd.file_formats.chat_format import (
     tail_chat_history,
 )
 from kmd.lang_tools.capitalization import capitalize_cms
-from kmd.llms.llm_completion import llm_completion
+from kmd.llms.llm_completion import llm_completion, LLMCompletionResult
 from kmd.model.args_model import fmt_loc
 from kmd.model.assistant_response_model import AssistantResponse
 from kmd.model.file_formats_model import Format
@@ -151,13 +151,41 @@ def assistant_chat_history(include_system_message: bool, fast: bool = False) -> 
     return assistant_history
 
 
-def general_assistance(
-    model: LLM,
+def assistant_model(fast: bool = False) -> LLM:
+    assistant_model = "assistant_model_fast" if fast else "assistant_model"
+    return not_none(workspace_param_value(assistant_model, type=LLM))
+
+
+def unstructured_assistance(
+    messages: List[Dict[str, str]], model: Optional[LLM] = None, fast: bool = False
+) -> LLMCompletionResult:
+    """
+    Get general assistance without any pre-loaded help or context.
+    """
+    if not model:
+        model = assistant_model(fast=fast)
+    response = llm_completion(
+        model,
+        messages=messages,
+        save_objects=global_settings().debug_assistant,
+    )
+    return response
+
+
+def structured_assistance(
     messages: List[Dict[str, str]],
+    model: Optional[LLM] = None,
+    fast: bool = False,
 ) -> AssistantResponse:
+    """
+    Get general assistance, with structured output. Must provide all context.
+    """
+
     # TODO: Stream response.
 
-    # Get the assistant's response, including history.
+    if not model:
+        model = assistant_model(fast=fast)
+
     response = llm_completion(
         model,
         messages=messages,
@@ -179,6 +207,9 @@ def general_assistance(
 def shell_context_assistance(
     input: str, fast: bool = False, silent: bool = False, model: Optional[LLM] = None
 ) -> None:
+    """
+    Get assistance, using the full context of the shell.
+    """
 
     if not model:
         assistant_model = "assistant_model_fast" if fast else "assistant_model"
@@ -188,7 +219,7 @@ def shell_context_assistance(
         cprint(f"Getting assistance (model {model})…")
 
     # Get shell chat history.
-    history_file = assistant_history_file()
+
     history = assistant_chat_history(include_system_message=False, fast=fast)
 
     # Insert the system message.
@@ -203,10 +234,11 @@ def shell_context_assistance(
     log.info("Assistant history context (including new message): %s", history.size_summary())
 
     # Get the assistant's response.
-    assistant_response = general_assistance(model, history.as_chat_completion())
+    assistant_response = structured_assistance(history.as_chat_completion(), model)
 
     # Save the user message to the history after a response. That way if the
     # use changes their mind right away and cancels it's not left in the file.
+    history_file = assistant_history_file()
     append_chat_message(history_file, user_message)
     # Record the assistant's response, in structured format.
     append_chat_message(
