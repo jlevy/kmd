@@ -73,8 +73,8 @@ def video_gallery_generate(config_item: Item) -> str:
     config = config_item.read_as_config()
     video_gallery = as_dataclass(config, VideoGallery)  # Checks the format.
 
-    content = render_web_template("youtube_gallery.template.html", asdict(video_gallery))
+    content = render_web_template("youtube_gallery.html.jinja", asdict(video_gallery))
 
     return render_web_template(
-        "base_webpage.template.html", {"title": video_gallery.title, "content": content}
+        "base_webpage.html.jinja", {"title": video_gallery.title, "content": content}
     )

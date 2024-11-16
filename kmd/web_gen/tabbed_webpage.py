@@ -97,10 +97,10 @@ def webpage_generate(config_item: Item) -> str:
     tabbed_webpage = as_dataclass(config, TabbedWebpage)  # Checks the format.
 
     _load_tab_content(tabbed_webpage)
-    content = render_web_template("tabbed_webpage.template.html", asdict(tabbed_webpage))
+    content = render_web_template("tabbed_webpage.html.jinja", asdict(tabbed_webpage))
 
     return render_web_template(
-        "base_webpage.template.html",
+        "base_webpage.html.jinja",
         {
             "title": tabbed_webpage.title,
             "content": content,
@@ -134,7 +134,7 @@ def test_render():
     assert new_config == config
 
     html = render_web_template(
-        "tabbed_webpage.template.html",
+        "tabbed_webpage.html.jinja",
         asdict(config),
     )
     with open("tmp/webpage.html", "w") as f:

@@ -1,0 +1,39 @@
+footer {
+  font-size: 1rem;
+  position: fixed;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  color: var(--color-secondary);
+}
+
+@page {
+  @bottom-right {
+    content: counter(page) " of " counter(pages);
+    font-family: var(--font-serif);
+    color: var(--color-secondary);
+  }
+
+  @bottom-left {
+    content: "{{ footer }}";
+    font-family: var(--font-serif);
+    color: var(--color-secondary);
+  }
+}
+
+@media print {
+  :root {
+    --color-text: #000;
+    --color-secondary: #999;
+    --color-bg: white;
+  }
+  
+  body {
+    background-color: white;
+    color: var(--color-text) !important;
+  }
+}

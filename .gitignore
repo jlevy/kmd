@@ -16,9 +16,6 @@ kmd_cache/
 stash.*
 *.stash.*
 
-# Ignore secrets file except for the template.
-secrets.toml
-!secrets.template.toml
 
 # GitHub's generic Python .gitignore:
 

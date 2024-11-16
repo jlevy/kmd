@@ -19,8 +19,8 @@ log = get_logger(__name__)
 
 
 def force_graph_generate(title: str, graph: GraphData) -> str:
-    content = render_web_template("force_graph.template.html", {"graph": graph.to_serializable()})
-    return render_web_template("base_webpage.template.html", {"title": title, "content": content})
+    content = render_web_template("force_graph.html.jinja", {"graph": graph.to_serializable()})
+    return render_web_template("base_webpage.html.jinja", {"title": title, "content": content})
 
 
 def generate_graph_view_html(data: GraphData) -> Path:

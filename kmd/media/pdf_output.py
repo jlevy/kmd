@@ -24,7 +24,7 @@ def html_to_pdf(
     title = title or ""
 
     full_html = render_web_template(
-        "base_webpage.template.html",
+        "base_webpage.html.jinja",
         {
             "title": title,
             "content": html_content,
