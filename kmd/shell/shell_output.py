@@ -11,9 +11,9 @@ from io import StringIO
 from typing import Any, Callable, List, Optional
 
 import rich
+import rich.style
 from rich.console import Group
 from rich.markdown import Markdown
-from rich.padding import Padding
 from rich.text import Text
 
 from kmd.config.logger import get_console, get_logger
@@ -37,7 +37,7 @@ from kmd.config.text_styles import (
     MID_CORNER,
     VRULE_CHAR,
 )
-from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH
+from kmd.shell.rich_indent import Indent
 from kmd.text_formatting.text_wrapping import wrap_paragraph
 from kmd.util.format_utils import DEFAULT_INDENT, split_paragraphs
 
@@ -64,8 +64,26 @@ class Wrap(Enum):
     """Wrap with hanging indent (indented except for the first line)."""
 
     @property
+    def initial_indent(self) -> str:
+        if self in [Wrap.INDENT_ONLY, Wrap.WRAP_INDENT]:
+            return DEFAULT_INDENT
+        else:
+            return ""
+
+    @property
+    def subsequent_indent(self) -> str:
+        if self in [Wrap.INDENT_ONLY, Wrap.WRAP_INDENT, Wrap.HANGING_INDENT]:
+            return DEFAULT_INDENT
+        else:
+            return ""
+
+    @property
     def should_wrap(self) -> bool:
         return self in [Wrap.WRAP, Wrap.WRAP_FULL, Wrap.WRAP_INDENT, Wrap.HANGING_INDENT]
+
+    @property
+    def replace_whitespace(self) -> bool:
+        return self in [Wrap.WRAP_FULL, Wrap.WRAP_INDENT, Wrap.HANGING_INDENT]
 
 
 def fill_text(
@@ -75,67 +93,46 @@ def fill_text(
     empty_indent: str = "",
     width=CONSOLE_WRAP_WIDTH,
 ) -> str:
-    if text_wrap in [Wrap.NONE, Wrap.INDENT_ONLY]:
+    if not text_wrap.should_wrap:
         indent = extra_indent + DEFAULT_INDENT if text_wrap == Wrap.INDENT_ONLY else extra_indent
         lines = text.splitlines()
         if lines:
             return "\n".join(indent + line for line in lines)
         else:
             return empty_indent
-    elif text_wrap in [Wrap.WRAP, Wrap.WRAP_FULL, Wrap.WRAP_INDENT, Wrap.HANGING_INDENT]:
+    else:
+        # Common settings for all wrap modes.
+        empty_indent = empty_indent.strip()
+        initial_indent = extra_indent + text_wrap.initial_indent
+        subsequent_indent = extra_indent + text_wrap.subsequent_indent
+
+        # These vary by wrap mode.
+        width = width - len(subsequent_indent)
+        replace_whitespace = text_wrap.replace_whitespace
+
         paragraphs = split_paragraphs(text)
         wrapped_paragraphs = []
 
+        # Wrap each paragraph.
         for i, paragraph in enumerate(paragraphs):
-            if text_wrap == Wrap.WRAP:
-                wrapped_paragraphs.append(
-                    wrap_paragraph(
-                        paragraph,
-                        width=width,
-                        initial_indent=extra_indent,
-                        subsequent_indent=extra_indent,
-                        empty_indent=extra_indent.strip(),
-                        replace_whitespace=False,
-                    )
+            # Special case for hanging indent mode.
+            # Hang the first line of the first paragraph. All other paragraphs are indented.
+            if text_wrap == Wrap.HANGING_INDENT and i > 0:
+                initial_indent = subsequent_indent
+
+            wrapped_paragraphs.append(
+                wrap_paragraph(
+                    paragraph,
+                    width=width,
+                    initial_indent=initial_indent,
+                    subsequent_indent=subsequent_indent,
+                    empty_indent=empty_indent,
+                    replace_whitespace=replace_whitespace,
                 )
-            elif text_wrap == Wrap.WRAP_FULL:
-                wrapped_paragraphs.append(
-                    wrap_paragraph(
-                        paragraph,
-                        width=width,
-                        initial_indent=extra_indent,
-                        subsequent_indent=extra_indent,
-                        empty_indent=extra_indent.strip(),
-                        replace_whitespace=True,
-                    )
-                )
-            elif text_wrap == Wrap.WRAP_INDENT:
-                wrapped_paragraphs.append(
-                    wrap_paragraph(
-                        paragraph,
-                        width=width - len(extra_indent + DEFAULT_INDENT),
-                        initial_indent=extra_indent + DEFAULT_INDENT,
-                        subsequent_indent=extra_indent + DEFAULT_INDENT,
-                        empty_indent=extra_indent.strip(),
-                        replace_whitespace=True,
-                    )
-                )
-            elif text_wrap == Wrap.HANGING_INDENT:
-                wrapped_paragraphs.append(
-                    wrap_paragraph(
-                        paragraph,
-                        width=width - len(extra_indent + DEFAULT_INDENT),
-                        # Hang the first line of the first paragraph. All other paragraphs are indented.
-                        initial_indent=extra_indent + DEFAULT_INDENT if i > 0 else extra_indent,
-                        subsequent_indent=extra_indent + DEFAULT_INDENT,
-                        empty_indent=extra_indent.strip(),
-                        replace_whitespace=True,
-                    )
-                )
+            )
+
         para_sep = f"\n{empty_indent}\n"
         return para_sep.join(wrapped_paragraphs)
-    else:
-        raise ValueError(f"Unknown text_wrap value: {text_wrap}")
 
 
 def format_name_and_description(
@@ -271,8 +268,15 @@ def output_as_string(func: Callable, *args: Any, **kwargs: Any) -> str:
     return buffer.getvalue()
 
 
+null_style = rich.style.Style.null()
+
+
 def rprint(
-    *args, width: Optional[int] = None, left_pad: Optional[int] = None, raw: bool = False, **kwargs
+    *args: str | Text | Markdown,
+    width: Optional[int] = None,
+    indent: str = "",
+    raw: bool = False,
+    **kwargs,
 ):
     """
     Print to global console, unless output stream is redirected.
@@ -284,7 +288,7 @@ def rprint(
     stream = getattr(_output_context, "stream", None)
 
     if raw:
-        # Leave raw mode as is; indent not supported
+        # TODO: Indent not supported in raw mode.
         text = " ".join(str(arg) for arg in args)
         end = kwargs.get("end", "\n")
         if stream:
@@ -297,11 +301,15 @@ def rprint(
             console.file.write(end)
             console.file.flush()
     else:
-        if left_pad:
-            renderable = Group(*args) if len(args) != 1 else args[0]
-            renderable = Padding(renderable, (0, 0, 0, left_pad))
+        if len(args) == 0:
+            renderable = ""
+        elif len(args) == 1:
+            renderable = args[0]
         else:
-            renderable = Group(*args) if len(args) != 1 else args[0]
+            renderable = Group(*args)
+
+        if indent:
+            renderable = Indent(renderable, indent=indent)
 
         if stream:
             rich.print(renderable, **kwargs, file=stream)
@@ -330,13 +338,14 @@ def cprint(
         extra_indent = tl_prefix + extra_indent
 
     if text_wrap.should_wrap and not width:
-        width = DEFAULT_WRAP_WIDTH
+        width = CONSOLE_WRAP_WIDTH
 
     if not isinstance(message, (Text, Markdown)):
         message = str(message)
 
     if message:
         if isinstance(message, str):
+            color = color or null_style
             text = message % args if args else message
             if text:
                 filled_text = fill_text(
@@ -346,20 +355,17 @@ def cprint(
                     empty_indent=empty_indent,
                 )
                 rprint(
-                    Text(filled_text, color) if color else filled_text,
+                    Text(filled_text, color),
                     end=end,
                     width=width,
                     raw=raw,
                 )
             elif extra_indent:
-                rprint(extra_indent, end=end, raw=raw)
+                rprint(Text(extra_indent, style=null_style), end=end, raw=raw)
         else:
-            # TODO: We don't support text_wrap and non-space extra_indent right now for
-            # Text objects.
-            left_pad = len(extra_indent) if extra_indent else None
-            rprint(message, end=end, width=width, left_pad=left_pad)
+            rprint(message, end=end, width=width, indent=extra_indent)
     else:
-        rprint(empty_indent)
+        rprint(Text(empty_indent, style=null_style))
 
 
 log = get_logger(__name__)

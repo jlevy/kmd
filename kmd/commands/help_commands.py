@@ -50,19 +50,19 @@ def welcome() -> None:
     from kmd.docs import welcome
 
     cprint()
-    cprint(BOX_TOP, color=COLOR_HINT)
+    cprint(BOX_TOP)
     version = get_version_name()
-    padding = " " * (len(BOX_TOP) - len(BOX_PREFIX) - len(LOGO) - len(version))
+    flush_right = " " * (len(BOX_TOP) - len(BOX_PREFIX) - len(LOGO) - len(version))
     cprint(
-        Text(LOGO, style=COLOR_LOGO) + Text(padding + version, style=COLOR_HINT),
+        Text(LOGO, style=COLOR_LOGO) + Text(flush_right + version, style=COLOR_HINT),
         extra_indent=BOX_PREFIX,
     )
-    cprint(BOX_MID, color=COLOR_HINT)
+    cprint(BOX_MID)
     cprint(extra_indent=BOX_PREFIX)
     cprint(Text("Welcome to Kmd.", style=COLOR_HEADING), extra_indent=BOX_PREFIX)
     cprint(extra_indent=BOX_PREFIX)
     cprint(welcome, text_wrap=Wrap.WRAP_FULL, extra_indent=BOX_PREFIX)
-    cprint(BOX_BOTTOM, color=COLOR_HINT)
+    cprint(BOX_BOTTOM)
 
 
 @kmd_command
