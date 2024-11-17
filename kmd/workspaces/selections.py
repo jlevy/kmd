@@ -56,6 +56,12 @@ class Selection(BaseModel):
     def deserialize_paths(cls, paths: List[str]) -> List[StorePath]:
         return [StorePath(p) for p in paths]
 
+    def clear(self) -> None:
+        """
+        Clear the current selection.
+        """
+        self.paths.clear()
+
     def remove_values(self, targets: Sequence[StorePath]) -> None:
         """
         Remove specified paths from the current selection.
@@ -199,7 +205,10 @@ class SelectionHistory(BaseModel):
         if not self.history:
             raise InvalidOperation("No current selection")
         else:
-            self.history[self.current_index].remove_values(paths)
+            if paths:
+                self.history[self.current_index].remove_values(paths)
+            else:
+                self.history[self.current_index].clear()
             return self.history[self.current_index]
 
     @persist_after(_save)

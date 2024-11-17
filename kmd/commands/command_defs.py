@@ -432,25 +432,25 @@ def select(
 
 
 @kmd_command
-def unselect(*paths: str) -> None:
+def unselect(*paths: str) -> ShellResult:
     """
     Remove items from the current selection. Handy if you've just selected some items and
-    wish to unselect a few of them.
+    wish to unselect a few of them. Used without arguments, makes the current selection empty.
     """
     ws = current_workspace()
-    if not paths:
-        raise InvalidInput("No paths given to unselect")
-    else:
-        current_paths = ws.selections.current.paths
-        new_paths = ws.selections.unselect_current([StorePath(path) for path in paths]).paths
 
-        print_status(
-            "Unselected %s %s, %s now selected:\n%s",
-            len(current_paths) - len(new_paths),
-            plural("item", len(current_paths) - len(new_paths)),
-            len(new_paths),
-            fmt_lines(new_paths),
-        )
+    current_paths = ws.selections.current.paths.copy()
+    new_paths = ws.selections.unselect_current([StorePath(path) for path in paths]).paths
+
+    n_removed = len(current_paths) - len(new_paths)
+    print_status(
+        "Unselected %s %s, %s now selected.",
+        n_removed,
+        plural("item", n_removed),
+        len(new_paths),
+    )
+
+    return ShellResult(show_selection=True)
 
 
 @kmd_command
