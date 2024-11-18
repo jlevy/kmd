@@ -2,6 +2,15 @@ import re
 from textwrap import dedent
 from typing import List, Protocol, Tuple
 
+from kmd.util.ansi_cell_len import ansi_cell_len
+
+# wrap_length_fn = len
+wrap_length_fn = ansi_cell_len
+"""
+Length function to use for wrapping.
+We could use character length, but ansi_cell_len is more accurate for OSC8 links.
+"""
+
 
 class WordSplitter(Protocol):
     def __call__(self, text: str) -> List[str]: ...
@@ -12,17 +21,6 @@ def simple_word_splitter(text: str) -> List[str]:
     Split words on whitespace.
     """
     return text.split()
-
-
-# We could use character length, but cell_len is more accurate for OSC8
-# links if we use our patched version of rich.
-# wrap_length_fn = len
-from kmd.util.rich_patch import cell_len
-
-wrap_length_fn = cell_len
-"""
-Length function to use for wrapping.
-"""
 
 
 class _SmarterWordSplitter:
@@ -267,10 +265,10 @@ def test_osc8_link():
     from kmd.shell_tools.osc_tools import osc8_link
 
     link = osc8_link("https://example.com/" + "x" * 50, "Example")
-    assert cell_len(link) == 7
+    assert ansi_cell_len(link) == 7
     text = (link + " ") * 50
     wrapped = wrap_paragraph(text, width=80).splitlines()
-    print([cell_len(line) for line in wrapped])
+    print([ansi_cell_len(line) for line in wrapped])
     print([len(line) for line in wrapped])
-    assert all(cell_len(line) <= 80 for line in wrapped)
+    assert all(ansi_cell_len(line) <= 80 for line in wrapped)
     assert all(len(line) >= 800 for line in wrapped)

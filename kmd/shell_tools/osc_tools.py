@@ -2,6 +2,9 @@ import os
 
 from cachetools import cached
 
+from rich.style import Style
+from rich.text import Text
+
 
 @cached({})
 def terminal_supports_osc8() -> bool:
@@ -21,6 +24,13 @@ def terminal_supports_osc8() -> bool:
         return True
 
     return False
+
+
+def osc8_link_rich(url: str, text: str, metadata_str: str = "", style: str | Style = "") -> Text:
+    """
+    Must use Text.from_ansi() for Rich to handle links correctly!
+    """
+    return Text.from_ansi(osc8_link(url, text, metadata_str), style=style)
 
 
 def osc8_link(url: str, text: str, metadata_str: str = "") -> str:
@@ -48,7 +58,7 @@ def osc8_link(url: str, text: str, metadata_str: str = "") -> str:
 def osc8_link_graceful(url: str, text: str, id: str = "") -> str:
     """
     Generate clickable text for terminal emulators supporting OSC 8 with a fallback
-    for non-supporting terminals.
+    for non-supporting terminals to make the link visible.
     """
     if terminal_supports_osc8():
         metadata_str = f"id={id}" if id else ""

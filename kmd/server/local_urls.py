@@ -8,12 +8,12 @@ from rich.text import Text
 
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings
-from kmd.config.text_styles import COLOR_LINK
+from kmd.config.text_styles import COLOR_HINT, COLOR_LINK
 from kmd.errors import InvalidState
 from kmd.model.args_model import fmt_loc
 from kmd.model.paths_model import StorePath
 from kmd.server.server_routes import Route
-from kmd.shell_tools.osc_tools import osc8_link
+from kmd.shell_tools.osc_tools import osc8_link_rich
 from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
@@ -40,7 +40,7 @@ class LinkFormatter(ABC):
     """
 
     @abstractmethod
-    def path_link(self, path: Path) -> str:
+    def path_link(self, path: Path) -> Text:
         pass
 
     @abstractmethod
@@ -53,31 +53,34 @@ class PlaintextFormatter(LinkFormatter):
     A plaintext formatter that doesn't use links.
     """
 
-    def path_link(self, path: Path) -> str:
-        return fmt_loc(path)
+    def path_link(self, path: Path) -> Text:
+        return Text(fmt_loc(path))
 
     def command_link(self, command_str: str) -> Text:
-        return Text.assemble("`", command_str, "`")
+        return Text.assemble(Text("`", style=COLOR_HINT), command_str, Text("`", style=COLOR_HINT))
 
 
-class NoWorkspaceUrlFormatter(PlaintextFormatter):
+class DefaultFormatter(PlaintextFormatter):
     """
     A formatter that uses OSC8 links.
     """
 
-    def explain_url(self, text: str) -> str:
-        return local_url(Route.explain, text=text)
+    def path_link(self, path: Path) -> Text:
+        return super().path_link(path)  # FIXME: Add links to other paths.
 
     def command_link(self, command_str: str) -> Text:
+        url = local_url(Route.explain, text=command_str)
         return Text.assemble(
-            "`", osc8_link(self.explain_url(command_str), command_str), "`", style=COLOR_LINK
+            Text("`", style=COLOR_HINT),
+            osc8_link_rich(url, command_str, style=COLOR_LINK),
+            Text("`", style=COLOR_HINT),
         )
 
     def __str__(self):
         return "NoWorkspaceUrlFormatter()"
 
 
-class WorkspaceUrlFormatter(NoWorkspaceUrlFormatter):
+class WorkspaceUrlFormatter(DefaultFormatter):
     """
     A formatter that also has workspace context so can add workspace-specific links.
     """
@@ -85,18 +88,15 @@ class WorkspaceUrlFormatter(NoWorkspaceUrlFormatter):
     def __init__(self, ws_name: str):
         self.ws_name = ws_name
 
-    def view_item_url(self, store_path: StorePath) -> str:
-        return local_url(Route.view_item, store_path=store_path.display_str(), ws_name=self.ws_name)
-
-    def path_link(self, path: Path) -> str:
+    def path_link(self, path: Path) -> Text:
         # Only link StorePaths. Avoiding linking to all system paths seems like
         # a simple way to avoid a bunch of security issues.
         if isinstance(path, StorePath):
-            link = osc8_link(self.view_item_url(path), fmt_loc(path))
-            log.info("Link: %s", link)
+            url = local_url(Route.view_item, store_path=path.display_str(), ws_name=self.ws_name)
+            link = osc8_link_rich(url, fmt_loc(path))
             return link
         else:
-            return fmt_loc(path)
+            return super().path_link(path)
 
     def __str__(self):
         return f"WorkspaceUrlFormatter(ws_name={self.ws_name})"
@@ -106,13 +106,13 @@ class WorkspaceUrlFormatter(NoWorkspaceUrlFormatter):
 def ws_formatter(ws_name: Optional[str] = None):
     """
     Context manager to make it easy to format store paths with links to the local
-    server for more info. If ws_name is None, use the default fmt_loc formatter.
+    server for more info. If ws_name is None, use the default formatter.
     """
     try:
         ws_name = current_workspace().name
         fmt = WorkspaceUrlFormatter(ws_name)
     except InvalidState:
-        fmt = NoWorkspaceUrlFormatter()
+        fmt = DefaultFormatter()
 
     log.info("Using %s", fmt)
     try:

@@ -1323,8 +1323,11 @@ def files(
     total_displayed_size = 0
     now = datetime.now(timezone.utc)
 
-    format_str = "%12s  %8s  %s"
-    indent = " " * (12 + 8 + 4)
+    # Define spacing constants.
+    TIME_WIDTH = 12
+    SIZE_WIDTH = 8
+    SPACING = "  "
+    indent = " " * (TIME_WIDTH + SIZE_WIDTH + len(SPACING) * 2)
 
     with console_pager(use_pager=pager):
         with ws_formatter(active_ws_name) as fmt:
@@ -1353,14 +1356,16 @@ def files(
                     else:
                         display_path = Path(rel_path)
 
-                    cprint(
-                        format_str,
-                        file_mod_time,
-                        file_size,
-                        fmt.path_link(display_path),
-                        text_wrap=Wrap.NONE,
-                        raw=True,  # Needed for OSC8 links.
-                    )
+                    # Assemble output line.
+                    # FIXME: Restore coloring on mod time and size.
+                    line = Text()
+                    line.append(file_mod_time.rjust(TIME_WIDTH))
+                    line.append(SPACING)
+                    line.append(file_size.rjust(SIZE_WIDTH))
+                    line.append(SPACING)
+                    line.append(fmt.path_link(display_path))
+
+                    cprint(line, text_wrap=Wrap.NONE)
                     total_displayed += 1
                     total_displayed_size += row["size"]
 

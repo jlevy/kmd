@@ -3,8 +3,6 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, TypeVar
 
-import kmd.util.rich_patch  # noqa: F401 # usort:skip # Monkey-patch must go first.
-
 from kmd.action_defs import reload_all_actions
 from kmd.commands import help_commands
 from kmd.commands.command_registry import all_commands
