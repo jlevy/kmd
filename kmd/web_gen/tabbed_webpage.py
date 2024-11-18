@@ -4,7 +4,6 @@ from typing import List, Optional
 
 from frontmatter_format import read_yaml_file, to_yaml_string, write_yaml_file
 
-from kmd.config import colors
 from kmd.config.logger import get_logger
 from kmd.errors import NoMatch
 from kmd.lang_tools.clean_headings import clean_heading, summary_heading
@@ -104,7 +103,6 @@ def webpage_generate(config_item: Item) -> str:
         {
             "title": tabbed_webpage.title,
             "content": content,
-            "color_defs": colors.generate_css_variables(),
         },
     )
 
@@ -136,6 +134,7 @@ def test_render():
     html = render_web_template(
         "tabbed_webpage.html.jinja",
         asdict(config),
+        with_colors=True,
     )
     with open("tmp/webpage.html", "w") as f:
         f.write(html)

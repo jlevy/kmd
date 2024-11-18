@@ -2,14 +2,25 @@ from typing import Optional
 
 from kmd.config.logger import get_logger
 from kmd.errors import ApiResultError
+from kmd.exec.action_exec import run_action
 from kmd.exec.action_registry import kmd_action
+from kmd.exec.system_actions import write_instructions
 from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.help.assistant import assist_preamble, structured_assistance
-from kmd.model import ArgCount, Format, ItemType, Message, Precondition, TitleTemplate
-from kmd.model.actions_model import ONE_ARG, PerItemAction
-from kmd.model.items_model import Item
-from kmd.model.language_models import LLM
-from kmd.model.model_settings import DEFAULT_CAREFUL_LLM
+from kmd.model import (
+    Action,
+    ActionInput,
+    ActionResult,
+    ArgCount,
+    DEFAULT_CAREFUL_LLM,
+    Format,
+    ItemType,
+    LLM,
+    Message,
+    ONE_OR_NO_ARGS,
+    Precondition,
+    TitleTemplate,
+)
 from kmd.preconditions.precondition_defs import is_instructions
 from kmd.shell.assistant_output import print_assistant_response
 from kmd.shell.shell_output import fill_text, Wrap
@@ -51,14 +62,14 @@ def write_action_instructions() -> str:
 
 
 @kmd_action
-class WriteNewAction(PerItemAction):
+class WriteNewAction(Action):
 
     name: str = "write_new_action"
 
     description: str = (
         """
         Create a new kmd action in Python, based on a description of the features.
-        Write an instruction to give as input.
+        If no input is provided, will start an interactive chat to collect the action description.
         """
     )
 
@@ -69,7 +80,9 @@ class WriteNewAction(PerItemAction):
 
     title_template: TitleTemplate = TitleTemplate("Action: {title}")
 
-    expected_args: ArgCount = ONE_ARG
+    expected_args: ArgCount = ONE_OR_NO_ARGS
+
+    interactive_input: bool = True
 
     precondition: Precondition = is_instructions
 
@@ -80,7 +93,20 @@ class WriteNewAction(PerItemAction):
         else:
             return fill_text(self.description, text_wrap=Wrap.WRAP_FULL, extra_indent="# ")
 
-    def run_item(self, action_description_item: Item) -> Item:
+    def run(self, items: ActionInput) -> ActionResult:
+        if not items:
+            # Start a chat to collect the action description.
+            # TODO: Consider generalizing this so an action can declare an input action to collect its input.
+            chat_result = run_action(write_instructions, internal_call=True)
+            if not chat_result.items:
+                raise ApiResultError("No chat input provided")
+
+            action_description_item = chat_result.items[0]
+        else:
+            action_description_item = items[0]
+
+        # Manually check precondition since we might have created the item
+        self.precondition.check(action_description_item, f"action `{self.name}`")
 
         chat_history = ChatHistory()
 
@@ -113,4 +139,4 @@ class WriteNewAction(PerItemAction):
             body=commented_body,
         )
 
-        return result_item
+        return ActionResult([result_item])

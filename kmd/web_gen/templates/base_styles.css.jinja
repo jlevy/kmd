@@ -1,15 +1,7 @@
 :root {
-  --color-primary: #488189;
-  --color-primary-light: #79bbc5;
-  --color-secondary: #6b7280;
-  --color-bg: #f3f4f6;
-  --color-text: #111827;
-  --color-hover: #d1d5db;
-  --color-hover-bg: #eff0f1;
-  --color-hint: #9ca3af;
-
   --font-sans: "Varta", "Noto Emoji", sans-serif;
   --font-serif: "PT Serif", "Noto Emoji", serif;
+  --font-mono: "Menlo", "DejaVu Sans Mono", Consolas, "Lucida Console", monospace;
 }
 
 {{ color_defs|safe }}
@@ -17,9 +9,10 @@
 body {
   font-family: var(--font-serif);
   color: var(--color-text);
-  line-height: 1.5;
-  padding: 2rem;
+  line-height: 1.3;
+  padding: 1rem;
   margin: auto;
+  background-color: var(--color-bg);
 }
 
 p {
@@ -122,13 +115,16 @@ blockquote {
 }
 
 code {
-  font-family: monospace;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
   background-color: var(--color-bg);
   padding: 0.2rem 0.4rem;
   border-radius: 3px;
 }
 
 pre {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
   background-color: var(--color-bg);
   padding: 1rem;
   border-radius: 5px;

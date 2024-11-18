@@ -1,7 +1,7 @@
 from InquirerPy.prompts.input import InputPrompt
 from InquirerPy.utils import InquirerPyStyle
 
-from kmd.config import colors
+from kmd.config.colors import terminal as colors
 from kmd.config.text_styles import PROMPT_FORM
 
 custom_style = InquirerPyStyle(

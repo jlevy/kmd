@@ -11,3 +11,13 @@ def fetch_page_metadata() -> Action:
 @lazyobject
 def assistant_chat() -> Action:
     return look_up_action("assistant_chat", base_only=True)
+
+
+@lazyobject
+def chat() -> Action:
+    return look_up_action("chat", base_only=True)
+
+
+@lazyobject
+def write_instructions() -> Action:
+    return look_up_action("write_instructions", base_only=True)

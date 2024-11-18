@@ -4,7 +4,7 @@ Settings that define the visual appearance of text outputs.
 
 import re
 
-from kmd.config import colors
+from kmd.config.colors import terminal as colors
 
 ## Settings
 
@@ -28,10 +28,6 @@ LOGO = "⎪K⎪M⎪D⎪"
 PROMPT_COLOR_NORMAL = "BOLD_GREEN"
 
 PROMPT_COLOR_WARN = "INTENSE_YELLOW"
-
-PROMPT_CHAT_COLOR = "#e0f2f5"
-
-PROMPT_ASSISTANT_COLOR = "#c6d3fb"
 
 PROMPT_INPUT_COLOR = colors.input
 

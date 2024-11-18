@@ -3,7 +3,6 @@ from typing import Optional
 
 import weasyprint
 
-from kmd.config import colors
 from kmd.config.settings import APP_NAME
 from kmd.util.strif import atomic_output_file
 from kmd.web_gen.template_render import render_web_template
@@ -28,7 +27,6 @@ def html_to_pdf(
         {
             "title": title,
             "content": html_content,
-            "color_defs": colors.generate_css_variables(),
             "footer": footer,
         },
     )
