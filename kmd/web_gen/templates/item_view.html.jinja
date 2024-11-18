@@ -2,7 +2,6 @@
 .item-view {
   font-family: var(--font-sans);
   max-width: 800px;
-  background-color: var(--color-bg);
 }
 
 .item-header {
@@ -14,32 +13,37 @@
 .item-type {
   font-family: var(--font-sans);
   text-transform: uppercase;
-  font-size: 0.9rem;
+  font-size: var(--font-size-smaller);
+  font-weight: 800;
   letter-spacing: 0.05em;
   margin-right: 1rem;
 }
 
 .item-format, .item-state {
-  color: var(--color-secondary);
   margin-right: 1rem;
 }
 
+.item-label {
+  color: var(--color-secondary);
+}
+
 .item-path {
-  font-family: monospace;
-  font-size: 0.8rem;
-  color: var(--color-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-mono);
   word-wrap: break-word;
   overflow-wrap: break-word;
   max-width: 100%;
+  margin-bottom: 1rem;
 }
 
 .item-title {
   font-family: var(--font-serif);
   font-size: 1.2rem;
-  margin: 1rem 0 0.5rem 0;
+  margin: 0.2rem 0 0.5rem 0;
 }
 
 .item-url {
+  margin-top: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
@@ -55,20 +59,20 @@
 .item-description {
   font-family: var(--font-serif);
   color: var(--color-secondary);
-  font-size: 0.85rem;
+  font-size: var(--font-size-smaller);
 }
 </style>
 
 <div class="item-view">
   <div class="item-header">
+    <div class="item-path">{{ item.store_path }}</div>
     <div class="item-meta">
       <span class="item-type">{{ item.type.value }}</span>
       {% if item.format %}
-      Format: <code class="item-format">{{ item.format.value }}</code>
+      <span class="item-label">Format:</span> <span class="item-format">{{ item.format.value }}</span>
       {% endif %}
-      State: <span class="item-state">{{ item.state.value }}</span>
+      <span class="item-label">State:</span> <span class="item-state">{{ item.state.value }}</span>
     </div>
-    <div class="item-path">{{ item.store_path }}</div>
   </div>
 
   <h1 class="item-title">{{ item.title or "Untitled" }}</h1>

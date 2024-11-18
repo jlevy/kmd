@@ -1,20 +1,38 @@
 from types import SimpleNamespace
+from typing import Dict
 
 from colour import Color
 
 
 def hsl_to_hex(hsl_string: str) -> str:
     """
-    Convert an HSL string to an RGB hex string.
+    Convert an HSL/HSLA string to an RGB hex string or RGBA value.
     "hsl(134, 43%, 60%)" -> "#6dbd6d"
+    "hsla(220, 14%, 96%, 0.86)" -> "rgba(244, 245, 247, 0.86)"
     """
-    hsl_values = hsl_string.replace("hsl(", "").replace(")", "").replace("%", "").split(",")
-    hue, saturation, lightness = (float(value.strip()) for value in hsl_values)
+    is_hsla = hsl_string.startswith("hsla")
+    hsl_values = (
+        hsl_string.replace("hsla(", "")
+        .replace("hsl(", "")
+        .replace(")", "")
+        .replace("%", "")
+        .split(",")
+    )
+
+    if is_hsla:
+        hue, saturation, lightness, alpha = (float(value.strip()) for value in hsl_values)
+    else:
+        hue, saturation, lightness = (float(value.strip()) for value in hsl_values)
+        alpha = 1.0
 
     saturation /= 100
     lightness /= 100
 
     color = Color(hsl=(hue / 360, saturation, lightness))
+
+    if alpha < 1:
+        rgb = color.rgb
+        return f"rgba({int(rgb[0]*255)}, {int(rgb[1]*255)}, {int(rgb[2]*255)}, {alpha})"
     return color.hex_l
 
 
@@ -70,14 +88,17 @@ terminal = terminal_dark
 
 # Web light colors.
 web_light = SimpleNamespace(
-    primary="#488189",
-    primary_light="#79bbc5",
-    secondary="#6b7280",
-    bg="#f3f4f6",
-    text="#111827",
-    hover="#d1d5db",
-    hover_bg="#eff0f1",
-    hint="#9ca3af",
+    primary=hsl_to_hex("hsl(188, 31%, 41%)"),
+    primary_light=hsl_to_hex("hsl(188, 40%, 62%)"),
+    secondary=hsl_to_hex("hsl(188, 9%, 46%)"),
+    bg=hsl_to_hex("hsl(188, 14%, 96%)"),
+    bg_translucent=hsl_to_hex("hsla(188, 12%, 84%, 0.95)"),
+    text=hsl_to_hex("hsl(188, 39%, 11%)"),
+    hover=hsl_to_hex("hsl(188, 12%, 84%)"),
+    hover_bg=hsl_to_hex("hsl(188, 7%, 94%)"),
+    hint=hsl_to_hex("hsl(188, 11%, 65%)"),
+    tooltip_bg=hsl_to_hex("hsla(44, 6%, 40%, 0.95)"),
+    bright=hsl_to_hex("hsl(134, 43%, 60%)"),
 )
 
 # Only support light web colors for now.
@@ -103,27 +124,44 @@ logical = SimpleNamespace(
 )
 
 
-def generate_css_variables():
+def consolidate_color_vars(overrides: Dict[str, str] = {}) -> Dict[str, str]:
+    """
+    Consolidate all color variables into a single dictionary with appropriate prefixes.
+    Terminal variables have no prefix, while web and logical variables have "color-" prefix.
+    """
+    return {
+        # Terminal variables (no prefix)
+        **terminal.__dict__,
+        # Web and logical variables with "color-" prefix
+        **{f"color-{k}": v for k, v in web.__dict__.items()},
+        **{f"color-{k}": v for k, v in logical.__dict__.items()},
+        # Overrides take precedence (assume they already have correct prefixes)
+        **overrides,
+    }
+
+
+def normalize_var_names(variables: Dict[str, str]) -> Dict[str, str]:
+    """
+    Normalize variable names from Python style to CSS style.
+    Example: color_bg -> color-bg
+    """
+    return {k.replace("_", "-"): v for k, v in variables.items()}
+
+
+def generate_css_vars(overrides: Dict[str, str] = {}) -> str:
     """
     Generate CSS variables for the terminal and web colors.
     """
+    normalized_vars = normalize_var_names(consolidate_color_vars(overrides))
 
+    # Generate the CSS.
     css_variables = ":root {\n"
-
-    # var(--red_dark), etc.
-    for name, value in terminal.__dict__.items():
-        css_var_name = name.replace("_", "-")
-        css_variables += f"  --{css_var_name}: {value};\n"
-
-    # var(--color-primary), var(--color-primary-light), etc.
-    for name, value in {**web.__dict__, **logical.__dict__}.items():
-        css_var_name = "color-" + name.replace("_", "-")
-        css_variables += f"  --{css_var_name}: {value};\n"
-
+    for name, value in normalized_vars.items():
+        css_variables += f"  --{name}: {value};\n"
     css_variables += "}"
 
     return css_variables
 
 
 if __name__ == "__main__":
-    print(generate_css_variables())
+    print(generate_css_vars())

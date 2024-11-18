@@ -3,6 +3,7 @@ from enum import Enum
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 
+from kmd.config import colors
 from kmd.config.logger import get_logger
 from kmd.file_storage.file_store import FileStore
 from kmd.help.command_help import explain_command
@@ -45,6 +46,7 @@ def view_item(store_path: str, ws_name: str):
                 "title": item.title or "Untitled",
                 "content": render_web_template("item_view.html.jinja", {"item": item}),
             },
+            css_overrides={"color-bg": colors.web.bg_translucent},
         )
     )
 
@@ -62,6 +64,7 @@ def explain(text: str):
                 "title": f"Help: {text}",
                 "content": render_web_template("explain_view.html.jinja", {"help_str": help_str}),
             },
+            css_overrides={"color-bg": colors.web.bg_translucent},
         )
     )
 

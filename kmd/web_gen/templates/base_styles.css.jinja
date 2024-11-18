@@ -2,6 +2,11 @@
   --font-sans: "Varta", "Noto Emoji", sans-serif;
   --font-serif: "PT Serif", "Noto Emoji", serif;
   --font-mono: "Menlo", "DejaVu Sans Mono", Consolas, "Lucida Console", monospace;
+
+  --font-size-small: 0.95rem;
+  --font-size-smaller: 0.85rem;
+  --font-size-mono: 0.8rem;
+  --font-size-mono-small: 0.75rem;
 }
 
 {{ color_defs|safe }}
@@ -116,16 +121,16 @@ blockquote {
 
 code {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  background-color: var(--color-bg);
+  font-size: var(--font-size-mono);
+  letter-spacing: -0.025em;
   padding: 0.2rem 0.4rem;
   border-radius: 3px;
 }
 
 pre {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  background-color: var(--color-bg);
+  font-size: var(--font-size-mono);
+  letter-spacing: -0.025em;
   padding: 1rem;
   border-radius: 5px;
   overflow-x: auto;

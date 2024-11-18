@@ -134,7 +134,6 @@ def test_render():
     html = render_web_template(
         "tabbed_webpage.html.jinja",
         asdict(config),
-        with_colors=True,
     )
     with open("tmp/webpage.html", "w") as f:
         f.write(html)
