@@ -10,7 +10,9 @@ class InsertSectionHeadings(LLMAction):
 
     name: str = "insert_section_headings"
 
-    description: str = "Insert headings into a text as <h2> tags."
+    description: str = """
+        Insert headings into a text as <h2> tags.
+        """
 
     system_message: Message = Message(
         """

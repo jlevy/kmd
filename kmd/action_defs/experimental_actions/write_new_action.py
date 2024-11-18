@@ -66,12 +66,10 @@ class WriteNewAction(Action):
 
     name: str = "write_new_action"
 
-    description: str = (
-        """
+    description: str = """
         Create a new kmd action in Python, based on a description of the features.
         If no input is provided, will start an interactive chat to collect the action description.
         """
-    )
 
     cacheable: bool = False
 

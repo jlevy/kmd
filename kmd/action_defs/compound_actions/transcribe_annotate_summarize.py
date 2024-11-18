@@ -10,9 +10,10 @@ class TranscribeAnnotateSummarize(SequenceAction):
 
     name: str = "transcribe_annotate_summarize"
 
-    description: str = (
-        "A fancy action to transcribe a video, format the transcript into paragraphs, backfill timestamps, and add a summary and description."
-    )
+    description: str = """
+        A fancy action to transcribe a video, format the transcript into paragraphs,
+        backfill timestamps, and add a summary and description.
+        """
 
     action_names: Tuple[str, ...] = (
         "transcribe_format",

@@ -22,9 +22,9 @@ class IdentifySpeakers(PerItemAction):
 
     name: str = "identify_speakers"
 
-    description: str = (
-        "Identify speakers in a transcript and replace placeholders with their names."
-    )
+    description: str = """
+        Identify speakers in a transcript and replace placeholders with their names.
+        """
 
     precondition: Precondition = has_text_body | has_html_body
 

@@ -25,9 +25,9 @@ class Concat(Action):
 
     name: str = "concat"
 
-    description: str = (
-        "Concatenate the given text documents into a single document. Adds titles to each section."
-    )
+    description: str = """
+        Concatenate the given text documents into a single document. Adds titles to each section.
+        """
 
     expected_args: ArgCount = ONE_OR_MORE_ARGS
 

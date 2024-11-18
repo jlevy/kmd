@@ -12,9 +12,9 @@ class WebpageConfig(Action):
 
     name: str = "webpage_config"
 
-    description: str = (
-        "Set up a web page config with optional tabs for each page of content. Uses first item as the page title."
-    )
+    description: str = """
+        Set up a web page config with optional tabs for each page of content. Uses first item as the page title.
+        """
 
     def run(self, items: ActionInput) -> ActionResult:
         for item in items:

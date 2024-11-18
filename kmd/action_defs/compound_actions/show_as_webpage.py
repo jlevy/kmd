@@ -14,7 +14,9 @@ class ShowAsWebpage(SequenceAction):
 
     name: str = "show_as_webpage"
 
-    description: str = "Show text, Markdown, or HTML as a nicely formatted webpage."
+    description: str = """
+        Show text, Markdown, or HTML as a nicely formatted webpage.
+        """
 
     action_names: Tuple[str, ...] = ("webpage_config", "webpage_generate")
 

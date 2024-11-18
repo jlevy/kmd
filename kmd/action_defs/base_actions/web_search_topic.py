@@ -19,7 +19,9 @@ class WebSearchTopic(Action):
 
     name: str = "web_search_topic"
 
-    description: str = "Search the web for information on a topic."
+    description: str = """
+        Search the web for information on a topic.
+        """
 
     expected_args: ArgCount = ONE_ARG
 

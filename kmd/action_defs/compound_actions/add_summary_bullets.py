@@ -11,9 +11,9 @@ class AddSummaryBullets(ComboAction):
 
     name: str = "add_summary_bullets"
 
-    description: str = (
-        "Add a summary of the content as bullet points above the full text of the item."
-    )
+    description: str = """
+        Add a summary of the content as bullet points above the full text of the item.
+        """
 
     action_names: Tuple[str, ...] = ("copy_items", "summarize_as_bullets")
 

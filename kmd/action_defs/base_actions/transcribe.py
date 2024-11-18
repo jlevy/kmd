@@ -20,7 +20,9 @@ class Transcribe(PerItemAction):
 
     name: str = "transcribe"
 
-    description: str = "Download and transcribe audio from a podcast or video."
+    description: str = """
+        Download and transcribe audio from a podcast or video.
+        """
 
     precondition: Precondition = is_url_item | is_audio_resource | is_video_resource
 

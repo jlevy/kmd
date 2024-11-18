@@ -11,7 +11,9 @@ class SummarizeAsBulletsChunked(ChunkedLLMAction):
 
     name: str = "summarize_as_bullets_chunked"
 
-    description: str = "Summarize text as bullet points. Processes each div chunk."
+    description: str = """
+        Summarize text as bullet points. Processes each div chunk.
+        """
 
     system_message: Message = Message(
         """

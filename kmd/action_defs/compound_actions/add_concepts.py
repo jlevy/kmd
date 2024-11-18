@@ -11,7 +11,9 @@ class AddConcepts(ComboAction):
 
     name: str = "add_concepts"
 
-    description: str = "Add a brief description of the content above the full text of the item."
+    description: str = """
+        Add a brief description of the content above the full text of the item.
+        """
 
     action_names: Tuple[str, ...] = ("copy_items", "find_concepts")
 

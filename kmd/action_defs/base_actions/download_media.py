@@ -13,9 +13,9 @@ class DownloadMedia(PerItemAction):
 
     name: str = "download_media"
 
-    description: str = (
-        "Download and save audio from a podcast or video. Only saves to media cache; does not create new items."
-    )
+    description: str = """
+        Download and save audio from a podcast or video. Only saves to media cache; does not create new items.
+        """
 
     precondition: Precondition = is_url_item
 

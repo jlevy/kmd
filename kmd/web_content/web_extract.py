@@ -42,10 +42,10 @@ def fetch_extract(url: Url, use_cache: bool = True) -> PageData:
         path, _was_cached = cache_file(url)
         with open(path, "rb") as file:
             content = file.read()
-        page_data = _extract_page_data_from_html(url, content)
+        page_data = extract_page_data_from_html(url, content)
     else:
         response = fetch(url)
-        page_data = _extract_page_data_from_html(url, response.content)
+        page_data = extract_page_data_from_html(url, response.content)
 
     # Add a thumbnail, if available.
     page_data.thumbnail_url = thumbnail_url(url)
@@ -53,7 +53,7 @@ def fetch_extract(url: Url, use_cache: bool = True) -> PageData:
     return page_data
 
 
-def _extract_page_data_from_html(url: Url, raw_html: bytes) -> PageData:
+def extract_page_data_from_html(url: Url, raw_html: bytes) -> PageData:
     dom, paragraphs = _justext_custom(raw_html, justext.get_stoplist("English"))
     # Extract title and description.
     title = None

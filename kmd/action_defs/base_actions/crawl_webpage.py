@@ -15,7 +15,9 @@ class CrawlWebpage(PerItemAction):
 
     name: str = "crawl_webpage"
 
-    description: str = "Crawl a web page using Firecrawl's web crawler and save it in Markdown."
+    description: str = """
+        Crawl a web page using Firecrawl's web crawler and save it in Markdown.
+        """
 
     precondition: Precondition = is_url_item
 

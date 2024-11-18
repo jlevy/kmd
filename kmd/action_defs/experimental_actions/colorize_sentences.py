@@ -26,7 +26,9 @@ class ColorizeSentences(PerItemAction):
 
     name: str = "colorize_sentences"
 
-    description: str = "Color each sentence based on its length."
+    description: str = """
+        Color each sentence based on its length.
+        """
 
     precondition: Precondition = is_text_doc
 

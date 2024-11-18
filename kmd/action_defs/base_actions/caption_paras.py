@@ -27,7 +27,9 @@ class CaptionParas(LLMAction):
 
     name: str = "caption_paras"
 
-    description: str = "Caption each paragraph in the text with a very short summary."
+    description: str = """
+        Caption each paragraph in the text with a very short summary.
+        """
 
     system_message: Message = Message(
         """

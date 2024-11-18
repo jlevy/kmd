@@ -27,7 +27,9 @@ class CreatePDF(Action):
 
     name: str = "create_pdf"
 
-    description: str = "Create a PDF from text or Markdown."
+    description: str = """
+        Create a PDF from text or Markdown.
+        """
 
     expected_args: ArgCount = ONE_ARG
 

@@ -13,7 +13,9 @@ class StripHtml(PerItemAction):
 
     name: str = "strip_html"
 
-    description: str = "Strip HTML tags from HTML or Markdown."
+    description: str = """
+        Strip HTML tags from HTML or Markdown.
+        """
 
     precondition: Precondition = has_html_body | has_text_body
 

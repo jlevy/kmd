@@ -13,13 +13,11 @@ class ListChannel(Action):
 
     name: str = "list_channel"
 
-    description: str = (
-        """
+    description: str = """
         List the contents of a media channel (YouTube, Apple Podcasts, etc.) channel, saving
         the URL of every audio or video as a resource item. Only adds the resources.
         Does not download any media.
         """
-    )
 
     precondition: Precondition = is_url_item
 

@@ -7,7 +7,9 @@ from kmd.text_docs.window_settings import WINDOW_128_PARA, WindowSettings
 class OutlineSectionHeadings(LLMAction):
     name: str = "outline_section_headings"
 
-    description: str = "Outline a text as a list of section headings."
+    description: str = """
+        Outline a text as a list of section headings.
+        """
 
     system_message: Message = Message(
         """

@@ -1,5 +1,3 @@
-from textwrap import dedent
-
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
@@ -16,13 +14,11 @@ class Chunkify(PerItemAction):
 
     name: str = "chunkify"
 
-    description: str = dedent(
-        """
+    description: str = """
         Group paragraphs or top-level divs into chunks, demarcated by <div class="chunk"> tags.
         If desired, set `chunk_size` to a large value, to indicate that the entire document
         should be processed as one chunk.
         """
-    )
 
     # Don't chunkify if already chunkified.
     precondition: Precondition = is_text_doc & ~has_div_chunks

@@ -1065,8 +1065,12 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
             cprint()
         else:
             cprint(
-                "Applicable actions for items:\n %s", fmt_lines(store_paths), color=COLOR_SUGGESTION
+                "Applicable actions for items:\n%s",
+                fmt_lines(store_paths),
+                color=COLOR_SUGGESTION,
+                text_wrap=Wrap.NONE,
             )
+            cprint()
             for action in applicable_actions:
                 precondition_str = (
                     f"(matches precondition {action.precondition })"

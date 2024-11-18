@@ -17,12 +17,10 @@ class SaveConcepts(Action):
 
     name: str = "save_concepts"
 
-    description: str = (
-        """
-                Creates a concept item for each value in a markdown list of concepts.
+    description: str = """
+        Creates a concept item for each value in a markdown list of concepts.
         Skips existing concepts and duplicates.
         """
-    )
 
     expected_args: ArgCount = ONE_OR_MORE_ARGS
 

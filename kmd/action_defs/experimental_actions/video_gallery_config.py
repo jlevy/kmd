@@ -11,7 +11,9 @@ log = get_logger(__name__)
 class VideoGalleryConfig(Action):
     name: str = "video_gallery_config"
 
-    description: str = "Set up a video gallery config with YouTube videos and their descriptions."
+    description: str = """
+        Set up a video gallery config with YouTube videos and their descriptions.
+        """
 
     precondition: Precondition = has_text_body
 

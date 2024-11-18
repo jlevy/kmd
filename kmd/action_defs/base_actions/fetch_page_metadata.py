@@ -1,5 +1,5 @@
 from kmd.config.logger import get_logger
-from kmd.errors import InvalidInput, WebFetchError
+from kmd.errors import InvalidInput
 from kmd.exec.action_registry import kmd_action
 from kmd.media.media_services import get_media_metadata
 from kmd.model import Item, PerItemAction, Precondition
@@ -14,7 +14,9 @@ class FetchPageMetadata(PerItemAction):
 
     name: str = "fetch_page_metadata"
 
-    description: str = "Fetches a web page for title, description, and thumbnail, if available."
+    description: str = """
+        Fetches a web page for title, description, and thumbnail, if available.
+        """
 
     precondition: Precondition = is_url_item
 
@@ -31,6 +33,8 @@ class FetchPageMetadata(PerItemAction):
             fetched_item = Item.from_media_metadata(media_metadata)
             fetched_item = item.merged_copy(fetched_item)
         else:
+            # cache_path, _was_cached = cache_file(item.url)  # FIXME: Handle all file formats.
+
             page_data = fetch_extract(item.url)
             fetched_item = item.new_copy_with(
                 title=page_data.title or item.title,
@@ -39,6 +43,6 @@ class FetchPageMetadata(PerItemAction):
             )
 
         if not fetched_item.title:
-            raise WebFetchError(f"Failed to fetch page data: title is missing: {item.url}")
+            log.warning("Failed to fetch page data: title is missing: %s", item.url)
 
         return fetched_item

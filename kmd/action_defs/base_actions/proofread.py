@@ -11,7 +11,9 @@ log = get_logger(__name__)
 class Proofread(LLMAction):
     name: str = "proofread"
 
-    description: str = "Proofread text, only fixing spelling, punctuation, and grammar."
+    description: str = """
+        Proofread text, only fixing spelling, punctuation, and grammar.
+        """
 
     system_message: Message = Message(
         """

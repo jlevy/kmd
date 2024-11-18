@@ -7,7 +7,9 @@ class DescribeBriefly(LLMAction):
 
     name: str = "describe_briefly"
 
-    description: str = "Write a brief description of a text, in at most three sentences."
+    description: str = """
+        Write a brief description of a text, in at most three sentences.
+        """
 
     system_message: Message = Message(
         """

@@ -10,9 +10,10 @@ class TranscribeFormat(SequenceAction):
 
     name: str = "transcribe_format"
 
-    description: str = (
-        "Transcribe a video, format the transcript into paragraphs, and backfill source timestamps on each paragraph."
-    )
+    description: str = """
+        Transcribe a video, format the transcript into paragraphs, and backfill
+        source timestamps on each paragraph.
+        """
 
     action_names: Tuple[str, ...] = (
         "transcribe",

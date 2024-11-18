@@ -9,7 +9,9 @@ class WriteInstructions(Action):
 
     name: str = "write_instructions"
 
-    description: str = "Write a chat item with system and user instructions."
+    description: str = """
+        Write a chat item with system and user instructions.
+        """
 
     expected_args: ArgCount = NO_ARGS
 

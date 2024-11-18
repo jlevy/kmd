@@ -24,7 +24,9 @@ class VideoGalleryGenerate(Action):
 
     name: str = "video_gallery_generate"
 
-    description: str = "Generate a video gallery from a configured video gallery item."
+    description: str = """
+        Generate a video gallery from a configured video gallery item.
+        """
 
     expected_args: ArgCount = ONE_ARG
 

@@ -8,7 +8,9 @@ class SummarizeAsBullets(LLMAction):
 
     name: str = "summarize_as_bullets"
 
-    description: str = "Summarize text as bullet points."
+    description: str = """
+        Summarize text as bullet points.
+        """
 
     system_message: Message = Message(
         """

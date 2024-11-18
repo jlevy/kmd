@@ -27,11 +27,9 @@ class FindNearDuplicates(Action):
 
     name: str = "find_near_duplicates"
 
-    description: str = (
-        """
+    description: str = """
         Look at input items and find near duplicate items using text embeddings, based on title or body.
         """
-    )
 
     expected_args: ArgCount = TWO_OR_MORE_ARGS
 

@@ -23,7 +23,9 @@ class WebpageGenerate(Action):
 
     name: str = "webpage_generate"
 
-    description: str = "Generate a web page from a configured web page item."
+    description: str = """
+        Generate a web page from a configured web page item.
+        """
 
     expected_args: ArgCount = ONE_ARG
 

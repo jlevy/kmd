@@ -14,12 +14,10 @@ class RemoveSpeakerLabels(PerItemAction):
 
     name: str = "remove_speaker_labels"
 
-    description: str = (
-        """
+    description: str = """
         Remove speaker labels (<span data-speaker-id=...>...</span>) from the transcript.
         Handy when the transcription has added them erroneously.
         """
-    )
 
     precondition: Precondition = has_html_body | has_text_body
 

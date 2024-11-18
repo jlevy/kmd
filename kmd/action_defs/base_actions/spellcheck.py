@@ -11,7 +11,9 @@ log = get_logger(__name__)
 class Spellcheck(LLMAction):
     name: str = "spellcheck"
 
-    description: str = "Spellcheck text, only fixing spelling, punctuation, and capitalization."
+    description: str = """
+        Spellcheck text, only fixing spelling, punctuation, and capitalization.
+        """
 
     system_message: Message = Message(
         """

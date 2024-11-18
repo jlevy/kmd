@@ -31,12 +31,10 @@ class Chat(Action):
 
     name: str = "chat"
 
-    description: str = (
-        """
+    description: str = """
         Chat with an LLM. By default, starts a new chat session. If provided a chat
         history item, will continue an existing chat.
         """
-    )
 
     expected_args: ArgCount = ONE_OR_NO_ARGS
 

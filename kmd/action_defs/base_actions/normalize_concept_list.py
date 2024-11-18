@@ -14,9 +14,9 @@ class NormalizeConceptList(PerItemAction):
 
     name: str = "normalize_concept_list"
 
-    description: str = (
-        "Normalize, capitalize, sort, and remove duplicates from a Markdown list of concepts."
-    )
+    description: str = """
+        Normalize, capitalize, sort, and remove duplicates from a Markdown list of concepts.
+        """
 
     precondition: Precondition = is_markdown_list
 

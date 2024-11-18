@@ -15,7 +15,9 @@ class FindConcepts(LLMAction):
 
     name: str = "find_concepts"
 
-    description: str = "Identify the key concepts in a text. Processes each div chunk."
+    description: str = """
+        Identify the key concepts in a text. Processes each div chunk.
+        """
 
     system_message: Message = Message(
         """

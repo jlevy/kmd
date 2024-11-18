@@ -13,7 +13,9 @@ class Wordtokenize(PerItemAction):
 
     name: str = "wordtokenize"
 
-    description: str = "For debugging: Break text into word tokens."
+    description: str = """
+        For debugging: Break text into word tokens.
+        """
 
     precondition: Precondition = has_text_body
 
