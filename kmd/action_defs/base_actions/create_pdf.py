@@ -16,7 +16,8 @@ from kmd.model import (
     ONE_ARG,
     Precondition,
 )
-from kmd.preconditions.precondition_defs import has_text_body
+from kmd.model.args_model import fmt_loc
+from kmd.preconditions.precondition_defs import has_html_body, has_text_body
 from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
@@ -33,7 +34,7 @@ class CreatePDF(Action):
 
     expected_args: ArgCount = ONE_ARG
 
-    precondition: Precondition = has_text_body
+    precondition: Precondition = has_text_body | has_html_body
 
     def run(self, items: ActionInput) -> ActionResult:
         item = items[0]
@@ -42,16 +43,23 @@ class CreatePDF(Action):
 
         pdf_item = item.derived_copy(type=ItemType.export, format=Format.pdf, file_ext=FileExt.pdf)
         pdf_path, _found, _old_pdf_path = current_workspace().store_path_for(pdf_item)
+        log.message("Will save PDF to: %s", fmt_loc(pdf_path))
         base_dir = current_workspace().base_dir
         full_pdf_path = join(base_dir, pdf_path)
 
         clean_title = clean_heading(item.abbrev_title())
 
-        content_html = f"""
-            <h1>{clean_title}</h1>
-
-            {item.body_as_html()}
-        """
+        # Convert to HTML if necessary.
+        if item.format == Format.html:
+            content_html = f"""
+                <h1>{clean_title}</h1>
+                {item.body_text()}
+                """
+        else:
+            content_html = f"""
+                <h1>{clean_title}</h1>
+                {item.body_as_html()}
+                """
 
         # Add directly to the store.
         html_to_pdf(

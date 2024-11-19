@@ -520,17 +520,17 @@ def show(
         input_path = input_paths[0]
 
         if isinstance(input_path, StorePath):
-            # Optionally, if we can inline display the image (like in kitty) above the text representation, do that.
             ws = current_workspace()
-
-            item = ws.load(input_path)
-            if thumbnail and item.thumbnail_url:
-                try:
-                    local_path, _was_cached = cache_file(item.thumbnail_url)
-                    terminal_show_image(local_path)
-                except Exception as e:
-                    log.info("Had trouble showing thumbnail image (will skip): %s", e)
-                    cprint(f"[Image: {item.thumbnail_url}]", color=COLOR_HINT)
+            if input_path.is_file():
+                # Optionally, if we can inline display the image (like in kitty) above the text representation, do that.
+                item = ws.load(input_path)
+                if thumbnail and item.thumbnail_url:
+                    try:
+                        local_path, _was_cached = cache_file(item.thumbnail_url)
+                        terminal_show_image(local_path)
+                    except Exception as e:
+                        log.info("Had trouble showing thumbnail image (will skip): %s", e)
+                        cprint(f"[Image: {item.thumbnail_url}]", color=COLOR_HINT)
 
             view_file_native(ws.base_dir / input_path, view_mode=view_mode)
         else:
@@ -709,39 +709,40 @@ def file_info(
         # Raw frontmatter info.
         try:
             _frontmatter_str, offset = fmf_read_frontmatter_raw(input_path)
-
         except UnicodeDecodeError:
             offset = None
 
         # Structured frontmatter and content info.
+        body = None
         if size_summary and detected_format and detected_format.supports_frontmatter:
-            body, frontmatter = fmf_read(input_path)
+            try:
+                body, frontmatter = fmf_read(input_path)
 
-            item_type = None
-            if frontmatter:
-                if offset:
-                    cprint(
-                        f"frontmatter: {len(frontmatter)} keys, {_dual_format_size(offset)}",
-                        text_wrap=Wrap.INDENT_ONLY,
-                    )
-                item_type = frontmatter.get("type")
-                if item_type:
-                    cprint(f"item type: {item_type}", text_wrap=Wrap.INDENT_ONLY)
-            if body:
-                # Show chat history info.
-                if item_type and item_type == ItemType.chat.value:
-                    try:
-                        chat_history = ChatHistory.from_yaml(body)
-                        size_summary_str = chat_history.size_summary()
-                        cprint(f"chat history: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
-                    except Exception:
-                        pass
-                # Parse text body.
-                parsed_body = parse_divs(body)
-                size_summary_str = parsed_body.size_summary(fast=not slow)
-                cprint(f"body: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
-            else:
-                cprint("body: None", text_wrap=Wrap.INDENT_ONLY)
+                item_type = None
+                if frontmatter:
+                    if offset:
+                        cprint(
+                            f"frontmatter: {len(frontmatter)} keys, {_dual_format_size(offset)}",
+                            text_wrap=Wrap.INDENT_ONLY,
+                        )
+                    item_type = frontmatter.get("type")
+                    if item_type:
+                        cprint(f"item type: {item_type}", text_wrap=Wrap.INDENT_ONLY)
+                if body:
+                    # Show chat history info.
+                    if item_type and item_type == ItemType.chat.value:
+                        try:
+                            chat_history = ChatHistory.from_yaml(body)
+                            size_summary_str = chat_history.size_summary()
+                            cprint(f"chat history: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
+                        except Exception:
+                            pass
+                    # Parse text body.
+                    parsed_body = parse_divs(body)
+                    size_summary_str = parsed_body.size_summary(fast=not slow)
+                    cprint(f"body: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
+            except UnicodeDecodeError as e:
+                log.warning("Error reading content as text, skipping body: %s", e)
 
         else:
             if offset:

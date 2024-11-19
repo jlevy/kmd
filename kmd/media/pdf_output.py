@@ -22,11 +22,22 @@ def html_to_pdf(
 
     title = title or ""
 
+    # Scale the content down a bit.
+    scaled_html = f"""
+        <style>
+            body {{
+                transform: scale(0.9);
+                transform-origin: top left;
+            }}
+        </style>
+        {html_content}
+        """
+
     full_html = render_web_template(
         "base_webpage.html.jinja",
         {
             "title": title,
-            "content": html_content,
+            "content": scaled_html,  # Use the scaled content
             "footer": footer,
         },
     )

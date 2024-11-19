@@ -1,6 +1,7 @@
 :root {
-  --font-sans: "Varta", "Noto Emoji", sans-serif;
-  --font-serif: "PT Serif", "Noto Emoji", serif;
+  /* Omitting Noto Emoji for now as it breaks PDF generation. */
+  --font-sans: "Varta", sans-serif;
+  --font-serif: "PT Serif", serif;
   --font-mono: "Menlo", "DejaVu Sans Mono", Consolas, "Lucida Console", monospace;
 
   --font-size-small: 0.95rem;
@@ -10,6 +11,19 @@
 }
 
 {{ color_defs|safe }}
+
+{# @font-face {
+  font-family: "Noto Emoji";
+  src: url("https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&display=swap");
+  /* Emoji Unicode ranges */
+  unicode-range: 
+    U+1F300-1F9FF,  /* Miscellaneous Symbols and Pictographs + Supplemental */
+    U+1F600-1F64F,  /* Emoticons */
+    U+2600-26FF,    /* Miscellaneous Symbols */
+    U+2700-27BF,    /* Dingbats */
+    U+FE00-FE0F,    /* Variation Selectors */
+    U+1F900-1F9FF;  /* Supplemental Symbols and Pictographs */ 
+} #}
 
 body {
   font-family: var(--font-serif);

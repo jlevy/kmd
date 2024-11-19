@@ -476,7 +476,7 @@ class FileFormatInfo:
             and self.mime_type.startswith("image")
         )
 
-    def best_guess(self) -> Optional[Format]:
+    def guess_format(self) -> Optional[Format]:
         choice = None
         if self.file_ext:
             choice = Format.guess_by_file_ext(self.file_ext)
@@ -500,7 +500,7 @@ def detect_file_format(path: str | Path) -> Optional[Format]:
     """
     Detect best guess at file format based on file extension and file content.
     """
-    return file_format_info(path).best_guess()
+    return file_format_info(path).guess_format()
 
 
 def detect_media_type(filename: str | Path) -> MediaType:

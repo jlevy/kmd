@@ -54,7 +54,7 @@ class InsertFrameCaptures(PerItemAction):
         ),
     )
 
-    threshold: float = 0.6
+    threshold: float = 0.5
 
     def run_item(self, item: Item) -> Item:
         if not item.body:

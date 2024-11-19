@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from frontmatter_format import fmf_read, fmf_write, FmStyle
+from frontmatter_format import fmf_has_frontmatter, fmf_read, fmf_write, FmStyle
 
 from kmd.config.logger import get_logger
 from kmd.file_storage.file_cache import FileMtimeCache
@@ -91,12 +91,17 @@ def read_item(path: Path, base_dir: Optional[Path]) -> Item:
 
 @tally_calls()
 def _read_item_uncached(path: Path, base_dir: Optional[Path]) -> Item:
-    body, metadata = fmf_read(path)
-    log.debug("Read item from %s: body length %s, metadata %s", path, len(body), metadata)
+    has_frontmatter = fmf_has_frontmatter(path)
+    if has_frontmatter:
+        body, metadata = fmf_read(path)
+        log.debug("Read item from %s: body length %s, metadata %s", path, len(body), metadata)
 
-    path = path.resolve()
-    if base_dir:
-        base_dir = base_dir.resolve()
+        path = path.resolve()
+        if base_dir:
+            base_dir = base_dir.resolve()
+    else:
+        log.info("No frontmatter found on file: %s", path)
+        body = metadata = None
 
     # Ensure store_path is used if it's within the base_dir, and
     # external_path otherwise.
@@ -108,11 +113,13 @@ def _read_item_uncached(path: Path, base_dir: Optional[Path]) -> Item:
         external_path = str(path)
 
     if metadata:
+        # We've read the file into memory.
         item = Item.from_dict(
             metadata, body=body, store_path=store_path, external_path=external_path
         )
     else:
-        # No frontmatter, so infer from the file and content.
+        # This is a file without frontmatter. Infer format from the file and content,
+        # and use store_path or external_path as appropriate.
         item = Item.from_external_path(path)
         if item.format and item.format.supports_frontmatter:
             log.info(
