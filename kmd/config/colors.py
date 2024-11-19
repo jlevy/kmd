@@ -78,7 +78,6 @@ terminal_dark = SimpleNamespace(
     # Additional colors.
     border=hsl_to_hex("hsl(231, 17%, 16%)"),
     cursor=hsl_to_hex("hsl(305, 84%, 68%)"),
-    selection="hsla(305, 32%, 82%, 0.50)",
     input=hsl_to_hex("hsl(305, 92%, 95%)"),
     input_form=hsl_to_hex("hsl(188, 52%, 76%)"),
 )
@@ -99,6 +98,7 @@ web_light = SimpleNamespace(
     hint=hsl_to_hex("hsl(188, 11%, 65%)"),
     tooltip_bg=hsl_to_hex("hsla(44, 6%, 40%, 0.95)"),
     bright=hsl_to_hex("hsl(134, 43%, 60%)"),
+    selection="hsla(225, 61%, 82%, 0.80)",
 )
 
 # Only support light web colors for now.

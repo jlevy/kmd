@@ -12,6 +12,12 @@
 
 {{ color_defs|safe }}
 
+::selection {
+  background-color: var(--color-selection);
+  color: inherit;
+}
+
+{# TODO: Fix PDF issues and re-enable for prettier emoji. #}
 {# @font-face {
   font-family: "Noto Emoji";
   src: url("https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&display=swap");

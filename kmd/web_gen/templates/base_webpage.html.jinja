@@ -30,4 +30,17 @@
   {{ content|safe }}
 </body>
 
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+  const content = document.body;
+  
+  console.log("Suggesting size to parent:", content.offsetWidth, content.offsetHeight);
+  window.parent.postMessage({
+    type: 'suggestedSize',
+    width: Math.max(content.offsetWidth, 400),
+    height: Math.max(content.offsetHeight, 100)
+    }, '*');
+  });
+</script>
+
 </html>
