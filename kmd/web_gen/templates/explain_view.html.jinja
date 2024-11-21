@@ -1,6 +1,8 @@
 <style>
 .explain-view {
   max-width: 800px;
+  padding: 1rem;
+  position: relative;
 }
 
 .explain-content {
@@ -10,8 +12,36 @@
   margin: 0;
   padding: 0;
 }
+
+.open-external {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.action-icon {
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--color-secondary);
+  transition: color 0.2s;
+}
+
+.action-icon:hover {
+  color: var(--color-primary);
+}
 </style>
 
 <div class="explain-view">
+  {% if page_url %}
+  <a href="{{ page_url }}" target="_blank" rel="noopener noreferrer" class="open-external">
+    <i data-feather="external-link" class="action-icon"></i>
+  </a>
+  {% endif %}
   <pre class="explain-content">{{ help_str }}</pre>
-</div> 
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  feather.replace();
+});
+</script> 

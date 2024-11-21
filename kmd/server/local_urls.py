@@ -12,7 +12,6 @@ from kmd.config.text_styles import COLOR_HINT, COLOR_LINK
 from kmd.errors import InvalidState
 from kmd.model.args_model import fmt_loc
 from kmd.model.paths_model import StorePath
-from kmd.server.server_routes import Route
 from kmd.shell_tools.osc_tools import osc8_link_rich
 from kmd.workspaces.workspaces import current_workspace
 
@@ -69,6 +68,8 @@ class DefaultFormatter(PlaintextFormatter):
         return super().path_link(path)  # FIXME: Add links to other paths.
 
     def command_link(self, command_str: str) -> Text:
+        from kmd.server.server_routes import Route
+
         url = local_url(Route.explain, text=command_str)
         return Text.assemble(
             Text("`", style=COLOR_HINT),
@@ -92,6 +93,8 @@ class WorkspaceUrlFormatter(DefaultFormatter):
         # Only link StorePaths. Avoiding linking to all system paths seems like
         # a simple way to avoid a bunch of security issues.
         if isinstance(path, StorePath):
+            from kmd.server.server_routes import Route
+
             url = local_url(Route.view_item, store_path=path.display_str(), ws_name=self.ws_name)
             link = osc8_link_rich(url, fmt_loc(path))
             return link

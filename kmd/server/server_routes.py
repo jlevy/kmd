@@ -8,6 +8,7 @@ from kmd.config.logger import get_logger
 from kmd.file_storage.file_store import FileStore
 from kmd.help.command_help import explain_command
 from kmd.model.paths_model import StorePath
+from kmd.server.local_urls import local_url
 from kmd.web_gen.template_render import render_web_template
 from kmd.workspaces.workspace_names import check_strict_workspace_name
 
@@ -39,12 +40,15 @@ def view_item(store_path: str, ws_name: str):
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
+    page_url = local_url(Route.view_item, store_path=store_path, ws_name=ws_name)
     return HTMLResponse(
         render_web_template(
             "base_webpage.html.jinja",
             {
                 "title": item.title or "Untitled",
-                "content": render_web_template("item_view.html.jinja", {"item": item}),
+                "content": render_web_template(
+                    "item_view.html.jinja", {"item": item, "page_url": page_url}
+                ),
             },
             css_overrides={"color-bg": colors.web.bg_translucent},
         )
@@ -57,12 +61,15 @@ def explain(text: str):
     if not help_str:
         raise HTTPException(status_code=404, detail="Explanation not found")
 
+    page_url = local_url(Route.explain, text=text)
     return HTMLResponse(
         render_web_template(
             "base_webpage.html.jinja",
             {
                 "title": f"Help: {text}",
-                "content": render_web_template("explain_view.html.jinja", {"help_str": help_str}),
+                "content": render_web_template(
+                    "explain_view.html.jinja", {"help_str": help_str, "page_url": page_url}
+                ),
             },
             css_overrides={"color-bg": colors.web.bg_translucent},
         )

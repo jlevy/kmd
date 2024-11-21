@@ -28,12 +28,53 @@
 }
 
 .item-path {
+  position: relative;
   font-family: var(--font-mono);
   font-size: var(--font-size-mono);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  max-width: 100%;
+  line-height: 1.15;
   margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-bg-alt);
+  display: flex;
+  align-items: flex-start;
+}
+
+.path-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: calc(100% - 2rem);
+}
+
+.path-text {
+  word-break: break-all;
+}
+
+.copy-icon-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.open-external {
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+}
+
+.action-icon {
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--color-secondary);
+  transition: color 0.2s;
+}
+
+.action-icon:hover {
+  color: var(--color-primary);
+}
+
+.item-body {
+  padding: 0 1rem;
 }
 
 .item-title {
@@ -64,28 +105,63 @@
 </style>
 
 <div class="item-view">
-  <div class="item-header">
-    <div class="item-path">{{ item.store_path }}</div>
-    <div class="item-meta">
-      <span class="item-type">{{ item.type.value }}</span>
-      {% if item.format %}
-      <span class="item-label">Format:</span> <span class="item-format">{{ item.format.value }}</span>
-      {% endif %}
-      <span class="item-label">State:</span> <span class="item-state">{{ item.state.value }}</span>
+  <div class="item-path">
+    <div class="path-group">
+      <span class="path-text">{{ item.store_path }}</span>
+      <span class="copy-icon-wrapper">
+        <i data-feather="copy" class="action-icon" onclick="copyPath(this)" data-path="{{ item.store_path }}"></i>
+      </span>
     </div>
+    {% if page_url %}
+    <a href="{{ page_url }}" target="_blank" rel="noopener noreferrer" class="open-external">
+      <i data-feather="external-link" class="action-icon"></i>
+    </a>
+    {% endif %}
   </div>
+  <div class="item-body">
+    <div class="item-header">
+      <div class="item-meta">
+        <span class="item-type">{{ item.type.value }}</span>
+        {% if item.format %}
+        <span class="item-label">Format:</span> <span class="item-format">{{ item.format.value }}</span>
+        {% endif %}
+        <span class="item-label">State:</span> <span class="item-state">{{ item.state.value }}</span>
+      </div>
+    </div>
 
-  <h1 class="item-title">{{ item.title or "Untitled" }}</h1>
-  
-  {% if item.url %}
-  <div class="item-url">
-    <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.url }}</a>
-  </div>
-  {% endif %}
+    <h1 class="item-title">{{ item.title or "Untitled" }}</h1>
 
-  {% if item.description %}
-  <div class="item-description">
-    {{ item.description }}
+    {% if item.url %}
+    <div class="item-url">
+      <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.url }}</a>
+    </div>
+    {% endif %}
+
+    {% if item.description %}
+    <div class="item-description">
+      {{ item.description }}
+    </div>
+    {% endif %}
   </div>
-  {% endif %}
 </div>
+
+<script>
+function copyPath(element) {
+  const path = element.getAttribute('data-path');
+  navigator.clipboard.writeText(path).then(() => {
+    // Change icon temporarily to show success
+    element.setAttribute('data-feather', 'check');
+    feather.replace();
+    
+    setTimeout(() => {
+      element.setAttribute('data-feather', 'copy');
+      feather.replace();
+    }, 1000);
+  });
+}
+
+// Initialize Feather icons
+document.addEventListener('DOMContentLoaded', () => {
+  feather.replace();
+});
+</script>
