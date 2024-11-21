@@ -128,7 +128,7 @@ def handle_shell_result(res: ShellResult) -> None:
             shell_print_selection(selection)
 
         if selection and res.suggest_actions:
-            from kmd.commands import command_defs
+            from kmd.commands import suggest_actions
 
             cprint()
-            command_defs.suggest_actions()
+            suggest_actions()

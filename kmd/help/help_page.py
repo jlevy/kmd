@@ -2,7 +2,6 @@ from typing import List
 
 from rich.text import Text
 
-from kmd.commands.command_registry import all_commands
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import COLOR_HINT
 from kmd.docs import (
@@ -21,6 +20,7 @@ log = get_logger(__name__)
 
 
 def print_builtin_commands_help() -> None:
+    from kmd.commands.command_registry import all_commands
     from kmd.help.command_help import print_command_function_help
 
     for command in all_commands().values():
