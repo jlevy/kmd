@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from kmd.commands import show
+from kmd.commands.files_commands import show
 from kmd.exec.action_registry import kmd_action
 from kmd.model.actions_model import ActionInput, ActionResult, Precondition
 from kmd.model.commands_model import Command

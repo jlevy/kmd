@@ -63,7 +63,12 @@ def _insert_output(func: Callable, name: str) -> str:
 
 @log_calls(level="warning", if_slower_than=0.5)
 def assist_current_state() -> Message:
-    from kmd.commands import applicable_actions, files, history, select  # Avoid circular imports.
+    from kmd.commands.workspace_commands import (
+        applicable_actions,
+        files,
+        history,
+        select,
+    )  # Avoid circular imports.
 
     ws = current_workspace()
     ws_base_dir = ws.base_dir
