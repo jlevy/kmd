@@ -5,6 +5,7 @@ from cachetools import cached
 
 from kmd.config.logger import get_logger, reset_logging
 from kmd.config.settings import resolve_and_create_dirs, SANDBOX_KB_PATH, SANDBOX_NAME
+from kmd.config.setup import log_api_key_setup
 from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
 from kmd.file_storage.metadata_dirs import MetadataDirs
@@ -124,7 +125,7 @@ def _infer_workspace_info() -> Tuple[Optional[Path], bool]:
     return dir, is_sandbox
 
 
-def _switch_current_workspace(base_dir: Path, silent: bool = False) -> FileStore:
+def _switch_current_workspace(base_dir: Path) -> FileStore:
     """
     Switch the current workspace to the given directory.
     Updates logging and cache directories to be within that workspace.
@@ -137,11 +138,7 @@ def _switch_current_workspace(base_dir: Path, silent: bool = False) -> FileStore
     reset_media_cache_dir(ws_dirs.media_cache_dir)
     reset_content_cache_dir(ws_dirs.content_cache_dir)
 
-    ws = get_workspace_registry().load(ws_name, ws_path, is_sandbox)
-    if not silent:
-        ws.log_store_info(once=True)
-
-    return ws
+    return get_workspace_registry().load(ws_name, ws_path, is_sandbox)
 
 
 def current_workspace(silent: bool = False) -> FileStore:
@@ -149,6 +146,7 @@ def current_workspace(silent: bool = False) -> FileStore:
     Get the current workspace based on the current working directory.
     Also updates logging and cache directories if this has changed.
     """
+
     base_dir, is_sandbox = _infer_workspace_info()
     if not base_dir:
         raise InvalidState(
@@ -156,7 +154,14 @@ def current_workspace(silent: bool = False) -> FileStore:
             "Create one with the `workspace` command."
         )
 
-    return _switch_current_workspace(base_dir, silent)
+    ws = _switch_current_workspace(base_dir)
+
+    if not silent:
+        # Delayed, once-only logging of any setup warnings.
+        log_api_key_setup(once=True)
+        ws.log_store_info(once=True)
+
+    return ws
 
 
 T = TypeVar("T")

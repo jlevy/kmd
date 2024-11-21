@@ -7,7 +7,7 @@ from kmd.action_defs import reload_all_actions
 from kmd.commands import help_commands
 from kmd.commands.command_registry import all_commands
 from kmd.config.logger import get_logger
-from kmd.config.setup import setup
+from kmd.config.setup import log_api_key_setup, setup
 from kmd.config.text_styles import PROMPT_COLOR_NORMAL, PROMPT_COLOR_WARN, PROMPT_MAIN
 from kmd.exec.history import wrap_with_history
 from kmd.model.actions_model import Action
@@ -75,7 +75,9 @@ def _wrap_handle_results(func: Callable[..., R]) -> Callable[[List[str]], None]:
 
         set_env("result", res.result)
 
-        selections = current_workspace().selections
+        silent = not _is_interactive  # Don't log workspace info unless interactive.
+
+        selections = current_workspace(silent=silent).selections
         selection = selections.current
         set_env("selections", selections)
         set_env("selection", selection)
@@ -210,6 +212,8 @@ def customize_xonsh():
     _initialize_commands()
 
     if _is_interactive:
+        log_api_key_setup(once=False)
+
         check_terminal_features().print_term_info()
 
         start_server()

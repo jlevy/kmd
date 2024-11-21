@@ -8,6 +8,7 @@ from kmd.commands.files_commands import trash
 from kmd.commands.selection_commands import select
 from kmd.config.logger import get_logger, log_file_path, log_objects_dir, reset_logging
 from kmd.config.settings import global_settings, LogLevel, update_global_settings
+from kmd.config.setup import log_api_key_setup
 from kmd.config.text_styles import PROMPT_ASSIST, SPINNER
 from kmd.form_input.prompt_input import prompt_simple_string
 from kmd.help.assistant import assist_system_message_with_state, shell_context_assistance
@@ -192,6 +193,19 @@ def version() -> None:
     from kmd.main import APP_VERSION
 
     cprint(APP_VERSION)
+
+
+@kmd_command
+def self_check() -> None:
+    """
+    Self-check kmd setup, including tools and API keys.
+    """
+    version()
+    cprint()
+    check_tools()
+    cprint()
+    log_api_key_setup(once=False)
+    cprint()
 
 
 # TODO:

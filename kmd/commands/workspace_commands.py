@@ -516,13 +516,3 @@ def normalize(*paths: str) -> ShellResult:
     if len(canon_paths) > 0:
         select(*canon_paths)
     return ShellResult(show_selection=len(canon_paths) > 0)
-
-
-@kmd_command
-def version() -> None:
-    """
-    Show the version of kmd.
-    """
-    from kmd.main import APP_VERSION
-
-    cprint(APP_VERSION)

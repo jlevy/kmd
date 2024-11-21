@@ -282,7 +282,7 @@ def print_help():
     print(output.getvalue())
 
 
-def parse_args():
+def parse_args() -> Optional[str]:
     # Do our own arg parsing since everything except these two options
     # should be handled as a kmd command.
     if sys.argv[1:] == ["--version"]:

@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+from threading import Event
 from typing import Any
 
 from cachetools import cached
@@ -7,13 +8,6 @@ from dotenv import find_dotenv, load_dotenv
 
 from kmd.config.logger import logging_setup
 from kmd.util.stack_traces import add_stacktrace_handler
-
-
-def error(msg: str, *args: Any):
-    from kmd.config.logger import get_logger
-
-    log = get_logger(__name__)
-    log.error(msg, *args)
 
 
 @cached(cache={})
@@ -34,14 +28,36 @@ def setup():
 RECOMMENDED_APIS = ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "DEEPGRAM_API_KEY", "GROQ_API_KEY"]
 
 
-def api_setup():
-    load_dotenv(find_dotenv(usecwd=True))
+def api_setup() -> str | None:
+    dotenv_path = find_dotenv(usecwd=True)
+    if dotenv_path:
+        load_dotenv(dotenv_path)
+    return dotenv_path
+
+
+_log_api_setup_done = Event()
+
+
+def log_api_key_setup(once: bool = False) -> None:
+    if once and _log_api_setup_done.is_set():
+        return
+
+    from kmd.config.logger import get_logger
+
+    log = get_logger(__name__)
+
+    dotenv_path = api_setup()
+
+    if dotenv_path:
+        log.message("Found .env file for API keys: %s", dotenv_path)
+    else:
+        log.warning("No .env file found. Set up your API keys in a .env file.")
 
     for key in RECOMMENDED_APIS:
         if key not in os.environ:
-            error(
-                f"Error: Missing expected API key (check if it is set in environment or .env file?): {key}"
-            )
+            log.warning("Missing recommended API key: %s", key)
+
+    _log_api_setup_done.set()
 
 
 def lib_setup():

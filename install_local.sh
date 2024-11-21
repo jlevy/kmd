@@ -4,6 +4,8 @@
 
 set -euo pipefail
 
+trap 'echo "Error: $0 failed with exit code $?. See errors above."' ERR
+
 APP_NAME=kmd
 
 if [ ! -f "pyproject.toml" ]; then
@@ -14,8 +16,13 @@ fi
 PYTHON_SITE_PACKAGES=$(python -c 'import site; print(site.USER_SITE)')
 
 echo
-echo "This will build and install $APP_NAME and its dependencies to the current Python environment:"
+echo "We will build and install $APP_NAME and its dependencies using pip"
+echo "to the current Python environment:"
+echo
 echo "$PYTHON_SITE_PACKAGES"
+echo
+echo "Running this script with options: $0 $@"
+echo "You can run with --force-reinstall to force pip to do reinstallation."
 echo
 read -p "Do you want to continue (y/n)? " choice
 
@@ -24,6 +31,8 @@ case "$choice" in
   n|N ) echo "Installation aborted."; exit 1;;
   * ) echo "Invalid choice. Installation aborted."; exit 1;;
 esac
+
+echo
 
 set -x
 
@@ -42,4 +51,24 @@ fi
 
 # We install for the user.
 set -x
-pip install --user "$WHEEL_FILE" $*
+pip install --user "$WHEEL_FILE" $@
+
+set +x
+
+echo
+echo "Checking everything worked (may take a minute to compile bytecode)..."
+
+# Use a full command to import/bytecompile more code now.
+if kmd self_check; then
+  echo
+  echo 'Success!'
+  echo 'Check for warnings about needed tools or .env file API key setup above.'
+  echo 'Then run `kmd` to get started.'
+  echo
+else
+  echo
+  echo 'Something went wrong. :('
+  echo 'Look for error messages above and see `installation` docs for help.'
+  echo
+  exit 1
+fi
