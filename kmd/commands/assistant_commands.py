@@ -59,12 +59,14 @@ def assistant_system_message(skip_api: bool = False) -> ShellResult:
 
 
 @kmd_command
-def assistant_history() -> None:
+def assistant_history(follow: bool = False) -> None:
     """
     Show the assistant history for the current workspace.
+
+    :param follow: Follow the file as it grows.
     """
     ws = current_workspace()
-    tail_file(ws.base_dir / ws.dirs.assistant_history_yml)
+    tail_file(ws.base_dir / ws.dirs.assistant_history_yml, follow=follow)
 
 
 @kmd_command

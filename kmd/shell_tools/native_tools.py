@@ -129,23 +129,51 @@ def view_file_native(
         native_open(file_or_url)
 
 
-def tail_file(filename: str | Path):
+def tail_file(
+    filename: str | Path,
+    follow: bool = False,
+    max_lines: int = 10000,
+    follow_max_lines: int = 200,
+):
     """
     Tail a log file. With colorization using bat if available, otherwise using less.
+    If follow is True, follows the file as it grows.
+
+    Uses bat if available. Note bat doesn't have efficient seek functionality like
+    `less +G` so we prefer to use bat with less. Use Ctrl-C to quit less (this is
+    enabled with `less -K`).
     """
     filename = str(filename)
     quoted_filename = shlex.quote(filename)
 
-    # Use bat if available.
+    if follow:
+        max_lines = follow_max_lines
+
     tool_check().require(Tool.less)
     tool_check().warn_if_missing(Tool.bat, Tool.tail)
-    if tool_check().has(Tool.bat, Tool.tail, Tool.less):
-        # Note bat doesn't have efficient seek functionality like `less +G` so we use less and bat.
-        command = f"tail -10000 {quoted_filename} | bat --color=always --paging=never --style=plain --theme={BAT_THEME} -l log | less -R +G"
-    else:
-        command = f"less +G {quoted_filename}"
 
-    cprint("Tailing file: `%s`", command, text_wrap=Wrap.NONE)
+    if follow:
+        if tool_check().has(Tool.bat, Tool.tail, Tool.less):
+            # Follow the file in real-time.
+            command = (
+                f"tail -{max_lines} -f {quoted_filename} | "
+                f"bat --paging=never --color=always --style=plain --theme={BAT_THEME} -l log | "
+                "less -K -R +F"
+            )
+        else:
+            command = f"tail -f {quoted_filename} | less -R +F"
+        cprint("Following file: `%s`", command)
+    else:
+        if tool_check().has(Tool.bat, Tool.tail, Tool.less):
+            command = (
+                f"tail -{max_lines} {quoted_filename} | "
+                f"bat --paging=never --color=always --style=plain --theme={BAT_THEME} -l log | "
+                "less -K -R +G"
+            )
+        else:
+            command = f"less +G {quoted_filename}"
+        cprint("Tailing file: `%s`", command)
+
     subprocess.run(command, shell=True, check=True)
 
 

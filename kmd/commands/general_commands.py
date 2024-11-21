@@ -55,11 +55,13 @@ def check_tools(warn_only: bool = False) -> None:
 
 
 @kmd_command
-def logs() -> None:
+def logs(follow: bool = False) -> None:
     """
     Page through the logs for the current workspace.
+
+    :param follow: Follow the file as it grows.
     """
-    tail_file(log_file_path())
+    tail_file(log_file_path(), follow=follow)
 
 
 @kmd_command
@@ -132,11 +134,13 @@ def stop_server() -> None:
 
 
 @kmd_command
-def server_logs() -> None:
+def server_logs(follow: bool = False) -> None:
     """
     Show the logs from the kmd local server.
+
+    :param follow: Follow the file as it grows.
     """
-    tail_file(local_server.log_file_path())
+    tail_file(local_server.log_file_path(), follow=follow)
 
 
 # TODO:
