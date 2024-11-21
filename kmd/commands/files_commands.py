@@ -386,10 +386,11 @@ def files(
          Defaults to 'parent'.
     :param iso_time: Show time in ISO format (default is human-readable age).
     """
-
-    # TODO: Consider adding a --flat or --depth option.
+    # FIXME: This is recursive by default so we should have it trim depth and breadth
+    # per directory, or it breaks on deeply nested directories.
+    # TODO: Add a --depth option.
     # TODO: Add a --full option with line and word counts and file_info details
-    # and enable by default for --save.
+    # and include these in --save.
 
     if len(paths) == 0:
         paths_to_show = [Path(".")]
