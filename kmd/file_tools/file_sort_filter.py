@@ -49,8 +49,8 @@ class FileInfo:
     type: FileType
 
 
-def get_file_info(file_path: Path, base_path: Path) -> FileInfo:
-    stat = file_path.stat()
+def get_file_info(file_path: Path, base_path: Path, follow_symlinks: bool = False) -> FileInfo:
+    stat = file_path.stat(follow_symlinks=follow_symlinks)
     return FileInfo(
         path=str(file_path.resolve()),
         relative_path=str(file_path.relative_to(base_path)),

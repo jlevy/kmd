@@ -98,10 +98,19 @@
 }
 
 .item-description {
+  font-family: var(--font-sans);
+  color: var(--color-secondary);
+}
+
+.item-body {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  margin-left: 0;
   font-family: var(--font-serif);
   color: var(--color-secondary);
   font-size: var(--font-size-smaller);
 }
+
 </style>
 
 <div class="item-view">
@@ -140,6 +149,12 @@
     {% if item.description %}
     <div class="item-description">
       {{ item.description }}
+    </div>
+    {% endif %}
+
+    {% if body_html %}
+    <div class="item-body">
+      {{ body_html|safe}}
     </div>
     {% endif %}
   </div>

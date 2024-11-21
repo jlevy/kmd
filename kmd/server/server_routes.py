@@ -41,13 +41,21 @@ def view_item(store_path: str, ws_name: str):
         raise HTTPException(status_code=404, detail="Item not found")
 
     page_url = local_url(Route.view_item, store_path=store_path, ws_name=ws_name)
+    if item.body and len(item.body) > 10 * 1024 * 1024:
+        body_html = "Item body is too large to display!"
+    else:
+        try:
+            body_html = item.body_as_html()
+        except ValueError:
+            body_html = None
     return HTMLResponse(
         render_web_template(
             "base_webpage.html.jinja",
             {
                 "title": item.title or "Untitled",
                 "content": render_web_template(
-                    "item_view.html.jinja", {"item": item, "page_url": page_url}
+                    "item_view.html.jinja",
+                    {"item": item, "page_url": page_url, "body_html": body_html},
                 ),
             },
             css_overrides={"color-bg": colors.web.bg_translucent},
@@ -62,6 +70,7 @@ def explain(text: str):
         raise HTTPException(status_code=404, detail="Explanation not found")
 
     page_url = local_url(Route.explain, text=text)
+
     return HTMLResponse(
         render_web_template(
             "base_webpage.html.jinja",
