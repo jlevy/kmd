@@ -130,7 +130,7 @@ def _load_xonsh_commands():
     update_aliases(kmd_commands)
 
 
-def _load_xonsh_actions():
+def _load_xonsh_actions() -> List[str]:
     """
     Load all kmd actions as xonsh commands.
     """
@@ -142,6 +142,8 @@ def _load_xonsh_actions():
         kmd_actions[action.name] = _wrap_handle_results(ShellCallableAction(action))
 
     update_aliases(kmd_actions)
+
+    return list(kmd_actions.keys())
 
 
 def _initialize_commands():

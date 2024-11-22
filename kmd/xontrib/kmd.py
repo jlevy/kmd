@@ -35,7 +35,6 @@ def load(*paths: str) -> None:
             importlib.import_module(path)
 
     # Now reload all actions into the environment so the new action is visible.
-    kmd.action_defs.reload_all_actions()
     kmd.xontrib.xonsh_customization._load_xonsh_actions()
 
     kmd.shell.shell_output.cprint(

@@ -7,7 +7,7 @@ from typing import Generic, Optional, Tuple, TypeVar
 from cachetools import LRUCache
 
 from kmd.config.logger import get_logger
-from kmd.web_content.dir_store import file_mtime_hash
+from kmd.util.strif import file_mtime_hash
 
 log = get_logger(__name__)
 

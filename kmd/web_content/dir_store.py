@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 from kmd.config.logger import get_logger
-from kmd.util.strif import clean_alphanum_hash
+from kmd.util.strif import clean_alphanum_hash, file_mtime_hash
 from kmd.util.url import Url
 
 
@@ -22,18 +22,6 @@ def aws_cli(*cmd):
     # Deal with problems
     if exit_code > 0:
         raise RuntimeError("AWS CLI exited with code {}".format(exit_code))
-
-
-def file_mtime_hash(path: Path) -> str:
-    """
-    A fast hash to detect file modifications via high-resolution modification time.
-    Hashes the file name, size, and modification time.
-    """
-    name = path.name
-    size = path.stat().st_size
-    mtime = path.stat().st_mtime_ns  # Nanosecond precision works on most platforms.
-    key = f"{name}-{size}-{mtime}"
-    return clean_alphanum_hash(key, max_length=80, max_hash_len=10)
 
 
 def string_hash(key: str) -> str:

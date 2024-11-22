@@ -15,7 +15,7 @@ from kmd.config.text_styles import BAT_STYLE, BAT_THEME, COLOR_ERROR
 from kmd.errors import FileNotFound, SetupError
 from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import file_format_info, is_full_html_page, read_partial_text
-from kmd.shell.shell_output import cprint, Wrap
+from kmd.shell.shell_output import cprint
 from kmd.shell_tools.terminal_images import terminal_show_image
 from kmd.shell_tools.tool_deps import detect_platform, OSPlatform, Tool, tool_check
 from kmd.util.log_calls import log_calls

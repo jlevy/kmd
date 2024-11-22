@@ -72,6 +72,7 @@ def new_timestamped_uid(bits: int = 32) -> str:
     """
     A unique id that begins with an ISO timestamp followed by fractions of seconds and bits of
     randomness. The advantage of this is it sorts nicely by time, while still being unique.
+
     Example: 20150912T084555Z-378465-43vtwbx
     """
     timestamp = re.sub(r"[^\w.]", "", datetime.now(timezone.utc).isoformat()).replace(".", "Z-")
@@ -84,7 +85,7 @@ _NON_ALPHANUM_CHARS = re.compile(r"[^a-z0-9]+", re.IGNORECASE)
 def clean_alphanum(string: str, max_length: Optional[int] = None) -> str:
     """
     Convert a string to a clean, readable identifier that includes the (first) alphanumeric
-    characters of the given string.
+    characters of the given string, replacing non-alphanumeric characters with underscores.
 
     This mapping is for readability only, and so can easily have collisions on different inputs.
     """
@@ -96,9 +97,13 @@ def clean_alphanum_hash(
 ) -> str:
     """
     Convert a string to a clean, readable identifier that includes the (first) alphanumeric
-    characters of the given string.
+    characters of the given string. Result is a string of length at most max_length,
+    unless max_length is so short that the base36 SHA1 hash won't fit.
 
-    This includes a SHA1 hash so collisions are unlikely.
+    Example: clean_alphanum_hash("foo")
+      -> 'foo_1e6gpc3ehk0mu2jqu8cg42g009s796b'
+
+    This includes a base36 SHA1 hash so collisions are unlikely.
     """
     hash_str = hash_string_base36(string, algorithm="sha1")
     if max_hash_len:
@@ -108,6 +113,27 @@ def clean_alphanum_hash(
     else:
         clean_str = clean_alphanum(string, max_length=max_length - len(hash_str))
         return f"{clean_str}_{hash_str}"
+
+
+def file_mtime_hash(path: str | Path) -> str:
+    """
+    An imperfect but fast hash to detect file modifications via high-resolution
+    modification time. Hashes the file name, size, and modification time,
+    and these are preserved in the prefix to help with sorting or debugging.
+
+    Example: file_mtime_hash("foo.txt")
+      -> 'foo_txt_1725_1732233268408136030_d1rgdwjlr29083zgd96ws9wq1807mps'
+
+    This is not guaranteed to be perfect like a content hash, but works for simple
+    use cases. Nanosecond precision via `st_mtime_ns` works on most platforms.
+    """
+    path = Path(path)
+    name = path.name
+    stat = path.stat()
+    size = stat.st_size
+    mtime = getattr(stat, "st_mtime_ns", int(stat.st_mtime * 1e9))
+    key = f"{name}-{size}-{mtime}"
+    return clean_alphanum_hash(key, max_length=64)
 
 
 def base36_encode(n: int) -> str:
@@ -127,6 +153,11 @@ def base36_encode(n: int) -> str:
 def hash_string_base36(string: str, algorithm: str = "sha1") -> str:
     """
     Hash string and return in base 36, which is good for short, friendly identifiers.
+    Length of a SHA1 hash in base36 is ~32 chars.
+
+    Example:
+      hash_string_base36("foo")
+      -> '1e6gpc3ehk0mu2jqu8cg42g009s796b'
     """
     h = hashlib.new(algorithm)
     h.update(string.encode("utf8"))
