@@ -502,8 +502,12 @@ def files(
                     display_df = group_df
 
                 for idx, row in display_df.iterrows():
-                    file_size = fmt_file_size(row["size"])
-                    file_mod_time = fmt_time(row["modified"], iso_time, now=now, brief=True)
+                    short_file_size = fmt_file_size(row["size"])
+                    full_file_size = f"{row['size']} bytes"
+                    short_mod_time = fmt_time(
+                        row["modified"], iso_time=iso_time, now=now, brief=True
+                    )
+                    full_mod_time = fmt_time(row["modified"], friendly=True, now=now)
 
                     rel_path = row["relative_path"]
 
@@ -520,9 +524,13 @@ def files(
                     # Assemble output line.
                     # FIXME: Restore coloring on mod time and size.
                     line = Text()
-                    line.append(file_mod_time.rjust(TIME_WIDTH))
+                    line.append(
+                        fmt.tooltip_link(short_mod_time.rjust(TIME_WIDTH), tooltip=full_mod_time)
+                    )
                     line.append(SPACING)
-                    line.append(file_size.rjust(SIZE_WIDTH))
+                    line.append(
+                        fmt.tooltip_link(short_file_size.rjust(SIZE_WIDTH), tooltip=full_file_size)
+                    )
                     line.append(SPACING)
                     line.append(fmt.path_link(display_path))
 

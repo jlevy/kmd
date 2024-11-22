@@ -100,6 +100,8 @@ web_light = SimpleNamespace(
     tooltip_bg=hsl_to_hex("hsla(44, 6%, 40%, 0.95)"),
     bright=hsl_to_hex("hsl(134, 43%, 60%)"),
     selection="hsla(225, 61%, 82%, 0.80)",
+    scrollbar=hsl_to_hex("hsl(188, 12%, 55%)"),
+    scrollbar_hover=hsl_to_hex("hsl(188, 12%, 38%)"),
 )
 
 # Only support light web colors for now.

@@ -11,7 +11,9 @@ from kmd.config.settings import global_settings
 from kmd.config.text_styles import COLOR_HINT, COLOR_LINK
 from kmd.errors import InvalidState
 from kmd.model.args_model import fmt_loc
+
 from kmd.model.paths_model import StorePath
+from kmd.server.rich_terminal_codes import RichUri
 from kmd.shell_tools.osc_tools import osc8_link_rich
 from kmd.workspaces.workspaces import current_workspace
 
@@ -39,6 +41,10 @@ class LinkFormatter(ABC):
     """
 
     @abstractmethod
+    def tooltip_link(self, text: str, tooltip: Optional[str] = None) -> Text:
+        pass
+
+    @abstractmethod
     def path_link(self, path: Path) -> Text:
         pass
 
@@ -52,6 +58,9 @@ class PlaintextFormatter(LinkFormatter):
     A plaintext formatter that doesn't use links.
     """
 
+    def tooltip_link(self, text: str, tooltip: Optional[str] = None) -> Text:
+        return Text(text)
+
     def path_link(self, path: Path) -> Text:
         return Text(fmt_loc(path))
 
@@ -63,6 +72,12 @@ class DefaultFormatter(PlaintextFormatter):
     """
     A formatter that uses OSC8 links.
     """
+
+    def tooltip_link(self, text: str, tooltip: Optional[str] = None) -> Text:
+        if tooltip:
+            return osc8_link_rich(RichUri.tooltip(tooltip).uri_str, text)
+        else:
+            return Text(text)
 
     def path_link(self, path: Path) -> Text:
         return super().path_link(path)  # FIXME: Add links to other paths.

@@ -8,6 +8,7 @@
   --font-size-smaller: 0.85rem;
   --font-size-mono: 0.8rem;
   --font-size-mono-small: 0.75rem;
+  --font-size-mono-tiny: 0.7rem;
 }
 
 {{ color_defs|safe }}
@@ -30,6 +31,28 @@
     U+FE00-FE0F,    /* Variation Selectors */
     U+1F900-1F9FF;  /* Supplemental Symbols and Pictographs */ 
 } #}
+
+/* Scrollbar coloring. */
+/* For Webkit browsers (Chrome, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar);
+  border-radius: 4px;
+  transition: color 0.2s ease-in-out;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbar-hover);
+}
+* { /* For Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scrollbar) var(--color-bg);
+}
 
 body {
   font-family: var(--font-serif);

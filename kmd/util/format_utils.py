@@ -250,11 +250,22 @@ def fmt_age(since_time: float | timedelta, brief: bool = False) -> str:
 
 
 def fmt_time(
-    dt: datetime, iso_time: bool = True, now: Optional[datetime] = None, brief: bool = False
+    dt: datetime,
+    iso_time: bool = True,
+    friendly: bool = False,
+    brief: bool = False,
+    now: Optional[datetime] = None,
 ) -> str:
     """
-    Format a datetime for display, either as an age (e.g. "2d ago") or ISO timestamp.
+    Format a datetime for display in various formats:
+    - ISO timestamp (e.g. "2024-03-15T17:23:45Z")
+    - Age (e.g. "2d ago")
+    - Friendly format (e.g. "March 15, 2024 17:23 UTC")
     """
+    if friendly:
+        # Format timezone name, handling UTC specially
+        tzname = dt.tzname() or "UTC" if dt.tzinfo else "UTC"
+        return dt.strftime("%B %d, %Y %H:%M ") + tzname
     if iso_time:
         return dt.isoformat().split(".", 1)[0] + "Z"
     else:
