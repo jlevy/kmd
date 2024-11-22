@@ -140,7 +140,7 @@ def server_logs(follow: bool = False) -> None:
 
     :param follow: Follow the file as it grows.
     """
-    tail_file(local_server.log_file_path(), follow=follow)
+    tail_file(local_server.log_file_path(global_settings().local_server_port), follow=follow)
 
 
 @kmd_command

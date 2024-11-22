@@ -22,7 +22,7 @@ GLOBAL_CACHE_NAME = "kmd_cache"
 MEDIA_CACHE_NAME = "media"
 CONTENT_CACHE_NAME = "content"
 
-LOCAL_SERVER_LOG_FILE = "~/.local/kmd/logs/server.log"
+LOCAL_SERVER_LOG_FILE = "~/.local/kmd/logs/local_server_{port}.log"
 LOCAL_SERVER_PORT_START = 4470
 LOCAL_SERVER_PORTS_MAX = 30
 

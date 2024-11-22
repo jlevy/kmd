@@ -25,8 +25,9 @@ server_instance = None
 
 
 @cached({})
-def log_file_path() -> Path:
-    return resolve_and_create_dirs(LOCAL_SERVER_LOG_FILE)
+def log_file_path(port: int) -> Path:
+    # Use a different log file for each port (server instance).
+    return resolve_and_create_dirs(LOCAL_SERVER_LOG_FILE.format(port=port))
 
 
 @cached({})
@@ -82,7 +83,7 @@ def _run_server():
                 "default": {
                     "formatter": "default",
                     "class": "logging.FileHandler",
-                    "filename": str(log_file_path()),
+                    "filename": str(log_file_path(port)),
                 }
             },
             "loggers": {
@@ -103,7 +104,7 @@ def _run_server():
                 host,
                 port,
             )
-            log.message("Local server logs: %s", fmt_path(log_file_path()))
+            log.message("Local server logs: %s", fmt_path(log_file_path(port)))
             await server.serve()
         finally:
             should_exit.set()
