@@ -422,10 +422,22 @@ class Item:
 
         return item_dict
 
+    def display_title(self) -> str:
+        """
+        A display title for this item. Same as abbrev_title() but will fall back
+        to the filename if it is available.
+        """
+        display_title = self.title
+        if not display_title and self.store_path:
+            display_title = Path(self.store_path).name
+        if not display_title:
+            display_title = self.abbrev_title()
+        return display_title
+
     def abbrev_title(self, max_len: int = 100, add_ops_suffix: bool = True) -> str:
         """
-        Get or infer title. Optionally, include the last operation as a parenthetical
-        at the end of the title.
+        Get or infer a title for this item. Optionally, include the last operation
+        as a parentheticalat the end of the title.
         """
         title_raw_text = (
             self.title

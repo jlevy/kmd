@@ -1,4 +1,5 @@
 from enum import Enum
+from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
@@ -41,15 +42,17 @@ def view_item(store_path: str, ws_name: str):
         raise HTTPException(status_code=404, detail="Item not found")
 
     page_url = local_url(Route.view_item, store_path=store_path, ws_name=ws_name)
+
+    body_text = None
     if item.body and len(item.body) > 10 * 1024 * 1024:
         body_text = "Item body is too large to display!"
-    else:
+    elif not item.is_binary:
         body_text = item.body_text()
     return HTMLResponse(
         render_web_template(
             "base_webpage.html.jinja",
             {
-                "title": item.title or "Untitled",
+                "title": item.display_title(),
                 "content": render_web_template(
                     "item_view.html.jinja",
                     {"item": item, "page_url": page_url, "body_text": body_text},

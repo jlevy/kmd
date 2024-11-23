@@ -48,6 +48,15 @@ def _server_setup():
             content={"message": f"File not found: {exc}"},
         )
 
+    # Global exception handler.
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        log.error(f"Unhandled server exception: {exc}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Internal server error."},
+        )
+
 
 def _run_server():
     import uvicorn

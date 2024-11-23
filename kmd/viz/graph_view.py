@@ -14,12 +14,15 @@ from kmd.shell_tools.native_tools import view_file_native, ViewMode
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
 from kmd.workspaces.workspaces import current_workspace
+from kmd.config import colors
 
 log = get_logger(__name__)
 
 
 def force_graph_generate(title: str, graph: GraphData) -> str:
-    content = render_web_template("force_graph.html.jinja", {"graph": graph.to_serializable()})
+    content = render_web_template(
+        "force_graph.html.jinja", {"graph": graph.to_serializable(), "colors": colors.logical}
+    )
     return render_web_template("base_webpage.html.jinja", {"title": title, "content": content})
 
 

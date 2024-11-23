@@ -1,5 +1,6 @@
 import socket
 import time
+from typing import Iterable
 
 from kmd.config.logger import get_logger
 
@@ -53,7 +54,7 @@ def wait_for_local_port(host: str, port: int, timeout: int = 0):
             time.sleep(2)
 
 
-def find_available_local_port(host: str, ports):
+def find_available_local_port(host: str, ports: Iterable[int]) -> int:
     """
     Find the first available port from an iterable of port numbers.
     Returns the first port that is free.

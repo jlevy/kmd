@@ -16,6 +16,12 @@ log = get_logger(__name__)
 UI_SCHEME = "ui://"
 
 
+# TODO:
+# - Popover hints on links.
+# - Widget injection (popover, image overlay, video player, etc.)
+# - Menu items for RichUris (right click and run action)
+
+
 class RichUriType(Enum):
     url = "url"
     tooltip = "tooltip"
