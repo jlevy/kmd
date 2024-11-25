@@ -15,7 +15,7 @@ from rich.text import Text
 from kmd.commands.command_registry import kmd_command
 from kmd.commands.selection_commands import select
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import COLOR_EMPH, COLOR_HINT
+from kmd.config.text_styles import COLOR_EMPH, COLOR_EMPH_ALT, COLOR_HINT
 from kmd.errors import InvalidInput, InvalidState
 from kmd.exec.resolve_args import assemble_path_args, resolvable_paths, resolve_path_arg
 from kmd.file_formats.chat_format import ChatHistory
@@ -368,10 +368,10 @@ def files(
 
     For a quick, paged overview of all files in a big directory, use `files --pager`.
 
-    :param brief: Gives an overview of the most recently modified files in each directory.
-        Same as `--head=20 --groupby=parent`.
-    :param recent: Like `--brief`, but shows the most recently modified files in each directory.
-        Same as `--head=20 --sort=modified --reverse --groupby=parent`.
+    :param brief: Only shows a few files per directory.
+        Same as `--head=10 --groupby=parent`.
+    :param recent: Only shows the most recently modified files in each directory.
+        Same as `--head=10 --sort=modified --reverse --groupby=parent`.
     :param flat: Show files in a flat list, rather than grouped by parent directory.
         Same as `--groupby=flat`.
     :param pager: Use the pager when displaying the output.
@@ -399,7 +399,7 @@ def files(
 
     if brief or recent:
         if head == 0:
-            head = 20
+            head = 10
         if groupby is None:
             groupby = GroupByOption.parent
     if recent:
@@ -541,15 +541,16 @@ def files(
                 # Indicate if items are omitted.
                 if groupby and head and len(group_df) > head:
                     cprint(
-                        f"{indent}… {len(group_df) - head} more files not shown",
+                        f"{indent}… and {len(group_df) - head} more files",
+                        color=COLOR_EMPH_ALT,
                         text_wrap=Wrap.NONE,
                     )
-                else:
-                    cprint()
+                cprint()
 
             if not groupby and head and files_matching > head:
                 cprint(
-                    f"{indent}… {files_matching - head} more files not shown",
+                    f"{indent}… and {files_matching - head} more files",
+                    color=COLOR_EMPH_ALT,
                     text_wrap=Wrap.NONE,
                 )
 

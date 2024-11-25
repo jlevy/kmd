@@ -1,8 +1,8 @@
 from enum import Enum
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import HTMLResponse, StreamingResponse
 
 from kmd.config import colors
 from kmd.config.logger import get_logger
@@ -35,32 +35,68 @@ class Route(str, Enum):
     explain = "/explain"
 
 
-@router.get(Route.view_item)
-def view_item(store_path: str, ws_name: str):
+@router.api_route(Route.view_item, methods=["GET", "HEAD"])
+def view_item(request: Request, store_path: str, ws_name: str):
     item = server_get_workspace(ws_name).load(StorePath(store_path))
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    page_url = local_url(Route.view_item, store_path=store_path, ws_name=ws_name)
+    if item.is_binary:
+        # Return the item itself.
+        # TODO: Could make this thumbnails for images, PDF, etc.
 
-    body_text = None
-    if item.body and len(item.body) > 10 * 1024 * 1024:
-        body_text = "Item body is too large to display!"
-    elif not item.is_binary:
-        body_text = item.body_text()
-    return HTMLResponse(
-        render_web_template(
-            "base_webpage.html.jinja",
-            {
-                "title": item.display_title(),
-                "content": render_web_template(
-                    "item_view.html.jinja",
-                    {"item": item, "page_url": page_url, "body_text": body_text},
-                ),
-            },
-            css_overrides={"color-bg": colors.web.bg_translucent},
+        mime_type = item.format and item.format.mime_type()
+        if not mime_type:
+            mime_type = "application/octet-stream"
+
+        # Return headers only for HEAD requests.
+        if request.method == "HEAD":
+            return HTMLResponse(status_code=200, headers={"Content-Type": mime_type})
+
+        # Serve the binary item.
+        path = item.store_path or item.external_path
+        if not path:
+            raise HTTPException(status_code=500, detail="Binary item has no path")
+
+        def file_iterator():
+            try:
+                with open(path, "rb") as f:
+                    while chunk := f.read(8192):  # 8KB chunks
+                        yield chunk
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error streaming file: {e}")
+
+        return StreamingResponse(
+            file_iterator(),
+            media_type=mime_type,
         )
-    )
+    else:
+        # Return headers only for HEAD requests
+        if request.method == "HEAD":
+            return HTMLResponse(status_code=200, headers={"Content-Type": "text/html"})
+
+        # Serve a webpage with info about the item
+        page_url = local_url(Route.view_item, store_path=store_path, ws_name=ws_name)
+
+        body_text = None
+        if item.body and len(item.body) > 10 * 1024 * 1024:
+            body_text = "Item body is too large to display!"
+        elif not item.is_binary:
+            body_text = item.body_text()
+
+        return HTMLResponse(
+            render_web_template(
+                "base_webpage.html.jinja",
+                {
+                    "title": item.display_title(),
+                    "content": render_web_template(
+                        "item_view.html.jinja",
+                        {"item": item, "page_url": page_url, "body_text": body_text},
+                    ),
+                },
+                css_overrides={"color-bg": colors.web.bg_translucent},
+            )
+        )
 
 
 @router.get(Route.explain)

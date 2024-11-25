@@ -52,7 +52,7 @@ COLOR_HEADING = "bold bright_green"
 
 COLOR_EMPH = "bright_green"
 
-COLOR_EMPH_ALT = "bright_green"
+COLOR_EMPH_ALT = "bright_blue"
 
 COLOR_SELECTION = "bright_yellow"
 
