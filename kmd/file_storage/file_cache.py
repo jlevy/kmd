@@ -29,7 +29,7 @@ class FileMtimeCache(Generic[T]):
 
     def __init__(self, max_size, name: str, log_freq: int = 500):
         self.cache: LRUCache[str, Tuple[str, T]] = LRUCache(maxsize=max_size)
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         self.stats = CacheStats()
         self.prev_stats = CacheStats()  # Initialize prev_stats with CacheStats
         self.name = name

@@ -4,10 +4,7 @@ from os.path import basename
 from pathlib import Path
 from typing import List, Optional
 
-from frontmatter_format import (
-    fmf_read_raw,
-    fmf_strip_frontmatter,
-)
+from frontmatter_format import fmf_read_raw, fmf_strip_frontmatter
 from rich.text import Text
 
 from kmd.commands.command_registry import kmd_command

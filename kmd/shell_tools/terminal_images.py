@@ -5,16 +5,15 @@ import shutil
 import subprocess
 import sys
 import termios
+from functools import cache
 from pathlib import Path
-
-from cachetools import cached
 
 from kmd.config.text_styles import COLOR_HINT
 from kmd.errors import SetupError
 from kmd.shell.shell_output import cprint
 
 
-@cached({})
+@cache
 def terminal_supports_sixel():
     """
     Modern terminals that support Sixel should respond with a sequence containing '4'
@@ -57,7 +56,7 @@ def terminal_supports_sixel():
 
 
 # Direct detection method. Shouldn't be needed as better method above seems to work.
-# @cached({})
+# @cache
 # def terminal_supports_sixel() -> bool:
 #     term = os.environ.get("TERM", "")
 #     term_program = os.environ.get("TERM_PROGRAM", "")
@@ -77,7 +76,7 @@ def terminal_supports_sixel():
 #     return term_supports and term_program_supports
 
 
-@cached({})
+@cache
 def terminal_is_kitty():
     return os.environ.get("TERM") == "xterm-kitty"
 

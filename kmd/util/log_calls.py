@@ -4,8 +4,6 @@ import time
 from dataclasses import dataclass
 from typing import Any, Callable, cast, Dict, List, Literal, Optional, TypeVar
 
-import regex
-
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.util.strif import abbreviate_str
@@ -21,7 +19,7 @@ def single_line(text: str) -> str:
     """
     Convert newlines and other whitespace to spaces.
     """
-    return regex.sub(r"\s+", " ", str(text)).strip()
+    return re.sub(r"\s+", " ", str(text)).strip()
 
 
 _QUOTABLE = re.compile(r"['\" \n\t\r]")

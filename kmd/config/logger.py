@@ -1,11 +1,11 @@
 import logging
 import os
 import threading
+from functools import cache
 from logging import ERROR, Formatter, INFO
 from pathlib import Path
 from typing import Any, Optional
 
-from cachetools import cached
 from rich import reconfigure
 from rich.console import Console
 from rich.logging import RichHandler
@@ -33,7 +33,7 @@ LOG_OBJECTS_NAME = "objects"
 
 _log_root = Path(".")
 
-_log_lock = threading.Lock()
+_log_lock = threading.RLock()
 
 
 def log_dir() -> Path:
@@ -48,7 +48,7 @@ def log_objects_dir() -> Path:
     return log_dir() / LOG_OBJECTS_NAME
 
 
-@cached(cache={})
+@cache
 def get_highlighter():
     return KmdHighlighter()
 

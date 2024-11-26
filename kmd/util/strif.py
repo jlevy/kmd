@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import tempfile
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Generator, List, Optional, Tuple
@@ -105,7 +106,7 @@ def clean_alphanum_hash(
 
     This includes a base36 SHA1 hash so collisions are unlikely.
     """
-    hash_str = hash_string_base36(string, algorithm="sha1")
+    hash_str = hash_string(string, algorithm="sha1").base36
     if max_hash_len:
         hash_str = hash_str[:max_hash_len]
     if max_length < len(hash_str) + 1:
@@ -150,18 +151,59 @@ def base36_encode(n: int) -> str:
     return encoded
 
 
-def hash_string_base36(string: str, algorithm: str = "sha1") -> str:
+@dataclass(frozen=True)
+class Hash:
     """
-    Hash string and return in base 36, which is good for short, friendly identifiers.
-    Length of a SHA1 hash in base36 is ~32 chars.
+    A simple, flexible hash format. Includes the algorithm used to compute it and
+    can convert to hex or base36 format or a prefixed format that includes the
+    algorithm name.
+
+    Base 36 format is good for short, friendly identifiers. Length of a SHA1 hash
+    in base36 is ~32 chars.
 
     Example:
-      hash_string_base36("foo")
+      hash_string("foo").base36
       -> '1e6gpc3ehk0mu2jqu8cg42g009s796b'
     """
-    h = hashlib.new(algorithm)
-    h.update(string.encode("utf8"))
-    return base36_encode(int.from_bytes(h.digest(), byteorder="big"))
+
+    algorithm: str
+    value: bytes
+
+    @property
+    def hex(self) -> str:
+        return self.value.hex()
+
+    @property
+    def base36(self) -> str:
+        return base36_encode(int.from_bytes(self.value, byteorder="big"))
+
+    @property
+    def with_prefix(self) -> str:
+        return f"{self.algorithm}:{self.hex}"
+
+
+def hash_string(string: str, algorithm: str = "sha1") -> Hash:
+    """
+    Flexible hash of a string.
+    """
+    hasher = hashlib.new(algorithm)
+    hasher.update(string.encode("utf8"))
+    return Hash(algorithm, hasher.digest())
+
+
+def hash_file(file_path: str | Path, algorithm: str = "sha1") -> Hash:
+    """
+    Hash the content of a file.
+    """
+    if algorithm not in hashlib.algorithms_available:
+        raise ValueError(f"Unsupported hash algorithm: {algorithm}")
+
+    hasher = hashlib.new(algorithm)
+    file_path = Path(file_path)
+    with file_path.open("rb") as file:
+        while chunk := file.read(8192):
+            hasher.update(chunk)
+    return Hash(algorithm, hasher.digest())
 
 
 #
@@ -494,3 +536,17 @@ def lenb(s: str, encoding: str = "utf-8") -> int:
     Convenience for length of a string in bytes.
     """
     return len(s.encode(encoding))
+
+
+## Tests
+
+
+def test_hash_file():
+    os.makedirs("tmp", exist_ok=True)
+    file_path = "tmp/test_file.txt"
+
+    with open(file_path, "w") as f:
+        f.write("Hello, World!")
+
+    result_hash = hash_file(file_path, "sha1").with_prefix
+    assert result_hash == "sha1:0a0a9f2a6772942557ab5355d76af442f8f65e01"

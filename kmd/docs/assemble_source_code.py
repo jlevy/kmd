@@ -1,8 +1,8 @@
 import os
+from functools import cache
 from pathlib import Path
 from typing import List
 
-from cachetools import cached
 from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
@@ -86,7 +86,7 @@ class SourceCode:
         return f"SourceCode({sizes})"
 
 
-@cached(cache={})
+@cache
 def load_source_code() -> SourceCode:
     code = SourceCode(
         model_src=read_source_code(kmd_base_path / "model"),

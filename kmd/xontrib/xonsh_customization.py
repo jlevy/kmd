@@ -122,6 +122,7 @@ def _load_xonsh_commands():
     global _commands
     _commands = all_commands()
 
+    # TODO: Move history to include all shell commands?
     for func in _commands.values():
         kmd_commands[func.__name__] = _wrap_handle_results(
             wrap_with_exception_printing(wrap_for_shell_args(wrap_with_history(func)))

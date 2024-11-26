@@ -1,5 +1,6 @@
+from functools import cache
+
 import spacy
-from cachetools import cached
 from spacy.cli.download import download
 from spacy.language import Language
 
@@ -21,7 +22,7 @@ def spacy_download(model_name: str) -> Language:
 
 # Lazy load Spacy models.
 class _Spacy:
-    @cached(cache={})
+    @cache
     def load_model(self, model_name: str):
         return spacy_download(model_name)
 

@@ -1,12 +1,11 @@
 import inspect
+from functools import cache
 from typing import List
-
-from cachetools import cached
 
 from kmd.model.preconditions_model import Precondition
 
 
-@cached({})
+@cache
 def all_preconditions() -> List[Precondition]:
     import kmd.preconditions.precondition_defs as precondition_defs
 

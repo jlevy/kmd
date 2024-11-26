@@ -1,16 +1,17 @@
 import os
 from enum import Enum
+from functools import cache
 from threading import Event
 from typing import Any
 
-from cachetools import cached
 from dotenv import find_dotenv, load_dotenv
 
 from kmd.config.logger import logging_setup
+from kmd.config.text_styles import EMOJI_SUCCESS
 from kmd.util.stack_traces import add_stacktrace_handler
 
 
-@cached(cache={})
+@cache
 def setup():
     """
     One-time setup of essential keys, directories, and configs. Idempotent.
@@ -49,7 +50,7 @@ def log_api_key_setup(once: bool = False) -> None:
     dotenv_path = api_setup()
 
     if dotenv_path:
-        log.message("Found .env file for API keys: %s", dotenv_path)
+        log.message("%s Found .env file for API keys: %s", EMOJI_SUCCESS, dotenv_path)
     else:
         log.warning("No .env file found. Set up your API keys in a .env file.")
 

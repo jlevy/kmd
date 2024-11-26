@@ -1,12 +1,11 @@
 import os
-
-from cachetools import cached
+from functools import cache
 
 from rich.style import Style
 from rich.text import Text
 
 
-@cached({})
+@cache
 def terminal_supports_osc8() -> bool:
     """
     Attempt to detect if the terminal supports OSC 8 hyperlinks.

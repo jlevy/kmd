@@ -1,8 +1,8 @@
 import threading
+from functools import cache
 from pathlib import Path
 from typing import Dict, Optional
 
-from cachetools import cached
 from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
@@ -13,7 +13,7 @@ log = get_logger(__name__)
 
 
 # Cache the file store per directory, since it takes a little while to load.
-@cached({})
+@cache
 def load_file_store(base_dir: Path, is_sandbox: bool) -> FileStore:
     file_store = FileStore(base_dir, is_sandbox)
     return file_store

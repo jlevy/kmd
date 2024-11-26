@@ -1,3 +1,4 @@
+import functools
 import os
 import threading
 import time
@@ -9,12 +10,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, TypeVa
 from kmd.config.logger import get_logger, log_file_path
 from kmd.config.text_styles import EMOJI_SAVED
 
-from kmd.errors import (
-    FileExists,
-    FileNotFound,
-    InvalidFilename,
-    SkippableError,
-)
+from kmd.errors import FileExists, FileNotFound, InvalidFilename, SkippableError
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_item_filename
@@ -27,10 +23,9 @@ from kmd.model.paths_model import StorePath
 from kmd.query.vector_index import WsVectorIndex
 from kmd.shell.shell_output import cprint
 from kmd.util.format_utils import fmt_lines
-from kmd.util.hash_utils import hash_file
 from kmd.util.log_calls import format_duration, log_calls
 
-from kmd.util.strif import copyfile_atomic, move_file
+from kmd.util.strif import copyfile_atomic, hash_file, move_file
 from kmd.util.uniquifier import Uniquifier
 from kmd.util.url import is_url, Url
 from kmd.workspaces.param_state import ParamState
@@ -48,6 +43,7 @@ def synchronized(method: Callable[..., T]) -> Callable[..., T]:
     Simple way to synchronize a few methods.
     """
 
+    @functools.wraps(method)
     def synchronized_method(self, *args: Any, **kwargs: Any) -> T:
         with self._lock:
             return method(self, *args, **kwargs)
@@ -378,7 +374,7 @@ class FileStore:
         """
         Get a hash of the item at the given path.
         """
-        return hash_file(self.base_dir / store_path, algorithm="sha1")
+        return hash_file(self.base_dir / store_path, algorithm="sha1").with_prefix
 
     def import_item(
         self, locator: Locator, as_type: ItemType = ItemType.resource, reimport: bool = False

@@ -2,8 +2,7 @@ import signal
 import sys
 import threading
 import traceback
-
-from cachetools import cached
+from functools import cache
 
 
 def current_stack_traces(all_threads: bool = True) -> str:
@@ -41,7 +40,7 @@ def _dump_stack_traces_handler(signum, frame, file=sys.stderr):
     dump_stack_traces()
 
 
-@cached(cache={})
+@cache
 def add_stacktrace_handler(sig=signal.SIGUSR1):
     """
     To use: `pkill -USR1 -f 'module_name'`

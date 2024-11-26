@@ -22,18 +22,22 @@ def _dual_format_size(size: int):
 
 
 def print_file_info(
-    input_path: Path, slow: bool = False, show_size_details: bool = False, show_format: bool = False
+    input_path: Path,
+    slow: bool = False,
+    show_size_details: bool = False,
+    show_format: bool = False,
+    text_wrap: Wrap = Wrap.NONE,
 ):
     # Format info.
     detected_format = None
     if show_format:
         format_info = file_format_info(input_path)
-        cprint(f"format: {format_info.as_str()}", text_wrap=Wrap.NONE)
+        cprint(f"format: {format_info.as_str()}", text_wrap=text_wrap)
         detected_format = format_info.format
 
     # Size info.
     size = Path(input_path).stat().st_size
-    cprint(f"size: {_dual_format_size(size)}", text_wrap=Wrap.NONE)
+    cprint(f"size: {_dual_format_size(size)}", text_wrap=text_wrap)
 
     # Raw frontmatter info.
     try:
@@ -52,27 +56,27 @@ def print_file_info(
                 if offset:
                     cprint(
                         f"frontmatter: {len(frontmatter)} keys, {_dual_format_size(offset)}",
-                        text_wrap=Wrap.NONE,
+                        text_wrap=text_wrap,
                     )
                 item_type = frontmatter.get("type")
                 if item_type:
-                    cprint(f"item type: {item_type}", text_wrap=Wrap.NONE)
+                    cprint(f"item type: {item_type}", text_wrap=text_wrap)
             if body:
                 # Show chat history info.
                 if item_type and item_type == ItemType.chat.value:
                     try:
                         chat_history = ChatHistory.from_yaml(body)
                         size_summary_str = chat_history.size_summary()
-                        cprint(f"chat history: {size_summary_str}", text_wrap=Wrap.NONE)
+                        cprint(f"chat history: {size_summary_str}", text_wrap=text_wrap)
                     except Exception:
                         pass
                 # Parse text body.
                 parsed_body = parse_divs(body)
                 size_summary_str = parsed_body.size_summary(fast=not slow)
-                cprint(f"body: {size_summary_str}", text_wrap=Wrap.NONE)
+                cprint(f"body: {size_summary_str}", text_wrap=text_wrap)
         except UnicodeDecodeError as e:
             log.warning("Error reading content as text, skipping body: %s", e)
 
     else:
         if offset:
-            cprint(f"frontmatter: {_dual_format_size(offset)}", text_wrap=Wrap.NONE)
+            cprint(f"frontmatter: {_dual_format_size(offset)}", text_wrap=text_wrap)

@@ -1,7 +1,6 @@
+from functools import cache
 from pathlib import Path
 from typing import Optional, Tuple, Type, TypeVar
-
-from cachetools import cached
 
 from kmd.config.logger import get_logger, reset_logging
 from kmd.config.settings import resolve_and_create_dirs, SANDBOX_KB_PATH, SANDBOX_NAME
@@ -99,7 +98,7 @@ def get_workspace(name: str | Path) -> FileStore:
     return get_workspace_registry().load(ws_name, ws_path, is_sandbox)
 
 
-@cached({})
+@cache
 def sandbox_dir() -> Path:
     kb_path = resolve_and_create_dirs(SANDBOX_KB_PATH, is_dir=True)
     log.info("Sandbox KB path: %s", kb_path)

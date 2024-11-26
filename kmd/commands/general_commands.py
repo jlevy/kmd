@@ -134,6 +134,16 @@ def stop_server() -> None:
 
 
 @kmd_command
+def restart_server() -> None:
+    """
+    Restart the kmd local server.
+    """
+    from kmd.server.local_server import restart_server
+
+    restart_server()
+
+
+@kmd_command
 def server_logs(follow: bool = False) -> None:
     """
     Show the logs from the kmd local server.
@@ -146,8 +156,10 @@ def server_logs(follow: bool = False) -> None:
 @kmd_command
 def reload_kmd() -> None:
     """
-    Reload the kmd package and all its submodules. Not perfect! But sometimes
-    useful for development.
+    Reload the kmd package and all its submodules. Also restarts the local the
+    local server.
+
+    Not perfect! But sometimes useful for development.
     """
     import kmd
     from kmd.util.import_utils import recursive_reload
@@ -166,6 +178,8 @@ def reload_kmd() -> None:
     package_names = recursive_reload(module, filter_func=filter_func)
     log.info("Reloaded modules: %s", ", ".join(package_names))
     log.message("Reloaded %s modules from %s.", len(package_names), module.__name__)
+
+    restart_server()
 
     # TODO Re-register commands and actions.
 

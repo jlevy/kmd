@@ -5,6 +5,7 @@ Platform-specific tools and utilities.
 import os
 import shutil
 from enum import Enum
+from functools import cache
 from typing import Callable, Optional
 
 from cachetools import cached, TTLCache
@@ -37,7 +38,7 @@ class OSPlatform(Enum):
     unknown = "unknown"
 
 
-@cached({})
+@cache
 def detect_platform() -> OSPlatform:
     if ON_DARWIN:
         return OSPlatform.macos

@@ -10,7 +10,7 @@ from kmd.file_storage.file_store import FileStore
 from kmd.help.command_help import explain_command
 from kmd.model.paths_model import StorePath
 from kmd.server.local_urls import local_url
-from kmd.shell.shell_output import output_as_string
+from kmd.shell.shell_output import output_as_string, Wrap
 from kmd.shell.shell_printing import print_file_info
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
@@ -85,7 +85,10 @@ def view_item(request: Request, store_path: str, ws_name: str):
 
         file_info_str = output_as_string(
             lambda: print_file_info(
-                Path(not_none(item.store_path)), show_size_details=True, show_format=True
+                Path(not_none(item.store_path)),
+                show_size_details=True,
+                show_format=True,
+                text_wrap=Wrap.WRAP,
             )
         )
 

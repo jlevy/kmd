@@ -23,7 +23,10 @@ def _cached_cell_len(text: str) -> int:
 
 
 def ansi_cell_len(text: str, _cell_len: Callable[[str], int] = _cached_cell_len) -> int:
-    """Copy Rich's cell_len method but with control character stripping."""
+    """
+    Same as Rich's `cell_len` method, but with control character stripping
+    so that the visual length of OSC-8 links is correctly calculated.
+    """
     if len(text) < 512:
         return _cell_len(text)
     if _is_single_cell_widths(text):

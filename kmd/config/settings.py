@@ -2,11 +2,11 @@ import os
 import threading
 from contextlib import contextmanager
 from enum import Enum
+from functools import cache
 from logging import DEBUG, ERROR, INFO, WARNING
 from pathlib import Path
 from typing import Optional
 
-from cachetools import cached
 from pydantic.dataclasses import dataclass
 
 
@@ -56,7 +56,7 @@ def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
     return None
 
 
-@cached(cache={})
+@cache
 def _global_cache_dir(name: str) -> Path:
     cache_dir = find_in_cwd_or_parents(GLOBAL_CACHE_NAME)
     if not cache_dir:
@@ -148,7 +148,7 @@ def global_settings() -> Settings:
     return _settings
 
 
-_settings_lock = threading.Lock()
+_settings_lock = threading.RLock()
 
 
 @contextmanager

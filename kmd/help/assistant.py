@@ -1,8 +1,8 @@
 import json
+from functools import cache
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
-from cachetools import cached
 from pydantic import ValidationError
 
 from kmd.config.logger import get_logger
@@ -38,7 +38,7 @@ from kmd.workspaces.workspaces import current_workspace, workspace_param_value
 log = get_logger(__name__)
 
 
-@cached({})
+@cache
 def assist_preamble(skip_api: bool = False, base_actions_only: bool = False) -> str:
     from kmd.help.help_page import print_manual  # Avoid circular imports.
 
