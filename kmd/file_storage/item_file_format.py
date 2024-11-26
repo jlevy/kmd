@@ -77,8 +77,10 @@ def read_item(path: Path, base_dir: Optional[Path]) -> Item:
     `store_path` will be set and be relative to `base_dir`.
 
     If frontmatter format YAML is present, it is parsed. If not, the item will
-    be a resource with a format inferred from the file extension or the content,
-    and the `external_path` will be set to the path it was read from.
+    be a resource with a format inferred from the file extension or the content.
+    The `store_path` will be the path relative to the `base_dir`, if the file
+    is within `base_dir`, or otherwise the `external_path` will be set to the path
+    it was read from.
     """
 
     cached_item = _item_cache.read(path)

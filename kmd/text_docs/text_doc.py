@@ -352,26 +352,31 @@ class TextDoc:
             return tiktoken_len(self.reassemble())
 
         base_size = sum(para.size(unit) for para in self.paragraphs)
+        n_para_breaks = max(len(self.paragraphs) - 1, 0)
         if unit == TextUnit.bytes:
-            return base_size + (len(self.paragraphs) - 1) * size_in_bytes(PARA_BR_STR)
+            return base_size + n_para_breaks * size_in_bytes(PARA_BR_STR)
         if unit == TextUnit.chars:
-            return base_size + (len(self.paragraphs) - 1) * len(PARA_BR_STR)
+            return base_size + n_para_breaks * len(PARA_BR_STR)
         if unit == TextUnit.words:
             return base_size
         if unit == TextUnit.wordtoks:
-            return base_size + (len(self.paragraphs) - 1)
+            return base_size + n_para_breaks
 
         raise ValueError(f"Unsupported unit for TextDoc: {unit}")
 
     def size_summary(self) -> str:
-        return (
-            f"{self.size(TextUnit.bytes)} bytes ("
-            f"{self.size(TextUnit.paragraphs)} paragraphs, "
-            f"{self.size(TextUnit.sentences)} sentences, "
-            f"{self.size(TextUnit.words)} words, "
-            f"{self.size(TextUnit.wordtoks)} wordtoks, "
-            f"{self.size(TextUnit.tiktokens)} tiktokens)"
-        )
+        nbytes = self.size(TextUnit.bytes)
+        if nbytes > 0:
+            return (
+                f"{nbytes} bytes ("
+                f"{self.size(TextUnit.paragraphs)} paragraphs, "
+                f"{self.size(TextUnit.sentences)} sentences, "
+                f"{self.size(TextUnit.words)} words, "
+                f"{self.size(TextUnit.wordtoks)} wordtoks, "
+                f"{self.size(TextUnit.tiktokens)} tiktokens)"
+            )
+        else:
+            return f"{nbytes} bytes"
 
     def as_wordtok_to_sent(self, bof_eof=False) -> Generator[Tuple[str, SentIndex], None, None]:
         if bof_eof:

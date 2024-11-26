@@ -14,7 +14,6 @@ from kmd.errors import (
     FileNotFound,
     InvalidFilename,
     SkippableError,
-    UnrecognizedFileFormat,
 )
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import MetadataDirs
@@ -131,11 +130,11 @@ class FileStore:
         """
         Update metadata index with a new item.
         """
-        try:
-            name, item_type, _format, file_ext = parse_item_filename(store_path)
-        except InvalidFilename:
-            log.debug("Skipping file with invalid name: %s", fmt_loc(store_path))
+        name, item_type, _format, file_ext = parse_item_filename(store_path)
+        if not file_ext:
+            log.debug("Skipping file with unrecognized name or extension: %s", fmt_loc(store_path))
             return None
+
         full_suffix = join_suffix(item_type.name, file_ext.name) if item_type else file_ext.name
         self.uniquifier.add(name, full_suffix)
 
@@ -373,25 +372,7 @@ class FileStore:
         """
         Load item at the given path.
         """
-        _name, item_type, format, file_ext = parse_item_filename(store_path)
-
-        if file_ext.is_text or (format and format.supports_frontmatter):
-            # This is a known text format or a YAML file, so we can read the whole thing.
-            return read_item(self.base_dir / store_path, self.base_dir)
-        else:
-            log.debug("Not a text file so loading item with external path: %s", fmt_loc(store_path))
-            # This is an existing file (such as media or docs) so we just return the metadata.
-            if not format:
-                raise UnrecognizedFileFormat(
-                    f"Unknown file extension: {file_ext}: {fmt_loc(store_path)}"
-                )
-            return Item(
-                type=item_type or ItemType.resource,  # Default to resource if not specified.
-                external_path=str(self.base_dir / store_path),
-                format=format,
-                file_ext=file_ext,
-                store_path=str(store_path),
-            )
+        return read_item(self.base_dir / store_path, self.base_dir)
 
     def hash(self, store_path: StorePath) -> str:
         """
@@ -433,7 +414,7 @@ class FileStore:
                 raise FileNotFound(f"File not found: {fmt_loc(path)}")
 
             # It's a path outside the store, so copy it in.
-            name, filename_item_type, format, file_ext = parse_item_filename(path)
+            _name, filename_item_type, format, _file_ext = parse_item_filename(path)
 
             if filename_item_type:
                 as_type = filename_item_type

@@ -10,6 +10,9 @@ from kmd.file_storage.file_store import FileStore
 from kmd.help.command_help import explain_command
 from kmd.model.paths_model import StorePath
 from kmd.server.local_urls import local_url
+from kmd.shell.shell_output import output_as_string
+from kmd.shell.shell_printing import print_file_info
+from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
 from kmd.workspaces.workspace_names import check_strict_workspace_name
 
@@ -30,8 +33,8 @@ def server_get_workspace(ws_name: str) -> FileStore:
 
 
 class Route(str, Enum):
-    view_item = "/view/item"
-    read_item = "/read/item"
+    view_item = "/item/view"
+    read_item = "/item/read"
     explain = "/explain"
 
 
@@ -45,7 +48,7 @@ def view_item(request: Request, store_path: str, ws_name: str):
         # Return the item itself.
         # TODO: Could make this thumbnails for images, PDF, etc.
 
-        mime_type = item.format and item.format.mime_type()
+        mime_type = item.format and item.format.mime_type
         if not mime_type:
             mime_type = "application/octet-stream"
 
@@ -63,6 +66,8 @@ def view_item(request: Request, store_path: str, ws_name: str):
                 with open(path, "rb") as f:
                     while chunk := f.read(8192):  # 8KB chunks
                         yield chunk
+            except FileNotFoundError:
+                raise HTTPException(status_code=404, detail="Item not found")
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error streaming file: {e}")
 
@@ -78,6 +83,12 @@ def view_item(request: Request, store_path: str, ws_name: str):
         # Serve a webpage with info about the item
         page_url = local_url(Route.view_item, store_path=store_path, ws_name=ws_name)
 
+        file_info_str = output_as_string(
+            lambda: print_file_info(
+                Path(not_none(item.store_path)), show_size_details=True, show_format=True
+            )
+        )
+
         body_text = None
         if item.body and len(item.body) > 10 * 1024 * 1024:
             body_text = "Item body is too large to display!"
@@ -91,7 +102,12 @@ def view_item(request: Request, store_path: str, ws_name: str):
                     "title": item.display_title(),
                     "content": render_web_template(
                         "item_view.html.jinja",
-                        {"item": item, "page_url": page_url, "body_text": body_text},
+                        {
+                            "item": item,
+                            "page_url": page_url,
+                            "file_info": file_info_str,
+                            "body_text": body_text,
+                        },
                     ),
                 },
                 css_overrides={"color-bg": colors.web.bg_translucent},
@@ -99,7 +115,7 @@ def view_item(request: Request, store_path: str, ws_name: str):
         )
 
 
-@router.get(Route.explain)
+@router.api_route(Route.explain, methods=["GET"])
 def explain(text: str):
     help_str = explain_command(text, use_assistant=True)
     if not help_str:

@@ -212,6 +212,7 @@ def set_cprint_prefix(prefix: str):
 
 
 class Style(Enum):
+    INDENT = auto()
     BOX = auto()
     PAD = auto()
     PAD_TOP = auto()
@@ -226,7 +227,14 @@ def print_style(style: Style, color: Optional[str] = None):
         style: Style enum indicating the desired style (BOX or PAD)
         color: Optional color for box style
     """
-    if style == Style.BOX:
+    if style == Style.INDENT:
+        original_prefix = get_cprint_prefix()
+        set_cprint_prefix(DEFAULT_INDENT)
+        try:
+            yield
+        finally:
+            _thread_local.output_prefix = original_prefix
+    elif style == Style.BOX:
         cprint(BOX_TOP, color=color)
         original_prefix = get_cprint_prefix()
         set_cprint_prefix(BOX_PREFIX)

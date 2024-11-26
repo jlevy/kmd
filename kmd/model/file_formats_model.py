@@ -186,6 +186,7 @@ class Format(Enum):
             "application/octet-stream": Format.binary,
         }
 
+    @property
     def mime_type(self) -> Optional[str]:
         """
         MIME type for the format, or None if not recognized.
@@ -401,7 +402,7 @@ def is_markdown(content: str) -> bool:
     """
     Check if the content is Markdown.
     """
-    return bool(re.search(r"^#+ |^- |\*\*|__", content, re.MULTILINE))
+    return len(re.findall(r"^##+ |^- \w|\*\*\w|__\w", content, re.MULTILINE)) >= 2
 
 
 def read_partial_text(
@@ -476,15 +477,27 @@ class FileFormatInfo:
             and self.mime_type.startswith("image")
         )
 
-    def guess_format(self) -> Optional[Format]:
-        choice = None
-        if self.file_ext:
-            choice = Format.guess_by_file_ext(self.file_ext)
-        if not choice:
-            choice = self.format
-        if not choice and self.mime_type:
-            choice = Format.from_mime_type(self.mime_type)
-        return choice
+    def as_str(self) -> str:
+        if self.format and self.mime_type:
+            return f"{self.format.value} ({self.mime_type})"
+        elif self.format:
+            return self.format.value
+        elif self.mime_type:
+            return self.mime_type
+        else:
+            return "unrecognized"
+
+    def __str__(self) -> str:
+        return self.as_str()
+
+
+def _guess_format(file_ext: Optional[FileExt], mime_type: Optional[str]) -> Optional[Format]:
+    format = None
+    if file_ext:
+        format = Format.guess_by_file_ext(file_ext)
+    if not format and mime_type:
+        format = Format.from_mime_type(mime_type)
+    return format
 
 
 def file_format_info(path: str | Path) -> FileFormatInfo:
@@ -492,15 +505,18 @@ def file_format_info(path: str | Path) -> FileFormatInfo:
     Full info on the file format path and content (file extension and file content).
     """
     path = Path(path)
+    file_ext = parse_file_ext(path)
     mime_type = _detect_mime_type(path)
-    return FileFormatInfo(parse_file_ext(path), Format.from_mime_type(mime_type), mime_type)
+    format = _guess_format(file_ext, mime_type)
+    final_mime_type = format.mime_type if format else mime_type
+    return FileFormatInfo(file_ext, format, final_mime_type)
 
 
 def detect_file_format(path: str | Path) -> Optional[Format]:
     """
     Detect best guess at file format based on file extension and file content.
     """
-    return file_format_info(path).guess_format()
+    return file_format_info(path).format
 
 
 def detect_media_type(filename: str | Path) -> MediaType:

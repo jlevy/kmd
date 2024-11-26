@@ -219,6 +219,7 @@ def item_id(*paths: str) -> None:
         cprint()
 
 
+# FIXME: Make sure fallback to regular file diff works.
 @kmd_command
 def diff(*paths: str, stat: bool = False, save: bool = False, strict: bool = False) -> ShellResult:
     """

@@ -4,6 +4,7 @@ from typing import Callable, List, Optional, Tuple
 
 from kmd.concepts.embeddings import Embeddings
 from kmd.concepts.text_similarity import find_related_pairs, relate_texts_by_embedding
+from kmd.config import colors
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput
 from kmd.model.args_model import fmt_loc
@@ -14,7 +15,6 @@ from kmd.shell_tools.native_tools import view_file_native, ViewMode
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
 from kmd.workspaces.workspaces import current_workspace
-from kmd.config import colors
 
 log = get_logger(__name__)
 

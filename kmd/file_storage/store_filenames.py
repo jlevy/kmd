@@ -3,7 +3,6 @@ from typing import Optional, Tuple
 
 from kmd.config.logger import get_logger
 
-from kmd.errors import InvalidFilename
 from kmd.lang_tools.inflection import plural
 from kmd.model.file_formats_model import FileExt, Format, split_filename
 from kmd.model.items_model import ItemType
@@ -33,7 +32,7 @@ def join_suffix(base_slug: str, full_suffix: str) -> str:
 
 def parse_item_filename(
     path: str | Path,
-) -> Tuple[str, Optional[ItemType], Optional[Format], FileExt]:
+) -> Tuple[str, Optional[ItemType], Optional[Format], Optional[FileExt]]:
     """
     Parse a store file path into its name, format, and extension. Returns None for
     format or item type if not recognized. Raises `InvalidFilename` if the file extension
@@ -42,11 +41,7 @@ def parse_item_filename(
     path_str = str(path)
     _dirname, name, item_type_str, ext_str = split_filename(path_str)
     file_ext = FileExt.parse(ext_str)
-    if not file_ext:
-        raise InvalidFilename(
-            f"Unknown extension for file: {path_str} (recognized file extensions are {', '.join(FileExt.__members__.keys())})"
-        )
-    format = Format.guess_by_file_ext(file_ext)
+    format = Format.guess_by_file_ext(file_ext) if file_ext else None
 
     # TODO: For yaml file resources, look at the format in the metadata.
 

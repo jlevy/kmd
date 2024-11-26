@@ -79,12 +79,19 @@
 .item-title {
   font-family: var(--font-serif);
   font-size: 1.2rem;
-  margin: 0.2rem 0 0.5rem 0;
+  margin: 0.2rem 0 1rem 0;
+}
+
+.item-file-info {
+  padding: 0;
+  margin: 0.5rem 0;
+  color: var(--color-secondary);
+  font-size: var(--font-size-mono-tiny);
+  font-style: italic;
 }
 
 .item-url {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin: 0.5rem 0;
 }
 
 .item-url a {
@@ -98,13 +105,12 @@
 
 .item-description {
   font-family: var(--font-sans);
-  color: var(--color-secondary);
   font-size: var(--font-size-small);
 }
 
 .item-body {
-  margin: 1rem 0 0 0;
   padding: 0;
+  margin: 1rem 0 0 0;
   font-family: var(--font-mono);
   color: var(--color-secondary);
   font-size: var(--font-size-mono-tiny);
@@ -160,6 +166,11 @@
       </div>
     </div>
     {% endif %}
+
+    {% if file_info %}
+    <pre class="item-file-info">{{ file_info }}</pre>
+    {% endif %}
+
 
     {% if item.description %}
     <div class="item-description">

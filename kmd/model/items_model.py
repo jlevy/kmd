@@ -292,9 +292,8 @@ class Item:
     def from_external_path(cls, path: Path, item_type: ItemType = ItemType.resource) -> "Item":
         """
         Create a resource Item for a file with a format inferred from the file extension
-        or the content. Only sets basic metadata. Does not read the content.
-        Raises `InvalidFilename` or `FileFormatError` if the file extension or format
-        is unrecognized.
+        or the content. Only sets basic metadata. Does not read the content. Will set
+        `format` and `file_ext` if possible but will leave them as None if unrecognized.
         """
         from kmd.file_storage.store_filenames import parse_item_filename
         from kmd.model.file_formats_model import detect_file_format
@@ -305,8 +304,6 @@ class Item:
             item_type = filename_item_type
         if not format:
             format = detect_file_format(path)
-        if not format:
-            raise FileFormatError(f"Unrecognized file format: {fmt_loc(path)}")
 
         item = cls(
             type=item_type,

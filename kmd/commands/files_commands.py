@@ -5,8 +5,6 @@ from pathlib import Path
 from typing import List, Optional
 
 from frontmatter_format import (
-    fmf_read,
-    fmf_read_frontmatter_raw,
     fmf_read_raw,
     fmf_strip_frontmatter,
 )
@@ -18,7 +16,6 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import COLOR_EMPH, COLOR_EMPH_ALT, COLOR_HINT
 from kmd.errors import InvalidInput, InvalidState
 from kmd.exec.resolve_args import assemble_path_args, resolvable_paths, resolve_path_arg
-from kmd.file_formats.chat_format import ChatHistory
 from kmd.file_tools.file_sort_filter import collect_files, GroupByOption, parse_since, SortOption
 from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import (
@@ -32,7 +29,8 @@ from kmd.model.items_model import Item, ItemType
 from kmd.model.paths_model import resolve_at_path, StorePath
 from kmd.model.shell_model import ShellResult
 from kmd.server.local_urls import ws_formatter
-from kmd.shell.shell_output import console_pager, cprint, print_status, Wrap
+from kmd.shell.shell_output import console_pager, cprint, print_status, print_style, Style, Wrap
+from kmd.shell.shell_printing import print_file_info
 from kmd.shell_tools.native_tools import (
     edit_files,
     native_trash,
@@ -41,7 +39,6 @@ from kmd.shell_tools.native_tools import (
     ViewMode,
 )
 from kmd.shell_tools.tool_deps import Tool, tool_check
-from kmd.text_chunks.parse_divs import parse_divs
 from kmd.text_formatting.doc_formatting import normalize_text_file
 from kmd.util.format_utils import fmt_file_size, fmt_lines, fmt_time
 from kmd.util.strif import copyfile_atomic
@@ -210,14 +207,6 @@ def strip_frontmatter(*paths: str) -> None:
         fmf_strip_frontmatter(path)
 
 
-def _dual_format_size(size: int):
-    readable_size_str = ""
-    if size > 1000000:
-        readable_size = fmt_file_size(size)
-        readable_size_str += f" ({readable_size})"
-    return f"{size} bytes{readable_size_str}"
-
-
 @kmd_command
 def file_info(
     *paths: str, slow: bool = False, size_summary: bool = False, format: bool = False
@@ -238,61 +227,11 @@ def file_info(
     input_paths = assemble_path_args(*paths)
     cprint()
     for input_path in input_paths:
-
         cprint(f"{fmt_loc(input_path)}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
-
-        # Format info.
-        if format:
-            detected_format = detect_file_format(input_path)
-            format_str = detected_format.value if detected_format else "unknown"
-            cprint(f"format: {format_str}", text_wrap=Wrap.INDENT_ONLY)
-
-        # Size info.
-        size = Path(input_path).stat().st_size
-        cprint(f"size: {_dual_format_size(size)}", text_wrap=Wrap.INDENT_ONLY)
-
-        # Raw frontmatter info.
-        try:
-            _frontmatter_str, offset = fmf_read_frontmatter_raw(input_path)
-        except UnicodeDecodeError:
-            offset = None
-
-        # Structured frontmatter and content info.
-        body = None
-        if size_summary and detected_format and detected_format.supports_frontmatter:
-            try:
-                body, frontmatter = fmf_read(input_path)
-
-                item_type = None
-                if frontmatter:
-                    if offset:
-                        cprint(
-                            f"frontmatter: {len(frontmatter)} keys, {_dual_format_size(offset)}",
-                            text_wrap=Wrap.INDENT_ONLY,
-                        )
-                    item_type = frontmatter.get("type")
-                    if item_type:
-                        cprint(f"item type: {item_type}", text_wrap=Wrap.INDENT_ONLY)
-                if body:
-                    # Show chat history info.
-                    if item_type and item_type == ItemType.chat.value:
-                        try:
-                            chat_history = ChatHistory.from_yaml(body)
-                            size_summary_str = chat_history.size_summary()
-                            cprint(f"chat history: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
-                        except Exception:
-                            pass
-                    # Parse text body.
-                    parsed_body = parse_divs(body)
-                    size_summary_str = parsed_body.size_summary(fast=not slow)
-                    cprint(f"body: {size_summary_str}", text_wrap=Wrap.INDENT_ONLY)
-            except UnicodeDecodeError as e:
-                log.warning("Error reading content as text, skipping body: %s", e)
-
-        else:
-            if offset:
-                cprint(f"frontmatter: {_dual_format_size(offset)}", text_wrap=Wrap.INDENT_ONLY)
-
+        with print_style(Style.INDENT):
+            print_file_info(
+                input_path, slow=slow, show_size_details=size_summary, show_format=format
+            )
         cprint()
 
 
@@ -625,6 +564,8 @@ def search(
 def reformat(*paths: str, inplace: bool = False) -> ShellResult:
     """
     Format text, Markdown, or HTML according to kmd conventions.
+
+    TODO: Also handle JSON and YAML.
 
     :param inplace: Overwrite the original file. Otherwise save to a new
     file with `_formatted` appended to the original name.
