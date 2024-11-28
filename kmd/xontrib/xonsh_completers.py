@@ -20,7 +20,6 @@ from kmd.docs.faq_headings import faq_headings
 from kmd.errors import InvalidState
 from kmd.exec.system_actions import assistant_chat
 from kmd.help.function_param_info import annotate_param_info
-from kmd.model.file_formats_model import is_ignored
 from kmd.model.items_model import Item
 from kmd.model.params_model import Param
 from kmd.model.paths_model import fmt_store_path
@@ -30,7 +29,7 @@ from kmd.shell.shell_syntax import assist_request_str
 from kmd.util.format_utils import single_line
 from kmd.util.log_calls import log_calls
 from kmd.util.type_utils import not_none
-from kmd.workspaces.workspaces import current_workspace
+from kmd.workspaces.workspaces import current_ignore, current_workspace
 
 log = get_logger(__name__)
 
@@ -239,6 +238,7 @@ def _command_completions(prefix: str) -> set[RichCompletion]:
 def _dir_completions(prefix: str, base_dir: Path) -> List[RichCompletion]:
     prefix = normalize(prefix)
 
+    is_ignored = current_ignore()
     dirs = (d.relative_to(base_dir) for d in base_dir.iterdir() if d.is_dir() and not is_ignored(d))
     scored_paths = score_paths(prefix, dirs)
 

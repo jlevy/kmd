@@ -12,6 +12,7 @@ from kmd.shell.shell_output import cprint, format_name_and_description, print_st
 from kmd.shell_tools.native_tools import tail_file
 from kmd.shell_tools.tool_deps import tool_check
 from kmd.util.format_utils import fmt_lines
+from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
 
@@ -80,6 +81,38 @@ def clear_logs() -> None:
         os.makedirs(obj_dir, exist_ok=True)
 
     print_status("Logs cleared:\n%s", fmt_lines([fmt_loc(log_path)]))
+
+
+@kmd_command
+def reset_ignore_file(append: bool = False) -> None:
+    """
+    Reset the kmd ignore file to the default.
+    """
+    from kmd.file_tools.ignore_files import write_ignore
+
+    ws = current_workspace()
+    ignore_path = ws.base_dir / ws.dirs.ignore_file
+    write_ignore(ignore_path, append=append)
+
+    log.message("Rewrote kmd ignore file: %s", fmt_loc(ignore_path))
+
+
+@kmd_command
+def ignore_file(pattern: Optional[str] = None) -> None:
+    """
+    Add a pattern to the kmd ignore file, or show the current patterns
+    if none is specified.
+    """
+    from kmd.file_tools.ignore_files import add_to_ignore
+    from kmd.commands.files_commands import show
+
+    ws = current_workspace()
+    ignore_path = ws.base_dir / ws.dirs.ignore_file
+
+    if not pattern:
+        show(ignore_path)
+    else:
+        add_to_ignore(ignore_path, pattern)
 
 
 @kmd_command

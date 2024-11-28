@@ -102,7 +102,6 @@ def _read_item_uncached(path: Path, base_dir: Optional[Path]) -> Item:
         if base_dir:
             base_dir = base_dir.resolve()
     else:
-        log.info("No frontmatter found on file: %s", path)
         body = metadata = None
 
     # Ensure store_path is used if it's within the base_dir, and

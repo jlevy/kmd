@@ -14,14 +14,9 @@ from kmd.config.text_styles import COLOR_EMPH, COLOR_EMPH_ALT, COLOR_HINT, EMOJI
 from kmd.errors import InvalidInput, InvalidState
 from kmd.exec.resolve_args import assemble_path_args, resolvable_paths, resolve_path_arg
 from kmd.file_tools.file_sort_filter import collect_files, GroupByOption, parse_since, SortOption
+from kmd.file_tools.ignore_files import ignore_none
 from kmd.model.args_model import fmt_loc
-from kmd.model.file_formats_model import (
-    detect_file_format,
-    Format,
-    is_ignored,
-    join_filename,
-    split_filename,
-)
+from kmd.model.file_formats_model import detect_file_format, Format, join_filename, split_filename
 from kmd.model.items_model import Item, ItemType
 from kmd.model.paths_model import resolve_at_path, StorePath
 from kmd.model.shell_model import ShellResult
@@ -40,7 +35,7 @@ from kmd.text_formatting.doc_formatting import normalize_text_file
 from kmd.util.format_utils import fmt_file_size, fmt_lines, fmt_time
 from kmd.util.strif import copyfile_atomic
 from kmd.web_content.file_cache_tools import cache_file
-from kmd.workspaces.workspaces import current_workspace
+from kmd.workspaces.workspaces import current_ignore, current_workspace
 
 log = get_logger(__name__)
 
@@ -291,7 +286,7 @@ def files(
     pager: bool = False,
     show_first: int = 0,
     max_depth: int = 3,
-    max_per_subdir: int = 100,
+    max_per_subdir: int = 1000,
     max_files: int = 1000,
     no_max: bool = False,
     no_ignore: bool = False,
@@ -368,14 +363,14 @@ def files(
     since_seconds = parse_since(since) if since else 0.0
 
     # Determine whether to show hidden files for this path.
-    ignore = None if no_ignore else is_ignored
+    is_ignored = ignore_none if no_ignore else current_ignore()
     for path in paths_to_show:
-        if not no_ignore and path and is_ignored(path.name):
+        if not no_ignore and path and is_ignored(path):
             log.info(
                 "Requested path is on default ignore list so disabling ignore: %s",
                 fmt_loc(path),
             )
-            ignore = None
+            is_ignored = None
             break
 
     base_path = Path(".")
@@ -383,7 +378,7 @@ def files(
     # Collect all the files.
     file_listing = collect_files(
         start_paths=paths_to_show,
-        ignore=ignore,
+        ignore=is_ignored,
         since_seconds=since_seconds,
         base_path=base_path,
         max_depth=max_depth,
@@ -535,13 +530,13 @@ def files(
                 )
             if file_listing.total_skipped > 0:
                 cprint(
-                    f"{EMOJI_WARN} {file_listing.total_skipped} files were skipped"
-                    f" at max_files={max_files}, max_depth={max_depth}, max_per_subdir={max_per_subdir}",
+                    f"{EMOJI_WARN} file listing truncated "
+                    f"at max_files={max_files}, max_depth={max_depth}, max_per_subdir={max_per_subdir})",
                     color=COLOR_EMPH,
                 )
             if file_listing.total_ignored > 0 or file_listing.total_skipped > 0:
                 cprint(
-                    "(Use --all to list everything, including hidden files.)",
+                    "(Use --no_max to remove cutoff, --no_ignore to show hidden files.)",
                     color=COLOR_HINT,
                 )
 

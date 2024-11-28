@@ -9,6 +9,7 @@ from pydantic.dataclasses import dataclass
 from kmd.config.logger import get_logger
 from kmd.config.settings import CONTENT_CACHE_NAME, DOT_DIR, MEDIA_CACHE_NAME
 from kmd.file_storage.persisted_yaml import PersistedYaml
+from kmd.file_tools.ignore_files import write_ignore
 from kmd.model.args_model import fmt_loc
 from kmd.model.paths_model import StorePath
 
@@ -33,6 +34,7 @@ class MetadataDirs:
     settings_dir: StorePath = StorePath(f"{DOT_DIR}/settings")
     selection_yml: StorePath = StorePath(f"{DOT_DIR}/settings/selection.yml")
     params_yml: StorePath = StorePath(f"{DOT_DIR}/settings/params.yml")
+    ignore_file: StorePath = StorePath(f"{DOT_DIR}/ignore")
 
     cache_dir: StorePath = StorePath(f"{DOT_DIR}/cache")
     media_cache_dir: StorePath = StorePath(f"{DOT_DIR}/cache/{MEDIA_CACHE_NAME}")
@@ -55,6 +57,7 @@ class MetadataDirs:
         Idempotent.
         """
         (self.base_dir / self.dot_dir).mkdir(parents=True, exist_ok=True)
+
         # Initialize metadata file.
         metadata_path = self.base_dir / self.metadata_yml
         if not metadata_path.exists():
@@ -74,3 +77,8 @@ class MetadataDirs:
             dir_path = self.base_dir / getattr(self, field)
             if field.endswith("_dir"):
                 dir_path.mkdir(parents=True, exist_ok=True)
+
+        # Add a default ignore file if it doesn't exist.
+        ignore_path = self.base_dir / self.ignore_file
+        if not ignore_path.exists():
+            write_ignore(ignore_path)

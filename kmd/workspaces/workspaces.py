@@ -8,6 +8,7 @@ from kmd.config.setup import log_api_key_setup
 from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
 from kmd.file_storage.metadata_dirs import MetadataDirs
+from kmd.file_tools.ignore_files import IgnoreFilter, is_ignored_default
 from kmd.media.media_tools import reset_media_cache_dir
 from kmd.model.args_model import fmt_loc
 from kmd.model.params_model import ParamValues, USER_SETTABLE_PARAMS
@@ -161,6 +162,16 @@ def current_workspace(silent: bool = False) -> FileStore:
         ws.log_store_info(once=True)
 
     return ws
+
+
+def current_ignore() -> IgnoreFilter:
+    """
+    Get the current ignore filter.
+    """
+    try:
+        return current_workspace().is_ignored
+    except InvalidState:
+        return is_ignored_default
 
 
 T = TypeVar("T")

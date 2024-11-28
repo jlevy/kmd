@@ -2,10 +2,11 @@ import os
 from dataclasses import dataclass
 from os.path import abspath, relpath
 from pathlib import Path
-from typing import Callable, Generator, List, Optional
+from typing import Generator, List, Optional
 
 from kmd.config.logger import get_logger
 from kmd.errors import FileNotFound
+from kmd.file_tools.ignore_files import IgnoreFilter
 from kmd.model.args_model import fmt_loc
 
 
@@ -25,9 +26,6 @@ class FileList:
     files_skipped: int
     dirs_skipped: int
     num_files: int  # Total number of files in the directory before capping
-
-
-IgnoreFilter = Callable[[str | Path], bool]
 
 
 def walk_by_dir(
@@ -83,7 +81,8 @@ def walk_by_dir(
         # Filter out ignored directories.
         if ignore:
             prev_dirs_len = len(dirnames)
-            dirnames[:] = [d for d in dirnames if not ignore(d)]
+            # Careful: ignore("foo") is false even if "foo/" is ignored.
+            dirnames[:] = [d for d in dirnames if not ignore(d) and not ignore(d + "/")]
             dirs_ignored = prev_dirs_len - len(dirnames)
         else:
             dirs_ignored = 0
@@ -96,7 +95,9 @@ def walk_by_dir(
         # Filter out ignored files.
         if ignore:
             prev_files_len = len(filenames)
-            filenames = [f for f in filenames if not ignore(f)]
+            filenames = [
+                f for f in filenames if not ignore(f) and not ignore(os.path.join(dirname, f))
+            ]
             files_ignored = prev_files_len - len(filenames)
         else:
             files_ignored = 0

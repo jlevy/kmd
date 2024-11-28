@@ -14,10 +14,11 @@ from kmd.errors import FileExists, FileNotFound, InvalidFilename, SkippableError
 from kmd.file_storage.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_item_filename
-from kmd.file_tools.file_walk import IgnoreFilter, walk_by_dir
+from kmd.file_tools.file_walk import walk_by_dir
+from kmd.file_tools.ignore_files import IgnoreChecker
 from kmd.model.args_model import fmt_loc, Locator
 from kmd.model.canon_url import canonicalize_url
-from kmd.model.file_formats_model import Format, is_ignored
+from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.paths_model import StorePath
 from kmd.query.vector_index import WsVectorIndex
@@ -79,17 +80,20 @@ class FileStore:
         self.uniquifier = Uniquifier()
         self.id_map: Dict[ItemId, StorePath] = {}
 
-        self._id_index_init()
-
         self.dirs = MetadataDirs(self.base_dir)
         self.dirs.initialize()
 
         self.vector_index = WsVectorIndex(self.base_dir / self.dirs.index_dir)
 
-        # Initialize selection with history support
+        # Initialize selection with history support.
         self.selections = SelectionHistory.init(self.base_dir / self.dirs.selection_yml)
 
-        # Filter out any non-existent paths from the initial selection
+        # Initialize ignore checker.
+        self.is_ignored = IgnoreChecker.from_file(self.base_dir / self.dirs.ignore_file)
+
+        self._id_index_init()
+
+        # Filter out any non-existent paths from the initial selection.
         if self.selections.history:
             self._filter_selection_paths()
 
@@ -107,14 +111,10 @@ class FileStore:
 
     def _id_index_init(self):
         num_dups = 0
-        for root, dirnames, filenames in os.walk(self.base_dir):
-            dirnames[:] = [d for d in dirnames if not is_ignored(d)]
-            for filename in filenames:
-                if not is_ignored(filename):
-                    store_path = StorePath(path.relpath(join(root, filename), self.base_dir))
-                    dup_path = self._id_index_item(store_path)
-                    if dup_path:
-                        num_dups += 1
+        for store_path in self.walk_items():
+            dup_path = self._id_index_item(store_path)
+            if dup_path:
+                num_dups += 1
 
         if num_dups > 0:
             self.warnings.append(
@@ -562,16 +562,32 @@ class FileStore:
     def walk_items(
         self,
         store_path: Optional[StorePath] = None,
-        ignore: Optional[IgnoreFilter] = is_ignored,
+        use_ignore: bool = True,
     ) -> Generator[StorePath, None, None]:
         """
         Yields StorePaths of items in a folder or the entire store.
         """
+        ignore = self.is_ignored if use_ignore else None
+
         start_path = self.base_dir / store_path if store_path else self.base_dir
+
+        num_files = 0
+        files_ignored = 0
+        dirs_ignored = 0
         for flist in walk_by_dir(start_path, relative_to=self.base_dir, ignore=ignore):
             store_dirname = flist.parent_dir
             for filename in flist.filenames:
                 yield StorePath(join(store_dirname, filename))
+            num_files += flist.num_files
+            files_ignored += flist.files_ignored
+            dirs_ignored += flist.dirs_ignored
+
+        log.info(
+            "Walked %s files, ignoring %s files and %s directories.",
+            num_files,
+            files_ignored,
+            dirs_ignored,
+        )
 
     def normalize(self, store_path: StorePath) -> StorePath:
         """

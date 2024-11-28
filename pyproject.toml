@@ -71,6 +71,7 @@ deepgram-sdk = "^3.7.7"
 firecrawl-py = "^1.6.1"
 exa-py = "^1.7.0"
 numexpr = "^2.10.1"
+pathspec = "^0.12.1"
 
 
 [tool.poetry.group.dev.dependencies]

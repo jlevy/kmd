@@ -352,24 +352,6 @@ def join_filename(dirname: str | Path, name: str, item_type: Optional[str], ext:
     return Path(dirname) / ".".join(parts)
 
 
-_hidden_file_pattern = re.compile(r"\.[^.]+")
-_partial_file_pattern = re.compile(r".*\.partial(\.[a-z0-9]+)?$")
-
-
-def is_ignored(path: str | Path) -> bool:
-    """
-    Whether a file or path should be skipped when processing a directory.
-    This skips .., .archive, .settings, __pycache__, .partial.xxx, etc.
-    """
-    name = os.path.basename(path)
-    should_ignore = (
-        bool(_hidden_file_pattern.match(name))
-        or name.startswith("__")
-        or bool(_partial_file_pattern.match(name))
-    )
-    return should_ignore
-
-
 def is_full_html_page(content: str) -> bool:
     """
     A full HTML document that is probably best rendered in a browser.

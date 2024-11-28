@@ -51,7 +51,6 @@ from kmd.model.file_formats_model import (
     canonicalize_file_ext,
     FileExt,
     Format,
-    is_ignored,
     parse_file_ext,
     split_filename,
 )
