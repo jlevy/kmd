@@ -59,17 +59,17 @@ xonsh = "^0.18.4"
 tiktoken = "^0.7.0"
 scipy = "^1.14.1"
 spacy = "^3.7.5"
-litellm = "^1.52.10"
+litellm = "^1.52.16"
 nlpia2-wikipedia = "^1.5.18"
 chromadb = "^0.5.3"
-llama-index-core = "^0.12.0"
-llama-index-llms-openai = "^0.3.0"
+llama-index-core = "^0.12.2"
+llama-index-llms-openai = "^0.3.2"
 llama-index-vector-stores-chroma = "^0.4.0"
-llama-index-embeddings-openai = "^0.3.0"
-openai = "^1.54.4"
-deepgram-sdk = "^3.7.6"
-firecrawl-py = "^1.5.0"
-exa-py = "^1.5.1"
+llama-index-embeddings-openai = "^0.3.1"
+openai = "^1.55.2"
+deepgram-sdk = "^3.7.7"
+firecrawl-py = "^1.6.1"
+exa-py = "^1.7.0"
 numexpr = "^2.10.1"
 
 
@@ -85,15 +85,27 @@ codespell = "^2.3.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-# Auto-generated version in build, based on tag or commit.
-# https://sam.hooke.me/note/2023/08/poetry-automatically-generated-package-version-from-git-commit/
+# Auto-generated version for builds based on git tag or commit.
+#
+# Preferred styles of versioning (PEP 440 compliant):
+#   1.2.3               (stable release)
+#   1.2.3a4             (pre-release, no dash or dots)
+#   1.2.3rc1            (release candidate)
+#   1.2.3.dev4+abcdef12 (development build, .dev for dev releases and +commit hash)
+#
+# Tags with a "v" prefix (e.g., v1.2.3) or additional dots (e.g., v1.2.3.rc1) are recognized
+# but normalized to the preferred style for distribution.
+# See: https://sam.hooke.me/note/2023/08/poetry-automatically-generated-package-version-from-git-commit/
 [tool.poetry-dynamic-versioning]
 enable = true
 vcs = "git"
-pattern  = "^v?(?P<base>\\d+\\.\\d+\\.\\d+)(-?((?P<stage>[a-zA-Z]+)\\.?(?P<revision>\\d+)?))?"
+pattern = "^v?(?P<base>\\d+\\.\\d+\\.\\d+)(-?((?P<stage>[a-zA-Z]+)\\.?(?P<revision>\\d+)?))?"
 format-jinja = """
     {%- if distance == 0 -%}
         {{- base -}}
+        {%- if stage -%}
+            {{ stage }}{{ revision | default("") }}
+        {%- endif -%}
     {%- else -%}
         {{- base }}.dev{{ distance }}+{{commit}}
     {%- endif -%}

@@ -10,7 +10,7 @@ from rich.text import Text
 from kmd.commands.command_registry import kmd_command
 from kmd.commands.selection_commands import select
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import COLOR_EMPH, COLOR_EMPH_ALT, COLOR_HINT
+from kmd.config.text_styles import COLOR_EMPH, COLOR_EMPH_ALT, COLOR_HINT, EMOJI_WARN
 from kmd.errors import InvalidInput, InvalidState
 from kmd.exec.resolve_args import assemble_path_args, resolvable_paths, resolve_path_arg
 from kmd.file_tools.file_sort_filter import collect_files, GroupByOption, parse_since, SortOption
@@ -289,8 +289,13 @@ def files(
     recent: bool = False,
     flat: bool = False,
     pager: bool = False,
+    show_first: int = 0,
+    max_depth: int = 3,
+    max_per_subdir: int = 100,
+    max_files: int = 1000,
+    no_max: bool = False,
+    no_ignore: bool = False,
     all: bool = False,
-    head: int = 0,
     save: bool = False,
     sort: Optional[SortOption] = None,
     reverse: bool = False,
@@ -305,15 +310,24 @@ def files(
     For a quick, paged overview of all files in a big directory, use `files --pager`.
 
     :param brief: Only shows a few files per directory.
-        Same as `--head=10 --groupby=parent`.
+        Same as `--show_first=10 --groupby=parent`.
     :param recent: Only shows the most recently modified files in each directory.
-        Same as `--head=10 --sort=modified --reverse --groupby=parent`.
+        Same as `--show_first=10 --sort=modified --reverse --groupby=parent`.
     :param flat: Show files in a flat list, rather than grouped by parent directory.
         Same as `--groupby=flat`.
     :param pager: Use the pager when displaying the output.
-    :param all: Include usually ignored (hidden) files.
-    :param head: Limit the first number of items displayed per group (if groupby is used)
+    :param show_first: Limit the first number of items displayed per group (if groupby is used)
         or in total. 0 means show all.
+    :param max_depth: Maximum depth to recurse into directories.
+        -1 means no limit.
+    :param max_files_per_subdir: Maximum number of files to yield per subdirectory
+        -1 means no limit.
+    :param max_files: Maximum number of files to yield per input path.
+        -1 means no limit.
+    :param no_max: Disable limits on depth and number of files. Same as
+        `--max_depth=-1 --max_per_subdir=-1 --max_files=-1`.
+    :param no_ignore: Disable ignoring hidden files.
+    :param all: Same as `--no_ignore --no_max`.
     :param save: Save the listing as a CSV file item.
     :param sort: Sort by 'filename','size', 'accessed', 'created', or 'modified'.
     :param reverse: Reverse the sorting order.
@@ -334,8 +348,8 @@ def files(
         paths_to_show = [resolve_at_path(path) for path in paths]
 
     if brief or recent:
-        if head == 0:
-            head = 10
+        if show_first <= 0:
+            show_first = 10
         if groupby is None:
             groupby = GroupByOption.parent
     if recent:
@@ -345,12 +359,18 @@ def files(
     if flat:
         groupby = GroupByOption.flat
 
+    if all:
+        no_ignore = True
+        no_max = True
+    if no_max:
+        max_depth = max_per_subdir = max_files = -1
+
     since_seconds = parse_since(since) if since else 0.0
 
     # Determine whether to show hidden files for this path.
-    ignore = None if all else is_ignored
+    ignore = None if no_ignore else is_ignored
     for path in paths_to_show:
-        if not all and path and is_ignored(path.name):
+        if not no_ignore and path and is_ignored(path.name):
             log.info(
                 "Requested path is on default ignore list so disabling ignore: %s",
                 fmt_loc(path),
@@ -363,10 +383,12 @@ def files(
     # Collect all the files.
     file_listing = collect_files(
         start_paths=paths_to_show,
-        recursive=True,
         ignore=ignore,
         since_seconds=since_seconds,
         base_path=base_path,
+        max_depth=max_depth,
+        max_files_per_subdir=max_per_subdir,
+        max_files_total=max_files,
     )
 
     ws = current_workspace()
@@ -432,8 +454,8 @@ def files(
                 if group_name:
                     cprint(f"\n{group_name} ({len(group_df)} files)", color=COLOR_EMPH)
 
-                if head:
-                    display_df = group_df.head(head)
+                if show_first:
+                    display_df = group_df.head(show_first)
                 else:
                     display_df = group_df
 
@@ -475,17 +497,17 @@ def files(
                     total_displayed_size += row["size"]
 
                 # Indicate if items are omitted.
-                if groupby and head and len(group_df) > head:
+                if groupby and show_first and len(group_df) > show_first:
                     cprint(
-                        f"{indent}… and {len(group_df) - head} more files",
+                        f"{indent}… and {len(group_df) - show_first} more files",
                         color=COLOR_EMPH_ALT,
                         text_wrap=Wrap.NONE,
                     )
                 cprint()
 
-            if not groupby and head and files_matching > head:
+            if not groupby and show_first and files_matching > show_first:
                 cprint(
-                    f"{indent}… and {files_matching - head} more files",
+                    f"{indent}… and {files_matching - show_first} more files",
                     color=COLOR_EMPH_ALT,
                     text_wrap=Wrap.NONE,
                 )
@@ -506,10 +528,21 @@ def files(
                     f"({fmt_file_size(file_listing.size_total)})",
                     color=COLOR_EMPH,
                 )
-            if file_listing.files_ignored or file_listing.dirs_ignored:
+            if file_listing.total_ignored > 0:
                 cprint(
-                    f"with {file_listing.files_ignored + file_listing.dirs_ignored} paths ignored",
+                    f"{EMOJI_WARN} {file_listing.total_ignored} files were ignored",
                     color=COLOR_EMPH,
+                )
+            if file_listing.total_skipped > 0:
+                cprint(
+                    f"{EMOJI_WARN} {file_listing.total_skipped} files were skipped"
+                    f" at max_files={max_files}, max_depth={max_depth}, max_per_subdir={max_per_subdir}",
+                    color=COLOR_EMPH,
+                )
+            if file_listing.total_ignored > 0 or file_listing.total_skipped > 0:
+                cprint(
+                    "(Use --all to list everything, including hidden files.)",
+                    color=COLOR_HINT,
                 )
 
     return ShellResult()

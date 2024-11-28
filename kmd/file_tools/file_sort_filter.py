@@ -86,8 +86,10 @@ class FileListing:
     start_paths: List[Path]
     files_total: int
     files_matching: int
-    files_ignored: int
-    dirs_ignored: int
+    files_ignored: int  # Due to ignore rules.
+    dirs_ignored: int  # Due to ignore rules.
+    files_skipped: int  # Due to max caps.
+    dirs_skipped: int  # Due to max caps.
     size_total: int
     size_matching: int
     since_timestamp: float
@@ -96,10 +98,20 @@ class FileListing:
         df = pd.DataFrame([file.__dict__ for file in self.files])
         return df
 
+    @property
+    def total_ignored(self) -> int:
+        return self.files_ignored + self.dirs_ignored
+
+    @property
+    def total_skipped(self) -> int:
+        return self.files_skipped + self.dirs_skipped
+
 
 def collect_files(
     start_paths: List[Path],
-    recursive=False,
+    max_depth: int = -1,
+    max_files_per_subdir: int = -1,
+    max_files_total: int = -1,
     ignore: Optional[IgnoreFilter] = None,
     since_seconds: float = 0.0,
     base_path: Optional[Path] = None,
@@ -124,25 +136,34 @@ def collect_files(
     size_total = 0
     size_matching = 0
 
+    dirs_ignored = 0
+    files_ignored = 0
+    dirs_skipped = 0
+    files_skipped = 0
+
     if not base_path:
         base_path = Path(".")
 
     for path in start_paths:
 
-        dirs_ignored = 0
-        files_ignored = 0
-
         log.debug("Walking folder: %s", fmt_loc(path))
 
         try:
             for flist in walk_by_dir(
-                path, relative_to=base_path, ignore=ignore, recursive=recursive
+                path,
+                relative_to=base_path,
+                ignore=ignore,
+                max_depth=max_depth,
+                max_files_per_subdir=max_files_per_subdir,
+                max_files_total=max_files_total,
             ):
 
                 log.debug("Walking folder: %s: %s", fmt_loc(flist.parent_dir), flist.filenames)
 
                 files_ignored += flist.files_ignored
                 dirs_ignored += flist.dirs_ignored
+                files_skipped += flist.files_skipped
+                dirs_skipped += flist.dirs_skipped
 
                 dir_path = base_path / flist.parent_dir
                 for filename in flist.filenames:
@@ -166,6 +187,8 @@ def collect_files(
         files_matching=len(files_info),
         files_ignored=files_ignored,
         dirs_ignored=dirs_ignored,
+        files_skipped=files_skipped,
+        dirs_skipped=dirs_skipped,
         size_total=size_total,
         size_matching=size_matching,
         since_timestamp=since_timestamp,

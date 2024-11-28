@@ -57,6 +57,7 @@ set +x
 
 echo
 echo "Checking everything worked (may take a minute to compile bytecode)..."
+echo "Running from: $(which kmd)"
 
 # Use a full command to import/bytecompile more code now.
 if kmd self_check; then
