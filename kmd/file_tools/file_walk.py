@@ -78,12 +78,15 @@ def walk_by_dir(
         if max_depth >= 0 and current_depth >= max_depth:
             dirnames[:] = []
 
+        # Original counts.
+        num_dirs = len(dirnames)
+        num_files = len(filenames)
+
         # Filter out ignored directories.
         if ignore:
-            prev_dirs_len = len(dirnames)
             # Careful: ignore("foo") is false even if "foo/" is ignored.
             dirnames[:] = [d for d in dirnames if not ignore(d) and not ignore(d + "/")]
-            dirs_ignored = prev_dirs_len - len(dirnames)
+            dirs_ignored = num_dirs - len(dirnames)
         else:
             dirs_ignored = 0
 
@@ -94,22 +97,20 @@ def walk_by_dir(
 
         # Filter out ignored files.
         if ignore:
-            prev_files_len = len(filenames)
             filenames = [
                 f for f in filenames if not ignore(f) and not ignore(os.path.join(dirname, f))
             ]
-            files_ignored = prev_files_len - len(filenames)
+            files_ignored = num_files - len(filenames)
         else:
             files_ignored = 0
 
-        num_files = len(filenames)  # Total files before capping
-        num_dirs = len(dirnames)
+        # Now cap number of files.
+        num_files_uncapped = num_files_capped = len(filenames)
+        num_dirs_uncapped = num_dirs_capped = len(dirnames)
 
         # Apply max_files_per_subdir
         if max_files_per_subdir > 0:
             filenames = filenames[:max_files_per_subdir]
-
-        num_files_capped = len(filenames)
 
         # Apply max_files limit
         if max_files_total > 0:
@@ -117,6 +118,7 @@ def walk_by_dir(
             if files_remaining <= 0:
                 # Stop traversal
                 dirnames[:] = []
+                num_dirs_capped = 0
                 break
             if num_files_capped > files_remaining:
                 filenames = filenames[:files_remaining]
@@ -124,17 +126,16 @@ def walk_by_dir(
 
         files_so_far += num_files_capped
 
-        if filenames:
-            parent_dir = relpath(abspath(dirname), relative_to) if relative_to else dirname
-            yield FileList(
-                parent_dir,
-                filenames,
-                files_ignored,
-                dirs_ignored,
-                files_skipped=num_files - len(filenames),
-                dirs_skipped=num_dirs - len(dirnames),
-                num_files=num_files,
-            )
+        parent_dir = relpath(abspath(dirname), relative_to) if relative_to else dirname
+        yield FileList(
+            parent_dir,
+            filenames,
+            files_ignored,
+            dirs_ignored,
+            files_skipped=num_files_uncapped - num_files_capped,
+            dirs_skipped=num_dirs_uncapped - num_dirs_capped,
+            num_files=num_files,
+        )
 
         # Check if max_files limit is reached after adding files
         if max_files_total > 0 and files_so_far >= max_files_total:

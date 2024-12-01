@@ -13,7 +13,13 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import COLOR_EMPH, COLOR_EMPH_ALT, COLOR_HINT, EMOJI_WARN
 from kmd.errors import InvalidInput, InvalidState
 from kmd.exec.resolve_args import assemble_path_args, resolvable_paths, resolve_path_arg
-from kmd.file_tools.file_sort_filter import collect_files, GroupByOption, parse_since, SortOption
+from kmd.file_tools.file_sort_filter import (
+    collect_files,
+    FileListing,
+    GroupByOption,
+    parse_since,
+    SortOption,
+)
 from kmd.file_tools.ignore_files import ignore_none
 from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import detect_file_format, Format, join_filename, split_filename
@@ -277,6 +283,44 @@ def trash(*paths: str) -> None:
     print_status(f"Deleted (check trash or recycling bin to recover):\n{fmt_lines(resolved_paths)}")
 
 
+def _print_listing_tallies(
+    file_listing: FileListing,
+    total_displayed: int,
+    total_displayed_size: int,
+    max_files: int,
+    max_depth: int,
+    max_per_subdir: int,
+) -> None:
+    if total_displayed > 0:
+        cprint(
+            f"{total_displayed} files ({fmt_file_size(total_displayed_size)}) shown",
+            color=COLOR_EMPH,
+        )
+    if file_listing.files_total > file_listing.files_matching > total_displayed:
+        cprint(
+            f"of {file_listing.files_matching} files "
+            f"({fmt_file_size(file_listing.size_matching)}) matching criteria",
+            color=COLOR_EMPH,
+        )
+    if file_listing.files_total > total_displayed:
+        cprint(
+            f"from {file_listing.files_total} total files "
+            f"({fmt_file_size(file_listing.size_total)})",
+            color=COLOR_EMPH,
+        )
+    if file_listing.total_ignored > 0:
+        cprint(f"{EMOJI_WARN} {file_listing.total_ignored} files were ignored", color=COLOR_EMPH)
+        cprint("(use --no_ignore to show hidden files)", color=COLOR_HINT)
+
+    if file_listing.total_skipped > 0:
+        cprint(
+            f"{EMOJI_WARN} long file listing: capped "
+            f"at max_files={max_files}, max_depth={max_depth}, max_per_subdir={max_per_subdir}",
+            color=COLOR_EMPH,
+        )
+        cprint("(use --no_max to remove cutoff)", color=COLOR_HINT)
+
+
 @kmd_command
 def files(
     *paths: str,
@@ -396,6 +440,7 @@ def files(
 
     if not file_listing.files:
         cprint("No files found.")
+        _print_listing_tallies(file_listing, 0, 0, max_files, max_depth, max_per_subdir)
         return ShellResult()
 
     df = file_listing.as_dataframe()
@@ -507,38 +552,14 @@ def files(
                     text_wrap=Wrap.NONE,
                 )
 
-            cprint(
-                f"{total_displayed} files ({fmt_file_size(total_displayed_size)}) shown",
-                color=COLOR_EMPH,
+            _print_listing_tallies(
+                file_listing,
+                total_displayed,
+                total_displayed_size,
+                max_files,
+                max_depth,
+                max_per_subdir,
             )
-            if file_listing.files_total > file_listing.files_matching > total_displayed:
-                cprint(
-                    f"of {file_listing.files_matching} files "
-                    f"({fmt_file_size(file_listing.size_matching)}) matching criteria",
-                    color=COLOR_EMPH,
-                )
-            if file_listing.files_total > total_displayed:
-                cprint(
-                    f"from {file_listing.files_total} total files "
-                    f"({fmt_file_size(file_listing.size_total)})",
-                    color=COLOR_EMPH,
-                )
-            if file_listing.total_ignored > 0:
-                cprint(
-                    f"{EMOJI_WARN} {file_listing.total_ignored} files were ignored",
-                    color=COLOR_EMPH,
-                )
-            if file_listing.total_skipped > 0:
-                cprint(
-                    f"{EMOJI_WARN} file listing truncated "
-                    f"at max_files={max_files}, max_depth={max_depth}, max_per_subdir={max_per_subdir})",
-                    color=COLOR_EMPH,
-                )
-            if file_listing.total_ignored > 0 or file_listing.total_skipped > 0:
-                cprint(
-                    "(Use --no_max to remove cutoff, --no_ignore to show hidden files.)",
-                    color=COLOR_HINT,
-                )
 
     return ShellResult()
 

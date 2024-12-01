@@ -103,8 +103,8 @@ def ignore_file(pattern: Optional[str] = None) -> None:
     Add a pattern to the kmd ignore file, or show the current patterns
     if none is specified.
     """
-    from kmd.file_tools.ignore_files import add_to_ignore
     from kmd.commands.files_commands import show
+    from kmd.file_tools.ignore_files import add_to_ignore
 
     ws = current_workspace()
     ignore_path = ws.base_dir / ws.dirs.ignore_file
