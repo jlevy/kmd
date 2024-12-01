@@ -79,7 +79,7 @@ build/
 
 
 class IgnoreFilter(Protocol):
-    def __call__(self, path: str | Path) -> bool: ...
+    def __call__(self, path: str | Path, *, is_dir: bool = False) -> bool: ...
 
 
 class IgnoreChecker(IgnoreFilter):
@@ -97,18 +97,24 @@ class IgnoreChecker(IgnoreFilter):
         log.info("Loading ignore file (%s lines): %s", len(lines), fmt_loc(path))
         return cls(lines)
 
-    def matches(self, path: str | Path) -> bool:
+    def matches(self, path: str | Path, *, is_dir: bool = False) -> bool:
         # Don't match "."!
         if Path(str(path)) == Path("."):
             return False
 
-        return self.spec.match_file(str(path))
+        # If it's a directory, make sure we check with a trailing slash to fit
+        # gitignore rules.
+        patterns = [str(path)]
+        if is_dir and not str(path).endswith("/"):
+            patterns.append(str(path) + "/")
 
-    def __call__(self, path: str | Path) -> bool:
-        return self.matches(path)
+        return any(self.spec.match_file(p) for p in patterns)
+
+    def __call__(self, path: str | Path, *, is_dir: bool = False) -> bool:
+        return self.matches(path, is_dir=is_dir)
 
 
-ignore_none = lambda path: False
+ignore_none: IgnoreFilter = lambda path, is_dir=False: False
 
 is_ignored_minimal = IgnoreChecker(list(MINIMAL_IGNORE_PATTERNS.splitlines()))
 """

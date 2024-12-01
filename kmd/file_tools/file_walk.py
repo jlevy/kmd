@@ -85,7 +85,7 @@ def walk_by_dir(
         # Filter out ignored directories.
         if ignore:
             # Careful: ignore("foo") is false even if "foo/" is ignored.
-            dirnames[:] = [d for d in dirnames if not ignore(d) and not ignore(d + "/")]
+            dirnames[:] = [d for d in dirnames if not ignore(d, is_dir=True)]
             dirs_ignored = num_dirs - len(dirnames)
         else:
             dirs_ignored = 0

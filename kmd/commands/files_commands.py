@@ -409,12 +409,13 @@ def files(
     # Determine whether to show hidden files for this path.
     is_ignored = ignore_none if no_ignore else current_ignore()
     for path in paths_to_show:
-        if not no_ignore and path and is_ignored(path):
+        log.info("Checking ignore for %s", fmt_loc(path))
+        if not no_ignore and is_ignored(path, is_dir=path.is_dir()):
             log.info(
-                "Requested path is on default ignore list so disabling ignore: %s",
+                "Requested path is on the ignore list so disabling ignore: %s",
                 fmt_loc(path),
             )
-            is_ignored = None
+            is_ignored = ignore_none
             break
 
     base_path = Path(".")
