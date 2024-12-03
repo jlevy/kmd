@@ -15,7 +15,7 @@ from kmd.config.settings import (
     resolve_and_create_dirs,
     update_global_settings,
 )
-from kmd.errors import InvalidState
+from kmd.errors import InvalidInput, InvalidState
 from kmd.server import server_routes
 from kmd.server.port_tools import find_available_local_port
 from kmd.util.format_utils import fmt_path
@@ -70,6 +70,7 @@ def _app_setup() -> "FastAPI":
     app.include_router(server_routes.router)
 
     # Map common exceptions to HTTP codes.
+    # FileNotFound first, since it might also be an InvalidInput.
     @app.exception_handler(FileNotFoundError)
     async def file_not_found_exception_handler(request: Request, exc: FileNotFoundError):
         return JSONResponse(
@@ -77,10 +78,16 @@ def _app_setup() -> "FastAPI":
             content={"message": f"File not found: {exc}"},
         )
 
+    @app.exception_handler(InvalidInput)
+    async def invalid_input_exception_handler(request: Request, exc: InvalidInput):
+        return JSONResponse(
+            status_code=400,
+            content={"message": f"Invalid input: {exc}"},
+        )
+
     # Global exception handler.
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
-        log.error(f"Unhandled server exception: {exc}", exc_info=True)
         return JSONResponse(
             status_code=500,
             content={"message": "Internal server error."},
