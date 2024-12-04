@@ -30,7 +30,7 @@ class FormatMarkdownTemplate(Action):
     description: str = """
         Format the given text documents into a single document using the given
         template. The variables must be unique matching prefixes of the filename
-        of each item, e.g. {body} for a file named `body_new_01.md`.
+        of each item, e.g. {body} for a file named `body.md` or `body_new_01.md`.
         """
 
     expected_args: ArgCount = ONE_OR_MORE_ARGS

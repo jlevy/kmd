@@ -10,6 +10,7 @@ from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ITEM_FIELDS
 from kmd.model.operations_model import OPERATION_FIELDS
 from kmd.text_formatting.doc_formatting import normalize_formatting
+from kmd.util.format_utils import fmt_file_size
 from kmd.util.log_calls import tally_calls
 from kmd.util.sort_utils import custom_key_sort
 
@@ -94,6 +95,7 @@ def read_item(path: Path, base_dir: Optional[Path]) -> Item:
 @tally_calls()
 def _read_item_uncached(path: Path, base_dir: Optional[Path]) -> Item:
     has_frontmatter = fmf_has_frontmatter(path)
+    body = metadata = None
     if has_frontmatter:
         body, metadata = fmf_read(path)
         log.debug("Read item from %s: body length %s, metadata %s", path, len(body), metadata)
@@ -101,8 +103,6 @@ def _read_item_uncached(path: Path, base_dir: Optional[Path]) -> Item:
         path = path.resolve()
         if base_dir:
             base_dir = base_dir.resolve()
-    else:
-        body = metadata = None
 
     # Ensure store_path is used if it's within the base_dir, and
     # external_path otherwise.
@@ -122,15 +122,28 @@ def _read_item_uncached(path: Path, base_dir: Optional[Path]) -> Item:
         # This is a file without frontmatter. Infer format from the file and content,
         # and use store_path or external_path as appropriate.
         item = Item.from_external_path(path)
-        if item.format and item.format.supports_frontmatter:
+        if item.format:
             log.info(
                 "Metadata not present on text file, inferred format `%s`: %s",
                 item.format.value,
                 fmt_loc(path),
             )
         item.store_path = store_path
-        item.external_path = external_path
-        item.body = body
+        item.original_filename = path.name
+        if not item.format or item.format.is_binary:
+            item.body = None
+            item.external_path = external_path
+        else:
+            stat = path.stat()
+            if stat.st_size > 100 * 1024 * 1024:
+                log.warning(
+                    "Reading large text file (%s) into memory: %s",
+                    fmt_file_size(stat.st_size),
+                    fmt_loc(path),
+                )
+            with open(path, "r", encoding="utf-8") as f:
+                item.body = f.read()
+            item.external_path = None
 
     # Update modified time.
     item.set_modified(path.stat().st_mtime)

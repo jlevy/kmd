@@ -327,15 +327,15 @@ def param(*args: str) -> None:
 
 @kmd_command
 def import_item(
-    *files_or_urls: str, type: ItemType = ItemType.resource, inplace: bool = False
+    *files_or_urls: str, type: Optional[ItemType] = None, inplace: bool = False
 ) -> ShellResult:
     """
     Add a file or URL resource to the workspace as an item, with associated metadata.
 
     :param inplace: If set and the item is already in the store, reimport the item,
       adding or rewriting metadata frontmatter.
-    :param type: Change the item type. Usually items are imported as resource type
-      but for example you may wish to import a file as a doc type.
+    :param type: Change the item type. Usually items are auto-detected from the file
+      format (typically doc or resource), but you can override this with this option.
     """
     if not files_or_urls:
         raise InvalidInput("No files or URLs provided to import")

@@ -4,7 +4,7 @@ from typing import Optional, Tuple, Type, TypeVar
 
 from kmd.config.logger import get_logger, reset_logging
 from kmd.config.settings import resolve_and_create_dirs, SANDBOX_KB_PATH, SANDBOX_NAME
-from kmd.config.setup import log_api_key_setup
+from kmd.config.setup import print_api_key_setup
 from kmd.errors import InvalidInput, InvalidState
 from kmd.file_storage.file_store import FileStore
 from kmd.file_storage.metadata_dirs import MetadataDirs
@@ -160,7 +160,7 @@ def current_workspace(silent: bool = False) -> FileStore:
 
     if not silent:
         # Delayed, once-only logging of any setup warnings.
-        log_api_key_setup(once=True)
+        print_api_key_setup(once=True)
         ws.log_store_info(once=True)
 
     return ws

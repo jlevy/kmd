@@ -24,7 +24,7 @@ from kmd.shell.shell_output import (
     format_success_or_failure,
     Wrap,
 )
-from kmd.shell_tools.osc_tools import terminal_supports_osc8
+from kmd.shell_tools.osc_tools import osc8_link_rich, terminal_supports_osc8
 from kmd.shell_tools.terminal_images import terminal_supports_sixel
 
 
@@ -241,12 +241,16 @@ class TerminalInfo:
             ),
             ", ",
             format_success_or_failure(
-                self.supports_osc8, true_str="OSC 8 hyperlinks", false_str="No OSC 8 hyperlinks"
+                self.supports_osc8,
+                true_str=osc8_link_rich(
+                    "https://github.com/Alhadis/OSC8-Adoption", "OSC 8 hyperlinks"
+                ),
+                false_str="No OSC 8 hyperlinks",
             ),
         )
 
     def print_term_info(self):
-        log.message(
+        cprint(
             Text.assemble(
                 f"Terminal is {self.term} ({self.term_program}): ",
                 self.as_text(),

@@ -179,6 +179,7 @@ class Item:
     # Text items are in body. Large or binary items may be stored externally.
     body: Optional[str] = None
     external_path: Optional[str] = None
+    original_filename: Optional[str] = None
 
     # Path to the item in the store, if it has been saved.
     store_path: Optional[str] = None
@@ -288,7 +289,9 @@ class Item:
         return result
 
     @classmethod
-    def from_external_path(cls, path: Path, item_type: ItemType = ItemType.resource) -> "Item":
+    def from_external_path(
+        cls, path: Path, item_type: Optional[ItemType] = None, title: Optional[str] = None
+    ) -> "Item":
         """
         Create a resource Item for a file with a format inferred from the file extension
         or the content. Only sets basic metadata. Does not read the content. Will set
@@ -299,14 +302,18 @@ class Item:
 
         # Will raise error for unrecognized file ext.
         name, filename_item_type, format, file_ext = parse_item_filename(path)
-        if filename_item_type:
-            item_type = filename_item_type
         if not format:
             format = detect_file_format(path)
-
+        if not item_type and filename_item_type:
+            item_type = filename_item_type
+        if not item_type:
+            # Default to doc for general text files and resource for everything else.
+            item_type = (
+                ItemType.doc if format and format.supports_frontmatter else ItemType.resource
+            )
         item = cls(
             type=item_type,
-            title=None,
+            title=title,
             file_ext=file_ext,
             format=format,
             external_path=str(path),
@@ -432,16 +439,18 @@ class Item:
 
     def abbrev_title(self, max_len: int = 100, add_ops_suffix: bool = True) -> str:
         """
-        Get or infer a title for this item, falling back to URL or filename.
+        Get or infer a title for this item, falling back to the filename, URL,
+        description, or finally body text.
         Optionally, include the last operation as a parenthetical at the end of the title.
         """
         title_raw_text = (
             self.title
+            or (self.store_path and Path(self.store_path).stem)
+            or (self.external_path and Path(self.external_path).stem)
+            or (self.original_filename and Path(self.original_filename).stem)
             or self.url
             or self.description
             or (not self.is_binary and self.abbrev_body(max_len))
-            or (self.store_path and StorePath(self.store_path).display_str())
-            or self.external_path
             or UNTITLED
         )
 
@@ -484,9 +493,10 @@ class Item:
 
         return body_text[:max_len]
 
-    def title_slug(self, max_len: int = SLUG_MAX_LEN) -> str:
+    def slug_name(self, max_len: int = SLUG_MAX_LEN) -> str:
         """
-        Get a readable slugified version of the title for this item (may not be unique).
+        Get a readable slugified version of the title or filename or content
+        appropriate for this item. May not be unique.
         """
         title = self.abbrev_title(max_len=max_len)
         slug = slugify(title, max_length=max_len, separator="_")

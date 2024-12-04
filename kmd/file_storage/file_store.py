@@ -174,7 +174,7 @@ class FileStore:
         Get a suitable filename for this item that is close to the slugified title yet also unique.
         Also return the old filename if it's different.
         """
-        slug = item.title_slug()
+        slug = item.slug_name()
         full_suffix = item.get_full_suffix()
         # Get a unique name per item type.
         unique_slug, old_slugs = self.uniquifier.uniquify_historic(slug, full_suffix)
@@ -188,7 +188,7 @@ class FileStore:
 
     def _default_path_for(self, item: Item) -> StorePath:
         folder_path = folder_for_type(item.type)
-        slug = item.title_slug()
+        slug = item.slug_name()
         suffix = item.get_full_suffix()
         return StorePath(folder_path / join_suffix(slug, suffix))
 
@@ -246,7 +246,7 @@ class FileStore:
     ) -> Tuple[StorePath, bool, Optional[StorePath]]:
         """
         Return the store path for an item. If the item already has a `store_path`, we use that.
-        Otherwise we need to find the store path or generate a new one.
+        Otherwise we need to find the store path or generate a new one that seems suitable.
 
         Returns `store_path, found, old_store_path` where `found` indicates whether the path was
         already found (in the item or in the store by checking for identity) and `old_store_path`
@@ -351,7 +351,7 @@ class FileStore:
                 if new_item.content_equals(old_item):
                     log.message(
                         "New item is identical to previous version, will keep old item: %s",
-                        old_store_path,
+                        fmt_loc(old_store_path),
                     )
                     os.unlink(full_path)
                     store_path = old_store_path
@@ -377,24 +377,28 @@ class FileStore:
         return hash_file(self.base_dir / store_path, algorithm="sha1").with_prefix
 
     def import_item(
-        self, locator: Locator, as_type: ItemType = ItemType.resource, reimport: bool = False
+        self,
+        locator: Locator,
+        as_type: Optional[ItemType] = None,
+        reimport: bool = False,
     ) -> StorePath:
         """
-        Add resources from a files or URLs. If a locator is a string or Path, copy it into
-        the store. If it's already there, just return the store path.
+        Add resources from files or URLs. If a locator is a path, copy it into the store.
+        If it's already there, just return the store path. If `as_type` is specified,
+        it will be used to override the item type, otherwise we go with our best guess.
         """
+
         if is_url(str(locator)):
             # Import a URL as a resource.
             orig_url = Url(str(locator))
             url = canonicalize_url(orig_url)
             if url != orig_url:
                 log.message("Canonicalized URL: %s -> %s", orig_url, url)
-            item = Item(as_type, url=url, format=Format.url)
+            item_type = as_type or ItemType.resource
+            item = Item(item_type, url=url, format=Format.url)
             store_path = self.save(item)
             return store_path
         elif isinstance(locator, StorePath) and not reimport:
-            # TODO: Maybe check if we need to insert metadata, in case it's a regular file just
-            # sitting in the store.
             log.info("Store path already imported: %s", fmt_loc(locator))
             return locator
         else:
@@ -412,8 +416,15 @@ class FileStore:
             # It's a path outside the store, so copy it in.
             _name, filename_item_type, format, _file_ext = parse_item_filename(path)
 
-            if filename_item_type:
-                as_type = filename_item_type
+            # Best guesses on item types if not specified.
+            item_type = as_type
+            if not item_type and filename_item_type:
+                item_type = filename_item_type
+            if not item_type and format:
+                item_type = format.default_item_type
+            if not item_type:
+                item_type = ItemType.resource
+
             if format and format.supports_frontmatter:
                 log.message("Importing text file: %s", fmt_loc(path))
                 # This will read the file with or without frontmatter.
@@ -421,7 +432,7 @@ class FileStore:
                 item = read_item(path, self.base_dir)
                 item.external_path = None
 
-                if item.type != as_type:
+                if item.type and as_type and item.type != as_type:
                     log.warning(
                         "Reimporting as item type `%s` instead of `%s`: %s",
                         as_type.value,
@@ -443,21 +454,17 @@ class FileStore:
                 if self.exists(store_path):
                     raise FileExists(f"Resource already in store: {fmt_loc(store_path)}")
 
-                if item.type != as_type:
-                    log.warning(
-                        "Reimporting as item type `%s` instead of `%s`: %s",
-                        as_type.value,
-                        item.type.value,
-                        fmt_loc(path),
-                    )
-                    item.type = as_type
+                item.type = item_type
 
                 log.message("Importing resource: %s -> %s", fmt_loc(path), fmt_loc(store_path))
                 copyfile_atomic(path, self.base_dir / store_path, make_parents=True)
             return store_path
 
     def import_items(
-        self, *locators: Locator, as_type: ItemType = ItemType.resource, reimport: bool = False
+        self,
+        *locators: Locator,
+        as_type: Optional[ItemType] = None,
+        reimport: bool = False,
     ) -> List[StorePath]:
         return [self.import_item(locator, as_type, reimport) for locator in locators]
 

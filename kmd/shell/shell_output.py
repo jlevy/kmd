@@ -171,7 +171,9 @@ def format_paragraphs(*paragraphs: str | Text) -> Text:
     return Text.assemble(*text)
 
 
-def format_success_or_failure(value: bool, true_str: str = "", false_str: str = "") -> Text:
+def format_success_or_failure(
+    value: bool, true_str: str | Text = "", false_str: str | Text = ""
+) -> Text:
     emoji = Text(emoji_bool(value), style=COLOR_SUCCESS if value else COLOR_FAILURE)
     if true_str or false_str:
         return Text.assemble(emoji, " ", true_str if value else false_str)

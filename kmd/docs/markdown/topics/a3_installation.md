@@ -87,8 +87,8 @@ To run:
 poetry run kmd
 ```
 
-Use the `self_check` command to confirm tools like `bat` and `ffmpeg` are found
-and confirm API keys are set up.
+Use the `self_check` command to confirm tools like `bat` and `ffmpeg` are found and confirm
+API keys are set up.
 
 Optionally, to install Kmd globally in the current user's Python virtual environment so you
 can conveniently use `kmd` anywhere, make sure you have a usable Python 3.12+ environment

@@ -78,7 +78,7 @@ class InsertFrameCaptures(PerItemAction):
         # Extract frame captures.
         target_dir = current_workspace().base_dir / "assets"
         timestamps = [timestamp for timestamp, _index, _offset in timestamp_matches]
-        frame_paths = capture_frames(video_path, timestamps, target_dir, prefix=item.title_slug())
+        frame_paths = capture_frames(video_path, timestamps, target_dir, prefix=item.slug_name())
 
         # Save images in file cache for later as well.
         for frame_path in frame_paths:

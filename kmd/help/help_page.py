@@ -9,7 +9,8 @@ from kmd.docs import (
     faq,
     getting_started,
     kmd_overview,
-    motivation,
+    philosophy_of_kmd,
+    progress,
     tips_for_use_with_other_tools,
     what_is_kmd,
     workspace_and_file_formats,
@@ -62,13 +63,15 @@ def print_manual(base_actions_only: bool = False) -> None:
 
     print_markdown(what_is_kmd)
 
-    print_markdown(motivation)
+    print_markdown(progress)
 
     print_markdown(getting_started)
 
     print_markdown(tips_for_use_with_other_tools)
 
     print_markdown(development)
+
+    print_markdown(philosophy_of_kmd)
 
     print_markdown(kmd_overview)
 

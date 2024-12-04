@@ -4,16 +4,28 @@ While not required, these tools can make using Kmd easier or more fun.
 
 ### Choosing a Terminal
 
-You can use any favorite terminal to run Kmd, but I recommend trying
-[the latest release of Hyper](https://github.com/vercel/hyper/releases) (use v4.0+)
-with the [Hyper-K](https://github.com/jlevy/hyper-k) plugin.
+You can use any favorite terminal to run Kmd.
 
-I tried half a dozen different popular terminals on Mac (Terminal, Warp, Kitty, etc.), and
-none were as easy to customize as I'd like.
+However, you can get a much better terminal experience if you use one with more advanced
+additional features, such as [OSC8 link](https://github.com/Alhadis/OSC8-Adoption) support
+and [Sixel](https://www.arewesixelyet.com/) graphics.
 
-Hyper-K is a plugin I've written that makes using a tool like Kmd much easier in small ways,
-especially by letting you click commands and file paths with the mouse to type them, and by
-easily viewing thumbnail images.
+I tried half a dozen different popular terminals on Mac
+([Terminal](https://support.apple.com/guide/terminal/welcome/mac),
+[Warp](https://www.warp.dev/), [iTerm2](https://iterm2.com/),
+[Kitty](https://sw.kovidgoyal.net/kitty/), [WezTerm](https://wezfurlong.org/wezterm/),
+[Hyper](https://hyper.is/)). Unfortunately, none offer really good support right out of the
+box, but I encourage you to try
+
+✨**Would you be willing to help test something new?** If you've made it this far and are
+still reading, I have a request.
+So alongside Kmd, I've begun to build a new terminal app, **Kyrm**, that has the features we
+would want in a modern command line, such as clickable links and commands, tooltips, and
+image support.
+Kmd also takes advantage of this support by embedding OSC8 links.
+It is *so* much nicer to use.
+I'd like feedback so please [message me](https://twitter.com/ojoshe) if you'd like to try it
+out an early dev version!
 
 ### Choosing an Editor
 

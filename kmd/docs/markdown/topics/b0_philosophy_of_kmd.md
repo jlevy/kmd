@@ -1,11 +1,10 @@
 ## The Philosophy of Kmd
 
-I'd like to give a little motivation for experimenting with Kmd and why I think it's
-potentially so useful.
-But jump to [examples](#examples) to get an idea of what it can do.
-If you just want to try it, jump to [Getting Started](#getting-started)!
+Here is a bit more motivation for experimenting with Kmd, why I think it's potentially so
+useful, and some design principles.
+(You may skip ahead to the next section if you just want a more concrete overview!)
 
-## Why Apps Can't Solve All Your Problems
+### Why Apps Can't Solve All Your Problems
 
 AI has radically changed the way we use software.
 With LLMs and other generative AI models, we've seen big improvements in two areas:
@@ -174,74 +173,3 @@ Kmd may evolve into more than a command line.
 It's more like a first step toward an item-based information operating system—an alternate,
 more flexible UX and information architecture for knowledge workflows.
 It could be the tool you need when you don't know what tool you need.
-
-### Credits
-
-All of this is only possible by relying on a wide variety of powerful libraries, especially
-[LiteLLM](https://github.com/BerriAI/litellm), [yt-dlp](https://github.com/yt-dlp/yt-dlp),
-[Pydantic](https://github.com/pydantic/pydantic),
-[Rich](https://github.com/Textualize/rich),
-[Ripgrep](https://github.com/BurntSushi/ripgrep), [Bat](https://github.com/sharkdp/bat),
-[jusText](https://github.com/miso-belica/jusText),
-[WeasyPrint](https://github.com/Kozea/WeasyPrint),
-[Marko](https://github.com/frostming/marko), and [Xonsh](https://github.com/xonsh/xonsh).
-
-### Is Kmd Mature?
-
-No. Not at all.
-:) It's the result of a few weeks of coding and experimentation, and it's very much in
-progress.
-Please help me make it better by sharing your ideas and feedback!
-It's easiest to DM me at [twitter.com/ojoshe](https://x.com/ojoshe).
-My contact info is at [github.com/jlevy](https://github.com/jlevy).
-
-### What is Included?
-
-- A bash-like, Python-compatible shell based on xonsh, with pretty syntax coloring of
-  commands and outputs
-
-- Tab auto-completion and help on almost everything
-
-- A [generalized frontmatter format](https://github.com/jlevy/frontmatter-format), that for
-  YAML metadata on Markdown, HTML, Python, and other text files
-
-- A [data model](https://github.com/jlevy/kmd/tree/main/kmd/model) that includes items such
-  as documents, resources, concepts, etc., all stored as files within a workspace of files,
-  and with consistent metadata in YAML on text files
-
-- A few dozen built-in commands for listing, showing, and paging through files, etc.
-  (see `help` for full docs)
-
-- An extensible set of actions for all kinds of tasks like editing or summarizing text or
-  transcribing videos (see `help`)
-
-- A way of tracking the provenance of each file (what actions created each item) so you can
-  tell when to skip running a command (like a Makefile)
-
-- A selection system for maintaining context between commands so you can pass outputs of one
-  action into the inputs of another command
-
-- A set of preconditions, like whether a document is Markdown or HTML, if it's a transcript
-  with timestamps, and so on, so you and Kmd know what actions might apply to any selection
-
-- A media cache, which is a mechanism for downloading and caching, downsampling, and
-  transcribing video, audio, using Whisper or Deepgram
-
-- A content cache, for downloading and caching web pages or other files
-
-- An LLM-based assistant that wraps the docs and the Kmd source code into a tool that
-  assists you in using or extending Kmd (this part is quite fun)
-
-- A
-  [Markdown auto-formatter](https://github.com/jlevy/kmd/blob/main/kmd/text_formatting/markdown_normalization.py),
-  so text documents are saved in a normalized form that can be diffed consistently
-
-- A bunch of other small utilities for making all this easier, including:
-
-  - parsing and representing text docs as sentences, paragraphs, or chunks of text
-
-  - diffing words and tokens and filtering diffs to control what changes LLMs make to text
-
-  - tools for detecting file types and automatic, readable file naming conventions
-
-  - media handling of videos and audio, including downloading and transcribing videos

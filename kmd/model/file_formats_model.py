@@ -2,7 +2,7 @@ import os
 import re
 from enum import Enum
 from pathlib import Path
-from typing import cast, List, Optional, Tuple
+from typing import cast, List, Optional, Tuple, TYPE_CHECKING
 
 from pydantic.dataclasses import dataclass
 
@@ -11,6 +11,9 @@ from kmd.errors import InvalidFilename
 from kmd.model.media_model import MediaType
 from kmd.shell_tools.tool_deps import Tool, tool_check
 from kmd.util.url import is_file_url, parse_file_url, Url
+
+if TYPE_CHECKING:
+    from kmd.model.items_model import ItemType
 
 log = get_logger(__name__)
 
@@ -104,6 +107,35 @@ class Format(Enum):
             self.kmd_script,
             self.csv,
         ]
+
+    @property
+    def default_item_type(self) -> "ItemType":
+        """
+        Default item type for this format, mainly for default guess when importing.
+        """
+        from kmd.model.items_model import ItemType
+
+        format_to_item_type = {
+            Format.url: ItemType.resource,
+            Format.plaintext: ItemType.doc,
+            Format.markdown: ItemType.doc,
+            Format.md_html: ItemType.doc,
+            Format.html: ItemType.doc,
+            Format.yaml: ItemType.doc,
+            Format.diff: ItemType.doc,
+            Format.python: ItemType.extension,
+            Format.kmd_script: ItemType.extension,
+            Format.json: ItemType.doc,
+            Format.csv: ItemType.doc,
+            Format.pdf: ItemType.resource,
+            Format.jpeg: ItemType.asset,
+            Format.png: ItemType.asset,
+            Format.docx: ItemType.resource,
+            Format.mp3: ItemType.resource,
+            Format.m4a: ItemType.resource,
+            Format.mp4: ItemType.resource,
+        }
+        return format_to_item_type.get(self, ItemType.resource)
 
     def media_format(self) -> MediaType:
         format_to_media_format = {

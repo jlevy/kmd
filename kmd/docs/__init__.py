@@ -34,12 +34,13 @@ def _lazy_load(path: str):
 
 welcome = _lazy_load("markdown/welcome")
 what_is_kmd = _lazy_load("markdown/topics/a1_what_is_kmd")
-motivation = _lazy_load("markdown/topics/a2_philosophy_of_kmd")
+progress = _lazy_load("markdown/topics/a2_progress")
 installation = _lazy_load("markdown/topics/a3_installation")
 getting_started = _lazy_load("markdown/topics/a4_getting_started")
 tips_for_use_with_other_tools = _lazy_load("markdown/topics/a5_tips_for_use_with_other_tools")
 development = _lazy_load("markdown/topics/a6_development")
 
+philosophy_of_kmd = _lazy_load("markdown/topics/b0_philosophy_of_kmd")
 kmd_overview = _lazy_load("markdown/topics/b1_kmd_overview")
 workspace_and_file_formats = _lazy_load("markdown/topics/b2_workspace_and_file_formats")
 faq = _lazy_load("markdown/topics/b3_faq")

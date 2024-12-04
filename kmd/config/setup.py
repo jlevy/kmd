@@ -5,9 +5,10 @@ from threading import Event
 from typing import Any
 
 from dotenv import find_dotenv, load_dotenv
+from rich.text import Text
 
 from kmd.config.logger import logging_setup
-from kmd.config.text_styles import EMOJI_TRUE
+from kmd.shell.shell_output import cprint, format_success_or_failure
 from kmd.util.stack_traces import add_stacktrace_handler
 
 
@@ -39,7 +40,7 @@ def api_setup() -> str | None:
 _log_api_setup_done = Event()
 
 
-def log_api_key_setup(once: bool = False) -> None:
+def print_api_key_setup(once: bool = False) -> None:
     if once and _log_api_setup_done.is_set():
         return
 
@@ -49,10 +50,16 @@ def log_api_key_setup(once: bool = False) -> None:
 
     dotenv_path = api_setup()
 
-    if dotenv_path:
-        log.message("%s Found .env file for API keys: %s", EMOJI_TRUE, dotenv_path)
-    else:
-        log.warning("No .env file found. Set up your API keys in a .env file.")
+    cprint(
+        Text.assemble(
+            "API keys: ",
+            format_success_or_failure(
+                dotenv_path is not None,
+                true_str=f"Found .env file: {dotenv_path}",
+                false_str="No .env file found. Set up your API keys in a .env file.",
+            ),
+        )
+    )
 
     for key in RECOMMENDED_APIS:
         if key not in os.environ:
