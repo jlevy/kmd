@@ -8,6 +8,7 @@ from kmd.config.settings import global_settings, LogLevel, update_global_setting
 from kmd.config.setup import log_api_key_setup
 from kmd.model.args_model import fmt_loc
 from kmd.server import local_server
+from kmd.server.local_url_formatters import enable_local_urls
 from kmd.shell.shell_output import cprint, format_name_and_description, print_status
 from kmd.shell_tools.native_tools import tail_file
 from kmd.shell_tools.tool_deps import tool_check
@@ -149,11 +150,15 @@ def log_level(level: Optional[str] = None, console: bool = False, file: bool = F
 @kmd_command
 def start_server() -> None:
     """
-    Start the kmd local server.
+    Start the kmd local server. This exposes local info on files and commands
+    so they can be displayed in your terminal, if it supports OSC8 links.
+    Note this is most useful for the Kyrm terminal, which shows links as
+    tooltips.
     """
     from kmd.server.local_server import start_server
 
     start_server()
+    enable_local_urls(True)
 
 
 @kmd_command
@@ -164,6 +169,7 @@ def stop_server() -> None:
     from kmd.server.local_server import stop_server
 
     stop_server()
+    enable_local_urls(False)
 
 
 @kmd_command
@@ -198,7 +204,7 @@ def reload_kmd() -> None:
     from kmd.util.import_utils import recursive_reload
 
     module = kmd
-    exclude = ["kmd.xontrib.kmd"]  # Don't reload the kmd initialization.
+    exclude = ["kmd.xontrib.kmd_extension"]  # Don't reload the kmd initialization.
 
     def filter_func(name: str) -> bool:
         if exclude:

@@ -1,3 +1,4 @@
+import os
 import threading
 import time
 from pathlib import Path
@@ -13,6 +14,7 @@ from kmd.exec.history import wrap_with_history
 from kmd.model.actions_model import Action
 from kmd.model.shell_model import ShellResult
 from kmd.server.local_server import start_server
+from kmd.server.local_url_formatters import enable_local_urls
 from kmd.shell.shell_output import cprint
 from kmd.shell.shell_results import handle_shell_result, shell_before_exec
 from kmd.shell_tools.action_wrapper import ShellCallableAction
@@ -219,7 +221,13 @@ def customize_xonsh():
 
         check_terminal_features().print_term_info()
 
-        start_server()
+        if os.environ.get("TERM_PROGRAM") == "Kyrm":
+            start_server()
+            enable_local_urls(True)
+        else:
+            log.message(
+                "If your terminal supports it, you may use `start_server` to enable local links."
+            )
 
         current_workspace()  # Validates and logs info for user.
         cprint()

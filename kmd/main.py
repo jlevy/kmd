@@ -53,7 +53,7 @@ XONSH_SHOW_TRACEBACK = True
 xonshrc_init_script = """
 # Auto-load of kmd:
 # This only activates if xonsh is invoked as kmd.
-xontrib load -f kmd.xontrib.kmd
+xontrib load -f kmd.xontrib.kmd_extension
 """
 
 xontrib_command = xonshrc_init_script.splitlines()[1].strip()
@@ -245,7 +245,7 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     events.on_pre_cmdloop.fire()
 
     # Load kmd xontrib for rest of kmd functionality.
-    xontribs_load(["kmd.xontrib.kmd"], full_module=True)
+    xontribs_load(["kmd.xontrib.kmd_extension"], full_module=True)
 
     # Imports are so slow we will need to improve this. Let's time it.
     startup_time = time.time() - import_start_time
