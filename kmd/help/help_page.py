@@ -44,9 +44,9 @@ def quote_item(item: str) -> str:
 
 
 def print_see_also(commands_or_questions: List[str]) -> None:
-    from kmd.server.local_urls import ws_formatter
+    from kmd.server.local_url_formatters import local_url_formatter
 
-    with ws_formatter() as fmt:
+    with local_url_formatter() as fmt:
         cprint()
         print_small_heading("See also:")
         cprint(

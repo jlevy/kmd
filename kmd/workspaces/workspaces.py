@@ -13,6 +13,7 @@ from kmd.media.media_tools import reset_media_cache_dir
 from kmd.model.args_model import fmt_loc
 from kmd.model.params_model import ParamValues, USER_SETTABLE_PARAMS
 from kmd.web_content.file_cache_tools import reset_content_cache_dir
+from kmd.workspaces.workspace_names import check_strict_workspace_name
 from kmd.workspaces.workspace_registry import get_workspace_registry
 
 log = get_logger(__name__)
@@ -95,8 +96,9 @@ def get_workspace(name: str | Path) -> FileStore:
     """
     Get a workspace by name or path and register the FileStore so we reuse it.
     """
-    ws_name, ws_path, is_sandbox = resolve_workspace(name)
-    return get_workspace_registry().load(ws_name, ws_path, is_sandbox)
+    ws_name, ws_path, is_sandbox = resolve_workspace(check_strict_workspace_name(str(name)))
+    ws = get_workspace_registry().load(ws_name, ws_path, is_sandbox)
+    return ws
 
 
 @cache

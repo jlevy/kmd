@@ -1,20 +1,23 @@
 from enum import Enum
 from pathlib import Path
+from typing import Optional, Tuple
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from kmd.config import colors
 from kmd.config.logger import get_logger
+from kmd.config.settings import global_settings
+from kmd.errors import InvalidFilename
 from kmd.file_storage.file_store import FileStore
 from kmd.help.command_help import explain_command
+from kmd.model.items_model import Item
 from kmd.model.paths_model import StorePath
-from kmd.server.local_urls import local_url
 from kmd.shell.shell_output import output_as_string, Wrap
 from kmd.shell.shell_printing import print_file_info
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
-from kmd.workspaces.workspace_names import check_strict_workspace_name
 
 log = get_logger(__name__)
 
@@ -25,25 +28,139 @@ router = APIRouter()
 def server_get_workspace(ws_name: str) -> FileStore:
     from kmd.workspaces.workspaces import get_workspace
 
-    ws_name = check_strict_workspace_name(ws_name)
     file_store = get_workspace(ws_name)
     if not file_store:
         raise HTTPException(status_code=404, detail=f"Workspace not found: `{ws_name}`")
     return file_store
 
 
+def format_local_url(route_path: str, **params: Optional[str]) -> str:
+    """
+    URL to content on the local server.
+    """
+    from kmd.server.local_server import LOCAL_SERVER_HOST
+
+    settings = global_settings()
+    route_path = route_path.strip("/")
+    url = f"http://{LOCAL_SERVER_HOST}:{settings.local_server_port}/{route_path}"
+    if params:
+        query_params = {k: v for k, v in params.items() if v is not None}
+        if query_params:
+            query_string = urlencode(query_params)
+            url += f"?{query_string}"
+    return url
+
+
 class Route(str, Enum):
+    view_file = "/file/view"
     view_item = "/item/view"
     read_item = "/item/read"
     explain = "/explain"
 
 
+class _LocalUrl:
+    def view_file(self, path: Path) -> str:
+        return format_local_url(Route.view_file, path=str(path))
+
+    def view_item(self, store_path: StorePath, ws_name: str) -> str:
+        return format_local_url(
+            Route.view_item, store_path=store_path.display_str(), ws_name=ws_name
+        )
+
+    def explain(self, text: str) -> str:
+        return format_local_url(Route.explain, text=text)
+
+
+local_url = _LocalUrl()
+"""Create URLs for the local server."""
+
+
+@router.api_route(Route.view_file, methods=["GET", "HEAD"])
+def view_file(request: Request, path: str):
+    # Treat the file like an external path for the purposes of viewing.
+    try:
+        p = Path(path)
+        item = Item.from_external_path(p)
+        body_text, footer_note = None, None
+        if not item.is_binary:
+            body_text, footer_note = _read_lines(p)
+        page_url = local_url.view_file(p)
+
+        return _serve_item(request, item, page_url, body_text, footer_note)
+    except (InvalidFilename, FileNotFoundError) as e:
+        raise HTTPException(status_code=404, detail=f"File not found: {e}")
+
+
 @router.api_route(Route.view_item, methods=["GET", "HEAD"])
 def view_item(request: Request, store_path: str, ws_name: str):
-    item = server_get_workspace(ws_name).load(StorePath(store_path))
+    sp = StorePath(store_path)
+    item = server_get_workspace(ws_name).load(sp)
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
+    # URL to serve a webpage with info about the item.
+    page_url = local_url.view_item(store_path=sp, ws_name=ws_name)
+
+    body_text, footer_note = _truncate_text(item.body_text())
+    if footer_note:
+        body_text += "\n…"
+
+    return _serve_item(request, item, page_url, body_text, footer_note)
+
+
+@router.api_route(Route.explain, methods=["GET"])
+def explain(text: str):
+    help_str = explain_command(text, use_assistant=True)
+    if not help_str:
+        raise HTTPException(status_code=404, detail="Explanation not found")
+
+    page_url = local_url.explain(text)
+
+    return HTMLResponse(
+        render_web_template(
+            "base_webpage.html.jinja",
+            {
+                "title": f"Help: {text}",
+                "content": render_web_template(
+                    "explain_view.html.jinja", {"help_str": help_str, "page_url": page_url}
+                ),
+            },
+            css_overrides={"color-bg": colors.web.bg_translucent},
+        )
+    )
+
+
+MAX_LINES = 200
+
+
+def _read_lines(path: Path, max_lines: int = MAX_LINES) -> Tuple[str, Optional[str]]:
+    lines = []
+    # frontmatter_str, offset = fmf_read_frontmatter_raw(path)
+    with open(path, "r") as f:
+        # f.seek(offset)
+        for i, line in enumerate(f):
+            if i >= max_lines:
+                return "\n".join(lines), f"Text truncated, showing first {max_lines} lines."
+            lines.append(line.rstrip("\n"))
+    return "\n".join(lines), None
+
+
+def _truncate_text(text: str, max_lines: int = MAX_LINES) -> Tuple[str, Optional[str]]:
+    num_lines = text.count("\n")
+    if num_lines > max_lines:
+        lines = text.split("\n", max_lines + 1)
+        footer_note = f"Text truncated, showing first {max_lines} of {num_lines} lines."
+        return "\n".join(lines[:max_lines]), footer_note
+    return text, None
+
+
+def _serve_item(
+    request: Request,
+    item: Item,
+    page_url: str,
+    body_text: Optional[str] = None,
+    footer_note: Optional[str] = None,
+) -> StreamingResponse | HTMLResponse:
     if item.is_binary:
         # Return the item itself.
         # TODO: Could make this thumbnails for images, PDF, etc.
@@ -80,23 +197,14 @@ def view_item(request: Request, store_path: str, ws_name: str):
         if request.method == "HEAD":
             return HTMLResponse(status_code=200, headers={"Content-Type": "text/html"})
 
-        # Serve a webpage with info about the item
-        page_url = local_url(Route.view_item, store_path=store_path, ws_name=ws_name)
-
         file_info_str = output_as_string(
             lambda: print_file_info(
-                Path(not_none(item.store_path)),
+                Path(not_none(item.store_path or item.external_path)),
                 show_size_details=True,
                 show_format=True,
                 text_wrap=Wrap.WRAP,
             )
         )
-
-        body_text = None
-        if item.body and len(item.body) > 10 * 1024 * 1024:
-            body_text = "Item body is too large to display!"
-        elif not item.is_binary:
-            body_text = item.body_text()
 
         return HTMLResponse(
             render_web_template(
@@ -110,34 +218,13 @@ def view_item(request: Request, store_path: str, ws_name: str):
                             "page_url": page_url,
                             "file_info": file_info_str,
                             "body_text": body_text,
+                            "footer_note": footer_note,
                         },
                     ),
                 },
                 css_overrides={"color-bg": colors.web.bg_translucent},
             )
         )
-
-
-@router.api_route(Route.explain, methods=["GET"])
-def explain(text: str):
-    help_str = explain_command(text, use_assistant=True)
-    if not help_str:
-        raise HTTPException(status_code=404, detail="Explanation not found")
-
-    page_url = local_url(Route.explain, text=text)
-
-    return HTMLResponse(
-        render_web_template(
-            "base_webpage.html.jinja",
-            {
-                "title": f"Help: {text}",
-                "content": render_web_template(
-                    "explain_view.html.jinja", {"help_str": help_str, "page_url": page_url}
-                ),
-            },
-            css_overrides={"color-bg": colors.web.bg_translucent},
-        )
-    )
 
 
 # @router.websocket("/ws")

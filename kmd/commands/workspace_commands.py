@@ -30,7 +30,7 @@ from kmd.model.paths_model import fmt_store_path, StorePath
 from kmd.model.shell_model import ShellResult
 from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths
-from kmd.server.local_urls import ws_formatter
+from kmd.server.local_url_formatters import local_url_formatter
 from kmd.shell.shell_output import (
     cprint,
     format_name_and_description,
@@ -426,7 +426,7 @@ def applicable_actions(*paths: str, brief: bool = False, all: bool = False) -> N
     if not applicable_actions:
         cprint("No applicable actions for selection.")
         return
-    with ws_formatter(ws.name) as fmt:
+    with local_url_formatter(ws.name) as fmt:
         if brief:
             action_names = [action.name for action in applicable_actions]
             cprint("Applicable actions:", color=COLOR_SUGGESTION)

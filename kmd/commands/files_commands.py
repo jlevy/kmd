@@ -26,7 +26,7 @@ from kmd.model.file_formats_model import detect_file_format, Format, join_filena
 from kmd.model.items_model import Item, ItemType
 from kmd.model.paths_model import resolve_at_path, StorePath
 from kmd.model.shell_model import ShellResult
-from kmd.server.local_urls import ws_formatter
+from kmd.server.local_url_formatters import local_url_formatter
 from kmd.shell.shell_output import console_pager, cprint, print_status, print_style, Style, Wrap
 from kmd.shell.shell_printing import print_file_info
 from kmd.shell_tools.native_tools import (
@@ -490,7 +490,7 @@ def files(
     indent = " " * (TIME_WIDTH + SIZE_WIDTH + len(SPACING) * 2)
 
     with console_pager(use_pager=pager):
-        with ws_formatter(active_ws_name) as fmt:
+        with local_url_formatter(active_ws_name) as fmt:
             for group_name, group_df in grouped:
                 if group_name:
                     cprint(f"\n{group_name} ({len(group_df)} files)", color=COLOR_EMPH)
@@ -510,11 +510,9 @@ def files(
 
                     rel_path = row["relative_path"]
 
-                    # If we are listing from within a workspace, we include the paths as
-                    # store paths (with an @ prefix). Otherwise, use regular paths.
-                    # We could link to the full StorePath display the relative path within
-                    # the listing but for simplicity not doing this for now, since usually
-                    # you're listing items from the root of the workspace dir.
+                    # If we are listing from within a workspace and we are at the base
+                    # of the workspace, we include the paths as store paths (with an @
+                    # prefix). Otherwise, use regular paths.
                     if active_ws_name and base_is_ws:
                         display_path = StorePath(rel_path)  # Add a local server link.
                     else:
@@ -531,7 +529,7 @@ def files(
                         fmt.tooltip_link(short_file_size.rjust(SIZE_WIDTH), tooltip=full_file_size)
                     )
                     line.append(SPACING)
-                    line.append(fmt.path_link(display_path))
+                    line.append(fmt.path_link(display_path.resolve(), link_text=str(display_path)))
 
                     cprint(line, text_wrap=Wrap.NONE)
                     total_displayed += 1

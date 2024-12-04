@@ -96,14 +96,22 @@ def _app_setup() -> "FastAPI":
     return app
 
 
+LOCAL_SERVER_HOST = "127.0.0.1"
+"""
+The local hostname to run the local server on.
+
+Important: This should be the loopback address, since this local server has full access
+to the local machine and filesystem!
+"""
+
+
 def _pick_port() -> int:
     """
     Pick an available port for the local server and update the global settings.
     """
     settings = global_settings()
-    host = settings.local_server_host
     port = find_available_local_port(
-        host,
+        LOCAL_SERVER_HOST,
         range(
             settings.local_server_ports_start,
             settings.local_server_ports_start + settings.local_server_ports_max,
@@ -130,8 +138,7 @@ class LocalServer:
         import uvicorn
 
         port = _pick_port()
-        host = global_settings().local_server_host
-        config = _server_config(self.app, host, port)
+        config = _server_config(self.app, LOCAL_SERVER_HOST, port)
         with self.server_lock:
             server = uvicorn.Server(config)
             self.server_instance = server
@@ -140,7 +147,7 @@ class LocalServer:
             try:
                 log.message(
                     "Starting local server on %s:%s",
-                    host,
+                    LOCAL_SERVER_HOST,
                     port,
                 )
                 log.message("Local server logs: %s", fmt_path(log_file_path(port)))

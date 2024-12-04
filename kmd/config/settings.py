@@ -111,9 +111,6 @@ class Settings:
     file_log_level: LogLevel
     """The log level for file-based logging."""
 
-    local_server_host: str
-    """The local hostname to run the local server on."""
-
     local_server_ports_start: int
     """The start of the range of ports to try to run the local server on."""
 
@@ -134,7 +131,6 @@ _settings = Settings(
     use_sandbox=True,
     file_log_level=LogLevel.info,
     console_log_level=LogLevel.warning,
-    local_server_host="127.0.0.1",
     local_server_ports_start=LOCAL_SERVER_PORT_START,
     local_server_ports_max=LOCAL_SERVER_PORTS_MAX,
     local_server_port=0,

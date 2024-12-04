@@ -29,7 +29,6 @@ from kmd.util.format_utils import (
     html_to_plaintext,
     plaintext_to_html,
 )
-from kmd.util.log_calls import log_calls
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.strif import format_iso_timestamp
 from kmd.util.url import Url
@@ -307,7 +306,7 @@ class Item:
 
         item = cls(
             type=item_type,
-            title=name,
+            title=None,
             file_ext=file_ext,
             format=format,
             external_path=str(path),
@@ -433,14 +432,16 @@ class Item:
 
     def abbrev_title(self, max_len: int = 100, add_ops_suffix: bool = True) -> str:
         """
-        Get or infer a title for this item. Optionally, include the last operation
-        as a parentheticalat the end of the title.
+        Get or infer a title for this item, falling back to URL or filename.
+        Optionally, include the last operation as a parenthetical at the end of the title.
         """
         title_raw_text = (
             self.title
             or self.url
             or self.description
             or (not self.is_binary and self.abbrev_body(max_len))
+            or (self.store_path and StorePath(self.store_path).display_str())
+            or self.external_path
             or UNTITLED
         )
 
@@ -465,7 +466,6 @@ class Item:
 
         return final_text
 
-    @log_calls(level="warning")
     def abbrev_body(self, max_len: int) -> str:
         """
         Get a cut off version of the body text. Must not be a binary Item.
@@ -480,7 +480,7 @@ class Item:
                 if len(yaml_obj) > 0:
                     body_text = " ".join(str(v) for v in yaml_obj[0].values())
             except Exception as e:
-                log.warning("Error parsing YAML body: %s", e)
+                log.info("Error parsing YAML body: %s", e)
 
         return body_text[:max_len]
 

@@ -43,7 +43,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem;
-  max-width: calc(100% - 4rem);
+  max-width: calc(100% - 6rem);
 }
 
 .path-text {
@@ -82,12 +82,17 @@
   margin: 0.2rem 0 1rem 0;
 }
 
+.item-file-info, .item-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .item-file-info {
+  font-family: var(--font-serif);
   padding: 0;
   margin: 0.5rem 0;
   color: var(--color-secondary);
-  font-size: var(--font-size-mono-tiny);
-  font-style: italic;
+  font-size: var(--font-size-small);
 }
 
 .item-url {
@@ -110,10 +115,17 @@
 
 .item-body {
   padding: 0;
-  margin: 1rem 0 0 0;
+  margin: 1rem 0;
   font-family: var(--font-mono);
   color: var(--color-secondary);
   font-size: var(--font-size-mono-tiny);
+}
+
+.item-footer-note {
+  margin: 1rem 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-small);
+  color: var(--color-secondary);
 }
 
 .action-icons {
@@ -134,11 +146,14 @@
 <div class="item-view">
   <div class="item-path">
     <div class="path-group">
-      <span class="path-text">{{ item.store_path }}</span>
+      <span class="path-text">{{ item.store_path or item.external_path }}</span>
     </div>
     <div class="action-icons">
-      <i data-feather="copy" class="action-icon" onclick="copyPath(this)" data-path="{{ item.store_path }}"></i>
+      <i data-feather="copy" class="action-icon" onclick="copyDataValue(this)"
+         data-value="{{ item.store_path or item.external_path }}" title="Copy path"></i>
       {% if page_url %}
+      <i data-feather="link" class="action-icon" onclick="copyDataValue(this)"
+         data-value="{{ page_url }}" title="Copy link"></i>
       <a href="{{ page_url }}" target="_blank" rel="noopener noreferrer">
         <i data-feather="external-link" class="action-icon"></i>
       </a>
@@ -156,7 +171,9 @@
       </div>
     </div>
 
-    <h1 class="item-title">{{ item.title or "Untitled" }}</h1>
+    {% if item.title %}
+    <h1 class="item-title">{{ item.title }}</h1>
+    {% endif %}
 
     {% if item.url %}
     <div class="item-url">
@@ -168,7 +185,7 @@
     {% endif %}
 
     {% if file_info %}
-    <pre class="item-file-info">{{ file_info }}</pre>
+    <div class="item-file-info">{{ file_info }}</div>
     {% endif %}
 
 
@@ -179,7 +196,11 @@
     {% endif %}
 
     {% if body_text %}
-    <pre class="item-body">{{ body_text}}</pre>
+    <div class="item-body">{{ body_text }}</div>
+    {% endif %}
+
+    {% if footer_note %}
+    <div class="item-footer-note">{{ footer_note }}</div>
     {% endif %}
   </div>
 </div>
@@ -198,9 +219,9 @@ function copyText(element, text) {
   });
 }
 
-function copyPath(element) {
-  const path = element.getAttribute('data-path');
-  copyText(element, path);
+function copyDataValue(element) {
+  const value = element.getAttribute('data-value');
+  copyText(element, value);
 }
 
 // Initialize Feather icons

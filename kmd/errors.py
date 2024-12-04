@@ -86,6 +86,12 @@ class FileNotFound(InvalidInput, FileNotFoundError):
     pass
 
 
+class InvalidFilename(InvalidInput):
+    """Raised when a filename is invalid."""
+
+    pass
+
+
 class InvalidCommand(InvalidInput):
     """Raised when a command is not valid."""
 
@@ -112,7 +118,7 @@ class SetupError(SelfExplanatoryError):
 
 
 class SkippableError(SelfExplanatoryError):
-    """Errors that are skippable but shouldn't abort the entire operation."""
+    """Errors that are skippable and shouldn't abort the entire operation."""
 
     pass
 
@@ -137,12 +143,6 @@ class PreconditionFailure(ContentError):
 
 class FileFormatError(ContentError):
     """Raised when a file's content format is invalid."""
-
-    pass
-
-
-class InvalidFilename(ContentError):
-    """Raised when a filename is invalid."""
 
     pass
 
