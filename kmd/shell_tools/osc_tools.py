@@ -25,11 +25,12 @@ def terminal_supports_osc8() -> bool:
     return False
 
 
-def osc8_link_rich(uri: str, text: str, metadata_str: str = "", style: str | Style = "") -> Text:
-    """
-    Must use Text.from_ansi() for Rich to handle links correctly!
-    """
-    return Text.from_ansi(osc8_link(uri, text, metadata_str), style=style)
+# Constants for OSC control sequences
+OSC_START = "\x1b]"
+ST_CODE = "\x1b\\"  # String Terminator
+BEL_CODE = "\x07"  # Bell character
+
+OSC_HYPERLINK = "8"
 
 
 def osc8_link(uri: str, text: str, metadata_str: str = "") -> str:
@@ -46,10 +47,9 @@ def osc8_link(uri: str, text: str, metadata_str: str = "") -> str:
     :param text: The clickable text to display.
     :param metadata_str: Optional metadata between the semicolons.
     """
-    st_code = "\x1b\\"
     safe_uri = uri.replace(";", "%3B")  # Escape semicolons in the URL.
-    escape_start = f"\x1b]8;{metadata_str};{safe_uri}{st_code}"
-    escape_end = f"\x1b]8;;{st_code}"
+    escape_start = f"{OSC_START}{OSC_HYPERLINK};{metadata_str};{safe_uri}{ST_CODE}"
+    escape_end = f"{OSC_START}{OSC_HYPERLINK};;{ST_CODE}"
 
     return f"{escape_start}{text}{escape_end}"
 
@@ -65,3 +65,10 @@ def osc8_link_graceful(uri: str, text: str, id: str = "") -> str:
     else:
         # Fallback for non-supporting terminals.
         return f"{text} ({uri})"
+
+
+def osc8_link_rich(uri: str, text: str, metadata_str: str = "", style: str | Style = "") -> Text:
+    """
+    Must use Text.from_ansi() for Rich to handle links correctly!
+    """
+    return Text.from_ansi(osc8_link(uri, text, metadata_str), style=style)

@@ -11,7 +11,12 @@ from prompt_toolkit.key_binding import KeyBindings, merge_key_bindings
 
 from thefuzz import fuzz
 from xonsh.completers.completer import add_one_completer, RichCompletion
-from xonsh.completers.tools import CompleterResult, CompletionContext, contextual_completer
+from xonsh.completers.tools import (
+    CompleterResult,
+    CompletionContext,
+    contextual_completer,
+    non_exclusive_completer,
+)
 
 from kmd.commands.help_commands import HELP_COMMANDS
 from kmd.config.logger import get_logger
@@ -324,6 +329,7 @@ def completion_sort(completion: RichCompletion) -> Tuple[int, str]:
 
 
 @contextual_completer
+@non_exclusive_completer
 @log_calls(level="info", if_slower_than=SLOW_COMPLETION)
 def command_or_action_completer(context: CompletionContext) -> CompleterResult:
     """
@@ -338,6 +344,7 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
 
 
 @contextual_completer
+@non_exclusive_completer
 @log_calls(level="info", if_slower_than=SLOW_COMPLETION)
 def item_completer(context: CompletionContext) -> CompleterResult:
     """
@@ -416,6 +423,7 @@ def _param_completions(params: List[Param], prefix: str):
 
 
 @contextual_completer
+@non_exclusive_completer
 @log_calls(level="info", if_slower_than=SLOW_COMPLETION)
 def options_completer(context: CompletionContext) -> CompleterResult:
     """

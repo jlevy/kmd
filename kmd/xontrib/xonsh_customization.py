@@ -4,11 +4,14 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, TypeVar
 
+from xonsh.built_ins import XSH
+from xonsh.prompt.base import PromptFields
+
 from kmd.action_defs import reload_all_actions
 from kmd.commands import help_commands
 from kmd.commands.command_registry import all_commands
 from kmd.config.logger import get_logger
-from kmd.config.setup import log_api_key_setup, setup
+from kmd.config.setup import print_api_key_setup, setup
 from kmd.config.text_styles import PROMPT_COLOR_NORMAL, PROMPT_COLOR_WARN, PROMPT_MAIN
 from kmd.exec.history import wrap_with_history
 from kmd.model.actions_model import Action
@@ -41,6 +44,10 @@ def get_env(name: str) -> Any:
 
 def set_env(name: str, value: Any) -> None:
     __xonsh__.env[name] = value  # type: ignore  # noqa: F821
+
+
+def unset_env(name: str) -> None:
+    del __xonsh__.env[name]  # type: ignore  # noqa: F821
 
 
 def set_alias(name: str, value: str | Callable) -> None:
@@ -173,19 +180,28 @@ def _initialize_commands():
         _load_xonsh_actions()
 
 
-def _kmd_xonsh_prompt():
+# Xonsh default prompt for reference:
+# dp = (
+#     "{YELLOW}{env_name}{RESET}"
+#     "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} "
+#     "{cwd}{branch_color}{curr_branch: {}}{RESET} "
+#     "{RED}{last_return_code_if_nonzero:[{BOLD_INTENSE_RED}{}{RED}] }{RESET}"
+#     "{BOLD_BLUE}{prompt_end}{RESET} "
+# )
+
+
+def _kmd_workspace_str():
     # Could do this faster with current_workspace_info() but actually it's nicer to load
     # and log info about the whole workspace after a cd so we do that.
     ws = current_workspace()
     ws_name = ws.name
     is_sandbox = ws.is_sandbox
 
-    # Workspace name, colored differently if sandbox.
-    workspace_str = (
-        f"{{{PROMPT_COLOR_NORMAL}}}" + ws_name
-        if ws_name and not is_sandbox
-        else f"{{{PROMPT_COLOR_WARN}}}(sandbox)"
-    )
+    # Workspace name, different format if sandbox.
+    if ws_name and not is_sandbox:
+        workspace_str = ws_name
+    else:
+        workspace_str = "(sandbox)"
 
     # Add current directory to workspace name if necessary to clarify.
     cwd = Path(".").resolve()
@@ -196,13 +212,34 @@ def _kmd_xonsh_prompt():
     elif cwd.name != ws_name:
         workspace_str = f"{workspace_str} {cwd.name}"
 
-    return f"\n{workspace_str} {{{PROMPT_COLOR_NORMAL}}}{PROMPT_MAIN}{{RESET}} "
+    return workspace_str
+
+
+def _kmd_xonsh_prompt():
+    workspace_str = _kmd_workspace_str()
+    # Apply colors to workspace string based on sandbox status
+    ws = current_workspace()
+    if ws.name and not ws.is_sandbox:
+        colored_workspace_str = f"{{{PROMPT_COLOR_NORMAL}}}{workspace_str}"
+    else:
+        colored_workspace_str = f"{{{PROMPT_COLOR_WARN}}}{workspace_str}"
+
+    colored_workspace_str = f"{colored_workspace_str}{{RESET}}"
+    return f"\n{colored_workspace_str} {{{PROMPT_COLOR_NORMAL}}}{PROMPT_MAIN}{{RESET}} "
 
 
 def _shell_setup():
     from kmd.xontrib.xonsh_completers import add_key_bindings
 
+    # Set up a prompt field for the workspace string.
+    fields = PromptFields(XSH)
+    fields["workspace_str"] = _kmd_workspace_str
+    set_env("PROMPT_FIELDS", fields)
+
+    # Set up the prompt and title template.
     set_env("PROMPT", _kmd_xonsh_prompt)
+    set_env("TITLE", "kmd - {workspace_str}")
+
     add_key_bindings()
 
 
@@ -217,15 +254,16 @@ def customize_xonsh():
     _initialize_commands()
 
     if _is_interactive:
-        log_api_key_setup(once=False)
 
         check_terminal_features().print_term_info()
+
+        print_api_key_setup(once=False)
 
         if os.environ.get("TERM_PROGRAM") == "Kyrm":
             start_server()
             enable_local_urls(True)
         else:
-            log.message(
+            cprint(
                 "If your terminal supports it, you may use `start_server` to enable local links."
             )
 
