@@ -7,7 +7,7 @@ While not required, these tools can make using Kmd easier or more fun.
 You can use any favorite terminal to run Kmd.
 
 However, you can get a much better terminal experience if you use one with more advanced
-additional features, such as [OSC8 link](https://github.com/Alhadis/OSC8-Adoption) support
+additional features, such as [OSC 8 link](https://github.com/Alhadis/OSC8-Adoption) support
 and [Sixel](https://www.arewesixelyet.com/) graphics.
 
 I tried half a dozen different popular terminals on Mac
@@ -22,7 +22,7 @@ still reading, I have a request.
 So alongside Kmd, I've begun to build a new terminal app, **Kyrm**, that has the features we
 would want in a modern command line, such as clickable links and commands, tooltips, and
 image support.
-Kmd also takes advantage of this support by embedding OSC8 links.
+Kmd also takes advantage of this support by embedding OSC 8 links.
 It is *so* much nicer to use.
 I'd like feedback so please [message me](https://twitter.com/ojoshe) if you'd like to try it
 out an early dev version!

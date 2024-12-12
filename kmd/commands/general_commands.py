@@ -152,7 +152,7 @@ def log_level(level: Optional[str] = None, console: bool = False, file: bool = F
 def start_server() -> None:
     """
     Start the kmd local server. This exposes local info on files and commands
-    so they can be displayed in your terminal, if it supports OSC8 links.
+    so they can be displayed in your terminal, if it supports OSC 8 links.
     Note this is most useful for the Kyrm terminal, which shows links as
     tooltips.
     """

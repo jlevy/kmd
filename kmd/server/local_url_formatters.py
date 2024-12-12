@@ -6,13 +6,12 @@ from typing import Optional
 from rich.text import Text
 
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import COLOR_HINT, COLOR_LINK
+from kmd.config.text_styles import COLOR_HINT
 from kmd.errors import InvalidState
 from kmd.model.args_model import fmt_loc
 
 from kmd.model.paths_model import StorePath
-from kmd.server.rich_terminal_codes import RichUri
-from kmd.shell_tools.osc_tools import osc8_link_rich
+from kmd.shell.kyrm_codes import Kri, Link
 from kmd.util.atomic import AtomicVar
 from kmd.workspaces.workspaces import current_workspace
 
@@ -57,12 +56,12 @@ class PlaintextFormatter(LinkFormatter):
 
 class DefaultLinkFormatter(PlaintextFormatter):
     """
-    A formatter that adds OSC8 links to the local server.
+    A formatter that adds OSC 8 links to the local server.
     """
 
     def tooltip_link(self, text: str, tooltip: Optional[str] = None) -> Text:
         if tooltip:
-            return osc8_link_rich(RichUri.tooltip(tooltip).uri_str, text)
+            return Link(kri=Kri.tooltip(tooltip), link_text=text).as_rich()
         else:
             return Text(text)
 
@@ -70,8 +69,7 @@ class DefaultLinkFormatter(PlaintextFormatter):
         from kmd.server.server_routes import local_url
 
         url = local_url.view_file(path)
-        link = osc8_link_rich(url, link_text)
-        return link
+        return Link(kri=Kri.from_url(url), link_text=link_text).as_rich()
 
     def command_link(self, command_str: str) -> Text:
         from kmd.server.server_routes import local_url
@@ -79,7 +77,7 @@ class DefaultLinkFormatter(PlaintextFormatter):
         url = local_url.explain(text=command_str)
         return Text.assemble(
             Text("`", style=COLOR_HINT),
-            osc8_link_rich(url, command_str, style=COLOR_LINK),
+            Link(kri=Kri.from_url(url), link_text=command_str).as_rich(),
             Text("`", style=COLOR_HINT),
         )
 
@@ -101,8 +99,7 @@ class WorkspaceLinkFormatter(DefaultLinkFormatter):
             from kmd.server.server_routes import local_url
 
             url = local_url.view_item(store_path=path, ws_name=self.ws_name)
-            link = osc8_link_rich(url, link_text)
-            return link
+            return Link(kri=Kri.from_url(url), link_text=link_text).as_rich()
         else:
             return super().path_link(path, link_text)
 

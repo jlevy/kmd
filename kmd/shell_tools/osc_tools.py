@@ -33,6 +33,13 @@ BEL_CODE = "\x07"  # Bell character
 OSC_HYPERLINK = "8"
 
 
+def osc_code(code: str, data: str) -> str:
+    """
+    Return an extended OSC code.
+    """
+    return f"{OSC_START}{code};{data}{ST_CODE}"
+
+
 def osc8_link(uri: str, text: str, metadata_str: str = "") -> str:
     r"""
     Return a string with the OSC 8 hyperlink escape sequence.

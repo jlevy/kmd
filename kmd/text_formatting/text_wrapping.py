@@ -8,7 +8,7 @@ from kmd.util.ansi_cell_len import ansi_cell_len
 wrap_length_fn = ansi_cell_len
 """
 Length function to use for wrapping.
-We could use character length, but ansi_cell_len is more accurate for OSC8 links.
+We could use character length, but ansi_cell_len is more accurate for OSC 8 links.
 """
 
 

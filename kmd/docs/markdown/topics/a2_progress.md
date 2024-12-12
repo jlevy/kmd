@@ -57,7 +57,7 @@ See more motivation in the philosophy section below.
   - Sixel graphics support (see images right in the terminal)
 
   - A local server for serving information on files as web pages that can be accessed as
-    OSC8 links
+    OSC 8 links
 
   - Sadly, we may have mind-boggling AI tools, but Terminals are still incredibly archaic
     and don't support these features well (more on this below) but I have a new terminal,
