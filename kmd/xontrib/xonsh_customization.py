@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, TypeVar
 
 from xonsh.built_ins import XSH
 from xonsh.prompt.base import PromptFields
+from xonsh.xontribs import xontribs_load
 
 from kmd.action_defs import reload_all_actions
 from kmd.commands import help_commands
@@ -241,6 +242,9 @@ def _shell_setup():
     set_env("TITLE", "kmd - {workspace_str}")
 
     add_key_bindings()
+
+    # Another convenience xontrib (fnm, since nvm doesn't work in xonsh).
+    xontribs_load(["kmd.xontrib.fnm"], full_module=True)
 
 
 def customize_xonsh():
