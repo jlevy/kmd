@@ -3,23 +3,14 @@ from typing import cast, List, Optional, Sequence, Tuple
 
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, MissingInput
-from kmd.model.args_model import CommandArg, Locator
+from kmd.model.args_model import CommandArg, Locator, UnresolvedLocator
 from kmd.model.items_model import ItemType
-from kmd.model.paths_model import resolve_at_path, StorePath
+from kmd.model.paths_model import parse_path_spec, StorePath, UnresolvedPath
+from kmd.util.log_calls import log_calls
 from kmd.util.url import is_url, Url
 from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)
-
-
-# "Resolved" means that the argument has been converted to a known argument
-# type, like Path, StorePath, or Url.
-# "Unresolved" means it is a string or a resolved type, so that resolving an
-# argument of a string or any argument-compatible type is idempotent.
-
-UnresolvedPath = str | Path | StorePath
-
-UnresolvedLocator = str | Locator
 
 
 def resolve_locator_arg(locator_or_str: UnresolvedLocator) -> Locator:
@@ -35,6 +26,7 @@ def resolve_locator_arg(locator_or_str: UnresolvedLocator) -> Locator:
         return resolve_path_arg(locator_or_str)
 
 
+@log_calls(level="info", log_return_only=True)
 def resolve_path_arg(path_str: UnresolvedPath) -> Path | StorePath:
     """
     Resolve a string to a Path or if it is within the current workspace,
@@ -43,7 +35,7 @@ def resolve_path_arg(path_str: UnresolvedPath) -> Path | StorePath:
     if isinstance(path_str, str) and is_url(path_str):
         raise InvalidInput(f"Expected a path but got a URL: {path_str}")
 
-    path = resolve_at_path(path_str)
+    path = parse_path_spec(path_str)
     if path.is_absolute():
         return path
     elif store_path := current_workspace().resolve_path(path):

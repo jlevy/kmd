@@ -238,6 +238,16 @@ class StorePath(BasePath):
         return hash((super().__str__(), self.store_name))
 
 
+UnresolvedPath = str | Path | StorePath
+"""
+"Resolved" means that the argument has been converted to a known argument
+type, like Path, StorePath, or Url.
+"Unresolved" means it is a string or a resolved type.
+Resolving an unresolved argument of a string or any argument-compatible type
+is idempotent.
+"""
+
+
 def fmt_store_path(store_path: str | Path | StorePath) -> str:
     """
     Format a store path as a string.
@@ -245,7 +255,7 @@ def fmt_store_path(store_path: str | Path | StorePath) -> str:
     return StorePath(store_path).display_str()
 
 
-def resolve_at_path(path: str | Path | StorePath) -> Path | StorePath:
+def parse_path_spec(path: str | Path | StorePath) -> Path | StorePath:
     """
     Resolve any string into a path, ensuring that a path that includes an @ prefix
     becomes a StorePath. Leaves already-resolved StorePaths and Paths unchanged.

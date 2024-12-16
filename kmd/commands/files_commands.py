@@ -24,7 +24,7 @@ from kmd.file_tools.ignore_files import ignore_none
 from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import detect_file_format, Format, join_filename, split_filename
 from kmd.model.items_model import Item, ItemType
-from kmd.model.paths_model import resolve_at_path, StorePath
+from kmd.model.paths_model import parse_path_spec, StorePath
 from kmd.model.shell_model import ShellResult
 from kmd.server.local_url_formatters import local_url_formatter
 from kmd.shell.shell_output import console_pager, cprint, print_status, print_style, Style, Wrap
@@ -222,6 +222,7 @@ def file_info(
     if not size_summary and not format:
         size_summary = format = True
 
+    # FIXME: Ensure this yields absolute paths for sandbox store paths
     input_paths = assemble_path_args(*paths)
     cprint()
     for input_path in input_paths:
@@ -384,7 +385,7 @@ def files(
     if len(paths) == 0:
         paths_to_show = [Path(".")]
     else:
-        paths_to_show = [resolve_at_path(path) for path in paths]
+        paths_to_show = [parse_path_spec(path) for path in paths]
 
     if brief or recent:
         if show_first <= 0:

@@ -5,12 +5,15 @@ from dataclasses import dataclass
 from typing import Any, Callable, cast, Dict, List, Literal, Optional, TypeVar
 
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import EMOJI_CALL_BEGIN, EMOJI_CALL_END, EMOJI_TIMING
 from kmd.util.strif import abbreviate_str
 
 log = get_logger(__name__)
 
-LogLevelStr = Literal["debug", "info", "warning", "message", "error"]
+EMOJI_CALL_BEGIN = "≫"
+EMOJI_CALL_END = "≪"
+EMOJI_TIMING = "⏱"
+
+LogLevelStr = Literal["debug", "info", "warning", "error", "message"]
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -47,6 +50,7 @@ DEFAULT_TRUNCATE = 200
 def balance_quotes(s: str) -> str:
     """
     Ensure balanced single and double quotes in a string, adding any missing quotes.
+    This is valuable especially for log file syntax highlighting.
     """
     stack: List[str] = []
     for char in s:
@@ -105,7 +109,8 @@ def func_and_module_name(func: Callable):
 def log_calls(
     level: LogLevelStr = "info",
     show_args: bool = True,
-    show_return: bool = True,
+    show_return_value: bool = True,
+    log_return_only: bool = False,
     if_slower_than: float = 0.0,
     truncate_length: Optional[int] = DEFAULT_TRUNCATE,
     repr_func: Callable = friendly_str,
@@ -130,17 +135,26 @@ def log_calls(
 
     log_func = getattr(log, level.lower())
 
-    show_call = True
+    show_calls = True
+    show_returns = True
     if if_slower_than > 0.0:
-        show_call = False
+        show_calls = False
+        show_returns = False
+
+    if log_return_only:
+        show_calls = False
+        show_returns = True
 
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             func_name = func_and_module_name(func)
 
-            if show_call:
-                log_func(f"{EMOJI_CALL_BEGIN} Call: {format_call(func_name, args, kwargs)}")
+            # Capture args now in case they are mutated by the function.
+            call_str = format_call(func_name, args, kwargs)
+
+            if show_calls:
+                log_func(f"{EMOJI_CALL_BEGIN} Call: {call_str}")
 
             start_time = time.time()
 
@@ -149,20 +163,23 @@ def log_calls(
             end_time = time.time()
             elapsed = end_time - start_time
 
-            if show_call:
-                call_msg = (
-                    f"{EMOJI_CALL_END} Call done: {func_name}() in {format_duration(elapsed)}"
-                )
-                if show_return:
-                    log_func("%s: %s", call_msg, to_str(result))
-                else:
-                    log_func("%s", call_msg)
-            else:
-                if elapsed > if_slower_than:
-                    call_msg = (
-                        f"{EMOJI_TIMING} Call to {func_name} took {format_duration(elapsed)}."
+            if show_returns:
+                if show_calls:
+                    # If we already logged the call, log the return in a corresponding style.
+                    return_msg = (
+                        f"{EMOJI_CALL_END} Call done: {func_name}() took {format_duration(elapsed)}"
                     )
-                    log_func("%s", call_msg)
+                else:
+                    return_msg = (
+                        f"{EMOJI_TIMING} Call to {call_str} took {format_duration(elapsed)}"
+                    )
+                if show_return_value:
+                    log_func("%s: %s", return_msg, to_str(result))
+                else:
+                    log_func("%s", return_msg)
+            elif elapsed > if_slower_than:
+                return_msg = f"{EMOJI_TIMING} Call to {call_str} took {format_duration(elapsed)}"
+                log_func("%s", return_msg)
 
             return result
 

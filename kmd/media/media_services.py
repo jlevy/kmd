@@ -70,7 +70,7 @@ def get_media_id(url: Url | None) -> Optional[str]:
     return None
 
 
-@log_calls(level="info", show_return=True)
+@log_calls(level="info")
 def get_media_metadata(url: Url) -> Optional[MediaMetadata]:
     """
     Return metadata for the media at the given URL.

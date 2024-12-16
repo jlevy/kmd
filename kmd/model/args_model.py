@@ -16,6 +16,9 @@ A reference to an external resource or an item in the store.
 The resolved form of the most common type of input argument to commands and actions.
 """
 
+UnresolvedLocator = str | Locator
+
+
 CommandArg = Locator | str
 """
 An argument to a command or action. Will be formatted as a string but
