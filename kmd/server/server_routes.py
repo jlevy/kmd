@@ -7,15 +7,16 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from kmd.config import colors
-from kmd.config.logger import get_logger
+from kmd.config.logger import get_logger, record_console
 from kmd.config.settings import global_settings
 from kmd.errors import InvalidFilename
 from kmd.file_storage.file_store import FileStore
 from kmd.help.command_help import explain_command
 from kmd.model.items_model import Item
 from kmd.model.paths_model import StorePath
-from kmd.shell.shell_output import output_as_string, Wrap
+from kmd.shell.shell_output import Wrap
 from kmd.shell.shell_printing import print_file_info
+from kmd.util.strif import abbreviate_str
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
 
@@ -110,6 +111,7 @@ def view_item(request: Request, store_path: str, ws_name: str):
 
 @router.api_route(Route.explain, methods=["GET"])
 def explain(text: str):
+    # FIXME: Use HTML.
     help_str = explain_command(text, use_assistant=True)
     if not help_str:
         raise HTTPException(status_code=404, detail="Explanation not found")
@@ -197,13 +199,16 @@ def _serve_item(
         if request.method == "HEAD":
             return HTMLResponse(status_code=200, headers={"Content-Type": "text/html"})
 
-        file_info_str = output_as_string(
-            lambda: print_file_info(
+        with record_console() as console:
+            print_file_info(
                 Path(not_none(item.store_path or item.external_path)),
                 show_size_details=True,
                 show_format=True,
                 text_wrap=Wrap.WRAP,
             )
+        file_info_html = console.export_text()  # FIXME: Use HTML
+        log.info(
+            "File info html: length %s: %s", len(file_info_html), abbreviate_str(file_info_html)
         )
 
         return HTMLResponse(
@@ -216,7 +221,7 @@ def _serve_item(
                         {
                             "item": item,
                             "page_url": page_url,
-                            "file_info": file_info_str,
+                            "file_info_html": file_info_html,
                             "body_text": body_text,
                             "footer_note": footer_note,
                         },

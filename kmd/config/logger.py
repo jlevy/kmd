@@ -1,12 +1,17 @@
 import logging
 import os
 import threading
+from collections.abc import Generator
+from contextlib import contextmanager
+from dataclasses import dataclass
 from functools import cache
 from logging import ERROR, Formatter, INFO
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, IO, Optional
 
+import rich
 from rich import reconfigure
+from rich._null_file import NULL_FILE
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
@@ -48,21 +53,60 @@ def log_objects_dir() -> Path:
     return log_dir() / LOG_OBJECTS_NAME
 
 
+@dataclass
+class TlContext(threading.local):
+    console: Optional[Console] = None
+
+
+_tl_context = TlContext()
+"""
+Thread-local context override for Rich console.
+"""
+
+
 @cache
 def get_highlighter():
     return KmdHighlighter()
 
 
-# Rich console theme setup.
-_custom_theme = Theme(RICH_STYLES)
-_console = Console(theme=_custom_theme, highlighter=get_highlighter())
-reconfigure(theme=_custom_theme)
+@cache
+def get_theme():
+    return Theme(RICH_STYLES)
 
 
-def get_console():
-    """A globally shared custom console for logging and output for interactive use."""
+reconfigure(theme=get_theme(), highlighter=get_highlighter())
 
-    return _console
+
+def get_console() -> Console:
+    """
+    Return the Rich global console, unless it is overridden by a
+    thread-local console.
+    """
+    return _tl_context.console or rich.get_console()
+
+
+def new_console(file: Optional[IO[str]], record: bool) -> Console:
+    """
+    Create a new console with the our theme and highlighter.
+    Use `get_console()` for the global console.
+    """
+    return Console(theme=get_theme(), highlighter=get_highlighter(), file=file, record=record)
+
+
+@contextmanager
+def record_console() -> Generator[Console, None, None]:
+    """
+    Context manager to temporarily override the global console with a thread-local
+    console that records output.
+    """
+    old_console = _tl_context.console
+    console = new_console(file=NULL_FILE, record=True)
+    _tl_context.console = console
+
+    try:
+        yield console
+    finally:
+        _tl_context.console = old_console
 
 
 # TODO: Need this to enforce flushing of stream?
@@ -78,7 +122,8 @@ global _console_handler
 def logging_setup():
     """
     Set up or reset logging setup. Call at initial run and again if log directory changes.
-    Replaces all previous loggers and handlers. Can be called to reset with different settings.
+    Replaces all previous loggers and handlers. Can be called to reset with different
+    settings.
     """
 
     kmd.config.suppress_warnings.filter_warnings()
@@ -92,9 +137,18 @@ def logging_setup():
     _file_handler.setLevel(global_settings().file_log_level.value)
     _file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
 
+    class PrefixedRichHandler(RichHandler):
+        # Add an extra
+        def emit(self, record):
+            record.msg = EMOJI_MSG_INDENT + record.msg
+            super().emit(record)
+
     global _console_handler
     _console_handler = PrefixedRichHandler(
-        console=_console,
+        # For now we use the fixed global console for logging.
+        # In the ruture we may want to add a way to have thread-local capture
+        # of all system logs.
+        console=rich.get_console(),
         level=global_settings().console_log_level.value,
         show_time=False,
         show_path=False,
@@ -227,10 +281,3 @@ def reset_logging(log_root: Optional[Path] = None):
             _log_root = log_root
 
         logging_setup()
-
-
-class PrefixedRichHandler(RichHandler):
-    # Add an extra
-    def emit(self, record):
-        record.msg = EMOJI_MSG_INDENT + record.msg
-        super().emit(record)

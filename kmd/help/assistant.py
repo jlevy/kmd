@@ -5,7 +5,7 @@ from typing import Callable, Dict, List, Optional
 
 from pydantic import ValidationError
 
-from kmd.config.logger import get_logger
+from kmd.config.logger import get_logger, record_console
 from kmd.config.settings import global_settings
 from kmd.docs import api_docs, assistant_instructions
 from kmd.errors import InvalidState, KmdRuntimeError
@@ -26,9 +26,8 @@ from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message
 from kmd.model.script_model import Script
 from kmd.shell.assistant_output import print_assistant_response
-from kmd.shell.shell_output import cprint, output_as_string
+from kmd.shell.shell_output import cprint
 from kmd.text_formatting.markdown_normalization import normalize_markdown
-from kmd.util.format_utils import fmt_paras
 from kmd.util.log_calls import log_calls
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none
@@ -42,20 +41,26 @@ log = get_logger(__name__)
 def assist_preamble(skip_api: bool = False, base_actions_only: bool = False) -> str:
     from kmd.help.help_page import print_manual  # Avoid circular imports.
 
-    return fmt_paras(
-        str(assistant_instructions),
-        output_as_string(lambda: print_manual(base_actions_only)),
-        None if skip_api else api_docs,
-    )
+    with record_console() as console:
+        cprint(str(assistant_instructions))
+        print_manual(base_actions_only)
+        if not skip_api:
+            cprint(api_docs)
+
+    preamble = console.export_text()
+    log.info("Assistant preamble: %s chars (%s lines)", len(preamble), preamble.count("\n"))
+    return preamble
 
 
 def _insert_output(func: Callable, name: str) -> str:
-    try:
-        output = output_as_string(func)
-    except (KmdRuntimeError, ValueError, FileNotFoundError) as e:
-        log.info("Skipping assistant input for %s: %s", name, e)
-        output = f"(No {name} available)"
+    with record_console() as console:
+        try:
+            func()
+        except (KmdRuntimeError, ValueError, FileNotFoundError) as e:
+            log.info("Skipping assistant input for %s: %s", name, e)
+            output = f"(No {name} available)"
 
+    output = console.export_text()
     log.info("Including %s lines of output to assistant for %s", output.count("\n"), name)
 
     return f"(output from command`{name}`:)\n\n{output}"
@@ -114,7 +119,11 @@ def assist_current_state() -> Message:
         {_insert_output(lambda: files(brief=True), "files --brief")}
         """
     )
-
+    log.info(
+        "Assistant current state message: %s chars (%s lines)",
+        len(current_state_message),
+        current_state_message.count("\n"),
+    )
     return current_state_message
 
 

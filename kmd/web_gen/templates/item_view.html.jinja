@@ -184,8 +184,8 @@
     </div>
     {% endif %}
 
-    {% if file_info %}
-    <div class="item-file-info">{{ file_info }}</div>
+    {% if file_info_html %}
+    <div class="item-file-info">{{ file_info_html | safe }}</div>
     {% endif %}
 
 

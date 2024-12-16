@@ -83,11 +83,11 @@ def why_kmd() -> None:
     """
     Show help on why Kmd was created.
     """
-    from kmd.docs import motivation, what_is_kmd
+    from kmd.docs import philosophy_of_kmd, what_is_kmd
 
     with console_pager():
         print_markdown(what_is_kmd)
-        print_markdown(motivation)
+        print_markdown(philosophy_of_kmd)
         print_see_also(["help", "getting_started", "faq", "commands", "actions"])
 
 

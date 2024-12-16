@@ -99,7 +99,7 @@ def view_file_native(
 ):
     """
     Open a file or URL in the console or a native app. If `view_mode` is auto,
-    automaticallyd determine whether to use console, web browser, or the user's
+    automatically determine whether to use console, web browser, or the user's
     preferred native application. For images, also tries terminal-based image
     display.
     """

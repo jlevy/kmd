@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from kmd.action_defs import look_up_action
 from kmd.commands.command_registry import CommandFunction, look_up_command
+from kmd.config.logger import record_console
 from kmd.errors import InvalidInput
 from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.help.assistant import assist_preamble, unstructured_assistance
@@ -11,13 +12,7 @@ from kmd.model.actions_model import Action
 from kmd.model.messages_model import Message
 from kmd.model.params_model import Param, RUNTIME_ACTION_PARAMS
 from kmd.model.preconditions_model import Precondition
-from kmd.shell.shell_output import (
-    cprint,
-    format_name_and_description,
-    output_as_string,
-    print_help,
-    Wrap,
-)
+from kmd.shell.shell_output import cprint, format_name_and_description, print_help, Wrap
 from kmd.util.format_utils import DEFAULT_INDENT
 
 
@@ -129,14 +124,18 @@ def explain_command(text: str, use_assistant: bool = False) -> Optional[str]:
     help_str = None
     try:
         command = look_up_command(text)
-        help_str = output_as_string(lambda: print_command_function_help(command))
+        with record_console() as console:
+            print_command_function_help(command)
+        help_str = console.export_text()
     except InvalidInput:
         pass
 
     if not help_str:
         try:
             action = look_up_action(text)
-            help_str = output_as_string(lambda: print_action_help(action))
+            with record_console() as console:
+                print_action_help(action)
+            help_str = console.export_text()
         except InvalidInput:
             pass
 

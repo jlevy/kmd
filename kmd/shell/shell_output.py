@@ -2,13 +2,12 @@
 Output to the shell UI. These are for user interaction, not logging.
 """
 
-import sys
 import textwrap
 import threading
 from contextlib import contextmanager
+from dataclasses import dataclass
 from enum import auto, Enum
-from io import StringIO
-from typing import Any, Callable, List, Optional
+from typing import Callable, List, Optional
 
 import rich
 import rich.style
@@ -181,36 +180,15 @@ def format_success_or_failure(
         return emoji
 
 
-# Allow output stream to be redirected if desired.
-_output_context = threading.local()
-_output_context.stream = None
-_output_context.rich_console = True
+@dataclass
+class TlPrintContext(threading.local):
+    prefix: str = ""
 
 
-@contextmanager
-def redirect_output(new_output):
-    old_output = getattr(_output_context, "stream", sys.stdout)
-    _output_context.stream = new_output
-    _output_context.rich_console = False
-    try:
-        yield
-    finally:
-        _output_context.stream = old_output
-        _output_context.rich_console = True
-
-
-_thread_local = threading.local()
-
-
-def get_cprint_prefix() -> str:
-    if not hasattr(_thread_local, "output_prefix"):
-        _thread_local.output_prefix = ""
-
-    return _thread_local.output_prefix
-
-
-def set_cprint_prefix(prefix: str):
-    _thread_local.output_prefix = prefix
+_tl_print_context = TlPrintContext()
+"""
+Thread-local print settings.
+"""
 
 
 class Style(Enum):
@@ -224,26 +202,22 @@ class Style(Enum):
 def print_style(style: Style, color: Optional[str] = None):
     """
     Unified context manager for print styles.
-
-    Args:
-        style: Style enum indicating the desired style (BOX or PAD)
-        color: Optional color for box style
     """
     if style == Style.INDENT:
-        original_prefix = get_cprint_prefix()
-        set_cprint_prefix(DEFAULT_INDENT)
+        original_prefix = _tl_print_context.prefix
+        _tl_print_context.prefix = DEFAULT_INDENT
         try:
             yield
         finally:
-            _thread_local.output_prefix = original_prefix
+            _tl_print_context.prefix = original_prefix
     elif style == Style.BOX:
         cprint(BOX_TOP, color=color)
-        original_prefix = get_cprint_prefix()
-        set_cprint_prefix(BOX_PREFIX)
+        original_prefix = _tl_print_context.prefix
+        _tl_print_context.prefix = BOX_PREFIX
         try:
             yield
         finally:
-            _thread_local.output_prefix = original_prefix
+            _tl_print_context.prefix = original_prefix
             cprint(BOX_BOTTOM, color=color)
     elif style == Style.PAD:
         cprint()
@@ -257,31 +231,22 @@ def print_style(style: Style, color: Optional[str] = None):
 
 
 @contextmanager
-def console_pager(use_pager: Optional[bool] = None):
+def console_pager(use_pager: bool = True):
     """
-    Use Rich pager if requested, or detect if it's applicable.
+    Use a Rich pager, if requested and applicable. Otherwise does nothing.
     """
-    if _output_context.rich_console and use_pager is not False:
-        with get_console().pager(styles=True):
+    console = get_console()
+    if console.is_interactive and use_pager:
+        with console.pager(styles=True):
             yield
     else:
         yield
 
 
-def output_as_string(func: Callable, *args: Any, **kwargs: Any) -> str:
-    """
-    Collect output printed by the given function as a string.
-    """
-    buffer = StringIO()
-    with redirect_output(buffer):
-        func(*args, **kwargs)
-    return buffer.getvalue()
-
-
 null_style = rich.style.Style.null()
 
 
-def rprint(
+def rich_print(
     *args: str | Text | Markdown,
     width: Optional[int] = None,
     indent: str = "",
@@ -289,27 +254,20 @@ def rprint(
     **kwargs,
 ):
     """
-    Print to global console, unless output stream is redirected.
-
-    With `raw` True, we bypass rich formatting entirely.
+    Print to the Rich console, either the global console or a thread-local
+    override, if one is active. With `raw` true, we bypass rich formatting
+    entirely and simply write to the console stream.
     """
-
-    global console
-    stream = getattr(_output_context, "stream", None)
-
+    console = get_console()
     if raw:
         # TODO: Indent not supported in raw mode.
         text = " ".join(str(arg) for arg in args)
         end = kwargs.get("end", "\n")
-        if stream:
-            stream.write(text)
-            stream.write(end)
-            stream.flush()
-        else:
-            console._write_buffer()  # Flush any pending rich content first.
-            console.file.write(text)
-            console.file.write(end)
-            console.file.flush()
+
+        console._write_buffer()  # Flush any pending rich content first.
+        console.file.write(text)
+        console.file.write(end)
+        console.file.flush()
     else:
         if len(args) == 0:
             renderable = ""
@@ -321,10 +279,7 @@ def rprint(
         if indent:
             renderable = Indent(renderable, indent=indent)
 
-        if stream:
-            rich.print(renderable, **kwargs, file=stream)
-        else:
-            console.print(renderable, width=width, **kwargs)
+        console.print(renderable, width=width, **kwargs)
 
 
 def cprint(
@@ -339,11 +294,12 @@ def cprint(
     raw: bool = False,
 ):
     """
-    Main way to print to the shell. Wraps `rprint` with all our formatting options.
+    Main way to print to the shell. Wraps `rprint` with our additional
+    formatting options for text fill and prefix.
     """
     empty_indent = extra_indent.strip()
 
-    tl_prefix = get_cprint_prefix()
+    tl_prefix = _tl_print_context.prefix
     if tl_prefix:
         extra_indent = tl_prefix + extra_indent
 
@@ -364,26 +320,27 @@ def cprint(
                     extra_indent=extra_indent,
                     empty_indent=empty_indent,
                 )
-                rprint(
+                rich_print(
                     Text(filled_text, color),
                     end=end,
                     width=width,
                     raw=raw,
                 )
             elif extra_indent:
-                rprint(Text(extra_indent, style=null_style), end=end, raw=raw)
+                rich_print(Text(extra_indent, style=null_style), end=end, raw=raw)
         else:
-            rprint(message, end=end, width=width, indent=extra_indent)
+            rich_print(message, end=end, width=width, indent=extra_indent)
     else:
-        rprint(Text(empty_indent, style=null_style))
+        rich_print(Text(empty_indent, style=null_style))
 
 
 log = get_logger(__name__)
 
 
-def print_markdown(doc_str: str, extra_indent: str = "", rich_markdown_display: bool = True):
+def print_markdown(doc_str: str, extra_indent: str = "", enable_markdown: bool = True):
     doc_str = str(doc_str)  # Convenience for lazy objects.
-    if rich_markdown_display and _output_context.rich_console:
+
+    if enable_markdown:
         doc = Markdown(doc_str, justify="left")
     else:
         doc = doc_str
@@ -396,13 +353,13 @@ def print_hrule(color: Optional[str] = None):
     Print a horizontal rule.
     """
     rule = HRULE
-    tl_prefix = get_cprint_prefix()
+    tl_prefix = _tl_print_context.prefix
     if tl_prefix:
         if tl_prefix.startswith(VRULE_CHAR):
             rule = MID_CORNER + rule[len(VRULE_CHAR) :]
         else:
             rule = tl_prefix + rule[len(tl_prefix) :]
-    rprint(rule, style=color)
+    rich_print(rule, style=color)
 
 
 def print_selection(
