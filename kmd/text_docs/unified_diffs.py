@@ -1,5 +1,6 @@
 import difflib
 from io import BytesIO
+from pathlib import Path
 from typing import Optional
 
 from patch_ng import PatchSet
@@ -20,6 +21,10 @@ log = get_logger(__name__)
 
 @dataclass(frozen=True)
 class UnifiedDiff:
+    """
+    A unified diff along with names of the before and after content and a diffstat summary.
+    """
+
     from_name: str
     to_name: str
     patch_text: str
@@ -55,6 +60,9 @@ def unified_diff(
     from_name: str = "before",
     to_name: str = "after",
 ) -> UnifiedDiff:
+    """
+    Generate a unified diff between two strings.
+    """
     lines1 = from_content.splitlines() if from_content else []
     lines2 = to_content.splitlines() if to_content else []
 
@@ -77,7 +85,31 @@ def unified_diff(
     return UnifiedDiff(from_name, to_name, patch_set_to_str(patch_set), str(patch_set.diffstat()))
 
 
+def unified_diff_files(from_file: str | Path, to_file: str | Path) -> UnifiedDiff:
+    """
+    Generate a unified diff between two files.
+    """
+    from_file, to_file = Path(from_file), Path(to_file)
+
+    # Recognizable names for each file.
+    from_name = from_file.name
+    to_name = to_file.name
+    if from_name == to_name:
+        from_name = str(from_file)
+        to_name = str(to_file)
+
+    with open(from_file, "r") as f1, open(to_file, "r") as f2:
+        content1 = f1.read()
+        content2 = f2.read()
+
+    return unified_diff(content1, content2, from_name, to_name)
+
+
 def unified_diff_items(from_item: Item, to_item: Item, strict: bool = True) -> Item:
+    """
+    Generate a unified diff between two items. If `strict` is true, will raise
+    an error if the items are of different formats.
+    """
     if not from_item.body and not to_item.body:
         raise ContentError(f"No body to diff for {from_item} and {to_item}")
     if not from_item.store_path or not to_item.store_path:
@@ -100,6 +132,7 @@ def unified_diff_items(from_item: Item, to_item: Item, strict: bool = True) -> I
 
     return Item(
         type=ItemType.doc,
+        title=f"Diff of {from_path} and {to_path}",
         format=Format.diff,
         relations=ItemRelations(diff_of=[from_path, to_path]),
         body=diff.patch_text,

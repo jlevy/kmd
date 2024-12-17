@@ -97,13 +97,6 @@ def wrap_text(
     current_line: List[str] = []
     current_width = initial_offset
 
-    # Special case: if the first word would not fit due to the initial_offset,
-    # add a blank line to indicate we must begin a new line.
-    # if initial_offset > 0 and len(words) > 0 and initial_offset + len(words[0]) > width:
-    #     lines.append("")
-    #     current_width = subsequent_offset
-    #     initial_offset = subsequent_offset
-
     # Walk through words, breaking them into lines.
     for word in words:
         word_width = len_fn(word)

@@ -7,18 +7,13 @@ from rich.text import Text
 
 from kmd.action_defs import load_all_actions
 from kmd.commands.command_registry import kmd_command
-from kmd.commands.files_commands import files, show, trash
+from kmd.commands.files_commands import files, trash
 from kmd.commands.selection_commands import select
 from kmd.config.logger import get_logger
 from kmd.config.settings import global_settings
 from kmd.config.text_styles import COLOR_EMPH, COLOR_HINT, COLOR_SUGGESTION, EMOJI_TRUE, EMOJI_WARN
-from kmd.errors import InvalidInput, InvalidOperation
-from kmd.exec.resolve_args import (
-    assemble_path_args,
-    assemble_store_path_args,
-    import_locator_args,
-    resolve_locator_arg,
-)
+from kmd.errors import InvalidInput
+from kmd.exec.resolve_args import assemble_path_args, assemble_store_path_args, resolve_locator_arg
 from kmd.file_formats.chat_format import tail_chat_history
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.lang_tools.inflection import plural
@@ -40,7 +35,6 @@ from kmd.shell.shell_output import (
 )
 from kmd.shell_tools.git_tools import add_to_git_ignore
 from kmd.shell_tools.native_tools import tail_file
-from kmd.text_docs.unified_diffs import unified_diff_items
 from kmd.util.format_utils import fmt_lines
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_key_vals import format_key_value, parse_key_value
@@ -217,48 +211,6 @@ def item_id(*paths: str) -> None:
             text_wrap=Wrap.NONE,
         )
         cprint()
-
-
-# FIXME: Make sure fallback to regular file diff works.
-@kmd_command
-def diff(*paths: str, stat: bool = False, save: bool = False, strict: bool = False) -> ShellResult:
-    """
-    Show the unified diff between the given files. It's helpful to maintain metadata on
-    diffs, so we only support diffing stored items. But the sandbox can be used for
-    files not in another store.
-
-    :param stat: Only show the diffstat summary.
-    :param strict: If true, will abort if the items are of different formats.
-    """
-    ws = current_workspace()
-    if len(paths) == 2:
-        [path1, path2] = paths
-    else:
-        try:
-            last_selections = ws.selections.previous_n(2, expected_size=1)
-        except InvalidOperation:
-            raise InvalidInput(
-                "Need two selections of single files in history or exactly two paths to diff"
-            )
-        [path1] = last_selections[0].paths
-        [path2] = last_selections[1].paths
-
-    [store_path1, store_path2] = import_locator_args(path1, path2)
-    item1, item2 = ws.load(store_path1), ws.load(store_path2)
-
-    diff_item = unified_diff_items(item1, item2, strict=strict)
-
-    if stat:
-        cprint(diff.diffstat, text_wrap=Wrap.NONE)
-        return ShellResult(show_selection=False)
-    elif save:
-        diff_store_path = ws.save(diff_item, as_tmp=False)
-        select(diff_store_path)
-        return ShellResult(show_selection=True)
-    else:
-        diff_store_path = ws.save(diff_item, as_tmp=True)
-        show(diff_store_path)
-        return ShellResult(show_selection=False)
 
 
 @kmd_command
