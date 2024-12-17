@@ -3,6 +3,8 @@ from typing import Dict
 
 from colour import Color
 
+from rich.terminal_theme import TerminalTheme
+
 
 def hsl_to_hex(hsl_string: str) -> str:
     """
@@ -36,54 +38,89 @@ def hsl_to_hex(hsl_string: str) -> str:
     return color.hex_l
 
 
-# Dark terminal colors.
-terminal_dark = SimpleNamespace(
-    foreground="#fff",
-    background="#000",
+def hex_to_int(hex_string: str) -> tuple[int, int, int]:
+    """
+    Convert a hex color string to RGB integers.
+    Supports both 6-digit and 3-digit hex codes:
+    "#6dbd6d" -> (109, 189, 109)
+    "#333" -> (51, 51, 51)  # equivalent to #333333
+    """
+    try:
+        hex_string = hex_string.lstrip("#")
+        if len(hex_string) == 3:
+            hex_string = "".join(c + c for c in hex_string)
+        if len(hex_string) != 6:
+            raise ValueError(f"Invalid hex color length: {hex_string}")
+
+        r = int(hex_string[0:2], 16)
+        g = int(hex_string[2:4], 16)
+        b = int(hex_string[4:6], 16)
+
+        return (r, g, b)
+    except Exception:
+        raise ValueError(f"Could not parse hex color: `{hex_string}`")
+
+
+# Main colors.
+terminal_colors = SimpleNamespace(
     # Based on:
     # https://rootloops.sh?sugar=8&colors=7&sogginess=5&flavor=2&fruit=9&milk=1
     # Some tools only like hex colors so convert them at once.
     # black
-    black_dark=hsl_to_hex("hsl(0, 0%, 10%)"),
+    black_darker=hsl_to_hex("hsl(0, 0%, 13%)"),
+    black_dark=hsl_to_hex("hsl(0, 0%, 30%)"),
     black_light=hsl_to_hex("hsl(0, 0%, 73%)"),
     black_lighter=hsl_to_hex("hsl(0, 0%, 90%)"),
     # red
+    red_darker=hsl_to_hex("hsl(7, 43%, 51%)"),
     red_dark=hsl_to_hex("hsl(7, 73%, 72%)"),
     red_light=hsl_to_hex("hsl(7, 87%, 85%)"),
     red_lighter=hsl_to_hex("hsl(7, 95%, 94%)"),
     # green
+    green_darker=hsl_to_hex("hsl(134, 35%, 46%)"),
     green_dark=hsl_to_hex("hsl(134, 43%, 60%)"),
     green_light=hsl_to_hex("hsl(134, 53%, 73%)"),
     green_lighter=hsl_to_hex("hsl(134, 70%, 90%)"),
     # yellow
+    yellow_darker=hsl_to_hex("hsl(44, 44%, 44%)"),
     yellow_dark=hsl_to_hex("hsl(44, 54%, 55%)"),
     yellow_light=hsl_to_hex("hsl(44, 74%, 76%)"),
     yellow_lighter=hsl_to_hex("hsl(44, 80%, 90%)"),
     # blue
+    blue_darker=hsl_to_hex("hsl(225, 35%, 52%)"),
     blue_dark=hsl_to_hex("hsl(225, 71%, 76%)"),
     blue_light=hsl_to_hex("hsl(225, 86%, 88%)"),
     blue_lighter=hsl_to_hex("hsl(225, 90%, 94%)"),
     # magenta
+    magenta_darker=hsl_to_hex("hsl(305, 34%, 55%)"),
     magenta_dark=hsl_to_hex("hsl(305, 54%, 71%)"),
     magenta_light=hsl_to_hex("hsl(305, 68%, 85%)"),
     magenta_lighter=hsl_to_hex("hsl(305, 96%, 95%)"),
     # cyan
+    cyan_darker=hsl_to_hex("hsl(188, 48%, 43%)"),
     cyan_dark=hsl_to_hex("hsl(188, 58%, 57%)"),
     cyan_light=hsl_to_hex("hsl(188, 52%, 76%)"),
     cyan_lighter=hsl_to_hex("hsl(188, 52%, 92%)"),
     # white
+    white_darker=hsl_to_hex("hsl(240, 6%, 72%)"),
     white_dark=hsl_to_hex("hsl(240, 6%, 87%)"),
     white_light=hsl_to_hex("hsl(240, 6%, 94%)"),
     white_lighter=hsl_to_hex("hsl(240, 6%, 98%)"),
-    # Additional colors.
+)
+
+
+# Only support dark terminal colors for now.
+terminal_dark = SimpleNamespace(
+    foreground="#fff",
+    background="#000",
     border=hsl_to_hex("hsl(231, 17%, 16%)"),
     cursor=hsl_to_hex("hsl(305, 84%, 68%)"),
     input=hsl_to_hex("hsl(305, 92%, 95%)"),
     input_form=hsl_to_hex("hsl(188, 52%, 76%)"),
+    **terminal_colors.__dict__,
 )
-
-# Only support dark terminal colors for now.
 terminal = terminal_dark
+
 
 # Web light colors.
 web_light = SimpleNamespace(
@@ -103,6 +140,64 @@ web_light = SimpleNamespace(
     scrollbar=hsl_to_hex("hsl(188, 12%, 55%)"),
     scrollbar_hover=hsl_to_hex("hsl(188, 12%, 38%)"),
 )
+
+
+rich_terminal_dark = TerminalTheme(
+    hex_to_int(terminal_dark.background),
+    hex_to_int(terminal_dark.foreground),
+    # normal colors [black, red, green, yellow, blue, magenta, cyan, white]
+    [
+        hex_to_int(terminal_dark.black_dark),
+        hex_to_int(terminal_dark.red_dark),
+        hex_to_int(terminal_dark.green_dark),
+        hex_to_int(terminal_dark.yellow_dark),
+        hex_to_int(terminal_dark.blue_dark),
+        hex_to_int(terminal_dark.magenta_dark),
+        hex_to_int(terminal_dark.cyan_dark),
+        hex_to_int(terminal_dark.white_dark),
+    ],
+    # bright colors [black, red, green, yellow, blue, magenta, cyan, white]
+    [
+        hex_to_int(terminal_dark.black_lighter),
+        hex_to_int(terminal_dark.red_lighter),
+        hex_to_int(terminal_dark.green_lighter),
+        hex_to_int(terminal_dark.yellow_lighter),
+        hex_to_int(terminal_dark.blue_lighter),
+        hex_to_int(terminal_dark.magenta_lighter),
+        hex_to_int(terminal_dark.cyan_lighter),
+        hex_to_int(terminal_dark.white_lighter),
+    ],
+)
+
+rich_terminal_light = TerminalTheme(
+    hex_to_int(terminal_dark.background),
+    hex_to_int(terminal_dark.foreground),
+    # normal colors [black, red, green, yellow, blue, magenta, cyan, white]
+    [
+        hex_to_int(terminal_dark.black_dark),
+        hex_to_int(terminal_dark.red_dark),
+        hex_to_int(terminal_dark.green_dark),
+        hex_to_int(terminal_dark.yellow_dark),
+        hex_to_int(terminal_dark.blue_dark),
+        hex_to_int(terminal_dark.magenta_dark),
+        hex_to_int(terminal_dark.cyan_dark),
+        hex_to_int(terminal_dark.white_dark),
+    ],
+    # bright colors [black, red, green, yellow, blue, magenta, cyan, white]
+    [
+        hex_to_int(terminal_dark.black_darker),
+        hex_to_int(terminal_dark.red_darker),
+        hex_to_int(terminal_dark.green_darker),
+        hex_to_int(terminal_dark.yellow_darker),
+        hex_to_int(terminal_dark.blue_darker),
+        hex_to_int(terminal_dark.magenta_darker),
+        hex_to_int(terminal_dark.cyan_darker),
+        hex_to_int(terminal_dark.white_darker),
+    ],
+)
+
+# We default to light colors for Rich content in HTML.
+rich_terminal = rich_terminal_light
 
 # Only support light web colors for now.
 web = web_light

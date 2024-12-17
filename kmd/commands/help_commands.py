@@ -20,7 +20,6 @@ from kmd.help.help_page import print_see_also
 from kmd.shell.shell_output import (
     console_pager,
     cprint,
-    print_assistance,
     print_code_block,
     print_markdown,
     Wrap,
@@ -189,13 +188,9 @@ def action_source(action_name: str) -> None:
 
 
 @kmd_command
-def explain(text: str, use_assistant: bool = False) -> None:
+def explain(text: str, no_assistant: bool = False) -> None:
     """
-    Give help on a command or action.  If `use_assistant` is True then will also use the assistant
+    Give help on a command or action.  If `no_assistant` is True then will not use the assistant
     if the command or text is not recognized.
     """
-    help_str = explain_command(text, use_assistant=use_assistant)
-    if help_str:
-        print_assistance(help_str)
-    else:
-        print("Command not recognized. Use `help` for more information.")
+    explain_command(text, use_assistant=not no_assistant)

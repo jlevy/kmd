@@ -14,6 +14,7 @@ from kmd.file_storage.file_store import FileStore
 from kmd.help.command_help import explain_command
 from kmd.model.items_model import Item
 from kmd.model.paths_model import StorePath
+from kmd.shell.rich_html import RICH_HTML_TEMPLATE
 from kmd.shell.shell_output import Wrap
 from kmd.shell.shell_printing import print_file_info
 from kmd.util.strif import abbreviate_str
@@ -111,10 +112,9 @@ def view_item(request: Request, store_path: str, ws_name: str):
 
 @router.api_route(Route.explain, methods=["GET"])
 def explain(text: str):
-    # FIXME: Use HTML.
-    help_str = explain_command(text, use_assistant=True)
-    if not help_str:
-        raise HTTPException(status_code=404, detail="Explanation not found")
+    with record_console() as console:
+        explain_command(text, use_assistant=True)
+    help_html = console.export_html(code_format=RICH_HTML_TEMPLATE, theme=colors.rich_terminal)
 
     page_url = local_url.explain(text)
 
@@ -124,7 +124,7 @@ def explain(text: str):
             {
                 "title": f"Help: {text}",
                 "content": render_web_template(
-                    "explain_view.html.jinja", {"help_str": help_str, "page_url": page_url}
+                    "explain_view.html.jinja", {"help_html": help_html, "page_url": page_url}
                 ),
             },
             css_overrides={"color-bg": colors.web.bg_translucent},
@@ -206,7 +206,9 @@ def _serve_item(
                 show_format=True,
                 text_wrap=Wrap.WRAP,
             )
-        file_info_html = console.export_text()  # FIXME: Use HTML
+        file_info_html = console.export_html(
+            code_format=RICH_HTML_TEMPLATE, theme=colors.rich_terminal
+        )
         log.info(
             "File info html: length %s: %s", len(file_info_html), abbreviate_str(file_info_html)
         )

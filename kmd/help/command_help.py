@@ -2,8 +2,7 @@ from typing import List, Optional
 
 from kmd.action_defs import look_up_action
 from kmd.commands.command_registry import CommandFunction, look_up_command
-from kmd.config.logger import record_console
-from kmd.errors import InvalidInput
+from kmd.errors import InvalidInput, NoMatch
 from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.help.assistant import assist_preamble, unstructured_assistance
 from kmd.help.docstrings import parse_docstring
@@ -12,7 +11,13 @@ from kmd.model.actions_model import Action
 from kmd.model.messages_model import Message
 from kmd.model.params_model import Param, RUNTIME_ACTION_PARAMS
 from kmd.model.preconditions_model import Precondition
-from kmd.shell.shell_output import cprint, format_name_and_description, print_help, Wrap
+from kmd.shell.shell_output import (
+    cprint,
+    format_name_and_description,
+    print_assistance,
+    print_help,
+    Wrap,
+)
 from kmd.util.format_utils import DEFAULT_INDENT
 
 
@@ -115,7 +120,7 @@ def print_action_help(action: Action, verbose: bool = True):
     )
 
 
-def explain_command(text: str, use_assistant: bool = False) -> Optional[str]:
+def explain_command(text: str, use_assistant: bool = False):
     """
     Explain a command or action or give a brief explanation of something.
     """
@@ -124,18 +129,16 @@ def explain_command(text: str, use_assistant: bool = False) -> Optional[str]:
     help_str = None
     try:
         command = look_up_command(text)
-        with record_console() as console:
-            print_command_function_help(command)
-        help_str = console.export_text()
+        print_command_function_help(command)
+        return
     except InvalidInput:
         pass
 
     if not help_str:
         try:
             action = look_up_action(text)
-            with record_console() as console:
-                print_action_help(action)
-            help_str = console.export_text()
+            print_action_help(action)
+            return
         except InvalidInput:
             pass
 
@@ -155,4 +158,7 @@ def explain_command(text: str, use_assistant: bool = False) -> Optional[str]:
         response = unstructured_assistance(chat_history.as_chat_completion())
         help_str = response.content
 
-    return help_str
+    if help_str:
+        print_assistance(help_str)
+    else:
+        raise NoMatch(f"Sorry, no help found for `{text}`")

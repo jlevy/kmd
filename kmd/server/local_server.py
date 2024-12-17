@@ -16,7 +16,7 @@ from kmd.config.settings import (
     update_global_settings,
 )
 from kmd.errors import InvalidInput, InvalidState
-from kmd.server import server_routes
+from kmd.server import local_server_routes
 from kmd.server.port_tools import find_available_local_port
 from kmd.util.format_utils import fmt_path
 
@@ -67,7 +67,7 @@ def _app_setup() -> "FastAPI":
 
     app = FastAPI()
 
-    app.include_router(server_routes.router)
+    app.include_router(local_server_routes.router)
 
     # Map common exceptions to HTTP codes.
     # FileNotFound first, since it might also be an InvalidInput.

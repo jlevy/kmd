@@ -6,7 +6,7 @@
 }
 
 .explain-content {
-  font-size: var(--font-size-mono-small);
+  font-size: var(--font-size-mono);
   white-space: pre-wrap;
   overflow-x: auto;
   margin: 0;
@@ -37,7 +37,7 @@
     <i data-feather="external-link" class="action-icon"></i>
   </a>
   {% endif %}
-  <pre class="explain-content">{{ help_str }}</pre>
+  <pre class="explain-content">{{ help_html | safe }}</pre>
 </div>
 
 <script>
