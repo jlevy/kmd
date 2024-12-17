@@ -56,6 +56,7 @@ class ItemType(Enum):
     chat = "chat"
     extension = "extension"
     script = "script"
+    log = "log"
 
     @property
     def expects_body(self) -> bool:

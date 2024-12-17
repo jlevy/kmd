@@ -42,6 +42,7 @@ class Format(Enum):
     """Our own format for Kmd scripts."""
     json = "json"
     csv = "csv"
+    log = "log"
 
     # Binary formats.
     pdf = "pdf"
@@ -77,6 +78,7 @@ class Format(Enum):
             self.json,
             self.kmd_script,
             self.csv,
+            self.log,
         ]
 
     @property
@@ -106,6 +108,7 @@ class Format(Enum):
             self.python,
             self.kmd_script,
             self.csv,
+            self.log,
         ]
 
     @property
@@ -127,6 +130,7 @@ class Format(Enum):
             Format.kmd_script: ItemType.extension,
             Format.json: ItemType.doc,
             Format.csv: ItemType.doc,
+            Format.log: ItemType.log,
             Format.pdf: ItemType.resource,
             Format.jpeg: ItemType.asset,
             Format.png: ItemType.asset,
@@ -150,6 +154,7 @@ class Format(Enum):
             Format.kmd_script: MediaType.text,
             Format.json: MediaType.text,
             Format.csv: MediaType.text,
+            Format.log: MediaType.text,
             Format.pdf: MediaType.text,
             Format.jpeg: MediaType.image,
             Format.png: MediaType.image,
@@ -180,6 +185,7 @@ class Format(Enum):
             FileExt.diff.value: Format.diff,
             FileExt.json.value: Format.json,
             FileExt.csv.value: Format.csv,
+            FileExt.log.value: Format.log,
             FileExt.py.value: Format.python,
             FileExt.ksh.value: Format.kmd_script,
             FileExt.pdf.value: Format.pdf,
@@ -254,6 +260,7 @@ class FileExt(Enum):
     diff = "diff"
     json = "json"
     csv = "csv"
+    log = "log"
     py = "py"
     ksh = "ksh"  # Borrowing from old Korn shell for our Kmd scripts.
     pdf = "pdf"
@@ -295,6 +302,7 @@ class FileExt(Enum):
             Format.diff.value: FileExt.diff,
             Format.json.value: FileExt.json,
             Format.csv.value: FileExt.csv,
+            Format.log.value: FileExt.log,
             Format.python.value: FileExt.py,
             Format.pdf.value: FileExt.pdf,
             Format.docx.value: FileExt.docx,
