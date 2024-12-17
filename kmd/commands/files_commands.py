@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone
 from os.path import basename
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from frontmatter_format import fmf_read_raw, fmf_strip_frontmatter
 from rich.text import Text
@@ -24,6 +24,7 @@ from kmd.file_tools.file_sort_filter import (
     GroupByOption,
     parse_since,
     SortOption,
+    FileInfo,
 )
 from kmd.file_tools.ignore_files import ignore_none
 from kmd.model.args_model import fmt_loc
@@ -507,15 +508,14 @@ def files(
                 else:
                     display_df = group_df
 
-                for idx, row in display_df.iterrows():
-                    short_file_size = fmt_file_size(row["size"])
-                    full_file_size = f"{row['size']} bytes"
-                    short_mod_time = fmt_time(
-                        row["modified"], iso_time=iso_time, now=now, brief=True
-                    )
-                    full_mod_time = fmt_time(row["modified"], friendly=True, now=now)
+                for row in display_df.itertuples(index=False, name="FileInfo"):
+                    row = cast(FileInfo, row)
+                    short_file_size = fmt_file_size(row.size)
+                    full_file_size = f"{row.size} bytes"
+                    short_mod_time = fmt_time(row.modified, iso_time=iso_time, now=now, brief=True)
+                    full_mod_time = fmt_time(row.modified, friendly=True, now=now)
 
-                    rel_path = row["relative_path"]
+                    rel_path = str(row.relative_path)
 
                     # If we are listing from within a workspace and we are at the base
                     # of the workspace, we include the paths as store paths (with an @
@@ -540,7 +540,7 @@ def files(
 
                     cprint(line, text_wrap=Wrap.NONE)
                     total_displayed += 1
-                    total_displayed_size += row["size"]
+                    total_displayed_size += row.size
 
                 # Indicate if items are omitted.
                 if groupby and show_first and len(group_df) > show_first:
