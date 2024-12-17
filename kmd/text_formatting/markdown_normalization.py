@@ -12,7 +12,7 @@ some old discussion on why line wrapping this way is convenient.)
 import re
 from contextlib import contextmanager
 from textwrap import dedent
-from typing import Callable, cast, Generator, List, Tuple
+from typing import Callable, Protocol, cast, Generator, List, Tuple
 
 import marko
 from marko import block, inline
@@ -23,7 +23,7 @@ from marko.source import Source
 
 from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
 from kmd.lang_tools.sentence_split_regex import split_sentences_regex
-from kmd.text_formatting.text_wrapping import wrap_paragraph
+from kmd.text_formatting.text_wrapping import wrap_paragraph, wrap_text, wrap_length_fn
 
 
 def _normalize_html_comments(text: str, break_str: str = "\n\n") -> str:
@@ -88,7 +88,12 @@ class CustomParser(Parser):
         self.block_elements["HTMLBlock"] = CustomHTMLBlock
 
 
-LineWrapper = Callable[[str, str, str], str]
+class LineWrapper(Protocol):
+    """
+    Takes a text string and any indents to use, and returns the wrapped text.
+    """
+
+    def __call__(self, text: str, initial_indent: str, subsequent_indent: str) -> str: ...
 
 
 class MarkdownNormalizer(Renderer):
@@ -274,6 +279,9 @@ DEFAULT_WRAP_WIDTH = 92
 """Default wrap width for text content. Same as Flowmark."""
 # See https://github.com/jlevy/atom-flowmark/blob/master/lib/remark-smart-word-wrap.js#L13
 
+DEFAULT_MIN_LINE_LEN = 20
+"""Default minimum line length for sentence breaking."""
+
 
 def wrap_lines_to_width(
     text: str, initial_indent: str, subsequent_indent: str, width: int = CONSOLE_WRAP_WIDTH
@@ -289,36 +297,53 @@ def wrap_lines_to_width(
     )
 
 
+def split_sentences_no_min_length(text: str) -> List[str]:
+    return split_sentences_regex(text, min_length=0)
+
+
 def wrap_lines_and_break_sentences(
     text: str,
     initial_indent: str,
     subsequent_indent: str,
-    split_sentences: Callable[[str], List[str]] = split_sentences_regex,
+    split_sentences: Callable[[str], List[str]] = split_sentences_no_min_length,
     width: int = DEFAULT_WRAP_WIDTH,
+    min_line_len: int = DEFAULT_MIN_LINE_LEN,
 ) -> str:
     """
     Wrap lines of text to a given width but also keep sentences on their own lines.
+    If the last line ends up shorter than min_line_len, it's combined with the next sentence.
     """
     text = text.replace("\n", " ")
-    wrapped_lines = []
+    lines: List[str] = []
+    current_offset = 0
     first_line = True
-    for line in text.splitlines():
-        if not line.strip():
-            wrapped_lines.append("")
-        else:
-            sentences = split_sentences(line)
-            for sentence in sentences:
-                wrapped_lines.append(
-                    wrap_paragraph(
-                        sentence,
-                        width=width,
-                        initial_indent=initial_indent if first_line else subsequent_indent,
-                        subsequent_indent=subsequent_indent,
-                    )
-                )
-                first_line = False
 
-    return "\n".join(wrapped_lines)
+    sentences = split_sentences(text)
+    for i, sentence in enumerate(sentences):
+        wrapped = wrap_text(
+            sentence,
+            width=width,
+            initial_indent=initial_indent if first_line else subsequent_indent,
+            subsequent_indent=subsequent_indent,
+            initial_offset=current_offset,
+        )
+
+        if wrap_length_fn(wrapped[0]) - wrap_length_fn(subsequent_indent) < min_line_len:
+            # Don't add a line break, just update the offset and append a space
+            current_offset = wrap_length_fn(wrapped[0]) - wrap_length_fn(subsequent_indent) + 1
+            if not lines:
+                lines.append(wrapped[0])
+            else:
+                lines[-1] += " " + sentence.strip()
+        else:
+            # Normal case - add all wrapped lines
+            if wrapped:
+                lines.extend(wrapped)
+                current_offset = 0
+
+        first_line = False
+
+    return "\n".join(lines)
 
 
 def normalize_markdown(
@@ -449,9 +474,8 @@ This is sentence one.
 This is sentence two.
 This is sentence three.
 This is sentence four.
-This is sentence 5. This is sentence six.
-Seven. Eight. Nine.
-Ten. A [link](https://example.com).
+This is sentence 5. This is sentence six. Seven. Eight. Nine. Ten.
+A [link](https://example.com).
 Some *emphasis* and **strong emphasis** and `code`. And a
 super-super-super-super-super-super-super-hyphenated
 veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery

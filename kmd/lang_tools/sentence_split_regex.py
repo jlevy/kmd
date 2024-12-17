@@ -39,10 +39,15 @@ def split_sentences_regex(
     """
     Split text into sentences using an approximate, fast regex heuristic. (English.)
     Goal is to be conservative, not perfect, avoiding excessive breaks.
+
+    :param text: The text to split into sentences.
+    :param heuristic: A callable that returns True if text ends at the end of a sentence.
+    :param min_length: The minimum length of a sentence in characters.
+    :return: A list of sentences.
     """
     words = text.split()
-    sentences = []
-    sentence = []
+    sentences: List[str] = []
+    sentence: List[str] = []
     words_len = 0
     for word in words:
         sentence.append(word)

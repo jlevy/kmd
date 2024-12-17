@@ -23,7 +23,7 @@ def simple_word_splitter(text: str) -> List[str]:
     return text.split()
 
 
-class _SmarterWordSplitter:
+class _HtmlMdWordSplitter:
     def __init__(self):
         # Sequences of whitespace-delimited words that should be coalesced and treated
         # like a single word.
@@ -67,7 +67,7 @@ class _SmarterWordSplitter:
         return all(pattern.match(word) for pattern, word in zip(patterns, words))
 
 
-smarter_word_splitter = _SmarterWordSplitter()
+html_md_word_splitter = _HtmlMdWordSplitter()
 """
 Split words, but not within HTML tags or Markdown links.
 """
@@ -81,7 +81,8 @@ def wrap_text(
     empty_indent: str = "",
     replace_whitespace: bool = True,
     drop_whitespace: bool = True,
-    splitter: WordSplitter = smarter_word_splitter,
+    splitter: WordSplitter = html_md_word_splitter,
+    initial_offset: int = 0,
 ) -> List[str]:
     """
     Wrap a single paragraph of text, returning a list of wrapped lines.
@@ -91,6 +92,7 @@ def wrap_text(
     :param subsequent_indent: String to prepend to subsequent lines.
     :param replace_whitespace: Replace all whitespace with single spaces.
     :param drop_whitespace: Drop leading and trailing whitespace from lines.
+    :param initial_offset: Number of columns to consider already used on first line.
     """
     global wrap_length_fn
     len_fn = wrap_length_fn
@@ -102,7 +104,16 @@ def wrap_text(
 
     lines: List[str] = []
     current_line: List[str] = []
-    current_width = len_fn(initial_indent)
+    current_width = len_fn(initial_indent) + initial_offset
+
+    if len(initial_indent) > initial_offset:
+        initial_offset = len(initial_indent)
+
+    if initial_offset + 1 >= width:
+        # Convenience, in case after the next space we would be at the width
+        # limit, we wrap and skip the first indent.
+        current_width = len_fn(subsequent_indent)
+        initial_indent = subsequent_indent
 
     for word in words:
         word_width = len_fn(word)
@@ -139,7 +150,8 @@ def wrap_paragraph(
     empty_indent: str = "",
     replace_whitespace: bool = True,
     drop_whitespace: bool = True,
-    splitter: WordSplitter = smarter_word_splitter,
+    splitter: WordSplitter = html_md_word_splitter,
+    initial_offset: int = 0,
 ) -> str:
     """
     Fill a single paragraph of text, returning a new string.
@@ -154,6 +166,7 @@ def wrap_paragraph(
             replace_whitespace,
             drop_whitespace,
             splitter,
+            initial_offset,
         )
     )
 
@@ -162,7 +175,7 @@ def wrap_paragraph(
 
 
 def test_smart_splitter():
-    splitter = _SmarterWordSplitter()
+    splitter = _HtmlMdWordSplitter()
 
     html_text = "This is <span class='test'>some text</span> and <a href='#'>this is a link</a>."
     assert splitter(html_text) == [
@@ -222,10 +235,10 @@ def test_wrap_text():
         """
     ).strip()
 
-    print("\nFilled text with smart splitter:")
+    print("\nFilled text with html_md_word_splitter:")
     filled_smart = wrap_paragraph(
         sample_text,
-        splitter=smarter_word_splitter,
+        splitter=html_md_word_splitter,
         width=40,
         initial_indent=">",
         subsequent_indent=">>",
@@ -241,9 +254,30 @@ def test_wrap_text():
         """
     ).strip()
 
-    assert filled == filled_expected
+    print("\nFilled text with html_md_word_splitter and initial_offset:")
+    filled_smart_offset = wrap_paragraph(
+        sample_text,
+        splitter=html_md_word_splitter,
+        width=40,
+        initial_indent=">",
+        subsequent_indent=">>",
+        initial_offset=35,
+    )
+    print(filled_smart_offset)
+    filled_smart_offset_expected = dedent(
+        """
+        >This
+        >>is a sample text with a
+        >>[Markdown link](https://example.com)
+        >>and an <a href='#'>tag</a>. It should
+        >>demonstrate the functionality of our
+        >>enhanced text wrapping implementation.
+        """
+    ).strip()
 
+    assert filled == filled_expected
     assert filled_smart == filled_smart_expected
+    assert filled_smart_offset == filled_smart_offset_expected
 
 
 def test_wrap_width():
