@@ -8,8 +8,12 @@ from kmd.config.colors import terminal as colors
 
 ## Settings
 
-CONSOLE_WRAP_WIDTH = 80
-"""Wrap width for console output."""
+CONSOLE_WRAP_WIDTH = 88
+"""
+Default wrap width for console content. A compromise between traditional but sometimes
+impractically narrow 80-char console width and being too wide to read comfortably
+for text, markup, and code. 88 is the same as Black.
+"""
 
 SPINNER = "dots12"
 """Progress spinner. For a list, use `python -m rich.spinner`."""

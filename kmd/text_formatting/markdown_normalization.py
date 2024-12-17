@@ -21,9 +21,21 @@ from marko.parser import Parser
 from marko.renderer import Renderer
 from marko.source import Source
 
-from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
 from kmd.lang_tools.sentence_split_regex import split_sentences_regex
-from kmd.text_formatting.text_wrapping import wrap_length_fn, wrap_paragraph, wrap_text
+from kmd.text_formatting.text_styling import CONSOLE_WRAP_WIDTH
+from kmd.text_formatting.text_wrapping import wrap_length_fn, wrap_paragraph, wrap_paragraph_lines
+
+
+class LineWrapper(Protocol):
+    """Takes a text string and any indents to use, and returns the wrapped text."""
+
+    def __call__(self, text: str, initial_indent: str, subsequent_indent: str) -> str: ...
+
+
+class SentenceSplitter(Protocol):
+    """Takes a text string and returns a list of sentences."""
+
+    def __call__(self, text: str) -> List[str]: ...
 
 
 def _normalize_html_comments(text: str, break_str: str = "\n\n") -> str:
@@ -88,21 +100,10 @@ class CustomParser(Parser):
         self.block_elements["HTMLBlock"] = CustomHTMLBlock
 
 
-class LineWrapper(Protocol):
+class _MarkdownNormalizer(Renderer):
     """
-    Takes a text string and any indents to use, and returns the wrapped text.
-    """
-
-    def __call__(self, text: str, initial_indent: str, subsequent_indent: str) -> str: ...
-
-
-class MarkdownNormalizer(Renderer):
-    """
-    Render Markdown in normalized form.
-
-    Also enforces that all list items have two newlines between them, so that items
-    are separate paragraphs when viewed as plaintext.
-
+    Render Markdown in normalized form. This is the internal implementation.
+    You likely want to use `normalize_markdown()` instead.
     Based on: https://github.com/frostming/marko/blob/master/marko/md_renderer.py
     """
 
@@ -113,7 +114,7 @@ class MarkdownNormalizer(Renderer):
         self._suppress_item_break: bool = True
         self._line_wrapper = line_wrapper
 
-    def __enter__(self) -> "MarkdownNormalizer":
+    def __enter__(self) -> "_MarkdownNormalizer":
         self._prefix = ""
         self._second_prefix = ""
         return super().__enter__()
@@ -275,16 +276,22 @@ class MarkdownNormalizer(Renderer):
         return f"`{element.children}`"
 
 
-DEFAULT_WRAP_WIDTH = 92
-"""Default wrap width for text content. Same as Flowmark."""
-# See https://github.com/jlevy/atom-flowmark/blob/master/lib/remark-smart-word-wrap.js#L13
+DEFAULT_WRAP_WIDTH = CONSOLE_WRAP_WIDTH
+"""
+Default wrap width for Markdown content. Currently same as console width.
+"""
+
 
 DEFAULT_MIN_LINE_LEN = 20
 """Default minimum line length for sentence breaking."""
 
 
+def split_sentences_no_min_length(text: str) -> List[str]:
+    return split_sentences_regex(text, min_length=0)
+
+
 def wrap_lines_to_width(
-    text: str, initial_indent: str, subsequent_indent: str, width: int = CONSOLE_WRAP_WIDTH
+    text: str, initial_indent: str, subsequent_indent: str, width: int = DEFAULT_WRAP_WIDTH
 ) -> str:
     """
     Wrap lines of text to a given width.
@@ -297,15 +304,11 @@ def wrap_lines_to_width(
     )
 
 
-def split_sentences_no_min_length(text: str) -> List[str]:
-    return split_sentences_regex(text, min_length=0)
-
-
-def wrap_lines_and_break_sentences(
+def wrap_lines_using_sentences(
     text: str,
     initial_indent: str,
     subsequent_indent: str,
-    split_sentences: Callable[[str], List[str]] = split_sentences_no_min_length,
+    split_sentences: SentenceSplitter = split_sentences_no_min_length,
     width: int = DEFAULT_WRAP_WIDTH,
     min_line_len: int = DEFAULT_MIN_LINE_LEN,
 ) -> str:
@@ -327,7 +330,7 @@ def wrap_lines_and_break_sentences(
         if len(lines) > 0 and length(lines[-1]) < min_line_len:
             current_offset += length(lines[-1])
 
-        wrapped = wrap_text(
+        wrapped = wrap_paragraph_lines(
             sentence,
             width=width,
             initial_offset=current_offset,
@@ -357,11 +360,14 @@ def wrap_lines_and_break_sentences(
 
 
 def normalize_markdown(
-    markdown_text: str, line_wrapper: LineWrapper = wrap_lines_and_break_sentences
+    markdown_text: str, line_wrapper: LineWrapper = wrap_lines_using_sentences
 ) -> str:
     """
     Normalize Markdown text. Wraps lines and adds line breaks within paragraphs and on
     best-guess estimations of sentences, to make diffs more readable.
+
+    Also enforces that all list items have two newlines between them, so that items
+    are separate paragraphs when viewed as plaintext.
     """
     markdown_text = markdown_text.strip() + "\n"
 
@@ -371,7 +377,7 @@ def normalize_markdown(
     # Normalize the markdown and wrap lines.
     parser = CustomParser()
     parsed = parser.parse(markdown_text)
-    result = MarkdownNormalizer(line_wrapper).render(parsed)
+    result = _MarkdownNormalizer(line_wrapper).render(parsed)
     return result
 
 
@@ -509,7 +515,8 @@ A [link](https://example.com).
 Some *emphasis* and **strong emphasis** and `code`. And a
 super-super-super-super-super-super-super-hyphenated
 veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery
-long word. This is a sentence with many words and words and words and words and words and
+long word.
+This is a sentence with many words and words and words and words and words and
 words and words and words.
 And another with words and words and words split across a line.
 
@@ -548,17 +555,17 @@ A third paragraph.
 
 <!--window-br-->
 
-Words and words and words and words and words and <span data-foo="bar">some HTML</span> and
-words and words and words and words and words and words.
+Words and words and words and words and words and <span data-foo="bar">some HTML</span>
+and words and words and words and words and words and words.
 
-<span data-foo="bar">Inline HTML.</span> And some following words and words and words and
-words and words and words.
+<span data-foo="bar">Inline HTML.</span> And some following words and words and words
+and words and words and words.
 
 <h1 data-foo="bar">Block HTML.</h1> And some following words.
 
 <div class="foo"> Some more HTML. Words and words and words and words and words and
-<span data-foo="bar">more HTML</span> and words and words and words and words and words and
-words.</div>
+<span data-foo="bar">more HTML</span> and words and words and words and words and words
+and words.</div>
 
 > This is a quote block.
 > With a couple sentences.
@@ -597,8 +604,8 @@ Complex should be possible.*” —Alan Kay </p>
 ### Building
 
 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-   [Fork](https://github.com/jlevy/kmd/fork) this repo (having your own fork will make it
-   easier to contribute actions, add models, etc.).
+   [Fork](https://github.com/jlevy/kmd/fork) this repo (having your own fork will make
+   it easier to contribute actions, add models, etc.).
 
 2. [Check out](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
    the code. Lorem

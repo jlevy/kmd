@@ -73,7 +73,7 @@ Split words, but not within HTML tags or Markdown links.
 """
 
 
-def wrap_text(
+def wrap_paragraph_lines(
     text: str,
     width: int,
     initial_offset: int = 0,
@@ -136,9 +136,10 @@ def wrap_paragraph(
     splitter: WordSplitter = html_md_word_splitter,
 ) -> str:
     """
-    Fill a single paragraph of text, returning a new string.
+    Fill a single paragraph of plain text, returning a new string.
+    By default, uses an HTML and Markdown aware word splitter.
     """
-    lines = wrap_text(
+    lines = wrap_paragraph_lines(
         text=text,
         width=width,
         replace_whitespace=replace_whitespace,
@@ -273,7 +274,7 @@ def test_wrap_width():
         """
     ).strip()
     width = 80
-    wrapped = wrap_text(text, width=width)
+    wrapped = wrap_paragraph_lines(text, width=width)
     print(wrapped)
     print([len(line) for line in wrapped])
     assert all(len(line) <= width for line in wrapped)

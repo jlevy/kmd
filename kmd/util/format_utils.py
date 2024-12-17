@@ -3,7 +3,7 @@ import shlex
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from textwrap import indent
-from typing import Any, Iterable, List, Optional
+from typing import Any, Iterable, Optional
 
 import humanfriendly
 import regex
@@ -17,9 +17,6 @@ from kmd.util.strif import abbreviate_str
 @lazyobject
 def inflect():
     return engine()
-
-
-DEFAULT_INDENT = "    "
 
 
 def plaintext_to_html(text: str):
@@ -45,7 +42,7 @@ def html_to_plaintext(text: str):
     return clean_text
 
 
-def fmt_lines(values: Iterable[Any], prefix: str = DEFAULT_INDENT, line_break: str = "\n") -> str:
+def fmt_lines(values: Iterable[Any], prefix: str = "    ", line_break: str = "\n") -> str:
     """
     Simple indented or prefixed formatting of values one per line.
     """
@@ -57,10 +54,6 @@ def single_line(text: str) -> str:
     Convert newlines and other whitespace to spaces.
     """
     return regex.sub(r"\s+", " ", text).strip()
-
-
-def split_paragraphs(text: str) -> List[str]:
-    return [p.strip() for p in regex.split(r"\n{2,}", text)]
 
 
 def clean_up_title(text: str) -> str:

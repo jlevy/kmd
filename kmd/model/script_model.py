@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from kmd.model.args_model import Signature
 from kmd.model.commands_model import CommentedCommand
-from kmd.shell.shell_output import fill_text, Wrap
+from kmd.text_formatting.text_styling import fill_text, Wrap
 
 
 class Script(BaseModel):

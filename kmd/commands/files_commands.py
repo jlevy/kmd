@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone
 from os.path import basename
 from pathlib import Path
-from typing import List, Optional, cast
+from typing import cast, List, Optional
 
 from frontmatter_format import fmf_read_raw, fmf_strip_frontmatter
 from rich.text import Text
@@ -20,11 +20,11 @@ from kmd.exec.resolve_args import (
 )
 from kmd.file_tools.file_sort_filter import (
     collect_files,
+    FileInfo,
     FileListing,
     GroupByOption,
     parse_since,
     SortOption,
-    FileInfo,
 )
 from kmd.file_tools.ignore_files import ignore_none
 from kmd.model.args_model import fmt_loc
