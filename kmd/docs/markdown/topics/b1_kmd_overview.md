@@ -18,17 +18,14 @@ This lets you run all Kmd commands, as well as have access to intelligent auto-c
 In xonsh, you also have access to the full power of Python and the shell when needed.
 
 On top of this, Kmd understands its own code and APIs and can help you use and even extend
-it.
-At any time you can ask a question and have the LLM-based assistant help you in how to use
-Kmd.
-Anything you type that ends in a `?` is sent to the assistant.
+it. At any time you can ask a question and have the LLM-based assistant help you in how to
+use Kmd. Anything you type that ends in a `?` is sent to the assistant.
 
 ### Items and File Formats
 
 Kmd operates on **items**, which are URLs, files, text or Markdown notes, or other
-documents.
-These are stored as simple files, in a single directory, called a **workspace**. Typically,
-you want a workspace for a single topic or project.
+documents. These are stored as simple files, in a single directory, called a **workspace**.
+Typically, you want a workspace for a single topic or project.
 By convention, workspace directories should have a `.kb` suffix, such as `fitness.kb`.
 
 Within a workspace, files are organized into folders by type, including resources, notes,
@@ -36,8 +33,8 @@ configs, and exports.
 Most text items are stored in Markdown format with YAML front matter (the same format used
 by Jekyll or other static site generators), optionally with some HTML for structure if
 needed.
-But with Kmd you can process or export items in any other format you wish, like a PDF or a
-webpage.
+But with Kmd you can process or export items in any other format you wish, like a PDF
+or a webpage.
 
 All items have a **source path**, which is simply the path of the file relative to the
 workspace directory.
@@ -53,9 +50,8 @@ The metadata on items includes titles and item types, as you might expect, but a
 provenance information, e.g. the URL where a page was downloaded from.
 If an item is based on one or more other items (such as a summary that is based on an
 original document), the sources are listed in a `derived_from` array within the `relations`
-metadata.
-This means actions can find citations or other data on the provenance of a given piece of
-information.
+metadata. This means actions can find citations or other data on the provenance of a given
+piece of information.
 
 ### Commands and Actions
 
@@ -64,9 +60,8 @@ selecting files to process), and Kmd **actions**, which are an extensible set of
 capabilities, like formatting documents, transcribing videos, or any arbitrary use of APIs.
 
 Kmd actions are a set of operations that can operate on one or more items and produce one or
-more new items.
-Actions can invoke APIs, use LLMs, or perform any other operation that's scriptable in
-Python.
+more new items. Actions can invoke APIs, use LLMs, or perform any other operation that's
+scriptable in Python.
 You specify inputs to actions as URLs or source paths.
 
 URLs that are provided as input and the output of actions are automatically stored as new
@@ -99,9 +94,8 @@ Kmd makes a few kinds of messy text manipulations easier:
 
 - Sliding window transformations: LLMs can have trouble processing large inputs, not just
   because of context window and because they may make more mistakes when making lots of
-  changes at once.
-  Kmd supports running actions in a sliding window across the document, then stitching the
-  results back together when done.
+  changes at once. Kmd supports running actions in a sliding window across the document, then
+  stitching the results back together when done.
 
 - Checking and enforcing changes: LLMs do not reliably do what they are asked to do.
   So a key part of making them useful is to save outputs at each step of the way and have a

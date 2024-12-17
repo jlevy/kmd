@@ -12,7 +12,7 @@ some old discussion on why line wrapping this way is convenient.)
 import re
 from contextlib import contextmanager
 from textwrap import dedent
-from typing import Callable, Protocol, cast, Generator, List, Tuple
+from typing import Callable, cast, Generator, List, Protocol, Tuple
 
 import marko
 from marko import block, inline
@@ -23,7 +23,7 @@ from marko.source import Source
 
 from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
 from kmd.lang_tools.sentence_split_regex import split_sentences_regex
-from kmd.text_formatting.text_wrapping import wrap_paragraph, wrap_text, wrap_length_fn
+from kmd.text_formatting.text_wrapping import wrap_length_fn, wrap_paragraph, wrap_text
 
 
 def _normalize_html_comments(text: str, break_str: str = "\n\n") -> str:
@@ -315,33 +315,43 @@ def wrap_lines_and_break_sentences(
     """
     text = text.replace("\n", " ")
     lines: List[str] = []
-    current_offset = 0
     first_line = True
+    length = wrap_length_fn
+    initial_indent_len = wrap_length_fn(initial_indent)
+    subsequent_indent_len = wrap_length_fn(subsequent_indent)
 
     sentences = split_sentences(text)
+
     for i, sentence in enumerate(sentences):
+        current_offset = initial_indent_len if first_line else subsequent_indent_len
+        if len(lines) > 0 and length(lines[-1]) < min_line_len:
+            current_offset += length(lines[-1])
+
         wrapped = wrap_text(
             sentence,
             width=width,
-            initial_indent=initial_indent if first_line else subsequent_indent,
-            subsequent_indent=subsequent_indent,
             initial_offset=current_offset,
+            subsequent_offset=subsequent_indent_len,
         )
+        # If last line is shorter than min_line_len, combine with next line.
+        # Also handles if the first word doesn't fit.
+        if (
+            len(lines) > 0
+            and length(lines[-1]) < min_line_len
+            and length(lines[-1]) + 1 + length(wrapped[0]) <= width
+        ):
+            lines[-1] += " " + wrapped[0]
+            wrapped.pop(0)
 
-        if wrap_length_fn(wrapped[0]) - wrap_length_fn(subsequent_indent) < min_line_len:
-            # Don't add a line break, just update the offset and append a space
-            current_offset = wrap_length_fn(wrapped[0]) - wrap_length_fn(subsequent_indent) + 1
-            if not lines:
-                lines.append(wrapped[0])
-            else:
-                lines[-1] += " " + sentence.strip()
-        else:
-            # Normal case - add all wrapped lines
-            if wrapped:
-                lines.extend(wrapped)
-                current_offset = 0
+        lines.extend(wrapped)
 
         first_line = False
+
+    # Now insert the indents and assemble the paragraph.
+    if initial_indent and len(lines) > 0:
+        lines[0] = initial_indent + lines[0]
+    if subsequent_indent and len(lines) > 1:
+        lines[1:] = [subsequent_indent + line for line in lines[1:]]
 
     return "\n".join(lines)
 
@@ -414,6 +424,9 @@ A second paragraph.
     
     - Another sub item (after a line break)
 
+- This is a nice [Markdown auto-formatter](https://github.com/jlevy/kmd/blob/main/kmd/text_formatting/markdown_normalization.py),
+  so text documents are saved in a normalized form that can be diffed consistently.
+
 A third paragraph.
 
 ## Sub-heading
@@ -463,6 +476,22 @@ Indented code:
 “*Simple should be simple.
 Complex should be possible.*” —Alan Kay
 </p>
+
+### Building
+
+1. Lorem ipsum dolor sit amet, consectetur adipiscing elit. [Fork](https://github.com/jlevy/kmd/fork) this repo
+   (having your own fork
+   will make it
+   easier to contribute actions, add models, etc.).
+
+2. [Check out](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
+   the code. Lorem [another link](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
+
+3. Install the package dependencies:
+
+   ```shell
+   poetry install
+   ```
     """
 ).lstrip()
 
@@ -474,14 +503,14 @@ This is sentence one.
 This is sentence two.
 This is sentence three.
 This is sentence four.
-This is sentence 5. This is sentence six. Seven. Eight. Nine. Ten.
+This is sentence 5. This is sentence six.
+Seven. Eight. Nine. Ten.
 A [link](https://example.com).
 Some *emphasis* and **strong emphasis** and `code`. And a
 super-super-super-super-super-super-super-hyphenated
 veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeery
-long word.
-This is a sentence with many words and words and words and words and words and words and
-words and words.
+long word. This is a sentence with many words and words and words and words and words and
+words and words and words.
 And another with words and words and words split across a line.
 
 A second paragraph.
@@ -502,6 +531,10 @@ A second paragraph.
   - Another sub item
 
   - Another sub item (after a line break)
+
+- This is a nice
+  [Markdown auto-formatter](https://github.com/jlevy/kmd/blob/main/kmd/text_formatting/markdown_normalization.py),
+  so text documents are saved in a normalized form that can be diffed consistently.
 
 A third paragraph.
 
@@ -560,6 +593,22 @@ and more
 
 <p style="max-width: 450px;"> “*Simple should be simple.
 Complex should be possible.*” —Alan Kay </p>
+
+### Building
+
+1. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+   [Fork](https://github.com/jlevy/kmd/fork) this repo (having your own fork will make it
+   easier to contribute actions, add models, etc.).
+
+2. [Check out](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
+   the code. Lorem
+   [another link](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
+
+3. Install the package dependencies:
+
+   ```shell
+   poetry install
+   ```
     """
 ).lstrip()
 

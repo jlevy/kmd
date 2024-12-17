@@ -76,25 +76,16 @@ Split words, but not within HTML tags or Markdown links.
 def wrap_text(
     text: str,
     width: int,
-    initial_indent: str = "",
-    subsequent_indent: str = "",
-    empty_indent: str = "",
+    initial_offset: int = 0,
+    subsequent_offset: int = 0,
     replace_whitespace: bool = True,
     drop_whitespace: bool = True,
     splitter: WordSplitter = html_md_word_splitter,
-    initial_offset: int = 0,
 ) -> List[str]:
     """
     Wrap a single paragraph of text, returning a list of wrapped lines.
-    Rewritten and simplified from Python's textwrap.py.
-
-    :param initial_indent: String to prepend to the first line.
-    :param subsequent_indent: String to prepend to subsequent lines.
-    :param replace_whitespace: Replace all whitespace with single spaces.
-    :param drop_whitespace: Drop leading and trailing whitespace from lines.
-    :param initial_offset: Number of columns to consider already used on first line.
+    Rewritten to simplify and generalize Python's textwrap.py.
     """
-    global wrap_length_fn
     len_fn = wrap_length_fn
 
     if replace_whitespace:
@@ -104,40 +95,39 @@ def wrap_text(
 
     lines: List[str] = []
     current_line: List[str] = []
-    current_width = len_fn(initial_indent) + initial_offset
+    current_width = initial_offset
 
-    if len(initial_indent) > initial_offset:
-        initial_offset = len(initial_indent)
+    # Special case: if the first word would not fit due to the initial_offset,
+    # add a blank line to indicate we must begin a new line.
+    # if initial_offset > 0 and len(words) > 0 and initial_offset + len(words[0]) > width:
+    #     lines.append("")
+    #     current_width = subsequent_offset
+    #     initial_offset = subsequent_offset
 
-    if initial_offset + 1 >= width:
-        # Convenience, in case after the next space we would be at the width
-        # limit, we wrap and skip the first indent.
-        current_width = len_fn(subsequent_indent)
-        initial_indent = subsequent_indent
-
+    # Walk through words, breaking them into lines.
     for word in words:
         word_width = len_fn(word)
 
         space_width = 1 if current_line else 0
         if current_width + word_width + space_width <= width:
+            # Add word to current line.
             current_line.append(word)
             current_width += word_width + space_width
         else:
+            # Start a new line.
             if current_line:
                 line = " ".join(current_line)
                 if drop_whitespace:
                     line = line.strip()
-                lines.append((initial_indent if not lines else subsequent_indent) + line)
+                lines.append(line)
             current_line = [word]
-            current_width = len_fn(subsequent_indent) + word_width
+            current_width = subsequent_offset + word_width
 
     if current_line:
         line = " ".join(current_line)
         if drop_whitespace:
             line = line.strip()
-        lines.append((initial_indent if not lines else subsequent_indent) + line)
-    elif empty_indent:
-        lines.append(empty_indent)
+        lines.append(line)
 
     return lines
 
@@ -147,28 +137,29 @@ def wrap_paragraph(
     width: int,
     initial_indent: str = "",
     subsequent_indent: str = "",
-    empty_indent: str = "",
+    initial_offset: int = 0,
     replace_whitespace: bool = True,
     drop_whitespace: bool = True,
     splitter: WordSplitter = html_md_word_splitter,
-    initial_offset: int = 0,
 ) -> str:
     """
     Fill a single paragraph of text, returning a new string.
     """
-    return "\n".join(
-        wrap_text(
-            text,
-            width,
-            initial_indent,
-            subsequent_indent,
-            empty_indent,
-            replace_whitespace,
-            drop_whitespace,
-            splitter,
-            initial_offset,
-        )
+    lines = wrap_text(
+        text=text,
+        width=width,
+        replace_whitespace=replace_whitespace,
+        drop_whitespace=drop_whitespace,
+        splitter=splitter,
+        initial_offset=initial_offset + wrap_length_fn(initial_indent),
+        subsequent_offset=wrap_length_fn(subsequent_indent),
     )
+    # Now insert indents on first and subsequent lines, if needed.
+    if initial_indent and initial_offset == 0 and len(lines) > 0:
+        lines[0] = initial_indent + lines[0]
+    if subsequent_indent and len(lines) > 1:
+        lines[1:] = [subsequent_indent + line for line in lines[1:]]
+    return "\n".join(lines)
 
 
 # Tests
@@ -266,7 +257,7 @@ def test_wrap_text():
     print(filled_smart_offset)
     filled_smart_offset_expected = dedent(
         """
-        >This
+        This
         >>is a sample text with a
         >>[Markdown link](https://example.com)
         >>and an <a href='#'>tag</a>. It should

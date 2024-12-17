@@ -41,8 +41,7 @@ solutions for us.
 So what does all this have to do with the command line?
 
 Well, the classic Unix-style command line has been the Swiss Army knife for savvy developers
-for decades.
-(The bash shell, still used widely, was released 35 years ago!)
+for decades. (The bash shell, still used widely, was released 35 years ago!)
 
 Like many developers, I love the terminal (I even wrote a popular
 [guide on it](https://github.com/jlevy/the-art-of-command-line), with millions of readers).
@@ -107,21 +106,18 @@ That brings us to the goals behind building a new, AI-native shell.
   with different models and prompts, looking at what works, focusing expert human attention
   in the right places.
   The most flexible tools augment, not replace, your ability to review and manipulate
-  information.
-  It should help both very technical users, like developers, as well as less technical but
-  sophisticated users who aren't traditional programmers.
+  information. It should help both very technical users, like developers, as well as less
+  technical but sophisticated users who aren't traditional programmers.
 
 - **Accelerate discovery of the workflows that work best:** We have so many powerful APIs,
   models, libraries, and tools now—but the real bottleneck is in discovering and then
   orchestrating the right workflows with the right inputs, models, prompts, and human
-  assistance.
-  Anyone should be able to discover new steps and workflows without waiting on engineers or
-  designers.
+  assistance. Anyone should be able to discover new steps and workflows without waiting on
+  engineers or designers.
 
 - **Understand and build on itself:** A truly AI-native programming environment should
-  improve itself!
-  Kmd can read its own code and docs, assist you with its own commands, and write new Kmd
-  actions.
+  improve itself! Kmd can read its own code and docs, assist you with its own commands, and
+  write new Kmd actions.
   Better languages and scripting tools can in fact make LLMs smarter, because it allows them
   to solve problems in ways that are simpler and less error prone.
 

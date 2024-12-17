@@ -1,8 +1,7 @@
 ## Is Kmd Mature?
 
-No. Not at all.
-:) It's the result of a few weeks of coding and experimentation, and it's very much in
-progress.
+No. Not at all. :) It's the result of a few weeks of coding and experimentation, and it's
+very much in progress.
 Please help me make it better by sharing your ideas and feedback!
 It's easiest to DM me at [twitter.com/ojoshe](https://x.com/ojoshe).
 My contact info is at [github.com/jlevy](https://github.com/jlevy).
@@ -56,8 +55,8 @@ See more motivation in the philosophy section below.
 
   - Sixel graphics support (see images right in the terminal)
 
-  - A local server for serving information on files as web pages that can be accessed as
-    OSC 8 links
+  - A local server for serving information on files as web pages that can be accessed as OSC
+    8 links
 
   - Sadly, we may have mind-boggling AI tools, but Terminals are still incredibly archaic
     and don't support these features well (more on this below) but I have a new terminal,

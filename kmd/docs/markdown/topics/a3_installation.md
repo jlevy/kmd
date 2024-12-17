@@ -4,9 +4,8 @@
 
 The best way to use Kmd is as its own shell, which is a shell environment based on
 [xonsh](https://xon.sh/). If you've used a bash or Python shell before, xonsh is very
-intuitive.
-If you don't want to use xonsh, you can still use it from other shells or as a Python
-library.
+intuitive. If you don't want to use xonsh, you can still use it from other shells or as a
+Python library.
 
 Within the Kmd shell, you get a full environment with all actions and commands.
 You also get intelligent auto-complete and a built-in assistant to help you perform tasks.

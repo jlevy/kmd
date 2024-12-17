@@ -125,7 +125,6 @@ def fill_text(
                     width=width,
                     initial_indent=initial_indent,
                     subsequent_indent=subsequent_indent,
-                    empty_indent=empty_indent,
                     replace_whitespace=replace_whitespace,
                 )
             )

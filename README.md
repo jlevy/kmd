@@ -42,9 +42,8 @@ tools in the right ways.
 
 ## Is Kmd Mature?
 
-No. Not at all.
-:) It's the result of a few weeks of coding and experimentation, and it's very much in
-progress.
+No. Not at all. :) It's the result of a few weeks of coding and experimentation, and it's
+very much in progress.
 Please help me make it better by sharing your ideas and feedback!
 It's easiest to DM me at [twitter.com/ojoshe](https://x.com/ojoshe).
 My contact info is at [github.com/jlevy](https://github.com/jlevy).
@@ -98,8 +97,8 @@ See more motivation in the philosophy section below.
 
   - Sixel graphics support (see images right in the terminal)
 
-  - A local server for serving information on files as web pages that can be accessed as
-    OSC 8 links
+  - A local server for serving information on files as web pages that can be accessed as OSC
+    8 links
 
   - Sadly, we may have mind-boggling AI tools, but Terminals are still incredibly archaic
     and don't support these features well (more on this below) but I have a new terminal,
@@ -133,9 +132,8 @@ All of this is only possible by relying on a wide variety of powerful libraries,
 
 The best way to use Kmd is as its own shell, which is a shell environment based on
 [xonsh](https://xon.sh/). If you've used a bash or Python shell before, xonsh is very
-intuitive.
-If you don't want to use xonsh, you can still use it from other shells or as a Python
-library.
+intuitive. If you don't want to use xonsh, you can still use it from other shells or as a
+Python library.
 
 Within the Kmd shell, you get a full environment with all actions and commands.
 You also get intelligent auto-complete and a built-in assistant to help you perform tasks.
@@ -461,9 +459,8 @@ By default, when you are not using the shell inside a workspace directory, or wh
 Kmd the first time, it uses the default *sandbox workspace*.
 
 Once you create a workspace, you can `cd` into that workspace and that will become the
-current workspace.
-(If you're familiar with how the `git` command-line works in conjunction with the `.git/`
-directory, this behavior is very similar.)
+current workspace. (If you're familiar with how the `git` command-line works in conjunction
+with the `.git/` directory, this behavior is very similar.)
 
 To start a new workspace, run a command like
 
@@ -564,8 +561,7 @@ box, but I encourage you to try
 still reading, I have a request.
 So alongside Kmd, I've begun to build a new terminal app, **Kyrm**, that has the features we
 would want in a modern command line, such as clickable links and commands, tooltips, and
-image support.
-Kmd also takes advantage of this support by embedding OSC 8 links.
+image support. Kmd also takes advantage of this support by embedding OSC 8 links.
 It is *so* much nicer to use.
 I'd like feedback so please [message me](https://twitter.com/ojoshe) if you'd like to try it
 out an early dev version!
@@ -718,8 +714,7 @@ solutions for us.
 So what does all this have to do with the command line?
 
 Well, the classic Unix-style command line has been the Swiss Army knife for savvy developers
-for decades.
-(The bash shell, still used widely, was released 35 years ago!)
+for decades. (The bash shell, still used widely, was released 35 years ago!)
 
 Like many developers, I love the terminal (I even wrote a popular
 [guide on it](https://github.com/jlevy/the-art-of-command-line), with millions of readers).
@@ -784,21 +779,18 @@ That brings us to the goals behind building a new, AI-native shell.
   with different models and prompts, looking at what works, focusing expert human attention
   in the right places.
   The most flexible tools augment, not replace, your ability to review and manipulate
-  information.
-  It should help both very technical users, like developers, as well as less technical but
-  sophisticated users who aren't traditional programmers.
+  information. It should help both very technical users, like developers, as well as less
+  technical but sophisticated users who aren't traditional programmers.
 
 - **Accelerate discovery of the workflows that work best:** We have so many powerful APIs,
   models, libraries, and tools now—but the real bottleneck is in discovering and then
   orchestrating the right workflows with the right inputs, models, prompts, and human
-  assistance.
-  Anyone should be able to discover new steps and workflows without waiting on engineers or
-  designers.
+  assistance. Anyone should be able to discover new steps and workflows without waiting on
+  engineers or designers.
 
 - **Understand and build on itself:** A truly AI-native programming environment should
-  improve itself!
-  Kmd can read its own code and docs, assist you with its own commands, and write new Kmd
-  actions.
+  improve itself! Kmd can read its own code and docs, assist you with its own commands, and
+  write new Kmd actions.
   Better languages and scripting tools can in fact make LLMs smarter, because it allows them
   to solve problems in ways that are simpler and less error prone.
 

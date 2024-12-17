@@ -30,8 +30,7 @@ File formats and conventions:
 
 - Markdown in these items optionally may be pure Markdown or optionally contain HTML. A
   common use case is to add `<span>` or `<div>` tags to wrap sections of the document with
-  semantic meaning.
-  Any HTML can be used but some conventions are helpful:
+  semantic meaning. Any HTML can be used but some conventions are helpful:
 
   - Timestamps from a transcription: `<span data-timestamp="12.34">Some trancribed
     text.</span>`
@@ -44,9 +43,8 @@ File formats and conventions:
 
 - Pure text Markdown is usually stored in an auto-formatted normalized form.
   This enforces strict Markdown syntax conventions and makes it easy to read in the console
-  and to diff.
-  One detail with the Markdown format is that bullet point items are always written with two
-  newlines between them.
+  and to diff. One detail with the Markdown format is that bullet point items are always
+  written with two newlines between them.
   This makes chunking in LLMs easier, so that each bullet point is a separate paragraph.
 
 - Resource items are often simply links to online resources such as a URL or YouTube video.

@@ -32,8 +32,7 @@ Ask by typing any question ending in `?` The Kmd assistant knows the docs and ca
 many questions!
 
 Remember there are tab completions on many commands and actions, and that can help you get
-started.
-You can also try `sugg
+started. You can also try `suggest_actions`.
 
 Type `?` and press tab to see some frequently asked questions.
 

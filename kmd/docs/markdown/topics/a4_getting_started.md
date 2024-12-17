@@ -215,9 +215,8 @@ By default, when you are not using the shell inside a workspace directory, or wh
 Kmd the first time, it uses the default *sandbox workspace*.
 
 Once you create a workspace, you can `cd` into that workspace and that will become the
-current workspace.
-(If you're familiar with how the `git` command-line works in conjunction with the `.git/`
-directory, this behavior is very similar.)
+current workspace. (If you're familiar with how the `git` command-line works in conjunction
+with the `.git/` directory, this behavior is very similar.)
 
 To start a new workspace, run a command like
 

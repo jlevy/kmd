@@ -21,8 +21,7 @@ box, but I encourage you to try
 still reading, I have a request.
 So alongside Kmd, I've begun to build a new terminal app, **Kyrm**, that has the features we
 would want in a modern command line, such as clickable links and commands, tooltips, and
-image support.
-Kmd also takes advantage of this support by embedding OSC 8 links.
+image support. Kmd also takes advantage of this support by embedding OSC 8 links.
 It is *so* much nicer to use.
 I'd like feedback so please [message me](https://twitter.com/ojoshe) if you'd like to try it
 out an early dev version!
