@@ -2,6 +2,7 @@ import re
 from textwrap import dedent
 from typing import List, Protocol, Tuple
 
+from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
 from kmd.util.ansi_cell_len import ansi_cell_len
 
 # wrap_length_fn = len
@@ -154,6 +155,15 @@ def wrap_paragraph(
     if subsequent_indent and len(lines) > 1:
         lines[1:] = [subsequent_indent + line for line in lines[1:]]
     return "\n".join(lines)
+
+
+def wrap_plaintext(text: str, width=CONSOLE_WRAP_WIDTH) -> str:
+    """
+    Wrap lines with our standard settings.
+    """
+    paragraphs = text.split("\n\n")
+    wrapped_paragraphs = [wrap_paragraph(p, width=width) for p in paragraphs]
+    return "\n\n".join(wrapped_paragraphs)
 
 
 # Tests

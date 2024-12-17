@@ -4,7 +4,7 @@ from typing import List
 import regex
 
 from kmd.config.text_styles import CONSOLE_WRAP_WIDTH
-from kmd.text_formatting.text_wrapping import html_md_word_splitter, WordSplitter, wrap_paragraph
+from kmd.text_wrap.text_wrapping import html_md_word_splitter, WordSplitter, wrap_paragraph
 
 
 DEFAULT_INDENT = "    "

@@ -397,7 +397,6 @@ class Kri(BaseModel):
     """
 
     attrs: TextAttrs = Field(
-        default=None,
         description="Attributes for this KRI, either the href or the other attributes.",
     )
 
@@ -430,7 +429,7 @@ class Kri(BaseModel):
         The full URI, including the type and metadata.
         Note that we use cautious URL encoding, i.e. %20 and not + for encodingspaces.
         """
-        if self.attrs and self.attrs.href:
+        if self.attrs.href:
             return self.attrs.href
         else:
             return f"{KUI_SCHEME}?{urlencode(self.attrs.as_json_dict(), quote_via=quote)}"

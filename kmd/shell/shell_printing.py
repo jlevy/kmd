@@ -6,8 +6,9 @@ from kmd.config.logger import get_logger
 from kmd.file_formats.chat_format import ChatHistory
 from kmd.model.file_formats_model import file_format_info
 from kmd.model.items_model import ItemType
-from kmd.shell.shell_output import cprint, Wrap
+from kmd.shell.shell_output import cprint
 from kmd.text_chunks.parse_divs import parse_divs
+from kmd.text_wrap.text_styling import Wrap
 from kmd.util.format_utils import fmt_file_size
 
 log = get_logger(__name__)

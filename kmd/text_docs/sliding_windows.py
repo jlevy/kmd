@@ -8,9 +8,9 @@ from typing import Generator, Optional
 
 from kmd.config.logger import get_logger
 from kmd.errors import ContentError
+from kmd.file_formats.doc_normalization import normalize_formatting
 from kmd.model.file_formats_model import Format
 from kmd.text_docs.text_doc import SentIndex, size, TextDoc, TextUnit
-from kmd.text_formatting.doc_formatting import normalize_formatting
 
 
 log = get_logger(__name__)

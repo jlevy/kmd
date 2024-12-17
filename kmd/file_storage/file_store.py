@@ -11,7 +11,7 @@ from kmd.config.logger import get_logger, log_file_path
 from kmd.config.text_styles import EMOJI_SAVED
 
 from kmd.errors import FileExists, FileNotFound, InvalidFilename, SkippableError
-from kmd.file_storage.item_file_format import read_item, write_item
+from kmd.file_formats.item_file_format import read_item, write_item
 from kmd.file_storage.metadata_dirs import MetadataDirs
 from kmd.file_storage.store_filenames import folder_for_type, join_suffix, parse_item_filename
 from kmd.file_tools.file_walk import walk_by_dir

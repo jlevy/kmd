@@ -27,7 +27,7 @@ from kmd.model.messages_model import Message
 from kmd.model.script_model import Script
 from kmd.shell.assistant_output import print_assistant_response
 from kmd.shell.shell_output import cprint
-from kmd.text_formatting.markdown_normalization import normalize_markdown
+from kmd.text_wrap.markdown_normalization import normalize_markdown
 from kmd.util.log_calls import log_calls
 from kmd.util.parse_shell_args import shell_unquote
 from kmd.util.type_utils import not_none

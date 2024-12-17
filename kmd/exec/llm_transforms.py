@@ -13,7 +13,7 @@ from kmd.model.messages_model import Message, MessageTemplate
 from kmd.text_docs.diff_filters import accept_all, DiffFilter
 from kmd.text_docs.sliding_transforms import filtered_transform, WindowSettings
 from kmd.text_docs.text_doc import TextDoc
-from kmd.text_formatting.markdown_normalization import normalize_markdown
+from kmd.text_wrap.markdown_normalization import normalize_markdown
 
 log = get_logger(__name__)
 

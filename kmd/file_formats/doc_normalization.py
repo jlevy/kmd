@@ -6,18 +6,9 @@ from frontmatter_format import fmf_read, fmf_write
 from kmd.errors import InvalidInput
 from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import detect_file_format, Format
-from kmd.text_formatting.markdown_normalization import DEFAULT_WRAP_WIDTH, normalize_markdown
-from kmd.text_formatting.text_wrapping import wrap_paragraph
+from kmd.text_wrap.markdown_normalization import DEFAULT_WRAP_WIDTH, normalize_markdown
+from kmd.text_wrap.text_wrapping import wrap_plaintext
 from kmd.util.type_utils import not_none
-
-
-def wrap_plaintext(text: str, width=80) -> str:
-    """
-    Wrap lines with our standard settings.
-    """
-    paragraphs = text.split("\n\n")
-    wrapped_paragraphs = [wrap_paragraph(p, width=width) for p in paragraphs]
-    return "\n\n".join(wrapped_paragraphs)
 
 
 def normalize_formatting(text: str, format: Optional[Format], width=DEFAULT_WRAP_WIDTH) -> str:

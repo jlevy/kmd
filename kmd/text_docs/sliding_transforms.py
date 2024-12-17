@@ -17,7 +17,7 @@ from kmd.text_docs.text_doc import Paragraph, TextDoc, TextUnit
 from kmd.text_docs.token_diffs import diff_docs, DiffFilter, find_best_alignment
 from kmd.text_docs.window_settings import WINDOW_BR, WINDOW_BR_SEP, WindowSettings
 from kmd.text_docs.wordtoks import join_wordtoks
-from kmd.text_formatting.markdown_normalization import normalize_markdown
+from kmd.text_wrap.markdown_normalization import normalize_markdown
 from kmd.util.format_utils import fmt_lines
 from kmd.util.task_stack import task_stack
 

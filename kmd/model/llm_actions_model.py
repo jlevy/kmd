@@ -43,7 +43,7 @@ class LLMAction(PerItemAction):
         Override to customize item handling.
         """
         from kmd.exec.llm_transforms import llm_transform_item
-        from kmd.text_formatting.markdown_normalization import normalize_markdown
+        from kmd.text_wrap.markdown_normalization import normalize_markdown
 
         item = llm_transform_item(self.context(), item)
         if item.body:

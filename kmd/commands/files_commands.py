@@ -18,6 +18,7 @@ from kmd.exec.resolve_args import (
     resolvable_paths,
     resolve_path_arg,
 )
+from kmd.file_formats.doc_normalization import normalize_text_file
 from kmd.file_tools.file_sort_filter import (
     collect_files,
     FileInfo,
@@ -44,7 +45,6 @@ from kmd.shell_tools.native_tools import (
 )
 from kmd.shell_tools.tool_deps import Tool, tool_check
 from kmd.text_docs.unified_diffs import unified_diff_files, unified_diff_items
-from kmd.text_formatting.doc_formatting import normalize_text_file
 from kmd.util.format_utils import fmt_file_size, fmt_lines, fmt_time
 from kmd.util.strif import copyfile_atomic
 from kmd.web_content.file_cache_tools import cache_file

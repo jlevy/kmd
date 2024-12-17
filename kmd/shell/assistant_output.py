@@ -13,7 +13,7 @@ from kmd.shell.shell_output import (
     print_text_block,
     Style,
 )
-from kmd.text_formatting.markdown_normalization import fill_markdown
+from kmd.text_wrap.markdown_normalization import fill_markdown
 
 
 def print_assistant_heading(model: LLM) -> None:

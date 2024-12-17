@@ -6,6 +6,9 @@ from kmd.text_docs.window_settings import WINDOW_128_PARA, WindowSettings
 
 log = get_logger(__name__)
 
+# FIXME: Get this working cleanly with highly formatted Markdown like
+# a project readme.
+
 
 @kmd_action
 class Spellcheck(LLMAction):

@@ -23,7 +23,7 @@ from kmd.model import (
 )
 from kmd.preconditions.precondition_defs import is_instructions
 from kmd.shell.assistant_output import print_assistant_response
-from kmd.text_formatting.text_styling import fill_text, Wrap
+from kmd.text_wrap.text_styling import fill_text, Wrap
 from kmd.util.lazyobject import lazyobject
 from kmd.util.type_utils import not_none
 
