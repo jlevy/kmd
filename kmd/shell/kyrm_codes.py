@@ -61,180 +61,18 @@ from rich.text import Text
 
 from kmd.shell_tools.osc_tools import osc_code
 
-KUI_PROTOCOL = "kui:"
-"""The "protocol" portion of Kyrm URIs."""
 
-KUI_SCHEME = f"{KUI_PROTOCOL}//"
-"""The Kyrm URI scheme for embedding UI elements into links."""
-
-KUI_OSC = "77"
-"""A lucky OSC code not used by other applications."""
-
-KUI_VERSION = 0
+KC_VERSION = 0
 """Version of the Kyrm codes format. Update when we make breaking changes."""
 
+KYRM_OSC = "77"
+"""A lucky OSC code not used by other applications."""
 
-class KriType(str, Enum):
-    """Types of rich URIs."""
+KUI_PROTOCOL = "kui:"
+"""The "protocol" portion of Kyrm code URIs."""
 
-    url = "url"
-    tooltip = "tooltip"
-    button = "button"
-    popover = "popover"
-    action = "action"
-    notification = "notification"
-
-    @property
-    def kui_prefix(self) -> str:
-        if self == KriType.url:
-            return ""
-        else:
-            return f"{KUI_SCHEME}{self.value}"
-
-
-class Kri(BaseModel):
-    """
-    A KRI is a "Kyrm URI" conveying rich metadata for UI elements, of the form:
-    `kui://kri_type?k1=v1&k2=v2&...`.
-    """
-
-    kri_type: KriType = Field(
-        ..., description="The type of the KRI is the path portion of the URI."
-    )
-    metadata: Dict[str, str] = Field(
-        default_factory=dict, description="KRI metadata is the query string of the URI."
-    )
-    url: Optional[str] = Field(
-        default=None,
-        description="Just the URL, if this is a plain URL, or None if it's another KRY type.",
-    )
-
-    @model_validator(mode="after")
-    def validate_url_consistency(self) -> Self:
-        if self.kri_type == KriType.url and self.url is None:
-            raise ValueError("URL is required for type 'url'")
-        if self.kri_type != KriType.url and self.url is not None:
-            raise ValueError("URL must be None unless of type 'url'")
-        return self
-
-    @classmethod
-    def from_url(cls, url: str) -> Self:
-        return cls(kri_type=KriType.url, url=url)
-
-    @classmethod
-    def tooltip(cls, text: str) -> Self:
-        """
-        Example: kui://tooltip?text=My%20Tooltip
-        """
-        return cls(kri_type=KriType.tooltip, metadata={"text": text})
-
-    @classmethod
-    def button(cls, text: str, action: str, value: str) -> Self:
-        """
-        Example: kui://button?text=Click%20Me&action=paste&value=ls%20-l
-        """
-        return cls(
-            kri_type=KriType.button,
-            metadata={"text": text, "action": action, "value": value},
-        )
-
-    @classmethod
-    def popover(cls, url: str) -> Self:
-        """
-        Example: kui://popover?url=https%3A%2F%2Fexample.com
-        """
-        return cls(kri_type=KriType.popover, metadata={"url": url})
-
-    @classmethod
-    def action(cls, action: str, value: str) -> Self:
-        """
-        Example: kui://action?action=paste&value=ls%20-l
-        """
-        return cls(
-            kri_type=KriType.action,
-            metadata={"action": action, "value": value},
-        )
-
-    @classmethod
-    def notification(cls, text: str) -> Self:
-        """
-        Example: kui://notification?text=Hello%20World
-        """
-        return cls(kri_type=KriType.notification, metadata={"text": text})
-
-    @classmethod
-    def parse(cls, uri_str: str) -> Self:
-        """
-        Parse a URI string into a Kri.
-        """
-        # Parse plain URLs.
-        if uri_str.startswith(("http://", "https://")):
-            return cls(kri_type=KriType.url, url=uri_str)
-
-        # Parse kui:// URIs into type and metadata.
-        if uri_str.startswith(KUI_SCHEME):
-            parsed = urlparse(uri_str)
-            try:
-                uri_type = KriType(parsed.netloc)
-            except ValueError:
-                raise ValueError(f"Unrecognized {KUI_SCHEME} URI: {uri_str}")
-            metadata = {k: v[0] for k, v in parse_qs(parsed.query).items()}
-            return cls(kri_type=uri_type, metadata=metadata)
-        raise ValueError(f"Invalid URI scheme: {uri_str}")
-
-    @property
-    def uri_str(self) -> str:
-        """
-        The full URI, including the type and metadata.
-        Note that we use cautious URL encoding, i.e. %20 and not + for encodingspaces.
-        """
-        if self.kri_type == KriType.url:
-            assert self.url is not None
-            return self.url
-        else:
-            return f"{self.kri_type.kui_prefix}?{urlencode(self.metadata, quote_via=quote)}"
-
-    def __str__(self) -> str:
-        return self.uri_str
-
-
-class Link(BaseModel):
-    """
-    A text link with a URL or KRI and link text. Serializable as an OSC 8
-    hyperlink.
-    """
-
-    kri: Kri
-    link_text: str
-
-    @property
-    def osc8(self) -> str:
-        from kmd.shell_tools.osc_tools import osc8_link
-
-        return osc8_link(self.kri.uri_str, self.link_text)
-
-    def as_rich(self, style: str | Style = "") -> Text:
-        return Text.from_ansi(self.osc8, style=style)
-
-    def as_html(self) -> str:
-        return f'<a href="{escape(self.kri.uri_str, quote=True)}">{escape(self.link_text)}</a>'
-
-    def as_json(self) -> str:
-        return self.model_dump_json()
-
-
-class ElementType(str, Enum):
-    text_tooltip = "text_tooltip"
-    link_tooltip = "link_tooltip"
-    iframe_tooltip = "iframe_tooltip"
-
-    iframe_popover = "iframe_popover"
-
-    chat_output = "chat_output"
-    chat_input = "chat_input"
-
-    button = "button"
-    multiple_choice = "multiple_choice"
+KUI_SCHEME = f"{KUI_PROTOCOL}//"
+"""The Kyrm code URI scheme for embedding UI elements into links."""
 
 
 class UIActionType(str, Enum):
@@ -248,11 +86,23 @@ class UIAction(BaseModel):
     An action triggered by a UI element, such as pasting text or running a command.
     """
 
-    action_type: UIActionType = Field(..., description="Action element_type.")
+    action_type: UIActionType = Field(..., description="Action type.")
     value: str = Field(..., description="Action value.")
 
-    def to_kri(self) -> str:
-        return Kri.action(self.action_type, self.value).uri_str
+    def as_json(self) -> str:
+        """
+        Serialize to standard JSON format.
+        """
+        return self.model_dump_json()
+
+
+class DisplayStyle(str, Enum):
+    """
+    Style for text.
+    """
+
+    plain = "plain"
+    button = "button"
 
 
 class Position(BaseModel):
@@ -282,26 +132,48 @@ class DisplayHints(BaseModel):
     dimensions: Optional[Dimensions] = Field(default=None, description="Dimensions.")
 
 
+class UIRole(str, Enum):
+    tooltip = "tooltip"
+    popover = "popover"
+    output = "output"
+    input = "input"
+
+
+class UIElementType(str, Enum):
+    text_tooltip = "text_tooltip"
+    link_tooltip = "link_tooltip"
+    iframe_tooltip = "iframe_tooltip"
+
+    iframe_popover = "iframe_popover"
+
+    chat_output = "chat_output"
+
+    chat_input = "chat_input"
+    button = "button"
+    multiple_choice = "multiple_choice"
+
+
 class UIElement(BaseModel):
     """
     Base class for all UI elements.
     """
 
-    element_type: ElementType
-    kui_version: int = Field(default=KUI_VERSION, description="Kyrm code version")
+    role: UIRole
+    element_type: UIElementType
+    kc_version: int = Field(default=KC_VERSION, description="Kyrm code version.")
     hints: Optional[DisplayHints] = Field(default=None, description="Display hints.")
 
     @model_validator(mode="after")
     def validate_version(self) -> Self:
-        if self.kui_version < KUI_VERSION:
+        if self.kc_version < KC_VERSION:
             raise ValueError(
-                f"Incompatible Kyrm code version: expected {KUI_VERSION}, got {self.kui_version}"
+                f"Incompatible Kyrm code version: expected {KC_VERSION}, got {self.kc_version}"
             )
         return self
 
     def as_json(self) -> str:
         """
-        Convert to a JSON string.
+        Serialize to a standard JSON format.
         """
         return self.model_dump_json()
 
@@ -309,93 +181,114 @@ class UIElement(BaseModel):
         """
         Convert to an OSC 77 code.
         """
-        return osc_code(KUI_OSC, self.model_dump_json())
+        return osc_code(KYRM_OSC, self.as_json())
 
 
-class InputElement(UIElement):
+class TooltipElement(UIElement):
+    """
+    Base for tooltip elements, which appear over the terminal and are transient.
+    """
+
+    role: Literal[UIRole.tooltip] = UIRole.tooltip
+
+
+class PopoverElement(UIElement):
+    """
+    Base for popover elements, which appear over the terminal and are persistent.
+    """
+
+    role: Literal[UIRole.popover] = UIRole.popover
+
+
+class TerminalElement(UIElement):
+    """
+    Base for elements that can be displayed within the terminal (as text or in
+    place of text).
+    """
+
+
+class OutputElement(TerminalElement):
+    """
+    Base for output elements.
+    """
+
+    role: Literal[UIRole.output] = UIRole.output
+
+
+class InputElement(TerminalElement):
     """
     Base for input elements.
     """
 
+    role: Literal[UIRole.input] = UIRole.input
 
-class TextTooltip(UIElement):
+
+class TextTooltip(TooltipElement):
     """
     A simple text tooltip.
     """
 
-    element_type: Literal[ElementType.text_tooltip] = ElementType.text_tooltip
+    element_type: Literal[UIElementType.text_tooltip] = UIElementType.text_tooltip
     text: str = Field(..., description="Tooltip text.")
 
-    def to_kri(self) -> str:
-        return Kri.tooltip(self.text).uri_str
 
-
-class LinkTooltip(UIElement):
+class LinkTooltip(TooltipElement):
     """
     A tooltip with info about a URL. Typically this would be a tooltip like with a
     preview of the page or the title and description of the page.
     """
 
-    element_type: Literal[ElementType.link_tooltip] = ElementType.link_tooltip
+    element_type: Literal[UIElementType.link_tooltip] = UIElementType.link_tooltip
     url: str = Field(..., description="Tooltip URL.")
 
-    def to_kri(self) -> str:
-        return self.url
 
-
-class IframeTooltip(UIElement):
+class IframeTooltip(TooltipElement):
     """
     A tooltip with an iframe.
     """
 
-    element_type: Literal[ElementType.iframe_tooltip] = ElementType.iframe_tooltip
+    element_type: Literal[UIElementType.iframe_tooltip] = UIElementType.iframe_tooltip
     url: str = Field(..., description="Tooltip iframe URL.")
 
     def to_kri(self) -> str:
         return self.url
 
 
-class IframePopover(UIElement):
+class IframePopover(PopoverElement):
     """
     A popover with an iframe.
     """
 
-    element_type: Literal[ElementType.iframe_popover] = ElementType.iframe_popover
+    element_type: Literal[UIElementType.iframe_popover] = UIElementType.iframe_popover
     url: str = Field(..., description="Popover iframe URL.")
 
-    def to_kri(self) -> str:
-        return Kri.popover(self.url).uri_str
 
-
-class ChatOutput(UIElement):
+class ChatOutput(OutputElement):
     """
     Chat-like output or response element.
     """
 
-    element_type: Literal[ElementType.chat_output] = ElementType.chat_output
+    element_type: Literal[UIElementType.chat_output] = UIElementType.chat_output
     text: str = Field(..., description="Chat text.")
 
 
-class ChatInput(UIElement):
+class ChatInput(InputElement):
     """
     Chat-like input element.
     """
 
-    element_type: Literal[ElementType.chat_input] = ElementType.chat_input
+    element_type: Literal[UIElementType.chat_input] = UIElementType.chat_input
     prompt: str = Field(..., description="Initial prompt.")
 
 
-class Button(UIElement):
+class Button(InputElement):
     """
     A clickable button.
     """
 
-    element_type: Literal[ElementType.button] = ElementType.button
+    element_type: Literal[UIElementType.button] = UIElementType.button
     text: str = Field(..., description="Button label.")
     action: UIAction = Field(..., description="Button action.")
-
-    def to_kri(self) -> str:
-        return Kri.button(self.text, self.action.action_type, self.action.value).uri_str
 
 
 class MultipleChoice(InputElement):
@@ -403,8 +296,20 @@ class MultipleChoice(InputElement):
     Multiple-choice input element.
     """
 
-    element_type: Literal[ElementType.multiple_choice] = ElementType.multiple_choice
+    element_type: Literal[UIElementType.multiple_choice] = UIElementType.multiple_choice
     options: List[str] = Field(..., description="Choice options.")
+
+
+TooltipUnion = Annotated[
+    Union[
+        TextTooltip,
+        LinkTooltip,
+        IframeTooltip,
+    ],
+    Field(discriminator="element_type"),
+]
+
+tooltip_adapter = TypeAdapter(TooltipUnion)
 
 
 UIElementUnion = Annotated[
@@ -412,40 +317,186 @@ UIElementUnion = Annotated[
         TextTooltip,
         LinkTooltip,
         IframeTooltip,
-        Button,
-        MultipleChoice,
+        IframePopover,
         ChatOutput,
         ChatInput,
-        IframePopover,
+        Button,
+        MultipleChoice,
     ],
     Field(discriminator="element_type"),
 ]
+
+ui_element_adapter = TypeAdapter(UIElementUnion)
+
+
+class TextAttrs(BaseModel):
+    """
+    Attributes, including link, hover, click, and display element, for text.
+    """
+
+    href: Optional[str] = Field(
+        default=None,
+        description="Target URL, if this text is a link.",
+    )
+    hover: Optional[TooltipUnion] = Field(default=None, description="Hover element.")
+    click: Optional[UIAction] = Field(default=None, description="Click action.")
+    double_click: Optional[UIAction] = Field(default=None, description="Double click action.")
+    display_style: DisplayStyle = Field(
+        default=DisplayStyle.plain, description="Display style for this text."
+    )
+
+    @model_validator(mode="after")
+    def validate(self) -> Self:
+        if self.href and not urlparse(self.href).scheme:
+            raise ValueError(f"Not a valid URL: {self.href}")
+        if not self.href and not self.hover and not self.click and not self.double_click:
+            raise ValueError(f"No text attributes set: {self}")
+        return self
+
+    @classmethod
+    def from_json_dict(cls, json_dict: Dict[str, str]) -> Self:
+        """
+        Deserialize from a set of JSON values.
+        """
+        href = json_dict.get("href")
+        hover = json_dict.get("hover")
+        click = json_dict.get("click")
+        double_click = json_dict.get("double_click")
+        return cls(
+            href=href,
+            hover=(tooltip_adapter.validate_json(hover) if hover else None),
+            click=(UIAction.model_validate_json(click) if click else None),
+            double_click=(UIAction.model_validate_json(double_click) if double_click else None),
+        )
+
+    def as_json_dict(self) -> Dict[str, str]:
+        """
+        Convert to a dictionary of JSON values, omitting None values.
+        """
+        base = {
+            "href": self.href,
+            "hover": self.hover.as_json() if self.hover else None,
+            "click": self.click.as_json() if self.click else None,
+            "double_click": self.double_click.as_json() if self.double_click else None,
+        }
+        return {k: v for k, v in base.items() if v is not None}
+
+
+class Kri(BaseModel):
+    """
+    A KRI is a URI that can be used to specify how terminal text will be displayed.
+
+    It may be a regular URL, which is usable as the href of a link in the usual way,
+    or a "Kyrm URI" conveying richer metadata.
+
+    A Kyrm URI is a `kui://` URI with a query string containing key-value pairs
+    that specify the attributes for the text.
+
+    Each query string value is optional and may be omitted. If present it is
+    an escaped, serialized JSON string.
+    """
+
+    attrs: TextAttrs = Field(
+        default=None,
+        description="Attributes for this KRI, either the href or the other attributes.",
+    )
+
+    @classmethod
+    def for_url(cls, url: str) -> Self:
+        return cls(attrs=TextAttrs(href=url))
+
+    @classmethod
+    def parse(cls, uri_str: str) -> Self:
+        """
+        Parse a URI string into a Kri.
+        """
+        # Convert AnyUrl to string if needed
+        uri_str = str(uri_str)
+
+        # Parse kui:// URIs.
+        if uri_str.startswith(KUI_SCHEME):
+            parsed = urlparse(uri_str)
+            qs = {k: v[0] for k, v in parse_qs(parsed.query).items()}
+            if not qs:
+                raise ValueError(f"Invalid KRI with no query string: {uri_str}")
+            metadata = TextAttrs.from_json_dict(qs)
+            return cls(attrs=metadata)
+        else:
+            return cls.for_url(uri_str)
+
+    @property
+    def uri_str(self) -> str:
+        """
+        The full URI, including the type and metadata.
+        Note that we use cautious URL encoding, i.e. %20 and not + for encodingspaces.
+        """
+        if self.attrs and self.attrs.href:
+            return self.attrs.href
+        else:
+            return f"{KUI_SCHEME}?{urlencode(self.attrs.as_json_dict(), quote_via=quote)}"
+
+    def __str__(self) -> str:
+        return self.uri_str
+
+
+class KriLink(BaseModel):
+    """
+    A text link with a URL or KRI and link text. Serializable as an OSC 8 hyperlink.
+    """
+
+    kri: Kri
+    link_text: str
+
+    @classmethod
+    def with_attrs(
+        cls,
+        link_text: str,
+        href: Optional[str] = None,
+        hover: Optional[TooltipUnion] = None,
+        click: Optional[UIAction] = None,
+        double_click: Optional[UIAction] = None,
+        display_style: DisplayStyle = DisplayStyle.plain,
+    ) -> Self:
+        return cls(
+            kri=Kri(
+                attrs=TextAttrs(
+                    href=href,
+                    hover=hover,
+                    click=click,
+                    double_click=double_click,
+                    display_style=display_style,
+                )
+            ),
+            link_text=link_text,
+        )
+
+    @property
+    def osc8(self) -> str:
+        from kmd.shell_tools.osc_tools import osc8_link
+
+        return osc8_link(self.kri.uri_str, self.link_text)
+
+    def as_rich(self, style: str | Style = "") -> Text:
+        return Text.from_ansi(self.osc8, style=style)
+
+    def as_html(self) -> str:
+        return f'<a href="{escape(self.kri.uri_str, quote=True)}">{escape(self.link_text)}</a>'
+
+    def as_json(self) -> str:
+        return self.model_dump_json()
 
 
 ## Tests
 
 
-def test_parsing():
-    tooltip_json = '{"element_type": "text_tooltip", "text": "Hello", "version": "kyrm.v0"}'
-    tooltip = TextTooltip.model_validate_json(tooltip_json)
-    assert tooltip.element_type == ElementType.text_tooltip
-    assert tooltip.text == "Hello"
-
-
 def test_examples():
 
-    kri = Kri.parse("kui://tooltip?text=Tooltip%20text")
-    assert kri.kri_type == KriType.tooltip
-    assert kri.metadata == {"text": "Tooltip text"}
-
-    tooltip_link = Link(kri=kri, link_text="Link text")
-    assert tooltip_link.as_html() == '<a href="kui://tooltip?text=Tooltip%20text">Link text</a>'
-
+    text_tooltip = TextTooltip(text="Hello")
+    link_tooltip = LinkTooltip(url="https://example.com")
     button = Button(
         text="Click me",
         action=UIAction(action_type=UIActionType.paste, value="ls"),
     )
-
     popover_element = IframePopover(
         url="https://example.com",
         hints=DisplayHints(
@@ -453,27 +504,45 @@ def test_examples():
         ),
     )
 
-    print("\ntooltip_link:")
-    print("\n".join([tooltip_link.as_html(), repr(tooltip_link.osc8)]))
-
-    print("\nbutton:")
-    print("\n".join([button.as_json(), repr(button.as_osc())]))
-
-    print("\npopover_element:")
-    print(
-        "\n".join(
-            [
-                popover_element.as_json(),
-                repr(popover_element.as_osc()),
-                popover_element.to_kri(),
-            ]
-        )
-    )
+    print(f"\ntext_tooltip: {text_tooltip.as_json()}")
+    print(f"\nlink_tooltip: {link_tooltip.as_json()}")
+    print(f"\nbutton: {button.as_json()}")
+    print(f"\npopover_element: {popover_element.as_json()}")
 
     # Test round-tripping.
-    element_parser = TypeAdapter(UIElementUnion)
     for element in [button, popover_element]:
-        parsed = element_parser.validate_json(element.as_json())
+        parsed = ui_element_adapter.validate_json(element.as_json())
         assert parsed.element_type == element.element_type
         assert parsed.as_json() == element.as_json()
         assert parsed.as_osc() == element.as_osc()
+
+
+def test_kri():
+
+    kri1 = Kri.for_url("https://example.com")
+    kri2 = Kri(attrs=TextAttrs(hover=TextTooltip(text="Tooltip text")))
+    kri3 = Kri(
+        attrs=TextAttrs(
+            hover=TextTooltip(text="List files"),
+            click=UIAction(action_type=UIActionType.paste, value="ls -l"),
+            double_click=UIAction(action_type=UIActionType.run_command, value="ls -l"),
+        )
+    )
+
+    print(f"\nkri1: {kri1.uri_str}")
+    print(f"\nkri2: {kri2.uri_str}")
+    print(f"\nkri3: {kri3.uri_str}")
+
+    assert Kri.parse(kri1.uri_str) == kri1
+    assert Kri.parse(kri2.uri_str) == kri2
+    assert Kri.parse(kri3.uri_str) == kri3
+
+    link1 = KriLink(kri=kri1, link_text="Example link")
+    link2 = KriLink(kri=kri2, link_text="Text with hover")
+    link3 = KriLink(kri=kri3, link_text="List files")
+
+    print(f"\nlink1: {link1.as_html()}")
+    print(f"\nlink2: {link2.as_html()}")
+    print(f"\nlink3: {link3.as_html()}")
+
+    assert link1.as_html() == '<a href="https://example.com">Example link</a>'

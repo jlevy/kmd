@@ -11,7 +11,7 @@ from kmd.errors import InvalidState
 from kmd.model.args_model import fmt_loc
 
 from kmd.model.paths_model import StorePath
-from kmd.shell.kyrm_codes import Kri, Link
+from kmd.shell.kyrm_codes import Kri, KriLink, TextTooltip
 from kmd.util.atomic import AtomicVar
 from kmd.workspaces.workspaces import current_workspace
 
@@ -25,14 +25,17 @@ class LinkFormatter(ABC):
 
     @abstractmethod
     def tooltip_link(self, text: str, tooltip: Optional[str] = None) -> Text:
+        """Text with a tooltip."""
         pass
 
     @abstractmethod
     def path_link(self, path: Path, link_text: str) -> Text:
+        """A link to a local path (file or directory)."""
         pass
 
     @abstractmethod
     def command_link(self, command_str: str) -> Text:
+        """Text that links to a command."""
         pass
 
 
@@ -61,23 +64,23 @@ class DefaultLinkFormatter(PlaintextFormatter):
 
     def tooltip_link(self, text: str, tooltip: Optional[str] = None) -> Text:
         if tooltip:
-            return Link(kri=Kri.tooltip(tooltip), link_text=text).as_rich()
+            return KriLink.with_attrs(text, hover=TextTooltip(text=tooltip)).as_rich()
         else:
             return Text(text)
 
     def path_link(self, path: Path, link_text: str) -> Text:
-        from kmd.server.server_routes import local_url
+        from kmd.server.local_server_routes import local_url
 
         url = local_url.view_file(path)
-        return Link(kri=Kri.from_url(url), link_text=link_text).as_rich()
+        return KriLink.with_attrs(link_text, href=url).as_rich()
 
     def command_link(self, command_str: str) -> Text:
-        from kmd.server.server_routes import local_url
+        from kmd.server.local_server_routes import local_url
 
         url = local_url.explain(text=command_str)
         return Text.assemble(
             Text("`", style=COLOR_HINT),
-            Link(kri=Kri.from_url(url), link_text=command_str).as_rich(),
+            KriLink.with_attrs(command_str, href=url).as_rich(),
             Text("`", style=COLOR_HINT),
         )
 
@@ -96,10 +99,10 @@ class WorkspaceLinkFormatter(DefaultLinkFormatter):
 
     def path_link(self, path: Path, link_text: str) -> Text:
         if isinstance(path, StorePath):
-            from kmd.server.server_routes import local_url
+            from kmd.server.local_server_routes import local_url
 
             url = local_url.view_item(store_path=path, ws_name=self.ws_name)
-            return Link(kri=Kri.from_url(url), link_text=link_text).as_rich()
+            return KriLink(kri=Kri.for_url(url), link_text=link_text).as_rich()
         else:
             return super().path_link(path, link_text)
 
