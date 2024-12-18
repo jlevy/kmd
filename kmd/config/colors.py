@@ -72,7 +72,7 @@ terminal_colors = SimpleNamespace(
     black_light=hsl_to_hex("hsl(0, 0%, 73%)"),
     black_lighter=hsl_to_hex("hsl(0, 0%, 90%)"),
     # red
-    red_darker=hsl_to_hex("hsl(7, 43%, 51%)"),
+    red_darker=hsl_to_hex("hsl(7, 43%, 48%)"),
     red_dark=hsl_to_hex("hsl(7, 73%, 72%)"),
     red_light=hsl_to_hex("hsl(7, 87%, 85%)"),
     red_lighter=hsl_to_hex("hsl(7, 95%, 94%)"),
@@ -82,7 +82,7 @@ terminal_colors = SimpleNamespace(
     green_light=hsl_to_hex("hsl(134, 53%, 73%)"),
     green_lighter=hsl_to_hex("hsl(134, 70%, 90%)"),
     # yellow
-    yellow_darker=hsl_to_hex("hsl(44, 44%, 44%)"),
+    yellow_darker=hsl_to_hex("hsl(44, 47%, 44%)"),
     yellow_dark=hsl_to_hex("hsl(44, 54%, 55%)"),
     yellow_light=hsl_to_hex("hsl(44, 74%, 76%)"),
     yellow_lighter=hsl_to_hex("hsl(44, 80%, 90%)"),
@@ -92,12 +92,12 @@ terminal_colors = SimpleNamespace(
     blue_light=hsl_to_hex("hsl(225, 86%, 88%)"),
     blue_lighter=hsl_to_hex("hsl(225, 90%, 94%)"),
     # magenta
-    magenta_darker=hsl_to_hex("hsl(305, 34%, 55%)"),
+    magenta_darker=hsl_to_hex("hsl(305, 38%, 55%)"),
     magenta_dark=hsl_to_hex("hsl(305, 54%, 71%)"),
     magenta_light=hsl_to_hex("hsl(305, 68%, 85%)"),
     magenta_lighter=hsl_to_hex("hsl(305, 96%, 95%)"),
     # cyan
-    cyan_darker=hsl_to_hex("hsl(188, 48%, 43%)"),
+    cyan_darker=hsl_to_hex("hsl(188, 60%, 41%)"),
     cyan_dark=hsl_to_hex("hsl(188, 58%, 57%)"),
     cyan_light=hsl_to_hex("hsl(188, 52%, 76%)"),
     cyan_lighter=hsl_to_hex("hsl(188, 52%, 92%)"),
