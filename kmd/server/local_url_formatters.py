@@ -12,7 +12,7 @@ from kmd.model.args_model import fmt_loc
 
 from kmd.model.paths_model import StorePath
 from kmd.shell.kyrm_codes import Kri, KriLink, TextTooltip
-from kmd.util.atomic import AtomicVar
+from kmd.util.atomic_var import AtomicVar
 from kmd.workspaces.workspaces import current_workspace
 
 log = get_logger(__name__)

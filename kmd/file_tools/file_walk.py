@@ -16,11 +16,13 @@ log = get_logger(__name__)
 @dataclass(frozen=True)
 class FileList:
     """
-    A flat list of files in a directory.
+    A flat list of files in a directory. It may also contain directories, if
+    requested.
     """
 
     parent_dir: str
     filenames: List[str]
+    dirnames: Optional[List[str]]
     files_ignored: int
     dirs_ignored: int
     files_skipped: int
@@ -35,6 +37,7 @@ def walk_by_dir(
     max_depth: int = -1,
     max_files_per_subdir: int = -1,
     max_files_total: int = -1,
+    include_dirs: bool = False,
 ) -> Generator[FileList, None, None]:
     """
     Simple wrapper around `os.walk`. Yields all files in each folder as a
@@ -44,7 +47,8 @@ def walk_by_dir(
 
     :param max_depth: Maximum depth to recurse into directories. -1 means no limit.
     :param max_files_per_subdir: Maximum number of files to yield per subdirectory.
-    :param max_files: Maximum total number of files to yield.
+    :param max_files_total: Maximum total number of files to yield.
+    :param include_dirs: Whether to include directory entries in the output.
     """
 
     start_path = start_path.resolve()
@@ -62,6 +66,7 @@ def walk_by_dir(
         yield FileList(
             parent_dir,
             [start_path.name],
+            None,
             files_ignored=0,
             dirs_ignored=0,
             files_skipped=0,
@@ -74,7 +79,9 @@ def walk_by_dir(
     for dirname, dirnames, filenames in os.walk(start_path):
         current_depth = len(Path(dirname).relative_to(start_path).parts)
 
-        # Handle max_depth.
+        dirnames_copy = dirnames
+
+        # Handle max_depth, truncating recursion if needed.
         if max_depth >= 0 and current_depth >= max_depth:
             dirnames[:] = []
 
@@ -108,8 +115,9 @@ def walk_by_dir(
         num_files_uncapped = num_files_capped = len(filenames)
         num_dirs_uncapped = num_dirs_capped = len(dirnames)
 
-        # Apply max_files_per_subdir
-        if max_files_per_subdir > 0:
+        # Apply max_files_per_subdir (but not at the top level, since that's confusing).
+        at_top_level = dirname == str(start_path)
+        if max_files_per_subdir > 0 and not at_top_level:
             filenames = filenames[:max_files_per_subdir]
 
         # Apply max_files limit
@@ -127,9 +135,13 @@ def walk_by_dir(
         files_so_far += num_files_capped
 
         parent_dir = relpath(abspath(dirname), relative_to) if relative_to else dirname
+
+        should_include_dirs = include_dirs and current_depth <= max_depth
+
         yield FileList(
             parent_dir,
             filenames,
+            dirnames_copy if should_include_dirs else None,
             files_ignored,
             dirs_ignored,
             files_skipped=num_files_uncapped - num_files_capped,

@@ -336,8 +336,9 @@ def files(
     recent: bool = False,
     flat: bool = False,
     pager: bool = False,
-    show_first: int = 0,
-    max_depth: int = 3,
+    include_dirs: bool = False,
+    max_per_group: int = 0,
+    depth: int = 3,
     max_per_subdir: int = 1000,
     max_files: int = 1000,
     no_max: bool = False,
@@ -357,20 +358,19 @@ def files(
     For a quick, paged overview of all files in a big directory, use `files --pager`.
 
     :param brief: Only shows a few files per directory.
-        Same as `--show_first=10 --groupby=parent`.
+        Same as `--groupby=parent --max_per_group=10 `.
     :param recent: Only shows the most recently modified files in each directory.
-        Same as `--show_first=10 --sort=modified --reverse --groupby=parent`.
+        Same as `--sort=modified --reverse --groupby=parent --max_per_group=10`.
     :param flat: Show files in a flat list, rather than grouped by parent directory.
         Same as `--groupby=flat`.
     :param pager: Use the pager when displaying the output.
-    :param show_first: Limit the first number of items displayed per group (if groupby is used)
-        or in total. 0 means show all.
-    :param max_depth: Maximum depth to recurse into directories.
-        -1 means no limit.
+    :param depth: Maximum depth to recurse into directories. -1 means no limit.
     :param max_files_per_subdir: Maximum number of files to yield per subdirectory
-        -1 means no limit.
+        (not including the top level). -1 means no limit.
     :param max_files: Maximum number of files to yield per input path.
         -1 means no limit.
+    :param max_per_group: Limit the first number of items displayed per group
+        (if groupby is used) or in total. 0 means show all.
     :param no_max: Disable limits on depth and number of files. Same as
         `--max_depth=-1 --max_per_subdir=-1 --max_files=-1`.
     :param no_ignore: Disable ignoring hidden files.
@@ -383,11 +383,8 @@ def files(
          Defaults to 'parent'.
     :param iso_time: Show time in ISO format (default is human-readable age).
     """
-    # FIXME: This is recursive by default so we should have it trim depth and breadth
-    # per directory, or it breaks on deeply nested directories.
-    # TODO: Add a --depth option.
     # TODO: Add a --full option with line and word counts and file_info details
-    # and include these in --save.
+    # and also include these in --save.
 
     if len(paths) == 0:
         paths_to_show = [Path(".")]
@@ -395,8 +392,8 @@ def files(
         paths_to_show = [parse_path_spec(path) for path in paths]
 
     if brief or recent:
-        if show_first <= 0:
-            show_first = 10
+        if max_per_group <= 0:
+            max_per_group = 10
         if groupby is None:
             groupby = GroupByOption.parent
     if recent:
@@ -410,7 +407,7 @@ def files(
         no_ignore = True
         no_max = True
     if no_max:
-        max_depth = max_per_subdir = max_files = -1
+        depth = max_per_subdir = max_files = -1
 
     since_seconds = parse_since(since) if since else 0.0
 
@@ -434,9 +431,10 @@ def files(
         ignore=is_ignored,
         since_seconds=since_seconds,
         base_path=base_path,
-        max_depth=max_depth,
+        max_depth=depth,
         max_files_per_subdir=max_per_subdir,
         max_files_total=max_files,
+        include_dirs=include_dirs,
     )
 
     ws = current_workspace()
@@ -449,7 +447,7 @@ def files(
 
     if not file_listing.files:
         cprint("No files found.")
-        _print_listing_tallies(file_listing, 0, 0, max_files, max_depth, max_per_subdir)
+        _print_listing_tallies(file_listing, 0, 0, max_files, depth, max_per_subdir)
         return ShellResult()
 
     df = file_listing.as_dataframe()
@@ -463,8 +461,8 @@ def files(
             by=[primary_sort, secondary_sort], ascending=[not reverse, True], inplace=True
         )
 
-    files_matching = len(df)
-    log.info(f"Total files collected: {files_matching}")
+    items_matching = len(df)
+    log.info(f"Total items collected: {items_matching}")
 
     if groupby and groupby != GroupByOption.flat:
         grouped = df.groupby(groupby.value)
@@ -503,8 +501,8 @@ def files(
                 if group_name:
                     cprint(f"\n{group_name} ({len(group_df)} files)", color=COLOR_EMPH)
 
-                if show_first:
-                    display_df = group_df.head(show_first)
+                if max_per_group:
+                    display_df = group_df.head(max_per_group)
                 else:
                     display_df = group_df
 
@@ -536,24 +534,28 @@ def files(
                         fmt.tooltip_link(short_file_size.rjust(SIZE_WIDTH), tooltip=full_file_size)
                     )
                     line.append(SPACING)
-                    line.append(fmt.path_link(display_path.resolve(), link_text=str(display_path)))
+                    line.append(
+                        fmt.path_link(
+                            display_path.resolve(), link_text=str(display_path) + row.suffix
+                        )
+                    )
 
                     cprint(line, text_wrap=Wrap.NONE)
                     total_displayed += 1
                     total_displayed_size += row.size
 
                 # Indicate if items are omitted.
-                if groupby and show_first and len(group_df) > show_first:
+                if groupby and max_per_group and len(group_df) > max_per_group:
                     cprint(
-                        f"{indent}… and {len(group_df) - show_first} more files",
+                        f"{indent}… and {len(group_df) - max_per_group} more files",
                         color=COLOR_EMPH_ALT,
                         text_wrap=Wrap.NONE,
                     )
                 cprint()
 
-            if not groupby and show_first and files_matching > show_first:
+            if not groupby and max_per_group and items_matching > max_per_group:
                 cprint(
-                    f"{indent}… and {files_matching - show_first} more files",
+                    f"{indent}… and {items_matching - max_per_group} more files",
                     color=COLOR_EMPH_ALT,
                     text_wrap=Wrap.NONE,
                 )
@@ -563,7 +565,7 @@ def files(
                 total_displayed,
                 total_displayed_size,
                 max_files,
-                max_depth,
+                depth,
                 max_per_subdir,
             )
 

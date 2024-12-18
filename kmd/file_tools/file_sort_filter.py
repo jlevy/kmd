@@ -48,6 +48,10 @@ class FileInfo:
     modified: datetime
     type: FileType
 
+    @property
+    def type_suffix(self):
+        return "/" if self.type == FileType.dir else ""
+
 
 def get_file_info(file_path: Path, base_path: Path, follow_symlinks: bool = False) -> FileInfo:
     stat = file_path.stat(follow_symlinks=follow_symlinks)
@@ -115,8 +119,9 @@ def collect_files(
     ignore: Optional[IgnoreFilter] = None,
     since_seconds: float = 0.0,
     base_path: Optional[Path] = None,
+    include_dirs: bool = False,
 ) -> FileListing:
-    files_info = []
+    files_info: List[FileInfo] = []
 
     for path in start_paths:
         if not path.exists():
@@ -156,6 +161,7 @@ def collect_files(
                 max_depth=max_depth,
                 max_files_per_subdir=max_files_per_subdir,
                 max_files_total=max_files_total,
+                include_dirs=include_dirs,
             ):
 
                 log.debug("Walking folder: %s: %s", fmt_loc(flist.parent_dir), flist.filenames)
@@ -166,6 +172,14 @@ def collect_files(
                 dirs_skipped += flist.dirs_skipped
 
                 dir_path = base_path / flist.parent_dir
+
+                if flist.dirnames:
+                    for dirname in flist.dirnames:
+                        info = get_file_info(dir_path / dirname, base_path)
+
+                        if not since_timestamp or info.modified.timestamp() > since_timestamp:
+                            files_info.append(info)
+
                 for filename in flist.filenames:
                     info = get_file_info(dir_path / filename, base_path)
 
