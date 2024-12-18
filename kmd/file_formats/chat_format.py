@@ -97,7 +97,7 @@ from frontmatter_format import from_yaml_string, new_yaml, to_yaml_string
 from pydantic.dataclasses import dataclass
 
 from kmd.model.items_model import Item, ItemType
-from kmd.util.format_utils import fmt_file_size
+from kmd.util.format_utils import fmt_size_human
 from kmd.util.obj_utils import abbreviate_obj
 from kmd.util.sort_utils import custom_key_sort
 
@@ -233,7 +233,7 @@ class ChatHistory:
             role_counts[msg.role.value] = role_counts.get(msg.role.value, 0) + 1
 
         counts = [f"{count} {role}" for role, count in role_counts.items()]
-        return f"{len(self.messages)} messages ({', '.join(counts)}, {fmt_file_size(len(self.to_json()))} bytes total)"
+        return f"{len(self.messages)} messages ({', '.join(counts)}, {fmt_size_human(len(self.to_json()))} bytes total)"
 
     def as_str(self) -> str:
         return self.to_yaml()

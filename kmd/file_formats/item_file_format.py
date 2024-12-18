@@ -10,7 +10,7 @@ from kmd.model.args_model import fmt_loc
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ITEM_FIELDS
 from kmd.model.operations_model import OPERATION_FIELDS
-from kmd.util.format_utils import fmt_file_size
+from kmd.util.format_utils import fmt_size_human
 from kmd.util.log_calls import tally_calls
 from kmd.util.sort_utils import custom_key_sort
 
@@ -138,7 +138,7 @@ def _read_item_uncached(path: Path, base_dir: Optional[Path]) -> Item:
             if stat.st_size > 100 * 1024 * 1024:
                 log.warning(
                     "Reading large text file (%s) into memory: %s",
-                    fmt_file_size(stat.st_size),
+                    fmt_size_human(stat.st_size),
                     fmt_loc(path),
                 )
             with open(path, "r", encoding="utf-8") as f:

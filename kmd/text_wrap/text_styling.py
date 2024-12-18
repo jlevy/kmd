@@ -63,15 +63,16 @@ class Wrap(Enum):
 def fill_text(
     text: str,
     text_wrap=Wrap.WRAP,
+    width=CONSOLE_WRAP_WIDTH,
     extra_indent: str = "",
     empty_indent: str = "",
-    width=CONSOLE_WRAP_WIDTH,
-    splitter: WordSplitter = html_md_word_splitter,
+    initial_column: int = 0,
+    word_splitter: WordSplitter = html_md_word_splitter,
 ) -> str:
     """
     Most flexible way to wrap and fill any number of paragraphs of plain text, with
     both text wrap options and extra indentation. Use for plain text. By default,
-    uses an HTML and Markdown aware word splitter.
+    uses the HTML and Markdown aware word splitter.
     """
 
     if not text_wrap.should_wrap:
@@ -107,8 +108,9 @@ def fill_text(
                     width=width,
                     initial_indent=initial_indent,
                     subsequent_indent=subsequent_indent,
+                    initial_column=initial_column,
                     replace_whitespace=replace_whitespace,
-                    splitter=splitter,
+                    word_splitter=word_splitter,
                 )
             )
 

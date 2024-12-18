@@ -326,14 +326,14 @@ def wrap_lines_using_sentences(
     sentences = split_sentences(text)
 
     for i, sentence in enumerate(sentences):
-        current_offset = initial_indent_len if first_line else subsequent_indent_len
+        current_column = initial_indent_len if first_line else subsequent_indent_len
         if len(lines) > 0 and length(lines[-1]) < min_line_len:
-            current_offset += length(lines[-1])
+            current_column += length(lines[-1])
 
         wrapped = wrap_paragraph_lines(
             sentence,
             width=width,
-            initial_offset=current_offset,
+            initial_column=current_column,
             subsequent_offset=subsequent_indent_len,
         )
         # If last line is shorter than min_line_len, combine with next line.

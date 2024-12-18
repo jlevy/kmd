@@ -267,12 +267,26 @@ def fmt_time(
         return fmt_age(now.timestamp() - dt.timestamp(), brief=brief)
 
 
-def fmt_file_size(size: int) -> str:
+def fmt_size_human(size: int) -> str:
     """
-    Format a file size in bytes as a human-readable string, e.g. "1.2MB".
+    Format a size (typically a file size) in bytes as a human-readable string,
+    e.g. "1.2MB".
     """
     # gnu is briefer, uses B instead of Bytes.
     return naturalsize(size, gnu=True)
+
+
+def fmt_size_dual(size: int, human_min: int = 1000000) -> str:
+    """
+    Format a size in bytes in both exact and human-readable formats, e.g.
+    "1200000 bytes (1.2MB)". The human-readable format is included if the size is
+    at least `human_min`.
+    """
+    readable_size_str = ""
+    if size >= human_min:
+        readable_size = fmt_size_human(size)
+        readable_size_str += f" ({readable_size})"
+    return f"{size} bytes{readable_size_str}"
 
 
 def fmt_count_items(count: int, name: str = "item") -> str:

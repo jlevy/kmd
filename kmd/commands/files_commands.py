@@ -45,7 +45,7 @@ from kmd.shell_tools.native_tools import (
 )
 from kmd.shell_tools.tool_deps import Tool, tool_check
 from kmd.text_docs.unified_diffs import unified_diff_files, unified_diff_items
-from kmd.util.format_utils import fmt_file_size, fmt_lines, fmt_time
+from kmd.util.format_utils import fmt_lines, fmt_size_human, fmt_time
 from kmd.util.strif import copyfile_atomic
 from kmd.web_content.file_cache_tools import cache_file
 from kmd.workspaces.workspaces import current_ignore, current_workspace
@@ -301,19 +301,19 @@ def _print_listing_tallies(
 ) -> None:
     if total_displayed > 0:
         cprint(
-            f"{total_displayed} files ({fmt_file_size(total_displayed_size)}) shown",
+            f"{total_displayed} files ({fmt_size_human(total_displayed_size)}) shown",
             color=COLOR_EMPH,
         )
     if file_listing.files_total > file_listing.files_matching > total_displayed:
         cprint(
             f"of {file_listing.files_matching} files "
-            f"({fmt_file_size(file_listing.size_matching)}) matching criteria",
+            f"({fmt_size_human(file_listing.size_matching)}) matching criteria",
             color=COLOR_EMPH,
         )
     if file_listing.files_total > total_displayed:
         cprint(
             f"from {file_listing.files_total} total files "
-            f"({fmt_file_size(file_listing.size_total)})",
+            f"({fmt_size_human(file_listing.size_total)})",
             color=COLOR_EMPH,
         )
     if file_listing.total_ignored > 0:
@@ -508,7 +508,7 @@ def files(
 
                 for row in display_df.itertuples(index=False, name="FileInfo"):
                     row = cast(FileInfo, row)
-                    short_file_size = fmt_file_size(row.size)
+                    short_file_size = fmt_size_human(row.size)
                     full_file_size = f"{row.size} bytes"
                     short_mod_time = fmt_time(row.modified, iso_time=iso_time, now=now, brief=True)
                     full_mod_time = fmt_time(row.modified, friendly=True, now=now)

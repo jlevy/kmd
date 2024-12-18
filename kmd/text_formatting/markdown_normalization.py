@@ -333,7 +333,7 @@ def wrap_lines_using_sentences(
         wrapped = wrap_paragraph_lines(
             sentence,
             width=width,
-            initial_offset=current_offset,
+            initial_column=current_offset,
             subsequent_offset=subsequent_indent_len,
         )
         # If last line is shorter than min_line_len, combine with next line.
