@@ -42,22 +42,43 @@ from kmd.text_wrap.text_styling import DEFAULT_INDENT, fill_text, Wrap
 console = get_console()
 
 
-def format_name_and_description(
-    name: str | Text,
-    doc: str | Text,
-    extra_note: Optional[str] = None,
-    text_wrap: Wrap = Wrap.WRAP_INDENT,
-) -> Text:
+def fill_rich_text(
+    doc: str | Text, text_wrap: Wrap = Wrap.WRAP_INDENT, initial_column: int = 0
+) -> str | Text:
     def do_fill(text: str) -> str:
-        return fill_text(textwrap.dedent(text).strip(), text_wrap=text_wrap)
+        return fill_text(
+            textwrap.dedent(text).strip(), text_wrap=text_wrap, initial_column=initial_column
+        )
 
     if isinstance(doc, Text):
         doc.plain = do_fill(doc.plain)
     else:
         doc = do_fill(doc)
 
+    return doc
+
+
+def format_name_and_value(
+    name: str | Text,
+    doc: str | Text,
+    text_wrap: Wrap = Wrap.WRAP_INDENT,
+) -> Text:
     if isinstance(name, str):
         name = Text(name, style=COLOR_KEY)
+    doc = fill_rich_text(doc, text_wrap=text_wrap, initial_column=len(name) + 2)
+
+    return Text.assemble(name, (": ", COLOR_HINT), doc)
+
+
+def format_name_and_description(
+    name: str | Text,
+    doc: str | Text,
+    extra_note: Optional[str] = None,
+    text_wrap: Wrap = Wrap.WRAP_INDENT,
+) -> Text:
+    if isinstance(name, str):
+        name = Text(name, style=COLOR_KEY)
+    doc = fill_rich_text(doc, text_wrap=text_wrap)
 
     return Text.assemble(
         name,

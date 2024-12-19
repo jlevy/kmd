@@ -9,14 +9,14 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from kmd.config import colors
 from kmd.config.logger import get_logger, record_console
 from kmd.config.settings import global_settings
-from kmd.errors import InvalidFilename
+from kmd.errors import FileNotFound, InvalidFilename
 from kmd.file_storage.file_store import FileStore
 from kmd.help.command_help import explain_command
 from kmd.model.items_model import Item
 from kmd.model.paths_model import StorePath
 from kmd.shell.rich_html import RICH_HTML_TEMPLATE
+from kmd.shell.shell_file_info import print_file_info
 from kmd.shell.shell_output import Wrap
-from kmd.shell.shell_printing import print_file_info
 from kmd.util.strif import abbreviate_str
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
@@ -54,19 +54,18 @@ def format_local_url(route_path: str, **params: Optional[str]) -> str:
 
 
 class Route(str, Enum):
-    view_file = "/file/view"
-    view_item = "/item/view"
-    read_item = "/item/read"
+    file_view = "/file/view"
+    item_view = "/item/view"
     explain = "/explain"
 
 
 class _LocalUrl:
     def view_file(self, path: Path) -> str:
-        return format_local_url(Route.view_file, path=str(path))
+        return format_local_url(Route.file_view, path=str(path))
 
     def view_item(self, store_path: StorePath, ws_name: str) -> str:
         return format_local_url(
-            Route.view_item, store_path=store_path.display_str(), ws_name=ws_name
+            Route.item_view, store_path=store_path.display_str(), ws_name=ws_name
         )
 
     def explain(self, text: str) -> str:
@@ -77,37 +76,43 @@ local_url = _LocalUrl()
 """Create URLs for the local server."""
 
 
-@router.api_route(Route.view_file, methods=["GET", "HEAD"])
-def view_file(request: Request, path: str):
+@router.api_route(Route.file_view, methods=["GET", "HEAD"])
+def file_view(request: Request, path: str):
     # Treat the file like an external path for the purposes of viewing.
     try:
         p = Path(path)
-        item = Item.from_external_path(p)
         body_text, footer_note = None, None
-        if not item.is_binary:
-            body_text, footer_note = _read_lines(p)
-        page_url = local_url.view_file(p)
+        if p.is_file():
+            item_or_path = Item.from_external_path(p)
+            if not item_or_path.is_binary:
+                body_text, footer_note = _read_lines(p)
+        else:
+            item_or_path = p
 
-        return _serve_item(request, item, page_url, body_text, footer_note)
+        page_self_url = local_url.view_file(path=p)
+
+        return _serve_item(request, item_or_path, page_self_url, body_text, footer_note)
     except (InvalidFilename, FileNotFoundError) as e:
         raise HTTPException(status_code=404, detail=f"File not found: {e}")
 
 
-@router.api_route(Route.view_item, methods=["GET", "HEAD"])
-def view_item(request: Request, store_path: str, ws_name: str):
-    sp = StorePath(store_path)
-    item = server_get_workspace(ws_name).load(sp)
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+@router.api_route(Route.item_view, methods=["GET", "HEAD"])
+def item_view(request: Request, store_path: str, ws_name: str):
+    try:
+        sp = StorePath(store_path)
+        item = server_get_workspace(ws_name).load(sp)
+        if not item:
+            raise FileNotFound(store_path)
 
-    # URL to serve a webpage with info about the item.
-    page_url = local_url.view_item(store_path=sp, ws_name=ws_name)
+        page_self_url = local_url.view_item(store_path=sp, ws_name=ws_name)
 
-    body_text, footer_note = _truncate_text(item.body_text())
-    if footer_note:
-        body_text += "\n…"
+        body_text, footer_note = _truncate_text(item.body_text())
+        if footer_note:
+            body_text += "\n…"
 
-    return _serve_item(request, item, page_url, body_text, footer_note)
+        return _serve_item(request, item, page_self_url, body_text, footer_note)
+    except (FileNotFound, InvalidFilename, FileNotFoundError) as e:
+        raise HTTPException(status_code=404, detail=f"Item not found: {e}")
 
 
 @router.api_route(Route.explain, methods=["GET"])
@@ -127,7 +132,6 @@ def explain(text: str):
                     "explain_view.html.jinja", {"help_html": help_html, "page_url": page_url}
                 ),
             },
-            css_overrides={"color-bg": colors.web.bg_translucent},
         )
     )
 
@@ -158,14 +162,30 @@ def _truncate_text(text: str, max_lines: int = MAX_LINES) -> Tuple[str, Optional
 
 def _serve_item(
     request: Request,
-    item: Item,
+    item_or_path: Item | Path,
     page_url: str,
     body_text: Optional[str] = None,
     footer_note: Optional[str] = None,
 ) -> StreamingResponse | HTMLResponse:
-    if item.is_binary:
-        # Return the item itself.
-        # TODO: Could make this thumbnails for images, PDF, etc.
+    """
+    Common logic to serve content of a binary item, or content or info of any item or file.
+    """
+
+    if isinstance(item_or_path, Item):
+        item = item_or_path
+        path = Path(not_none(item.store_path or item.external_path, "Missing path for item"))
+    elif isinstance(item_or_path, Path):
+        item = None
+        path = item_or_path
+    else:
+        raise ValueError("Missing item or path")
+
+    if not path:
+        raise HTTPException(status_code=500, detail="Missing path for item")
+
+    # Handle binary items, serving with a streaming response.
+    # TODO: Could also expose thumbnails for images, PDF, etc.
+    if item and item.is_binary:
 
         mime_type = item.format and item.format.mime_type
         if not mime_type:
@@ -174,11 +194,6 @@ def _serve_item(
         # Return headers only for HEAD requests.
         if request.method == "HEAD":
             return HTMLResponse(status_code=200, headers={"Content-Type": mime_type})
-
-        # Serve the binary item.
-        path = item.store_path or item.external_path
-        if not path:
-            raise HTTPException(status_code=500, detail="Binary item has no path")
 
         def file_iterator():
             try:
@@ -195,13 +210,15 @@ def _serve_item(
             media_type=mime_type,
         )
     else:
+        display_title = item.display_title() if item else str(path)
+
         # Return headers only for HEAD requests
         if request.method == "HEAD":
             return HTMLResponse(status_code=200, headers={"Content-Type": "text/html"})
 
         with record_console() as console:
             print_file_info(
-                Path(not_none(item.store_path or item.external_path)),
+                path,
                 show_size_details=True,
                 show_format=True,
                 text_wrap=Wrap.WRAP,
@@ -217,11 +234,12 @@ def _serve_item(
             render_web_template(
                 "base_webpage.html.jinja",
                 {
-                    "title": item.display_title(),
+                    "title": display_title,
                     "content": render_web_template(
                         "item_view.html.jinja",
                         {
                             "item": item,
+                            "path": path,
                             "page_url": page_url,
                             "file_info_html": file_info_html,
                             "body_text": body_text,
@@ -229,7 +247,6 @@ def _serve_item(
                         },
                     ),
                 },
-                css_overrides={"color-bg": colors.web.bg_translucent},
             )
         )
 

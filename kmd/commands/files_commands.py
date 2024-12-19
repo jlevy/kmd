@@ -23,6 +23,7 @@ from kmd.file_tools.file_sort_filter import (
     collect_files,
     FileInfo,
     FileListing,
+    filename_display,
     GroupByOption,
     parse_since,
     SortOption,
@@ -34,8 +35,8 @@ from kmd.model.items_model import Item, ItemType
 from kmd.model.paths_model import parse_path_spec, StorePath
 from kmd.model.shell_model import ShellResult
 from kmd.server.local_url_formatters import local_url_formatter
+from kmd.shell.shell_file_info import print_file_info
 from kmd.shell.shell_output import console_pager, cprint, print_status, print_style, Style, Wrap
-from kmd.shell.shell_printing import print_file_info
 from kmd.shell_tools.native_tools import (
     edit_files,
     native_trash,
@@ -231,7 +232,6 @@ def file_info(
 
     # FIXME: Ensure this yields absolute paths for sandbox store paths
     input_paths = assemble_path_args(*paths)
-    cprint()
     for input_path in input_paths:
         cprint(f"{fmt_loc(input_path)}:", color=COLOR_EMPH, text_wrap=Wrap.NONE)
         with print_style(Style.INDENT):
@@ -536,7 +536,8 @@ def files(
                     line.append(SPACING)
                     line.append(
                         fmt.path_link(
-                            display_path.resolve(), link_text=str(display_path) + row.suffix
+                            display_path.resolve(),
+                            link_text=filename_display(row),
                         )
                     )
 

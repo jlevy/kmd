@@ -4,6 +4,7 @@
 }
 
 .item-header {
+  margin: 0 1rem;
 }
 
 .item-meta {
@@ -33,9 +34,10 @@
   line-height: 1.2;
   margin-bottom: 1rem;
   padding: 0.5rem 1rem;
-  background-color: var(--color-bg-alt);
+  background-color: var(--color-bg-header);
   display: flex;
   align-items: flex-start;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .path-group {
@@ -73,7 +75,6 @@
 }
 
 .item-content {
-  padding: 0 1rem;
 }
 
 .item-title {
@@ -83,20 +84,18 @@
 }
 
 .item-body {
-  white-space: pre-wrap;
-  word-break: break-word;
+  border-top: 1px solid var(--color-border);
 }
 
 .item-file-info {
   font-family: var(--font-serif);
-  padding: 0;
-  margin: 0.5rem 0;
+  padding: 0.5rem 1rem;
   font-size: var(--font-size-mono-small);
   word-break: break-word;
 }
 
 .item-url {
-  margin: 0.5rem 0;
+  padding: 0.5rem 0;
 }
 
 .item-url a {
@@ -114,15 +113,18 @@
 }
 
 .item-body {
-  padding: 0;
-  margin: 1rem 0;
+  background-color: var(--color-bg-bright);
+  padding: 0.5rem 1rem;
   font-family: var(--font-mono);
   color: var(--color-secondary);
   font-size: var(--font-size-mono-small);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .item-footer-note {
-  margin: 1rem 0;
+  background-color: var(--color-bg-bright);
+  padding: 1rem 1rem;
   font-family: var(--font-sans);
   font-size: var(--font-size-small);
   color: var(--color-secondary);
@@ -146,7 +148,7 @@
 <div class="item-view">
   <div class="item-path">
     <div class="path-group">
-      <span class="path-text">{{ item.store_path or item.external_path }}</span>
+      <span class="path-text">{{ item.store_path or item.external_path or path }}</span>
     </div>
     <div class="action-icons">
       <i data-feather="copy" class="action-icon" onclick="copyDataValue(this)"
@@ -163,17 +165,22 @@
   <div class="item-content">
     <div class="item-header">
       <div class="item-meta">
+        {% if item.type %}
         <span class="item-type">{{ item.type.value }}</span>
+        {% endif %}
         {% if item.format %}
         <span class="item-label">Format:</span> <span class="item-format">{{ item.format.value }}</span>
         {% endif %}
+        {% if item.state %}
         <span class="item-label">State:</span> <span class="item-state">{{ item.state.value }}</span>
+        {% endif %}
       </div>
     </div>
 
     {% if item.title %}
     <h1 class="item-title">{{ item.title }}</h1>
     {% endif %}
+
 
     {% if item.url %}
     <div class="item-url">

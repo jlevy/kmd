@@ -77,7 +77,7 @@ terminal_colors = SimpleNamespace(
     red_light=hsl_to_hex("hsl(7, 87%, 85%)"),
     red_lighter=hsl_to_hex("hsl(7, 95%, 94%)"),
     # green
-    green_darker=hsl_to_hex("hsl(134, 35%, 46%)"),
+    green_darker=hsl_to_hex("hsl(134, 37%, 46%)"),
     green_dark=hsl_to_hex("hsl(134, 43%, 60%)"),
     green_light=hsl_to_hex("hsl(134, 53%, 73%)"),
     green_lighter=hsl_to_hex("hsl(134, 70%, 90%)"),
@@ -87,7 +87,7 @@ terminal_colors = SimpleNamespace(
     yellow_light=hsl_to_hex("hsl(44, 74%, 76%)"),
     yellow_lighter=hsl_to_hex("hsl(44, 80%, 90%)"),
     # blue
-    blue_darker=hsl_to_hex("hsl(225, 35%, 52%)"),
+    blue_darker=hsl_to_hex("hsl(225, 55%, 52%)"),
     blue_dark=hsl_to_hex("hsl(225, 71%, 76%)"),
     blue_light=hsl_to_hex("hsl(225, 86%, 88%)"),
     blue_lighter=hsl_to_hex("hsl(225, 90%, 94%)"),
@@ -123,18 +123,19 @@ terminal = terminal_dark
 
 
 # Web light colors.
-web_light = SimpleNamespace(
+web_light_translucent = SimpleNamespace(
     primary=hsl_to_hex("hsl(188, 31%, 41%)"),
     primary_light=hsl_to_hex("hsl(188, 40%, 62%)"),
-    secondary=hsl_to_hex("hsl(188, 12%, 38%)"),
-    bg=hsl_to_hex("hsl(188, 14%, 96%)"),
-    bg_translucent=hsl_to_hex("hsla(188, 12%, 84%, 0.95)"),
-    bg_alt=hsl_to_hex("hsl(44, 28%, 90%)"),
+    secondary=hsl_to_hex("hsl(188, 12%, 28%)"),
+    bg=hsl_to_hex("hsla(188, 12%, 90%, 0.8)"),
+    bg_header=hsl_to_hex("hsla(44, 28%, 90%, 0.75)"),
+    bg_bright=hsl_to_hex("hsla(44, 6%, 95%, 0.6)"),
     text=hsl_to_hex("hsl(188, 39%, 11%)"),
+    border=hsl_to_hex("hsl(188, 8%, 50%)"),
     hover=hsl_to_hex("hsl(188, 12%, 84%)"),
-    hover_bg=hsl_to_hex("hsl(188, 7%, 94%)"),
+    hover_bg=hsl_to_hex("hsla(188, 7%, 94%, 0.8)"),
     hint=hsl_to_hex("hsl(188, 11%, 65%)"),
-    tooltip_bg=hsl_to_hex("hsla(188, 6%, 37%, 0.90)"),
+    tooltip_bg=hsl_to_hex("hsla(188, 6%, 37%, 0.8)"),
     bright=hsl_to_hex("hsl(134, 43%, 60%)"),
     selection="hsla(225, 61%, 82%, 0.80)",
     scrollbar=hsl_to_hex("hsl(188, 12%, 55%)"),
@@ -200,7 +201,7 @@ rich_terminal_light = TerminalTheme(
 rich_terminal = rich_terminal_light
 
 # Only support light web colors for now.
-web = web_light
+web = web_light_translucent
 
 # Logical colors
 logical = SimpleNamespace(

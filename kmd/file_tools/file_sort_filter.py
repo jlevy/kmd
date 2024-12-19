@@ -48,9 +48,10 @@ class FileInfo:
     modified: datetime
     type: FileType
 
-    @property
-    def type_suffix(self):
-        return "/" if self.type == FileType.dir else ""
+
+def filename_display(file_info: FileInfo) -> str:
+    type_suffix = "/" if file_info.type == FileType.dir else ""
+    return f"{file_info.filename}{type_suffix}"
 
 
 def get_file_info(file_path: Path, base_path: Path, follow_symlinks: bool = False) -> FileInfo:
