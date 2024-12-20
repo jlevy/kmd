@@ -1,10 +1,12 @@
 <style>
 .item-view {
   font-family: var(--font-sans);
+  border-left: 3px solid var(--color-border-accent);
 }
 
 .item-header {
-  margin: 0 1rem;
+  padding: 1rem 1rem 0rem 1rem;
+  border-bottom: 1px solid var(--color-border-hint); 
 }
 
 .item-meta {
@@ -16,11 +18,11 @@
   font-size: var(--font-size-smaller);
   font-weight: 800;
   letter-spacing: 0.05em;
-  margin-right: 1rem;
+  padding-right: 1rem;
 }
 
 .item-format, .item-state {
-  margin-right: 1rem;
+  padding-right: 1rem;
 }
 
 .item-label {
@@ -28,16 +30,16 @@
 }
 
 .item-path {
+  background-color: var(--color-bg-header);
   position: relative;
   font-family: var(--font-mono);
   font-size: var(--font-size-mono-small);
   line-height: 1.2;
-  margin-bottom: 1rem;
   padding: 0.5rem 1rem;
-  background-color: var(--color-bg-header);
   display: flex;
   align-items: flex-start;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border-hint);
+  {# box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1); #}
 }
 
 .path-group {
@@ -75,23 +77,29 @@
 }
 
 .item-content {
+  {# background-color: var(--color-bg); #}
 }
 
 .item-title {
   font-family: var(--font-serif);
   font-size: 1.2rem;
-  margin: 0.2rem 0 1rem 0;
+  padding: 0.2rem 0 1rem 0;
 }
 
 .item-body {
-  border-top: 1px solid var(--color-border);
+  {# border-top: 1px solid var(--color-border); #}
 }
 
 .item-file-info {
-  font-family: var(--font-serif);
-  padding: 0.5rem 1rem;
-  font-size: var(--font-size-mono-small);
+  {# font-family: var(--font-sans); #}
+  padding: 0.5rem 0;
+  {# font-size: var(--font-size-mono-small); #}
   word-break: break-word;
+}
+
+.item-file-info pre {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-small);
 }
 
 .item-url {
@@ -113,7 +121,7 @@
 }
 
 .item-body {
-  background-color: var(--color-bg-bright);
+  {# background-color: var(--color-bg); #}
   padding: 0.5rem 1rem;
   font-family: var(--font-mono);
   color: var(--color-secondary);
@@ -122,8 +130,8 @@
   word-break: break-word;
 }
 
-.item-footer-note {
-  background-color: var(--color-bg-bright);
+.item-footer {
+  {# background-color: var(--color-bg); #}
   padding: 1rem 1rem;
   font-family: var(--font-sans);
   font-size: var(--font-size-small);
@@ -146,6 +154,7 @@
 </style>
 
 <div class="item-view">
+
   <div class="item-path">
     <div class="path-group">
       <span class="path-text">{{ item.store_path or item.external_path or path }}</span>
@@ -162,19 +171,18 @@
       {% endif %}
     </div>
   </div>
-  <div class="item-content">
-    <div class="item-header">
-      <div class="item-meta">
-        {% if item.type %}
-        <span class="item-type">{{ item.type.value }}</span>
-        {% endif %}
-        {% if item.format %}
-        <span class="item-label">Format:</span> <span class="item-format">{{ item.format.value }}</span>
-        {% endif %}
-        {% if item.state %}
-        <span class="item-label">State:</span> <span class="item-state">{{ item.state.value }}</span>
-        {% endif %}
-      </div>
+
+  <div class="item-header">
+    <div class="item-meta">
+      {% if item.type %}
+      <span class="item-type">{{ item.type.value }}</span>
+      {% endif %}
+      {% if item.format %}
+      <span class="item-label">Format:</span> <span class="item-format">{{ item.format.value }}</span>
+      {% endif %}
+      {% if item.state %}
+      <span class="item-label">State:</span> <span class="item-state">{{ item.state.value }}</span>
+      {% endif %}
     </div>
 
     {% if item.title %}
@@ -195,21 +203,23 @@
     <div class="item-file-info">{{ file_info_html | safe }}</div>
     {% endif %}
 
-
     {% if item.description %}
     <div class="item-description">
       {{ item.description }}
     </div>
     {% endif %}
+  </div>
 
+  <div class="item-content">
     {% if body_text %}
     <div class="item-body">{{ body_text }}</div>
     {% endif %}
 
     {% if footer_note %}
-    <div class="item-footer-note">{{ footer_note }}</div>
+    <div class="item-footer">{{ footer_note }}</div>
     {% endif %}
   </div>
+
 </div>
 
 <script>

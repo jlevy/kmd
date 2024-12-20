@@ -11,6 +11,9 @@
   --font-size-mono: 0.75rem;
   --font-size-mono-small: 0.7rem;
   --font-size-mono-tiny: 0.65rem;
+
+  --console-char-width: 88;
+  --console-width: calc(var(--console-char-width) + 2rem);
 }
 
 {{ color_defs|safe }}
@@ -174,7 +177,7 @@ pre {
   font-family: var(--font-mono);
   font-size: var(--font-size-mono);
   letter-spacing: -0.025em;
-  overflow-x: auto;
+  {# overflow-x: auto; #}
 }
 
 nav {
