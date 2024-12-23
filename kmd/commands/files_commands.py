@@ -23,10 +23,10 @@ from kmd.file_tools.file_sort_filter import (
     collect_files,
     FileInfo,
     FileListing,
-    type_suffix,
     GroupByOption,
     parse_since,
     SortOption,
+    type_suffix,
 )
 from kmd.file_tools.ignore_files import ignore_none
 from kmd.model.args_model import fmt_loc

@@ -11,7 +11,7 @@ from kmd.errors import InvalidState
 from kmd.model.args_model import fmt_loc
 
 from kmd.model.paths_model import StorePath
-from kmd.shell.kyrm_codes import Kri, KriLink, TextTooltip
+from kmd.shell.kyrm_codes import KriLink, TextTooltip, UIAction, UIActionType
 from kmd.util.atomic_var import AtomicVar
 from kmd.workspaces.workspaces import current_workspace
 
@@ -64,7 +64,8 @@ class DefaultLinkFormatter(PlaintextFormatter):
 
     def tooltip_link(self, text: str, tooltip: Optional[str] = None) -> Text:
         if tooltip:
-            return KriLink.with_attrs(text, hover=TextTooltip(text=tooltip)).as_rich()
+            link = KriLink.with_attrs(text, hover=TextTooltip(text=tooltip))
+            return link.as_rich()
         else:
             return Text(text)
 
@@ -72,7 +73,13 @@ class DefaultLinkFormatter(PlaintextFormatter):
         from kmd.server.local_server_routes import local_url
 
         url = local_url.view_file(path)
-        return KriLink.with_attrs(link_text, href=url).as_rich()
+        link = KriLink.with_attrs(
+            link_text,
+            href=url,
+            click=UIAction(action_type=UIActionType.paste_text),
+            double_click=UIAction(action_type=UIActionType.open_iframe_popover),
+        )
+        return link.as_rich()
 
     def command_link(self, command_str: str) -> Text:
         from kmd.server.local_server_routes import local_url
@@ -80,7 +87,12 @@ class DefaultLinkFormatter(PlaintextFormatter):
         url = local_url.explain(text=command_str)
         return Text.assemble(
             Text("`", style=COLOR_HINT),
-            KriLink.with_attrs(command_str, href=url).as_rich(),
+            KriLink.with_attrs(
+                command_str,
+                href=url,
+                click=UIAction(action_type=UIActionType.paste_text),
+                double_click=UIAction(action_type=UIActionType.run_command),
+            ).as_rich(),
             Text("`", style=COLOR_HINT),
         )
 
@@ -102,7 +114,13 @@ class WorkspaceLinkFormatter(DefaultLinkFormatter):
             from kmd.server.local_server_routes import local_url
 
             url = local_url.view_item(store_path=path, ws_name=self.ws_name)
-            return KriLink(kri=Kri.for_url(url), link_text=link_text).as_rich()
+            link = KriLink.with_attrs(
+                link_text,
+                href=url,
+                click=UIAction(action_type=UIActionType.paste_text),
+                double_click=UIAction(action_type=UIActionType.open_iframe_popover),
+            )
+            return link.as_rich()
         else:
             return super().path_link(path, link_text)
 

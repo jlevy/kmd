@@ -76,9 +76,17 @@ KUI_SCHEME = f"{KUI_PROTOCOL}//"
 
 
 class UIActionType(str, Enum):
-    paste = "paste"
+    paste_text = "paste_text"
+    """Default action for pasting text into the terminal. If value is omitted, paste the link text."""
+
+    paste_href = "paste_href"
+    """Action for pasting the link URL into the terminal. If value is omitted, paste the href attribute."""
+
     run_command = "run_command"
+    """Action for running a command in the terminal. If value is omitted, run the link text."""
+
     open_iframe_popover = "open_iframe_popover"
+    """Action for opening an iframe popover. If value is omitted, open the href attribute."""
 
 
 class UIAction(BaseModel):
@@ -87,7 +95,7 @@ class UIAction(BaseModel):
     """
 
     action_type: UIActionType = Field(..., description="Action type.")
-    value: str = Field(..., description="Action value.")
+    value: Optional[str] = Field(default=None, description="Action value.")
 
     def as_json(self) -> str:
         """
@@ -372,14 +380,17 @@ class TextAttrs(BaseModel):
     def as_json_dict(self) -> Dict[str, str]:
         """
         Convert to a dictionary of JSON values, omitting None values.
+        Sort keys to ensure deterministic ordering.
         """
         base = {
             "href": self.href,
             "hover": self.hover.as_json() if self.hover else None,
             "click": self.click.as_json() if self.click else None,
             "double_click": self.double_click.as_json() if self.double_click else None,
+            "display_style": self.display_style.value,
         }
-        return {k: v for k, v in base.items() if v is not None}
+        # Filter out None values and sort by keys
+        return dict(sorted((k, v) for k, v in base.items() if v is not None))
 
 
 class Kri(BaseModel):
@@ -429,10 +440,19 @@ class Kri(BaseModel):
         The full URI, including the type and metadata.
         Note that we use cautious URL encoding, i.e. %20 and not + for encodingspaces.
         """
-        if self.attrs.href:
+        if self.attrs.href and self.is_simple_url():
             return self.attrs.href
         else:
             return f"{KUI_SCHEME}?{urlencode(self.attrs.as_json_dict(), quote_via=quote)}"
+
+    def is_simple_url(self) -> bool:
+        return bool(
+            self.attrs.href
+            and not self.attrs.hover
+            and not self.attrs.click
+            and not self.attrs.double_click
+            and self.attrs.display_style == DisplayStyle.plain
+        )
 
     def __str__(self) -> str:
         return self.uri_str
@@ -494,7 +514,7 @@ def test_examples():
     link_tooltip = LinkTooltip(url="https://example.com")
     button = Button(
         text="Click me",
-        action=UIAction(action_type=UIActionType.paste, value="ls"),
+        action=UIAction(action_type=UIActionType.paste_text, value="ls"),
     )
     popover_element = IframePopover(
         url="https://example.com",
@@ -523,7 +543,7 @@ def test_kri():
     kri3 = Kri(
         attrs=TextAttrs(
             hover=TextTooltip(text="List files"),
-            click=UIAction(action_type=UIActionType.paste, value="ls -l"),
+            click=UIAction(action_type=UIActionType.paste_text),
             double_click=UIAction(action_type=UIActionType.run_command, value="ls -l"),
         )
     )
@@ -545,3 +565,7 @@ def test_kri():
     print(f"\nlink3: {link3.as_html()}")
 
     assert link1.as_html() == '<a href="https://example.com">Example link</a>'
+    assert (
+        link2.as_html()
+        == '<a href="kui://?display_style=plain&amp;hover=%7B%22role%22%3A%22tooltip%22%2C%22element_type%22%3A%22text_tooltip%22%2C%22kc_version%22%3A0%2C%22hints%22%3Anull%2C%22text%22%3A%22Tooltip%20text%22%7D">Text with hover</a>'
+    )
