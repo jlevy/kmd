@@ -49,9 +49,8 @@ class FileInfo:
     type: FileType
 
 
-def filename_display(file_info: FileInfo) -> str:
-    type_suffix = "/" if file_info.type == FileType.dir else ""
-    return f"{file_info.filename}{type_suffix}"
+def type_suffix(file_info: FileInfo) -> str:
+    return "/" if file_info.type == FileType.dir else ""
 
 
 def get_file_info(file_path: Path, base_path: Path, follow_symlinks: bool = False) -> FileInfo:

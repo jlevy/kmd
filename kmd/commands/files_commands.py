@@ -23,7 +23,7 @@ from kmd.file_tools.file_sort_filter import (
     collect_files,
     FileInfo,
     FileListing,
-    filename_display,
+    type_suffix,
     GroupByOption,
     parse_since,
     SortOption,
@@ -520,8 +520,10 @@ def files(
                     # prefix). Otherwise, use regular paths.
                     if active_ws_name and base_is_ws:
                         display_path = StorePath(rel_path)  # Add a local server link.
+                        display_path_str = f"{display_path.display_str()}{type_suffix(row)}"
                     else:
                         display_path = Path(rel_path)
+                        display_path_str = f"{display_path}{type_suffix(row)}"
 
                     # Assemble output line.
                     # FIXME: Restore coloring on mod time and size.
@@ -537,7 +539,7 @@ def files(
                     line.append(
                         fmt.path_link(
                             display_path.resolve(),
-                            link_text=filename_display(row),
+                            link_text=display_path_str,
                         )
                     )
 
