@@ -485,6 +485,25 @@ class FileFormatInfo:
                 self.mime_type.startswith("text")
                 or self.mime_type.startswith("application/yaml")
                 or self.mime_type.startswith("application/json")
+                # .js, .jsx, .ts, .tsx are all application/javascript
+                or self.mime_type.startswith("application/javascript")
+                or self.mime_type.startswith("application/xml")
+                or self.mime_type
+                in {
+                    # Shell scripts
+                    "application/x-sh",
+                    "application/x-shellscript",
+                    "application/x-csh",
+                    # Programming languages
+                    "application/x-perl",
+                    "application/x-python",  # Python is "text/x-python" but just in case.
+                    "application/x-ruby",
+                    "application/x-php",
+                    # Document formats
+                    "application/x-latex",
+                    "application/x-tex",
+                    "application/rtf",
+                }
             )
         )
 

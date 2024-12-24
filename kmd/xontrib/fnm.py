@@ -1,7 +1,10 @@
 """
-xontrib for fnm (Fast Node Manager) integration with xonsh shell. Currently fnm
-doesn't support xonsh directly. This parses the bash output of fnm and uses it
-within xonsh.
+xontrib for fnm (Fast Node Manager) integration with xonsh shell.
+
+Fnm is a good replacement for nvm and is compatible with .nvmrc.
+
+Currently fnm doesn't support xonsh directly. This parses the bash output
+of fnm and uses it within xonsh.
 """
 
 import subprocess

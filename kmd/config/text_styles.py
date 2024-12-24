@@ -164,7 +164,7 @@ EMOJI_TIMING = "⏱"
 
 EMOJI_SUCCESS = "[✓]"
 
-EMOJI_SKIP = "[−]"
+EMOJI_SKIP = "[∕]"
 
 EMOJI_FAILURE = "[✗]"
 

@@ -220,7 +220,7 @@ def _serve_item(
             print_file_info(
                 path,
                 show_size_details=True,
-                show_format=True,
+                show_format=False,
                 text_wrap=Wrap.WRAP,
             )
         file_info_html = console.export_html(
