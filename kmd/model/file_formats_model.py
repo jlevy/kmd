@@ -1,5 +1,6 @@
 import os
 import re
+import regex
 from enum import Enum
 from pathlib import Path
 from typing import cast, List, Optional, Tuple, TYPE_CHECKING
@@ -424,6 +425,26 @@ def is_markdown(content: str) -> bool:
     """
     Check if the content is Markdown.
     """
+    # First check for plain language with at least 5 words and no special punctuation.
+    # This rules out a lot of text-like formats like lockfiles etc.
+    sample = content[:2048]
+    has_prose = bool(regex.search(r"[\p{L}]+(?:\s+[\p{L}]+){4,}", sample, regex.UNICODE))
+    if not has_prose:
+        return False
+
+    words = [w for w in regex.split(r"\s+", sample) if w]
+    if not words:
+        return False
+
+    # Count "natural" words (only letters, no special chars).
+    natural_words = [w for w in words if regex.match(r"^[\p{L}]+$", w)]
+    # Calculate ratio of natural words to total words
+    prose_ratio = len(natural_words) / len(words)
+    # Require enough natural words.
+    if prose_ratio < 0.4 or len(words) < 5:
+        return False
+
+    # Finally check for markdown formatting.
     return len(re.findall(r"^##+ |^- \w|\*\*\w|__\w", content, re.MULTILINE)) >= 2
 
 
@@ -485,6 +506,7 @@ class FileFormatInfo:
                 self.mime_type.startswith("text")
                 or self.mime_type.startswith("application/yaml")
                 or self.mime_type.startswith("application/json")
+                or self.mime_type.startswith("application/toml")
                 # .js, .jsx, .ts, .tsx are all application/javascript
                 or self.mime_type.startswith("application/javascript")
                 or self.mime_type.startswith("application/xml")
