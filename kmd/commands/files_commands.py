@@ -538,9 +538,9 @@ def files(
                     line.append(SPACING)
                     line.append(
                         fmt.path_link(
-                            display_path.resolve(),
+                            display_path,
                             link_text=display_path_str,
-                        )
+                        ),
                     )
 
                     cprint(line, text_wrap=Wrap.NONE)

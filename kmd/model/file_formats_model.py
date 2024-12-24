@@ -1,9 +1,10 @@
 import os
 import re
-import regex
 from enum import Enum
 from pathlib import Path
 from typing import cast, List, Optional, Tuple, TYPE_CHECKING
+
+import regex
 
 from pydantic.dataclasses import dataclass
 

@@ -1,5 +1,5 @@
 from textwrap import dedent
-from typing import Iterable
+from typing import Iterable, override
 
 import regex
 
@@ -34,6 +34,7 @@ class TimestampExtractor(Extractor):
         self.doc_str = doc_str
         self.wordtoks, self.offsets = raw_text_to_wordtok_offsets(self.doc_str, bof_eof=True)
 
+    @override
     def extract_all(self) -> Iterable[Match[float]]:
         """
         Extract all timestamps from the document.
@@ -43,6 +44,7 @@ class TimestampExtractor(Extractor):
             if timestamp:
                 yield timestamp, index, offset
 
+    @override
     def extract_preceding(self, wordtok_offset: int) -> Match[float]:
         try:
             index, wordtok = (

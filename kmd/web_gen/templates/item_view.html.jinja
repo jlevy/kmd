@@ -1,11 +1,15 @@
 <style>
 .item-view {
   font-family: var(--font-sans);
-  border-left: 3px solid var(--color-border-accent);
+  {# TODO: Consider putting a border to indicate type of info. But have to
+     make sure it does not grow the tooltip inadverently. #}
+  {# border-left: 3px solid var(--color-border-accent);
+  display: flex;
+  flex-direction: column; #}
 }
 
 .item-header {
-  padding: 1rem 1rem 0rem 1rem;
+  padding: 0.5rem 1rem 0rem 1rem;
   border-bottom: 1px solid var(--color-border-hint); 
 }
 
@@ -83,7 +87,11 @@
 .item-title {
   font-family: var(--font-serif);
   font-size: 1.2rem;
-  padding: 0.2rem 0 1rem 0;
+  padding: 0.5rem 0 0.3rem 0;
+}
+
+h1.item-title {
+  margin: 0;
 }
 
 .item-body {
@@ -122,7 +130,6 @@
 }
 
 .item-body {
-  {# background-color: var(--color-bg); #}
   padding: 0.5rem 1rem;
   font-family: var(--font-mono);
   color: var(--color-secondary);
@@ -132,11 +139,18 @@
 }
 
 .item-footer {
-  {# background-color: var(--color-bg); #}
-  padding: 1rem 1rem;
+  padding: 0.5rem 1rem;
   font-family: var(--font-sans);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-smaller);
   color: var(--color-secondary);
+}
+
+.border-top-dashed {
+  border-top: 1px dashed var(--color-border-hint);
+}
+
+.border-top-solid {
+  border-top: 1px solid var(--color-border-hint);
 }
 
 .action-icons {
@@ -164,60 +178,71 @@
       <i data-feather="copy" class="action-icon" onclick="copyDataValue(this)"
          data-value="{{ item.store_path or item.external_path }}" title="Copy path"></i>
       {% if page_url %}
-      <i data-feather="link" class="action-icon" onclick="copyDataValue(this)"
-         data-value="{{ page_url }}" title="Copy link"></i>
-      <a href="{{ page_url }}" target="_blank" rel="noopener noreferrer">
-        <i data-feather="external-link" class="action-icon"></i>
-      </a>
+        <i data-feather="link" class="action-icon" onclick="copyDataValue(this)"
+          data-value="{{ page_url }}" title="Copy link"></i>
+        <a href="{{ page_url }}" target="_blank" rel="noopener noreferrer">
+          <i data-feather="external-link" class="action-icon"></i>
+        </a>
       {% endif %}
     </div>
   </div>
 
-  <div class="item-header">
-    <div class="item-meta">
-      {% if item.type %}
-      <span class="item-type">{{ item.type.value }}</span>
+    <div class="item-header">
+      {% if not brief_header %}
+        <div class="item-meta">
+          {% if item.type %}
+            <span class="item-type">{{ item.type.value }}</span>
+          {% endif %}
+          {% if item.format %}
+            <span class="item-label">Format:</span> <span class="item-format">{{ item.format.value }}</span>
+          {% endif %}
+          {% if item.state %}
+            <span class="item-label">State:</span> <span class="item-state">{{ item.state.value }}</span>
+          {% endif %}
+        </div>
+
+        {% if item.title %}
+          <h1 class="item-title">{{ item.title }}</h1>
+        {% endif %}
+
+        {% if item.url %}
+          <div class="item-url">
+            <div class="url-container">
+              <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.url }}</a>
+              <i data-feather="copy" class="action-icon" onclick="copyText(this, '{{ item.url }}')" title="Copy URL"></i>
+            </div>
+          </div>
+        {% endif %}
       {% endif %}
-      {% if item.format %}
-      <span class="item-label">Format:</span> <span class="item-format">{{ item.format.value }}</span>
+
+      {% if file_info_html %}
+        <div class="item-file-info">{{ file_info_html | safe }}</div>
       {% endif %}
-      {% if item.state %}
-      <span class="item-label">State:</span> <span class="item-state">{{ item.state.value }}</span>
+
+      {% if not brief_header %}
+        {% if item.description %}
+          <div class="item-description">
+            {{ item.description }}
+          </div>
+        {% endif %}
       {% endif %}
     </div>
-
-    {% if item.title %}
-    <h1 class="item-title">{{ item.title }}</h1>
-    {% endif %}
-
-
-    {% if item.url %}
-    <div class="item-url">
-      <div class="url-container">
-        <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.url }}</a>
-        <i data-feather="copy" class="action-icon" onclick="copyText(this, '{{ item.url }}')" title="Copy URL"></i>
-      </div>
-    </div>
-    {% endif %}
-
-    {% if file_info_html %}
-    <div class="item-file-info">{{ file_info_html | safe }}</div>
-    {% endif %}
-
-    {% if item.description %}
-    <div class="item-description">
-      {{ item.description }}
-    </div>
-    {% endif %}
-  </div>
 
   <div class="item-content">
     {% if body_text %}
-    <div class="item-body">{{ body_text }}</div>
+      <div class="item-body">{{ body_text }}</div>
     {% endif %}
 
     {% if footer_note %}
-    <div class="item-footer">{{ footer_note }}</div>
+      {% if body_text_truncated %}
+        <div class="item-footer border-top-dashed">
+          {{ footer_note }}
+        </div>
+      {% else %}
+        <div class="item-footer border-top-solid">
+          {{ footer_note }}
+        </div>
+      {% endif %}
     {% endif %}
   </div>
 

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional
+from typing import Optional, override
 
 from rich.text import Text
 
@@ -44,12 +44,15 @@ class PlaintextFormatter(LinkFormatter):
     A plaintext formatter that doesn't use links.
     """
 
+    @override
     def tooltip_link(self, text: str, tooltip: Optional[str] = None) -> Text:
         return Text(text)
 
+    @override
     def path_link(self, path: Path, link_text: str) -> Text:
         return Text(fmt_loc(link_text))
 
+    @override
     def command_link(self, command_str: str) -> Text:
         return Text.assemble(Text("`", style=COLOR_HINT), command_str, Text("`", style=COLOR_HINT))
 
@@ -62,6 +65,7 @@ class DefaultLinkFormatter(PlaintextFormatter):
     A formatter that adds OSC 8 links to the local server.
     """
 
+    @override
     def tooltip_link(self, text: str, tooltip: Optional[str] = None) -> Text:
         if tooltip:
             link = KriLink.with_attrs(text, hover=TextTooltip(text=tooltip))
@@ -69,10 +73,11 @@ class DefaultLinkFormatter(PlaintextFormatter):
         else:
             return Text(text)
 
+    @override
     def path_link(self, path: Path, link_text: str) -> Text:
         from kmd.server.local_server_routes import local_url
 
-        url = local_url.view_file(path)
+        url = local_url.file_view(path)
         link = KriLink.with_attrs(
             link_text,
             href=url,
@@ -81,6 +86,7 @@ class DefaultLinkFormatter(PlaintextFormatter):
         )
         return link.as_rich()
 
+    @override
     def command_link(self, command_str: str) -> Text:
         from kmd.server.local_server_routes import local_url
 
@@ -109,11 +115,12 @@ class WorkspaceLinkFormatter(DefaultLinkFormatter):
     def __init__(self, ws_name: str):
         self.ws_name = ws_name
 
+    @override
     def path_link(self, path: Path, link_text: str) -> Text:
         if isinstance(path, StorePath):
             from kmd.server.local_server_routes import local_url
 
-            url = local_url.view_item(store_path=path, ws_name=self.ws_name)
+            url = local_url.item_view(store_path=path, ws_name=self.ws_name)
             link = KriLink.with_attrs(
                 link_text,
                 href=url,
@@ -145,8 +152,10 @@ def local_url_formatter(ws_name: Optional[str] = None):
         try:
             ws_name = current_workspace().name
             fmt = WorkspaceLinkFormatter(ws_name)
+            log.warning("Using WorkspaceLinkFormatter(ws_name=%s)", ws_name)
         except InvalidState:
             fmt = DefaultLinkFormatter()
+            log.warning("Using DefaultLinkFormatter()")
     else:
         fmt = PlaintextFormatter()
 
