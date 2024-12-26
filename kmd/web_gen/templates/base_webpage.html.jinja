@@ -63,12 +63,14 @@
 </body>
 
 <script>
+  // Suggest size to parent in case we are in a resizable viewport like a tooltip.
   document.addEventListener('DOMContentLoaded', () => {
   const content = document.body;
-  
-  console.log("Suggesting size to parent:", content.offsetWidth, content.offsetHeight);
+  console.log("Suggesting resize to parent:", content.offsetWidth, content.offsetHeight);
+  // This iframe size message format isn't standardized by ResizeObserver, but is common.
+  // It is supported by Kyrm.
   window.parent.postMessage({
-    type: 'suggestedSize',
+    type: 'resize',
     width: Math.max(content.offsetWidth, 600),
     height: Math.max(content.offsetHeight, 100)
     }, '*');

@@ -127,6 +127,7 @@ h1.item-title {
 .item-description {
   font-family: var(--font-sans);
   font-size: var(--font-size-small);
+  padding: 0.5rem 0;
 }
 
 .item-body {
@@ -175,11 +176,13 @@ h1.item-title {
       <span class="path-text">{{ item.store_path or item.external_path or path }}</span>
     </div>
     <div class="action-icons">
-      <i data-feather="copy" class="action-icon" onclick="copyDataValue(this)"
-         data-value="{{ item.store_path or item.external_path }}" title="Copy path"></i>
+      <div data-value="{{ item.store_path or item.external_path }}" onclick="copyDataValue(this)" title="Copy path">
+        <i data-feather="copy" class="action-icon"></i>
+      </div>
       {% if page_url %}
-        <i data-feather="link" class="action-icon" onclick="copyDataValue(this)"
-          data-value="{{ page_url }}" title="Copy link"></i>
+        <div data-value="{{ page_url }}" onclick="copyDataValue(this)" title="Copy link">
+          <i data-feather="link" class="action-icon"></i>
+        </div>
         <a href="{{ page_url }}" target="_blank" rel="noopener noreferrer">
           <i data-feather="external-link" class="action-icon"></i>
         </a>
@@ -209,7 +212,7 @@ h1.item-title {
           <div class="item-url">
             <div class="url-container">
               <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.url }}</a>
-              <i data-feather="copy" class="action-icon" onclick="copyText(this, '{{ item.url }}')" title="Copy URL"></i>
+              <i data-feather="copy" class="action-icon" onclick="copyDataValue(this.parentElement)" title="Copy URL"></i>
             </div>
           </div>
         {% endif %}
@@ -251,20 +254,24 @@ h1.item-title {
 <script>
 function copyText(element, text) {
   navigator.clipboard.writeText(text).then(() => {
-    // Change icon temporarily to show success
-    element.setAttribute('data-feather', 'check');
-    feather.replace();
-    
-    setTimeout(() => {
-      element.setAttribute('data-feather', 'copy');
+    const iconElement = element.firstElementChild;
+    if (iconElement) {
+      iconElement.setAttribute('data-feather', 'check');
       feather.replace();
-    }, 1000);
-  });
+      
+      setTimeout(() => {
+        iconElement.setAttribute('data-feather', 'copy');
+        feather.replace();
+      }, 1000);
+    }
+  })
 }
 
 function copyDataValue(element) {
   const value = element.getAttribute('data-value');
-  copyText(element, value);
+  if (value) {
+    copyText(element, value);
+  }
 }
 
 // Initialize Feather icons
