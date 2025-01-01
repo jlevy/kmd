@@ -79,12 +79,22 @@
     }, '*');
   });
 
-  // Send expand message (e.g. expand tooltip to popover).
+  // Double-click to expand (e.g. expand tooltip to popover).
   document.addEventListener('dblclick', () => {
     console.log("Sending expand message to parent");
     window.parent.postMessage({
       type: 'expand'
     }, '*');
+  });
+
+  // Escape to close tooltip or popover.
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      console.log("Sending close message to parent");
+      window.parent.postMessage({
+        type: 'close'
+      }, '*');
+    }
   });
 </script>
 

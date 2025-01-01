@@ -26,6 +26,8 @@ log = get_logger(__name__)
 
 router = APIRouter()
 
+DEFAULT_MAX_LINES = 1000
+
 
 def server_get_workspace(ws_name: str) -> FileStore:
     from kmd.workspaces.workspaces import get_workspace
@@ -63,10 +65,15 @@ class _LocalUrl:
     def file_view(self, path: Path) -> str:
         return format_local_url(Route.file_view, path=str(path))
 
-    def item_view(self, store_path: StorePath, ws_name: str) -> str:
-        return format_local_url(
-            Route.item_view, store_path=store_path.display_str(), ws_name=ws_name
-        )
+    def item_view(
+        self, store_path: StorePath, ws_name: str, max_lines: int = DEFAULT_MAX_LINES
+    ) -> str:
+        params = {
+            "store_path": store_path.display_str(),
+            "ws_name": ws_name,
+            "max_lines": max_lines,
+        }
+        return format_local_url(Route.item_view, **params)
 
     def explain(self, text: str) -> str:
         return format_local_url(Route.explain, text=text)
@@ -77,7 +84,7 @@ local_url = _LocalUrl()
 
 
 @router.api_route(Route.file_view, methods=["GET", "HEAD"])
-def file_view(request: Request, path: str):
+def file_view(request: Request, path: str, max_lines: int = DEFAULT_MAX_LINES):
     # Treat the file like an external path for the purposes of viewing.
     try:
         p = Path(path)
@@ -85,7 +92,7 @@ def file_view(request: Request, path: str):
         if p.is_file():
             item_or_path = Item.from_external_path(p)
             if item_or_path.format and item_or_path.format.is_text:
-                body_text, footer_note = _file_body_and_footer(p)
+                body_text, footer_note = _file_body_and_footer(p, max_lines=max_lines)
         else:
             item_or_path = p
 
@@ -104,16 +111,16 @@ def file_view(request: Request, path: str):
 
 
 @router.api_route(Route.item_view, methods=["GET", "HEAD"])
-def item_view(request: Request, store_path: str, ws_name: str):
+def item_view(request: Request, store_path: str, ws_name: str, max_lines: int = DEFAULT_MAX_LINES):
     try:
         sp = StorePath(store_path)
         item = server_get_workspace(ws_name).load(sp)
         if not item:
             raise FileNotFound(store_path)
 
-        page_self_url = local_url.item_view(store_path=sp, ws_name=ws_name)
+        page_self_url = local_url.item_view(store_path=sp, ws_name=ws_name, max_lines=max_lines)
 
-        body_text, footer_note = _text_body_and_footer(item.body_text())
+        body_text, footer_note = _text_body_and_footer(item.body_text(), max_lines=max_lines)
 
         return _serve_item(request, item, page_self_url, body_text, footer_note, brief_header=False)
     except (FileNotFound, InvalidFilename, FileNotFoundError) as e:
@@ -141,27 +148,29 @@ def explain(text: str):
     )
 
 
-MAX_LINES = 200
-
-
-def _read_lines(path: Path, max_lines: int = MAX_LINES) -> Tuple[str, Optional[int]]:
+def _read_lines(path: Path, max_lines: int = DEFAULT_MAX_LINES) -> Tuple[str, Optional[int]]:
     """
     Read the first `max_lines` lines of a file. Only reads that amount into memory.
     If file was truncated, also return how many bytes were read.
     """
     lines = []
-    # Could make this frontmatter aware but seems okay as is for now.
+    # TODO: Could make this frontmatter aware but seems okay as is for now.
     # frontmatter_str, offset = fmf_read_frontmatter_raw(path)
+    bytes_read = 0
     with open(path, "r") as f:
-        # f.seek(offset)
-        for i, line in enumerate(f):
-            if i >= max_lines:
-                return "\n".join(lines), f.tell()
+        for _ in range(max_lines):
+            line = f.readline()
+            if not line:  # EOF reached
+                break
+            bytes_read += len(line.encode("utf-8"))
             lines.append(line.rstrip("\n"))
-    return "\n".join(lines), None
+
+        has_more = bool(f.readline())
+
+    return "\n".join(lines), bytes_read if has_more else None
 
 
-def _file_body_and_footer(path: Path, max_lines: int = MAX_LINES) -> Tuple[str, Optional[str]]:
+def _file_body_and_footer(path: Path, max_lines: int) -> Tuple[str, Optional[str]]:
     body_text, truncated_at = _read_lines(path, max_lines)
     if truncated_at:
         body_text += "\n…"
@@ -171,7 +180,7 @@ def _file_body_and_footer(path: Path, max_lines: int = MAX_LINES) -> Tuple[str, 
     return body_text, footer_note
 
 
-def _text_body_and_footer(body_text: str, max_lines: int = MAX_LINES) -> Tuple[str, Optional[str]]:
+def _text_body_and_footer(body_text: str, max_lines: int) -> Tuple[str, Optional[str]]:
     if not body_text:
         return "", None
 

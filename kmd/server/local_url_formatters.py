@@ -152,7 +152,6 @@ def local_url_formatter(ws_name: Optional[str] = None):
         try:
             ws_name = current_workspace().name
             fmt = WorkspaceLinkFormatter(ws_name)
-            log.warning("Using WorkspaceLinkFormatter(ws_name=%s)", ws_name)
         except InvalidState:
             fmt = DefaultLinkFormatter()
             log.warning("Using DefaultLinkFormatter()")
