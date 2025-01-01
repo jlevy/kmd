@@ -47,6 +47,7 @@ from kmd.shell_tools.native_tools import (
 from kmd.shell_tools.tool_deps import Tool, tool_check
 from kmd.text_docs.unified_diffs import unified_diff_files, unified_diff_items
 from kmd.util.format_utils import fmt_lines, fmt_size_human, fmt_time
+from kmd.util.parse_shell_args import shell_quote
 from kmd.util.strif import copyfile_atomic
 from kmd.web_content.file_cache_tools import cache_file
 from kmd.workspaces.workspaces import current_ignore, current_workspace
@@ -577,7 +578,11 @@ def files(
 
 @kmd_command
 def search(
-    query_str: str, *paths: str, sort: str = "path", ignore_case: bool = False
+    query_str: str,
+    *paths: str,
+    sort: str = "path",
+    ignore_case: bool = False,
+    verbose: bool = False,
 ) -> ShellResult:
     """
     Search for a string in files at the given paths and return their store paths.
@@ -590,7 +595,8 @@ def search(
     search "youtube.com" resources/ --sort=modified
 
     :param sort: How to sort results. Can be `path` or `modified` or `created` (as with `rg`).
-    :param ignore_case: Ignore case when seang.
+    :param ignore_case: Ignore case when searching.
+    :param verbose: Also print the ripgrep command line.
     """
     tool_check().require(Tool.ripgrep)
     from ripgrepy import RipGrepNotFound, Ripgrepy
@@ -606,6 +612,13 @@ def search(
         rg = rg.files_with_matches().sort(sort)
         if ignore_case:
             rg = rg.ignore_case()
+        if verbose:
+            command = " ".join(
+                [shell_quote(arg) for arg in rg.command]
+                + [query_str]
+                + [str(p) for p in resolved_paths]
+            )
+            cprint(f"{command}")
         rg_output = rg.run().as_string
         results: List[str] = [
             line.lstrip(strip_prefix) if strip_prefix and line.startswith(strip_prefix) else line

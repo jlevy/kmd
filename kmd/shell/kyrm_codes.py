@@ -404,7 +404,8 @@ class Kri(BaseModel):
     that specify the attributes for the text.
 
     Each query string value is optional and may be omitted. If present it is
-    an escaped, serialized JSON string.
+    an escaped, serialized JSON string. Within serialized JSON, fields that are
+    optional may either be omitted or set to null.
     """
 
     attrs: TextAttrs = Field(

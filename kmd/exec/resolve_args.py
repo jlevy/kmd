@@ -5,7 +5,7 @@ from kmd.config.logger import get_logger
 from kmd.errors import InvalidInput, MissingInput
 from kmd.model.args_model import CommandArg, Locator, UnresolvedLocator
 from kmd.model.items_model import ItemType
-from kmd.model.paths_model import parse_path_spec, StorePath, UnresolvedPath
+from kmd.model.paths_model import InvalidStorePath, parse_path_spec, StorePath, UnresolvedPath
 from kmd.util.log_calls import log_calls
 from kmd.util.url import is_url, Url
 from kmd.workspaces.workspaces import current_workspace
@@ -38,16 +38,22 @@ def resolve_path_arg(path_str: UnresolvedPath) -> Path | StorePath:
     path = parse_path_spec(path_str)
     if path.is_absolute():
         return path
-    elif store_path := current_workspace().resolve_path(path):
-        return store_path
     else:
-        return path
+        try:
+            store_path = current_workspace().resolve_path(path)
+            if store_path:
+                return store_path
+            else:
+                return path
+        except InvalidStorePath:
+            return path
 
 
 def assemble_path_args(*paths_or_strs: Optional[UnresolvedPath]) -> List[StorePath | Path]:
     """
     Assemble paths or store paths from the current workspace, or the current
-    selection if no paths are given.
+    selection if no paths are given. Fall back to treating values as plain
+    Paths if values can't be resolved to store paths.
     """
     resolved = [resolve_path_arg(p) for p in paths_or_strs if p]
     if not resolved:

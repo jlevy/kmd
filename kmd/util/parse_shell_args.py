@@ -15,7 +15,7 @@ _shell_unsafe_re = re.compile(r"[^\w@%+=:,./~-]", re.ASCII)
 
 def is_shell_quoted(arg: str) -> bool:
     """
-    Is this a valid, quoted string?
+    Is this a valid, quoted string? Uses Pythonic style quoting.
     """
     if arg.startswith(("'", '"')) and arg.endswith(arg[0]):
         try:
@@ -31,6 +31,7 @@ def shell_quote(arg: str, idempotent: bool = False) -> str:
     Quote a string for shell usage, if needed, using simplified shell conventions
     compatible with Python and xonsh. This means simple text words without spaces
     are left unquoted. Prefers single quotes in cases where either could work.
+    Uses Pythonic style quoting for more complex strings.
     """
     if idempotent and is_shell_quoted(arg):
         return arg
