@@ -15,7 +15,7 @@ from rich.text import Text
 from xonsh.platform import ON_DARWIN, ON_LINUX, ON_WINDOWS
 
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import EMOJI_WARN
+from kmd.config.text_styles import CONSOLE_WRAP_WIDTH, EMOJI_WARN
 from kmd.errors import SetupError
 from kmd.shell.shell_output import (
     cprint,
@@ -231,11 +231,13 @@ def tool_check() -> InstalledTools:
 class TerminalInfo:
     term: str
     term_program: str
+    wrap_width: int
     supports_sixel: bool
     supports_osc8: bool
 
     def as_text(self) -> Text:
         return Text.assemble(
+            f"{self.wrap_width} columns, ",
             format_success_or_failure(
                 self.supports_sixel, true_str="Sixel images", false_str="No Sixel images"
             ),
@@ -252,7 +254,7 @@ class TerminalInfo:
     def print_term_info(self):
         cprint(
             Text.assemble(
-                f"Terminal is {self.term} ({self.term_program}): ",
+                f"Terminal is {self.term} ({self.term_program}), ",
                 self.as_text(),
             )
         )
@@ -264,4 +266,5 @@ def check_terminal_features() -> TerminalInfo:
         term_program=os.environ.get("TERM_PROGRAM", ""),
         supports_sixel=terminal_supports_sixel(),
         supports_osc8=terminal_supports_osc8(),
+        wrap_width=CONSOLE_WRAP_WIDTH,
     )

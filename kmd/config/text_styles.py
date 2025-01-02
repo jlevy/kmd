@@ -3,16 +3,18 @@ Settings that define the visual appearance of text outputs.
 """
 
 import re
+import shutil
 
 from kmd.config.colors import terminal as colors
 
 ## Settings
 
-CONSOLE_WRAP_WIDTH = 88
+TERMINAL_SIZE = shutil.get_terminal_size()
+
+CONSOLE_WRAP_WIDTH = TERMINAL_SIZE.columns if 0 < TERMINAL_SIZE.columns < 88 else 88
 """
-Default wrap width for console content. A compromise between traditional but sometimes
-impractically narrow 80-char console width and being too wide to read comfortably
-for text, markup, and code. 88 is the same as Black.
+Default wrap width for console content. Aim to match our default
+Markdown wrap width unless the terminal is too narrow.
 """
 
 SPINNER = "dots12"
