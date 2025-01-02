@@ -17,7 +17,6 @@ from kmd.model.paths_model import StorePath
 from kmd.shell.rich_html import RICH_HTML_TEMPLATE
 from kmd.shell.shell_file_info import print_file_info
 from kmd.shell.shell_output import Wrap
-from kmd.util.strif import abbreviate_str
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
 
@@ -259,9 +258,6 @@ def _serve_item(
             )
         file_info_html = console.export_html(
             code_format=RICH_HTML_TEMPLATE, theme=colors.rich_terminal
-        )
-        log.info(
-            "File info html: length %s: %s", len(file_info_html), abbreviate_str(file_info_html)
         )
 
         return HTMLResponse(

@@ -53,9 +53,12 @@ def _server_config(app: "FastAPI", host: str, port: int) -> "uvicorn.Config":
                 }
             },
             "loggers": {
+                # Root logger captures everything not explicitly configured.
+                "": {"handlers": ["default"], "level": "INFO"},
                 "uvicorn": {"handlers": ["default"], "level": "INFO", "propagate": False},
                 "uvicorn.error": {"handlers": ["default"], "level": "INFO", "propagate": False},
                 "uvicorn.access": {"handlers": ["default"], "level": "INFO", "propagate": False},
+                "kmd.server": {"handlers": ["default"], "level": "INFO", "propagate": False},
             },
         },
     )
