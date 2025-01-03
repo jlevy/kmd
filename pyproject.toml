@@ -50,10 +50,7 @@ scikit-image = "^0.24.0"
 python-fasthtml = "^0.9.1"
 fastapi = "^0.115.4"
 uvicorn = "^0.32.0"
-# yt-dlp = "^2024.8.6"
-# Temp support for new Apple Podcasts format, until yt-dlp is updated:
-# https://github.com/yt-dlp/yt-dlp/pull/10903
-yt-dlp = { git = "https://github.com/coreywright/yt-dlp.git", branch = "ie/applepodcasts/Fix_after_website_rewrite" }
+yt-dlp = "^2024.12.23"
 # orjson pinned for now since 3.10.11 had install issues:
 orjson = "3.10.10"
 xonsh = "^0.19.0"
