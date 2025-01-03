@@ -500,7 +500,11 @@ def files(
         with local_url_formatter(active_ws_name) as fmt:
             for group_name, group_df in grouped:
                 if group_name:
-                    cprint(f"\n{group_name} ({len(group_df)} files)", color=COLOR_EMPH)
+                    cprint(
+                        f"\n{group_name} ({len(group_df)} files)",
+                        color=COLOR_EMPH,
+                        text_wrap=Wrap.NONE,
+                    )
 
                 if max_per_group:
                     display_df = group_df.head(max_per_group)

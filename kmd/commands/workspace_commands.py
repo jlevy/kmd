@@ -117,7 +117,9 @@ def cache_content(*urls_or_paths: str) -> None:
 @kmd_command
 def history(max: int = 30, raw: bool = False) -> None:
     """
-    Show the command history for the current workspace.
+    Show the kmd command history for the current workspace.
+
+    For xonsh's built-in history, use `xhistory`.
 
     :param max: Show at most the last `max` commands.
     :param raw: Show raw command history by tailing the history file directly.
@@ -142,7 +144,7 @@ def history(max: int = 30, raw: bool = False) -> None:
 @kmd_command
 def clear_history() -> None:
     """
-    Clear the command history for the current workspace. Old history file will be
+    Clear the kmd command history for the current workspace. Old history file will be
     moved to the trash.
     """
     ws = current_workspace()

@@ -178,6 +178,7 @@ null_style = rich.style.Style.null()
 def rich_print(
     *args: str | Text | Markdown,
     width: Optional[int] = None,
+    soft_wrap: Optional[bool] = None,
     indent: str = "",
     raw: bool = False,
     **kwargs,
@@ -208,7 +209,7 @@ def rich_print(
         if indent:
             renderable = Indent(renderable, indent=indent)
 
-        console.print(renderable, width=width, **kwargs)
+        console.print(renderable, width=width, soft_wrap=soft_wrap, **kwargs)
 
 
 def cprint(
@@ -235,6 +236,8 @@ def cprint(
     if text_wrap.should_wrap and not width:
         width = CONSOLE_WRAP_WIDTH
 
+    soft_wrap = not text_wrap.should_wrap  # Disable rich's auto-wrap?
+
     if not isinstance(message, (Text, Markdown)):
         message = str(message)
 
@@ -252,14 +255,28 @@ def cprint(
                 rich_print(
                     Text(filled_text, color),
                     end=end,
-                    width=width,
                     raw=raw,
+                    width=width,
+                    soft_wrap=soft_wrap,
                 )
             elif extra_indent:
-                rich_print(Text(extra_indent, style=null_style), end=end, raw=raw)
+                rich_print(
+                    Text(extra_indent, style=null_style),
+                    end=end,
+                    raw=raw,
+                    width=width,
+                    soft_wrap=soft_wrap,
+                )
         else:
-            rich_print(message, end=end, width=width, indent=extra_indent)
+            rich_print(
+                message,
+                end=end,
+                indent=extra_indent,
+                width=width,
+                soft_wrap=soft_wrap,
+            )
     else:
+        # Blank line.
         rich_print(Text(empty_indent, style=null_style))
 
 
