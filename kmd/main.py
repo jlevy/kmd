@@ -14,7 +14,7 @@ import xonsh.main
 from pygments.token import Token
 from xonsh.built_ins import XSH
 from xonsh.execer import Execer
-from xonsh.main import events, postmain, premain
+from xonsh.main import events
 from xonsh.shell import Shell
 from xonsh.xontribs import xontribs_load
 
@@ -93,12 +93,21 @@ def install_to_xonshrc():
 from xonsh.shells.ptk_shell import PromptToolkitShell
 
 
-class CustomInteractiveShell(PromptToolkitShell):  # PromptToolkitShell or ReadlineShell
+class CustomAssistantShell(PromptToolkitShell):  # PromptToolkitShell or ReadlineShell
     """
     Our custom version of the interactive xonsh shell.
 
     Note event hooks in xonsh don't let you disable xonsh's processing, so we use a custom shell.
     """
+
+    # TODO: Additional completer integration.
+    # def __init__(self, *args, **kwargs):
+    #     from kmd.xontrib.xonsh_ranking_completer import RankingCompleter
+
+    #     # Set the completer to our custom one.
+    #     self.completer = RankingCompleter()
+    #     print("CustomInteractiveShell: initializing self.completer: %s" % self.completer)
+    #     super().__init__(*args, completer=False)
 
     def default(self, line, raw_line=None):
         from kmd.help.assistant import shell_context_assistance
@@ -114,6 +123,14 @@ class CustomInteractiveShell(PromptToolkitShell):  # PromptToolkitShell or Readl
         else:
             # Call xonsh shell.
             super().default(line)
+
+
+# XXX xonsh's Shell class hard-codes available shell types, but does have some
+# helpful scaffolding, so let's override to use ours.
+class CustomShell(Shell):
+    @staticmethod
+    def construct_shell_cls(backend, **kwargs):
+        return CustomAssistantShell(**kwargs)
 
 
 @events.on_command_not_found
@@ -215,8 +232,6 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     # that kmd's help can be used in its place (otherwise builtins override aliases).
     del builtins.help
 
-    args = premain(None)  # No xonsh args.
-
     # Make process title "kmd" instead of "xonsh".
     try:
         from setproctitle import setproctitle as spt
@@ -225,6 +240,7 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     except ImportError:
         pass
 
+    # Seems like we have to do our own setup as premain/postmain can't be customized.
     ctx = {}
     execer = Execer(
         filename="<stdin>",
@@ -233,8 +249,7 @@ def start_custom_xonsh(single_command: Optional[str] = None):
         cacheall=False,
     )
     XSH.load(ctx=ctx, execer=execer, inherit_env=True)
-    XSH.shell = Shell(execer=execer)  # type: ignore
-    XSH.shell.shell = CustomInteractiveShell(execer=execer, ctx=ctx)  # type: ignore
+    XSH.shell = CustomShell(execer=execer, ctx=ctx)  # type: ignore
 
     is_interactive = False if single_command else True
 
@@ -259,7 +274,8 @@ def start_custom_xonsh(single_command: Optional[str] = None):
         else:
             XSH.shell.shell.cmdloop()  # type: ignore
     finally:
-        postmain(args)
+        XSH.unload()
+        XSH.shell = None
 
 
 def run_shell(single_command: Optional[str] = None):
