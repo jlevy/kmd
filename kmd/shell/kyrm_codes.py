@@ -50,6 +50,10 @@ https://github.com/chromium/hterm/blob/main/doc/ControlSequences.md#OSC
 https://www.ethanheilman.com/x/28/index.html
 """
 
+# TODO:
+# - Registering behaviors on regexes. Example: Local web server with info about files.
+# - Multiple command confirmation (or line-by-line script execution).
+
 from enum import Enum
 from html import escape
 from typing import Annotated, Dict, List, Literal, Optional, Self, Union
