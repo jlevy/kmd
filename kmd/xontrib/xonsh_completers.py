@@ -4,6 +4,7 @@ from typing import cast, Iterable, List, Tuple
 from prompt_toolkit.application import get_app
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings, merge_key_bindings
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 
 from xonsh.completers.completer import add_one_completer, RichCompletion
 from xonsh.completers.tools import (
@@ -346,11 +347,29 @@ def options_completer(context: CompletionContext) -> CompleterResult:
 # FIXME: Complete enum values for enum options.
 
 
+@Condition
+def is_unquoted_assitant_request():
+    app = get_app()
+    buf = app.current_buffer
+    text = buf.text.strip()
+    return (
+        buf.name == "DEFAULT_BUFFER"
+        and text.startswith("?")
+        and not (text.startswith('? "') or text.startswith("? '"))
+    )
+
+
+@Condition
+def is_completion_menu_active() -> bool:
+    app = get_app()
+    return app.current_buffer.complete_state is not None
+
+
 def add_key_bindings() -> None:
     custom_bindings = KeyBindings()
 
     @custom_bindings.add(" ")
-    def _(event):
+    def _(event: KeyPressEvent):
         """
         Map two spaces to `? ` to invoke an assistant question.
         """
@@ -361,19 +380,8 @@ def add_key_bindings() -> None:
         else:
             buf.insert_text(" ")
 
-    @Condition
-    def is_unquoted_assitant_request():
-        app = get_app()
-        buf = app.current_buffer
-        text = buf.text.strip()
-        return (
-            buf.name == "DEFAULT_BUFFER"
-            and text.startswith("?")
-            and not (text.startswith('? "') or text.startswith("? '"))
-        )
-
     @custom_bindings.add("enter", filter=is_unquoted_assitant_request)
-    def _(event):
+    def _(event: KeyPressEvent):
         """
         Automatically add quotes around assistant questions, so there are not
         syntax errors if the command line contains unclosed quotes etc.
@@ -395,13 +403,20 @@ def add_key_bindings() -> None:
         buf.validate_and_handle()
 
     @custom_bindings.add("@")
-    def _(event):
+    def _(event: KeyPressEvent):
         """
         Auto-trigger item completions after `@` sign.
         """
         buf = event.app.current_buffer
         buf.insert_text("@")
         buf.start_completion()
+
+    @custom_bindings.add("escape", eager=True, filter=is_completion_menu_active)
+    def _(event: KeyPressEvent):
+        """
+        Close the completion menu when escape is pressed.
+        """
+        event.app.current_buffer.cancel_completion()
 
     existing_bindings = __xonsh__.shell.shell.prompter.app.key_bindings  # type: ignore  # noqa: F821
     merged_bindings = merge_key_bindings([existing_bindings, custom_bindings])

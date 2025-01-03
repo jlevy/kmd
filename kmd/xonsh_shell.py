@@ -70,20 +70,17 @@ def install_to_xonshrc():
 
 ## -- Custom xonsh shell setup --
 
+
 # Base shell can be ReadlineShell or PromptToolkitShell.
+# Completer can be RankingCompleter or the standard Completer.
+# from xonsh.completer import Completer
 # from xonsh.shells.readline_shell import ReadlineShell
 from xonsh.shells.ptk_shell import PromptToolkitShell
 
-CustomShellBase = PromptToolkitShell
-
-# Completer can be RankingCompleter or the standard Completer.
-# from xonsh.completer import Completer
 from kmd.xontrib.xonsh_ranking_completer import RankingCompleter
 
-CustomCompleter = RankingCompleter
 
-
-class CustomAssistantShell(CustomShellBase):
+class CustomAssistantShell(PromptToolkitShell):
     """
     Our custom version of the interactive xonsh shell.
 
@@ -93,11 +90,14 @@ class CustomAssistantShell(CustomShellBase):
     def __init__(self, **kwargs):
         from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
 
-        # Set the completer to our custom one. Need to disable the default Completer,
-        # then overwrite with our custom one.
+        # Set the completer to our custom one.
+        # XXX Need to disable the default Completer, then overwrite with our custom one.
         super().__init__(completer=False, **kwargs)
-        self.completer = CustomCompleter()
+        self.completer = RankingCompleter()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
+
+        # TODO: Consider patching in additional keybindings e.g. for custom mouse support.
+        # self.key_bindings = merge_key_bindings([custom_ptk_keybindings(), self.key_bindings])
 
         log.info(
             "CustomAssistantShell: initialized completer=%s, pt_completer=%s",
@@ -173,10 +173,12 @@ def customize_xonsh_settings(is_interactive: bool):
         # Number of rows in the fancier prompt toolkit completion menu.
         "COMPLETIONS_MENU_ROWS": 8,
         # Mode is "default" (fills in common prefix) or "menu-complete" (fills in first match).
-        "COMPLETION_MODE": "menu-complete",
-        # Show completions always, after each keypress.
+        "COMPLETION_MODE": "default",
+        # If true, show completions always, after each keypress.
+        # TODO: Find a way to do this after a delay. Instantly showing this is annoying.
         "UPDATE_COMPLETIONS_ON_KEYPRESS": False,
         # Mouse support for completions by default interferes with other mouse scrolling.
+        # TODO: Enable mouse support but disable scroll events.
         "MOUSE_SUPPORT": False,
         # Start with default colors then override prompt toolkit colors
         # being the same input color.
@@ -236,9 +238,9 @@ def start_custom_xonsh(single_command: Optional[str] = None):
 
     # Make process title "kmd" instead of "xonsh".
     try:
-        from setproctitle import setproctitle as spt
+        from setproctitle import setproctitle
 
-        spt(APP_NAME)
+        setproctitle(APP_NAME)
     except ImportError:
         pass
 

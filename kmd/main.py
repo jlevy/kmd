@@ -14,8 +14,8 @@ import xonsh.main
 from kmd.config.logger import get_logger
 from kmd.config.settings import APP_NAME
 from kmd.config.setup import setup
-from kmd.xonsh_shell import install_to_xonshrc, start_custom_xonsh
 from kmd.version import get_version
+from kmd.xonsh_shell import install_to_xonshrc, start_custom_xonsh
 
 
 # Ensure logging is set up before anything else.
