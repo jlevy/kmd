@@ -1,15 +1,10 @@
-import math
-import re
-from dataclasses import dataclass, field, replace
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import cast, Iterable, List, Tuple, TypeVar
+from typing import cast, Iterable, List, Tuple
 
 from prompt_toolkit.application import get_app
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings, merge_key_bindings
 
-from thefuzz import fuzz
 from xonsh.completers.completer import add_one_completer, RichCompletion
 from xonsh.completers.tools import (
     CompleterResult,
@@ -20,12 +15,11 @@ from xonsh.completers.tools import (
 
 from kmd.commands.help_commands import HELP_COMMANDS
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import COLOR_ACTION_TEXT, COLOR_COMMAND_TEXT, EMOJI_TASK
+from kmd.config.text_styles import COLOR_ACTION_TEXT, COLOR_COMMAND_TEXT, EMOJI_COMMAND, EMOJI_TASK
 from kmd.docs.faq_headings import faq_headings
 from kmd.errors import InvalidState
 from kmd.exec.system_actions import assistant_chat
 from kmd.help.function_param_info import annotate_param_info
-from kmd.model.items_model import Item
 from kmd.model.params_model import Param
 from kmd.model.paths_model import fmt_store_path
 from kmd.model.preconditions_model import Precondition
@@ -35,6 +29,13 @@ from kmd.util.format_utils import single_line
 from kmd.util.log_calls import log_calls
 from kmd.util.type_utils import not_none
 from kmd.workspaces.workspaces import current_ignore, current_workspace
+from kmd.xontrib.completion_ranking import (
+    normalize,
+    score_items,
+    score_paths,
+    score_phrase,
+    select_hits_by_score,
+)
 
 log = get_logger(__name__)
 
@@ -44,127 +45,6 @@ MAX_DIR_COMPLETIONS = 100
 
 # We want to keep completion fast, so make it obvious when it's slow.
 SLOW_COMPLETION = 0.15
-
-T = TypeVar("T")
-
-
-@dataclass(frozen=True)
-class Score:
-    exact_prefix: float
-    full_path: float
-    filename: float
-    recency: float
-    # Could do title score too.
-    total: float = field(init=False)
-
-    def _total_score(self) -> float:
-        return max(
-            self.exact_prefix, 0.4 * self.full_path + 0.3 * self.filename + 0.3 * self.recency
-        )
-
-    def __post_init__(self):
-        object.__setattr__(self, "total", self._total_score())
-
-    def __lt__(self, other: "Score") -> bool:
-        return self.total < other.total
-
-
-_punct_re = re.compile(r"[^\w\s]")
-
-
-def normalize(text: str) -> str:
-    return _punct_re.sub(" ", text.lower()).strip()
-
-
-def score_exact_prefix(prefix: str, text: str) -> float:
-    is_match = text.startswith(prefix)
-    is_long_enough = len(prefix) >= 2
-    return 100 if is_match and is_long_enough else 50 if is_match else 0
-
-
-def score_phrase(prefix: str, text: str) -> float:
-    # Could experiment with this more but it's a rough attempt to balance
-    # full matches and prefix matches.
-    return (
-        0.4 * fuzz.token_set_ratio(prefix, text)
-        + 0.4 * fuzz.partial_ratio(prefix, text)
-        + 0.2 * fuzz.token_sort_ratio(prefix, text)
-    )
-
-
-def score_path(prefix: str, path: Path) -> Score:
-    path_str = normalize(str(path))
-    name_str = normalize(path.name)
-
-    return Score(
-        exact_prefix=max(
-            score_exact_prefix(prefix, path_str), score_exact_prefix(prefix, name_str)
-        ),
-        full_path=max(score_phrase(prefix, path_str), score_phrase(prefix, name_str)),
-        filename=score_phrase(prefix, name_str),
-        recency=0,
-    )
-
-
-ONE_HOUR = 3600
-ONE_YEAR = 3600 * 24 * 365
-
-
-def score_recency(
-    age_in_seconds: float, min_age: float = ONE_HOUR, max_age: float = ONE_YEAR
-) -> float:
-    """
-    Calculate a score (0-100) based on age of the file's last modification.
-    Uses an exponential decay curve to give higher weights to more recent changes.
-    """
-    if age_in_seconds <= min_age:
-        return 100.0
-    if age_in_seconds >= max_age:
-        return 0.0
-
-    age_after_min = age_in_seconds - min_age
-    time_range = max_age - min_age
-
-    decay_constant = 5.0 / time_range
-
-    return 100.0 * math.exp(-decay_constant * age_after_min)
-
-
-def score_item(prefix: str, item: Item) -> Score:
-    path_score = score_path(prefix, Path(not_none(item.store_path)))
-
-    timestamp = item.modified_at or item.created_at or None
-
-    if not timestamp:
-        return path_score
-    else:
-        age = (
-            (datetime.now(timezone.utc) - item.modified_at).total_seconds()
-            if item.modified_at
-            else float("inf")
-        )
-        return replace(path_score, recency=score_recency(age))
-
-
-def score_paths(prefix: str, paths: Iterable[Path]) -> List[Tuple[Score, Path]]:
-    scored_paths = [(score_path(prefix, p), p) for p in paths]
-    scored_paths.sort(key=lambda x: x[0], reverse=True)
-    return scored_paths
-
-
-def score_items(prefix: str, items: Iterable[Item]) -> List[Tuple[Score, Item]]:
-    scored_items = [(score_item(prefix, item), item) for item in items]
-    scored_items.sort(key=lambda x: x[0], reverse=True)
-    return scored_items
-
-
-def select_hits(
-    scored_items: List[Tuple[Score, T]], min_score: float, max_hits: int
-) -> List[Tuple[Score, T]]:
-    """
-    Filter scored items by minimum score and maximum count, preserving sort order.
-    """
-    return [(score, item) for score, item in scored_items[:max_hits] if score.total >= min_score]
 
 
 def _dir_description(directory: Path) -> str:
@@ -212,8 +92,10 @@ def _command_completions(prefix: str) -> set[RichCompletion]:
     command_completions = [
         RichCompletion(
             name,
+            display=f"{name} {EMOJI_COMMAND}",
             description=single_line(_commands[name].__doc__ or ""),
             style=COLOR_COMMAND_TEXT,
+            append_space=True,
         )
         for name in command_matches
     ]
@@ -247,7 +129,7 @@ def _dir_completions(prefix: str, base_dir: Path) -> List[RichCompletion]:
     dirs = (d.relative_to(base_dir) for d in base_dir.iterdir() if d.is_dir() and not is_ignored(d))
     scored_paths = score_paths(prefix, dirs)
 
-    hits = select_hits(scored_paths, min_score=60, max_hits=MAX_DIR_COMPLETIONS)
+    hits = select_hits_by_score(scored_paths, min_score=60, max_hits=MAX_DIR_COMPLETIONS)
 
     log.debug(
         "Found %s dir hits out of %s completions.",
@@ -296,7 +178,7 @@ def _item_completions(
 
     scored_items = score_items(prefix, matching_items)
 
-    hits = select_hits(scored_items, min_score=0, max_hits=MAX_COMPLETIONS)
+    hits = select_hits_by_score(scored_items, min_score=0, max_hits=MAX_COMPLETIONS)
 
     log.debug(
         "Found %s item hits out of %s completions.",

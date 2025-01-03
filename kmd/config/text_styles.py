@@ -94,9 +94,9 @@ COLOR_TIMING = "blue"
 
 COLOR_CALL = "bright_yellow"
 
-COLOR_COMMAND_TEXT = "bold default"
+COLOR_COMMAND_TEXT = "bold black"
 
-COLOR_ACTION_TEXT = "bold default"
+COLOR_ACTION_TEXT = "bold black"
 
 COLOR_SIZE1 = "bright_black"
 
@@ -153,6 +153,10 @@ PROMPT_FORM = "❯❯"
 PROMPT_ASSIST = "(assistant) ❯"
 
 EMOJI_HINT = "👉"
+
+# More ideas: ⦿⧁⧀⦿⦾⟐⦊⟡
+
+EMOJI_COMMAND = "⧁"
 
 EMOJI_TASK = "⛭"
 

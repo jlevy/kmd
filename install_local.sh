@@ -63,13 +63,15 @@ echo "Running from: $(which kmd)"
 if kmd self_check; then
   echo
   echo 'Success!'
-  echo 'Check for warnings about needed tools or .env file API key setup above.'
+  echo
+  echo 'Check above for warnings about needed tools or .env file API key setup.'
   echo 'Then run `kmd` to get started.'
   echo
 else
   echo
   echo 'Something went wrong. :('
-  echo 'Look for error messages above and see `installation` docs for help.'
+  echo
+  echo 'Look above for error messages and see `installation` docs for help.'
   echo
   exit 1
 fi

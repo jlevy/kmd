@@ -8,7 +8,7 @@ import time
 from contextlib import redirect_stdout
 from io import StringIO
 from os.path import expanduser
-from typing import List, Optional
+from typing import List, Optional, override
 
 import xonsh.main
 from pygments.token import Token
@@ -92,22 +92,36 @@ def install_to_xonshrc():
 # from xonsh.shells.readline_shell import ReadlineShell
 from xonsh.shells.ptk_shell import PromptToolkitShell
 
+CustomShellBase = PromptToolkitShell
 
-class CustomAssistantShell(PromptToolkitShell):  # PromptToolkitShell or ReadlineShell
+# Completer can be RankingCompleter or the standard Completer.
+# from xonsh.completer import Completer
+from kmd.xontrib.xonsh_ranking_completer import RankingCompleter
+
+CustomCompleter = RankingCompleter
+
+
+class CustomAssistantShell(CustomShellBase):
     """
     Our custom version of the interactive xonsh shell.
 
     Note event hooks in xonsh don't let you disable xonsh's processing, so we use a custom shell.
     """
 
-    # TODO: Additional completer integration.
-    # def __init__(self, *args, **kwargs):
-    #     from kmd.xontrib.xonsh_ranking_completer import RankingCompleter
+    def __init__(self, **kwargs):
+        from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
 
-    #     # Set the completer to our custom one.
-    #     self.completer = RankingCompleter()
-    #     print("CustomInteractiveShell: initializing self.completer: %s" % self.completer)
-    #     super().__init__(*args, completer=False)
+        # Set the completer to our custom one. Need to disable the default Completer,
+        # then overwrite with our custom one.
+        super().__init__(completer=False, **kwargs)
+        self.completer = CustomCompleter()
+        self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
+
+        log.info(
+            "CustomAssistantShell: initialized completer=%s, pt_completer=%s",
+            self.completer,
+            self.pt_completer,
+        )
 
     def default(self, line, raw_line=None):
         from kmd.help.assistant import shell_context_assistance
@@ -128,8 +142,10 @@ class CustomAssistantShell(PromptToolkitShell):  # PromptToolkitShell or Readlin
 # XXX xonsh's Shell class hard-codes available shell types, but does have some
 # helpful scaffolding, so let's override to use ours.
 class CustomShell(Shell):
+    @override
     @staticmethod
     def construct_shell_cls(backend, **kwargs):
+        log.info("Using %s: %s", CustomAssistantShell.__name__, kwargs)
         return CustomAssistantShell(**kwargs)
 
 
