@@ -9,6 +9,7 @@ from typing import List, Optional, override
 
 from pygments.token import Token
 from xonsh.built_ins import XSH
+from xonsh.environ import xonshrc_context
 from xonsh.execer import Execer
 from xonsh.main import events
 from xonsh.shell import Shell
@@ -17,7 +18,7 @@ from xonsh.xontribs import xontribs_load
 # Keeping initial imports/deps minimal.
 from kmd.config.lazy_imports import import_start_time
 from kmd.config.logger import get_console, get_logger
-from kmd.config.settings import APP_NAME
+from kmd.config.settings import APP_NAME, find_rcfiles
 from kmd.config.text_styles import PROMPT_INPUT_COLOR, SPINNER
 from kmd.shell.shell_output import cprint
 from kmd.shell.shell_syntax import is_assist_request_str
@@ -225,6 +226,13 @@ def customize_xonsh_settings(is_interactive: bool):
         XSH.env[key] = os.environ.get(key, default_value)  # type: ignore
 
 
+def load_rcfiles(execer: Execer, ctx: dict):
+    rcfiles = [str(f) for f in find_rcfiles()]
+    if rcfiles:
+        log.info("Loading rcfiles: %s", rcfiles)
+        xonshrc_context(rcfiles=rcfiles, execer=execer, ctx=ctx, env=XSH.env, login=True)
+
+
 def start_custom_xonsh(single_command: Optional[str] = None):
     """
     Customize xonsh shell, with custom shell settings and input loop hooks as well
@@ -265,6 +273,11 @@ def start_custom_xonsh(single_command: Optional[str] = None):
 
     # Load kmd xontrib for rest of kmd functionality.
     xontribs_load(["kmd.xontrib.kmd_extension"], full_module=True)
+
+    # If we want to replicate all the xonsh settings including .xonshrc, we could call
+    # start_services(). It may be problematic to support all xonsh enhancements, however,
+    # so let's only load ~/.kmdrc files.
+    load_rcfiles(execer, ctx)
 
     # Imports are so slow we will need to improve this. Let's time it.
     startup_time = time.time() - import_start_time

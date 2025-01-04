@@ -14,9 +14,10 @@ APP_NAME = "kmd"
 
 DOT_DIR = ".kmd"
 
+RCFILE_PATH = "~/.kmdrc"
+
 SANDBOX_NAME = "sandbox"
 SANDBOX_KB_PATH = f"~/.local/kmd/{SANDBOX_NAME}.kb"
-
 
 GLOBAL_CACHE_NAME = "kmd_cache"
 MEDIA_CACHE_NAME = "media"
@@ -54,6 +55,17 @@ def find_in_cwd_or_parents(filename: Path | str) -> Optional[Path]:
             return file_path
         path = path.parent
     return None
+
+
+def find_rcfiles() -> list[Path]:
+    """
+    Find active rcfiles. Currently only supports one.
+    """
+    rcfile_path = Path(RCFILE_PATH).expanduser().resolve()
+    if rcfile_path.exists():
+        return [rcfile_path]
+    else:
+        return []
 
 
 @cache
