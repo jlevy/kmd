@@ -4,7 +4,7 @@ from kmd.config.logger import get_logger
 from kmd.config.text_styles import COLOR_ERROR
 
 from kmd.errors import NONFATAL_EXCEPTIONS
-from kmd.shell.shell_output import cprint
+from kmd.shell_ui.shell_output import cprint
 
 
 log = get_logger(__name__)

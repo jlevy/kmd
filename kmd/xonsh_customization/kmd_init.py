@@ -18,13 +18,13 @@ from kmd.model.actions_model import Action
 from kmd.model.shell_model import ShellResult
 from kmd.server.local_server import start_server
 from kmd.server.local_url_formatters import enable_local_urls
-from kmd.shell.shell_output import cprint
-from kmd.shell.shell_results import handle_shell_result, shell_before_exec
 from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
 from kmd.shell_tools.native_tools import tool_check
 from kmd.shell_tools.tool_deps import check_terminal_features
+from kmd.shell_ui.shell_output import cprint
+from kmd.shell_ui.shell_results import handle_shell_result, shell_before_exec
 from kmd.version import get_version_name
 from kmd.workspaces.workspaces import current_workspace
 from kmd.xonsh_customization.modernize_shell import modernize_shell

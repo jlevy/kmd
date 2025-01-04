@@ -4,7 +4,7 @@ from frontmatter_format import to_yaml_string
 
 from kmd.commands.command_registry import kmd_command
 from kmd.exec.resolve_args import assemble_store_path_args
-from kmd.shell.shell_output import cprint, print_response, print_status, Wrap
+from kmd.shell_ui.shell_output import cprint, print_response, print_status, Wrap
 from kmd.util.format_utils import fmt_lines
 from kmd.workspaces.workspaces import current_workspace
 

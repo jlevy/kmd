@@ -6,7 +6,7 @@ from kmd.config.logger import get_logger
 from kmd.file_formats.chat_format import ChatHistory
 from kmd.model.file_formats_model import file_format_info
 from kmd.model.items_model import ItemType
-from kmd.shell.shell_output import cprint, format_name_and_value
+from kmd.shell_ui.shell_output import cprint, format_name_and_value
 from kmd.text_chunks.parse_divs import parse_divs
 from kmd.text_wrap.text_styling import Wrap
 from kmd.util.format_utils import fmt_size_dual

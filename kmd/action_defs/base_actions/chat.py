@@ -20,7 +20,7 @@ from kmd.model import (
     ShellResult,
 )
 from kmd.preconditions.precondition_defs import is_chat
-from kmd.shell.shell_output import print_assistance, print_response, print_style, Style, Wrap
+from kmd.shell_ui.shell_output import print_assistance, print_response, print_style, Style, Wrap
 
 
 log = get_logger(__name__)

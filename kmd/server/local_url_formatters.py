@@ -11,7 +11,7 @@ from kmd.errors import InvalidState
 from kmd.model.args_model import fmt_loc
 
 from kmd.model.paths_model import StorePath
-from kmd.shell.kyrm_codes import KriLink, TextTooltip, UIAction, UIActionType
+from kmd.shell_ui.kyrm_codes import KriLink, TextTooltip, UIAction, UIActionType
 from kmd.util.atomic_var import AtomicVar
 from kmd.workspaces.workspaces import current_workspace
 

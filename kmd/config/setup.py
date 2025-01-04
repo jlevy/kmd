@@ -8,7 +8,7 @@ from dotenv import find_dotenv, load_dotenv
 from rich.text import Text
 
 from kmd.config.logger import logging_setup
-from kmd.shell.shell_output import cprint, format_success_or_failure
+from kmd.shell_ui.shell_output import cprint, format_success_or_failure
 from kmd.util.stack_traces import add_stacktrace_handler
 
 

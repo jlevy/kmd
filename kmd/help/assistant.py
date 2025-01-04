@@ -25,8 +25,8 @@ from kmd.model.items_model import Item, ItemType
 from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message
 from kmd.model.script_model import Script
-from kmd.shell.assistant_output import print_assistant_response
-from kmd.shell.shell_output import cprint
+from kmd.shell_ui.assistant_output import print_assistant_response
+from kmd.shell_ui.shell_output import cprint
 from kmd.text_wrap.markdown_normalization import normalize_markdown
 from kmd.util.log_calls import log_calls
 from kmd.util.parse_shell_args import shell_unquote

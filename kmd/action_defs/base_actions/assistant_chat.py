@@ -14,8 +14,8 @@ from kmd.model import (
 from kmd.model.args_model import NO_ARGS
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_chat
-from kmd.shell.assistant_output import print_assistant_heading
-from kmd.shell.shell_output import cprint, print_response, Wrap
+from kmd.shell_ui.assistant_output import print_assistant_heading
+from kmd.shell_ui.shell_output import cprint, print_response, Wrap
 
 
 @kmd_action

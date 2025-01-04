@@ -10,7 +10,7 @@ from pathlib import Path
 
 from kmd.config.text_styles import COLOR_HINT
 from kmd.errors import SetupError
-from kmd.shell.shell_output import cprint
+from kmd.shell_ui.shell_output import cprint
 
 
 @cache

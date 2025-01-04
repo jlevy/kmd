@@ -35,8 +35,6 @@ from kmd.model.items_model import Item, ItemType
 from kmd.model.paths_model import parse_path_spec, StorePath
 from kmd.model.shell_model import ShellResult
 from kmd.server.local_url_formatters import local_url_formatter
-from kmd.shell.shell_file_info import print_file_info
-from kmd.shell.shell_output import console_pager, cprint, print_status, print_style, Style, Wrap
 from kmd.shell_tools.native_tools import (
     edit_files,
     native_trash,
@@ -45,6 +43,8 @@ from kmd.shell_tools.native_tools import (
     ViewMode,
 )
 from kmd.shell_tools.tool_deps import Tool, tool_check
+from kmd.shell_ui.shell_file_info import print_file_info
+from kmd.shell_ui.shell_output import console_pager, cprint, print_status, print_style, Style, Wrap
 from kmd.text_docs.unified_diffs import unified_diff_files, unified_diff_items
 from kmd.util.format_utils import fmt_lines, fmt_size_human, fmt_time
 from kmd.util.parse_shell_args import shell_quote

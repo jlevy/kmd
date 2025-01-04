@@ -9,9 +9,9 @@ from kmd.config.setup import print_api_key_setup
 from kmd.model.args_model import fmt_loc
 from kmd.server import local_server
 from kmd.server.local_url_formatters import enable_local_urls
-from kmd.shell.shell_output import cprint, format_name_and_description, print_status
 from kmd.shell_tools.native_tools import tail_file
 from kmd.shell_tools.tool_deps import check_terminal_features, tool_check
+from kmd.shell_ui.shell_output import cprint, format_name_and_description, print_status
 from kmd.util.format_utils import fmt_lines
 from kmd.workspaces.workspaces import current_workspace
 

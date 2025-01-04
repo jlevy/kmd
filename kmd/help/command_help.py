@@ -11,7 +11,12 @@ from kmd.model.actions_model import Action
 from kmd.model.messages_model import Message
 from kmd.model.params_model import Param, RUNTIME_ACTION_PARAMS
 from kmd.model.preconditions_model import Precondition
-from kmd.shell.shell_output import cprint, format_name_and_description, print_assistance, print_help
+from kmd.shell_ui.shell_output import (
+    cprint,
+    format_name_and_description,
+    print_assistance,
+    print_help,
+)
 from kmd.text_wrap.text_styling import DEFAULT_INDENT, Wrap
 
 

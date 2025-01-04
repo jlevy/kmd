@@ -36,7 +36,7 @@ from kmd.config.text_styles import (
     MID_CORNER,
     VRULE_CHAR,
 )
-from kmd.shell.rich_indent import Indent
+from kmd.shell_ui.rich_indent import Indent
 from kmd.text_wrap.text_styling import DEFAULT_INDENT, fill_text, Wrap
 
 console = get_console()

@@ -15,7 +15,7 @@ from kmd.model import (
     TWO_OR_MORE_ARGS,
 )
 from kmd.preconditions.precondition_defs import is_concept, is_text_doc
-from kmd.shell.shell_output import cprint, print_heading
+from kmd.shell_ui.shell_output import cprint, print_heading
 from kmd.text_formatting.markdown_util import as_bullet_points
 from kmd.util.type_utils import not_none
 

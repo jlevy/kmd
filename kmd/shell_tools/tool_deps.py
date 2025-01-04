@@ -17,14 +17,14 @@ from xonsh.platform import ON_DARWIN, ON_LINUX, ON_WINDOWS
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import CONSOLE_WRAP_WIDTH, EMOJI_WARN
 from kmd.errors import SetupError
-from kmd.shell.shell_output import (
+from kmd.shell_tools.osc_tools import osc8_link_rich, terminal_supports_osc8
+from kmd.shell_tools.terminal_images import terminal_supports_sixel
+from kmd.shell_ui.shell_output import (
     cprint,
     format_name_and_description,
     format_paragraphs,
     format_success_or_failure,
 )
-from kmd.shell_tools.osc_tools import osc8_link_rich, terminal_supports_osc8
-from kmd.shell_tools.terminal_images import terminal_supports_sixel
 
 
 log = get_logger(__name__)

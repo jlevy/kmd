@@ -26,15 +26,15 @@ from kmd.model.shell_model import ShellResult
 from kmd.preconditions import all_preconditions
 from kmd.preconditions.precondition_checks import actions_matching_paths
 from kmd.server.local_url_formatters import local_url_formatter
-from kmd.shell.shell_output import (
+from kmd.shell_tools.git_tools import add_to_git_ignore
+from kmd.shell_tools.native_tools import tail_file
+from kmd.shell_ui.shell_output import (
     cprint,
     format_name_and_description,
     print_heading,
     print_status,
     Wrap,
 )
-from kmd.shell_tools.git_tools import add_to_git_ignore
-from kmd.shell_tools.native_tools import tail_file
 from kmd.util.format_utils import fmt_lines
 from kmd.util.obj_utils import remove_values
 from kmd.util.parse_key_vals import format_key_value, parse_key_value

@@ -5,7 +5,7 @@ from kmd.config.text_styles import COLOR_HINT, COLOR_SELECTION
 from kmd.errors import is_fatal
 from kmd.exec.command_exec import run_command
 from kmd.model.shell_model import ShellResult
-from kmd.shell.shell_output import (
+from kmd.shell_ui.shell_output import (
     console_pager,
     cprint,
     print_hrule,

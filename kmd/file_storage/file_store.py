@@ -22,7 +22,7 @@ from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemId, ItemType
 from kmd.model.paths_model import StorePath
 from kmd.query.vector_index import WsVectorIndex
-from kmd.shell.shell_output import cprint
+from kmd.shell_ui.shell_output import cprint
 from kmd.util.format_utils import fmt_lines
 from kmd.util.log_calls import format_duration, log_calls
 

@@ -4,7 +4,7 @@ from kmd.config.text_styles import COLOR_HEADING, COLOR_HINT, EMOJI_ASSISTANT
 from kmd.help.help_page import print_see_also
 from kmd.model.assistant_response_model import AssistantResponse, Confidence
 from kmd.model.language_models import LLM
-from kmd.shell.shell_output import (
+from kmd.shell_ui.shell_output import (
     cprint,
     print_assistance,
     print_code_block,

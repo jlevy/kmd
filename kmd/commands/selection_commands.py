@@ -4,8 +4,8 @@ from kmd.errors import InvalidInput
 from kmd.lang_tools.inflection import plural
 from kmd.model.paths_model import StorePath
 from kmd.model.shell_model import ShellResult
-from kmd.shell.shell_output import print_status
-from kmd.shell.shell_results import shell_print_selection_history
+from kmd.shell_ui.shell_output import print_status
+from kmd.shell_ui.shell_results import shell_print_selection_history
 from kmd.workspaces.selections import Selection
 from kmd.workspaces.workspaces import current_workspace
 

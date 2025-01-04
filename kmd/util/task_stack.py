@@ -131,7 +131,7 @@ class TaskStack:
 
     @property
     def _output(self):
-        from kmd.shell.shell_output import cprint
+        from kmd.shell_ui.shell_output import cprint
 
         return cprint
 

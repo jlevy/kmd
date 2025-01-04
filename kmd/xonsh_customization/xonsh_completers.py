@@ -26,7 +26,7 @@ from kmd.model.params_model import Param
 from kmd.model.paths_model import fmt_store_path
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_checks import items_matching_precondition
-from kmd.shell.shell_syntax import assist_request_str
+from kmd.shell_ui.shell_syntax import assist_request_str
 from kmd.util.format_utils import single_line
 from kmd.util.log_calls import log_calls
 from kmd.util.type_utils import not_none

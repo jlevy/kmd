@@ -15,7 +15,13 @@ from kmd.docs import (
     what_is_kmd,
     workspace_and_file_formats,
 )
-from kmd.shell.shell_output import cprint, print_heading, print_markdown, print_small_heading, Wrap
+from kmd.shell_ui.shell_output import (
+    cprint,
+    print_heading,
+    print_markdown,
+    print_small_heading,
+    Wrap,
+)
 
 log = get_logger(__name__)
 

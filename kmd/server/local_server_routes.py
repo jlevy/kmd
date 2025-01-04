@@ -14,9 +14,9 @@ from kmd.file_storage.file_store import FileStore
 from kmd.help.command_help import explain_command
 from kmd.model.items_model import Item
 from kmd.model.paths_model import StorePath
-from kmd.shell.rich_html import RICH_HTML_TEMPLATE
-from kmd.shell.shell_file_info import print_file_info
-from kmd.shell.shell_output import Wrap
+from kmd.shell_ui.rich_html import RICH_HTML_TEMPLATE
+from kmd.shell_ui.shell_file_info import print_file_info
+from kmd.shell_ui.shell_output import Wrap
 from kmd.util.type_utils import not_none
 from kmd.web_gen.template_render import render_web_template
 
