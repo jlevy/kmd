@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import cast, Iterable, List, Tuple
 
@@ -348,15 +349,62 @@ def options_completer(context: CompletionContext) -> CompleterResult:
 
 
 @Condition
-def is_unquoted_assitant_request():
+def is_unquoted_assistant_request():
     app = get_app()
     buf = app.current_buffer
     text = buf.text.strip()
-    return (
-        buf.name == "DEFAULT_BUFFER"
-        and text.startswith("?")
-        and not (text.startswith('? "') or text.startswith("? '"))
-    )
+    is_default_buffer = buf.name == "DEFAULT_BUFFER"
+    has_prefix = text.startswith("?") and not (text.startswith('? "') or text.startswith("? '"))
+    return is_default_buffer and has_prefix
+
+
+_command_regex = re.compile(r"^[a-zA-Z0-9_-]+$")
+
+
+def _extract_command_name(text: str) -> str | None:
+    text = text.split()[0]
+    if _command_regex.match(text):
+        return text
+    return None
+
+
+@Condition
+def is_typo_command() -> bool:
+    from xonsh.built_ins import XSH
+    from xonsh.xoreutils._which import which, WhichError
+
+    app = get_app()
+    buf = app.current_buffer
+    text = buf.text.strip()
+
+    is_default_buffer = buf.name == "DEFAULT_BUFFER"
+    has_assistant_prefix = text.startswith("?")
+    if not is_default_buffer or has_assistant_prefix:
+        return False
+
+    # Empty command line allowed.
+    if not text:
+        return False
+
+    command_name = _extract_command_name(text)
+
+    # Things that don't look like a command are allowed.
+    if not command_name:
+        return False
+
+    # Built-in values and aliases are allowed.
+    globals = XSH.ctx
+    aliases = XSH.aliases or {}
+    if command_name in globals or command_name in aliases:
+        return False
+
+    # Finally check if it is a known command.
+    try:
+        which(command_name)
+        return False
+    except WhichError:
+        # Almost certainly a typo.
+        return True
 
 
 @Condition
@@ -380,7 +428,7 @@ def add_key_bindings() -> None:
         else:
             buf.insert_text(" ")
 
-    @custom_bindings.add("enter", filter=is_unquoted_assitant_request)
+    @custom_bindings.add("enter", filter=is_unquoted_assistant_request)
     def _(event: KeyPressEvent):
         """
         Automatically add quotes around assistant questions, so there are not
@@ -401,6 +449,20 @@ def add_key_bindings() -> None:
             buf.insert_text(assist_request_str(question_text))
 
         buf.validate_and_handle()
+
+    @custom_bindings.add("enter", filter=is_typo_command)
+    def _(event: KeyPressEvent):
+        """
+        Suppress enter and if possible give completions if the command is just not a valid command.
+        """
+
+        buf = event.app.current_buffer
+        buf.start_completion()
+
+    # TODO: Also suppress enter if a command or action doesn't meet the required args,
+    # selection, or preconditions.
+    # Perhaps also have a way to get confirmation if its a rarely used or unexpected command
+    # (based on history/suggestions).
 
     @custom_bindings.add("@")
     def _(event: KeyPressEvent):
