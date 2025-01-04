@@ -22,7 +22,6 @@ from kmd.shell.shell_output import (
     format_name_and_description,
     format_paragraphs,
     format_success_or_failure,
-    Wrap,
 )
 from kmd.shell_tools.osc_tools import osc8_link_rich, terminal_supports_osc8
 from kmd.shell_tools.terminal_images import terminal_supports_sixel
@@ -59,6 +58,7 @@ class ToolDep:
     command_names: tuple[str, ...]
     check_function: Optional[Callable[[], bool]] = None
     comment: Optional[str] = None
+    warn_if_missing: bool = False
 
     brew_pkg: Optional[str] = None
     apt_pkg: Optional[str] = None
@@ -86,29 +86,39 @@ class Tool(Enum):
     less = ToolDep(("less",))
     tail = ToolDep(("tail",))
 
-    pygmentize = ToolDep(
-        ("pygmentize",),
-        brew_pkg="pygments",
-        apt_pkg="python3-pygments",
-        pip_pkg="Pygments",
+    bat = ToolDep(
+        ("batcat", "bat"),  # batcat for Debian/Ubuntu), bat for macOS
+        brew_pkg="bat",
+        apt_pkg="bat",
+        winget_pkg="sharkdp.bat",
+        warn_if_missing=True,
     )
     ripgrep = ToolDep(
         ("rg",),
         brew_pkg="ripgrep",
         apt_pkg="ripgrep",
         winget_pkg="BurntSushi.ripgrep",
-    )
-    bat = ToolDep(
-        ("batcat", "bat"),  # batcat for Debian/Ubuntu), bat for macOS
-        brew_pkg="bat",
-        apt_pkg="bat",
-        winget_pkg="sharkdp.bat",
+        warn_if_missing=True,
     )
     eza = ToolDep(
         ("eza",),
         brew_pkg="eza",
         apt_pkg="eza",
         winget_pkg="eza-community.eza",
+        warn_if_missing=True,
+    )
+    zoxide = ToolDep(
+        ("zoxide",),
+        brew_pkg="zoxide",
+        apt_pkg="zoxide",
+        winget_pkg="ajeetdsouza.zoxide",
+        warn_if_missing=True,
+    )
+    pygmentize = ToolDep(
+        ("pygmentize",),
+        brew_pkg="pygments",
+        apt_pkg="python3-pygments",
+        pip_pkg="Pygments",
     )
     libmagic = ToolDep(
         (),
@@ -120,18 +130,21 @@ class Tool(Enum):
         brew_pkg="libmagic",
         apt_pkg="libmagic1",
         pip_pkg="python-magic-bin",
+        warn_if_missing=True,
     )
     ffmpeg = ToolDep(
         ("ffmpeg",),
         brew_pkg="ffmpeg",
         apt_pkg="ffmpeg",
         winget_pkg="Gyan.FFmpeg",
+        warn_if_missing=True,
     )
     imagemagick = ToolDep(
         ("magick",),
         brew_pkg="imagemagick",
         apt_pkg="imagemagick",
         winget_pkg="ImageMagick.ImageMagick",
+        warn_if_missing=True,
     )
 
     @property
@@ -151,7 +164,7 @@ class InstalledTools:
     tools: dict[Tool, str | bool]
 
     def has(self, *tools: Tool) -> bool:
-        return all(self.tools[tool] is not None for tool in tools)
+        return all(self.tools[tool] for tool in tools)
 
     def require(self, *tools: Tool):
         for tool in tools:
@@ -168,32 +181,41 @@ class InstalledTools:
 
     def warn_if_missing(self, *tools: Tool):
         for tool in self.missing_tools(*tools):
-            print_missing_tool_help(tool)
+            if tool.value.warn_if_missing:
+                print_missing_tool_help(tool)
 
     def formatted(self):
         texts = []
-        for tool, path in self.tools.items():
-            doc = format_success_or_failure(
-                bool(path), true_str=f"Found: `{path}`", false_str="Not found!"
-            )
+        for tool, path in self.items():
+            found_str = "Found" if isinstance(path, bool) else f"Found: `{path}`"
+            doc = format_success_or_failure(bool(path), true_str=found_str, false_str="Not found!")
             texts.append(format_name_and_description(tool.name, doc))
 
         return format_paragraphs(*texts)
 
+    def items(self):
+        return sorted(self.tools.items(), key=lambda item: item[0].name)
+
+    def status(self):
+        texts = []
+        for tool, path in self.items():
+            texts.append(format_success_or_failure(bool(path), tool.name))
+
+        return Text.assemble("Tools: ", Text(" ").join(texts))
+
 
 def print_missing_tool_help(tool: Tool):
-    cprint()
-    cprint(
-        "%s %s was not found; it is recommended to install it for better functionality.",
-        EMOJI_WARN,
-        tool.full_name,
-    )
+    warn_str = f"{EMOJI_WARN} {tool.full_name} was not found; it is recommended to install it for better functionality."
     if tool.value.comment:
-        cprint(tool.value.comment, text_wrap=Wrap.WRAP_FULL)
-    print_install_suggestion(tool)
+        warn_str += f" {tool.value.comment}"
+    install_str = get_install_suggestion(tool)
+    if install_str:
+        warn_str += f" {install_str}"
+
+    cprint(warn_str)
 
 
-def print_install_suggestion(*missing_tools: Tool):
+def get_install_suggestion(*missing_tools: Tool) -> Optional[str]:
     platform = detect_platform()
     brew_pkgs = [tool.value.brew_pkg for tool in missing_tools if tool.value.brew_pkg]
     apt_pkgs = [tool.value.apt_pkg for tool in missing_tools if tool.value.apt_pkg]
@@ -201,17 +223,16 @@ def print_install_suggestion(*missing_tools: Tool):
     pip_pkgs = [tool.value.pip_pkg for tool in missing_tools if tool.value.pip_pkg]
 
     if platform == OSPlatform.macos and brew_pkgs:
-        cprint("On macOS, try using Homebrew: `brew install %s`", " ".join(brew_pkgs))
+        return "On macOS, try using Homebrew: `brew install %s`" % " ".join(brew_pkgs)
     elif platform == OSPlatform.linux and apt_pkgs:
-        cprint(
-            "On Linux, try using your package manager, e.g.: `sudo apt install %s`",
-            " ".join(apt_pkgs),
+        return "On Linux, try using your package manager, e.g.: `sudo apt install %s`" % " ".join(
+            apt_pkgs
         )
     elif platform == OSPlatform.windows and winget_pkgs:
-        cprint("On Windows, try using Winget: `winget install %s`", " ".join(winget_pkgs))
+        return "On Windows, try using Winget: `winget install %s`" % " ".join(winget_pkgs)
 
     if pip_pkgs:
-        cprint("You may also try using pip: `pip install %s`", " ".join(pip_pkgs))
+        return "You may also try using pip: `pip install %s`" % " ".join(pip_pkgs)
 
 
 _tools_cache = TTLCache(maxsize=1, ttl=5.0)

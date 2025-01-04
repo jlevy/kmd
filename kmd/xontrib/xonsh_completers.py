@@ -385,8 +385,12 @@ def is_typo_command() -> bool:
     text = buf.text.strip()
 
     is_default_buffer = buf.name == "DEFAULT_BUFFER"
-    has_assistant_prefix = text.startswith("?")
-    if not is_default_buffer or has_assistant_prefix:
+    if not is_default_buffer:
+        return False
+
+    # Assistant commands always allowed.
+    has_assistant_prefix = text.startswith("?") or text.rstrip().endswith("?")
+    if has_assistant_prefix:
         return False
 
     # Empty command line allowed.
@@ -474,6 +478,7 @@ def add_key_bindings() -> None:
     # selection, or preconditions.
     # Perhaps also have a way to get confirmation if its a rarely used or unexpected command
     # (based on history/suggestions).
+    # TODO: Add suggested replacements, e.g. df -> duf, top -> btm, etc.
 
     @custom_bindings.add("@")
     def _(event: KeyPressEvent):

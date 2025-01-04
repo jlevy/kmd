@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, TypeVar
 
+
 from xonsh.built_ins import XSH
 from xonsh.prompt.base import PromptFields
 from xonsh.xontribs import xontribs_load
@@ -28,7 +29,7 @@ from kmd.shell_tools.native_tools import tool_check
 from kmd.shell_tools.tool_deps import check_terminal_features
 from kmd.version import get_version_name
 from kmd.workspaces.workspaces import current_workspace
-from kmd.xontrib.modern_aliases import add_modern_aliases
+from kmd.xontrib.modernize_shell import modernize_shell
 from kmd.xontrib.xonsh_completers import load_completers
 
 
@@ -247,7 +248,12 @@ def _shell_setup():
     # Another convenience xontrib (fnm, since nvm doesn't work in xonsh).
     xontribs_load(["kmd.xontrib.fnm"], full_module=True)
 
-    add_modern_aliases()
+    modernize_shell()
+
+
+def _status_messages():
+    check_terminal_features().print_term_info()
+    cprint(tool_check().status())
 
 
 def customize_xonsh():
@@ -262,7 +268,7 @@ def customize_xonsh():
 
     if _is_interactive:
 
-        check_terminal_features().print_term_info()
+        _status_messages()
 
         print_api_key_setup(once=False)
 

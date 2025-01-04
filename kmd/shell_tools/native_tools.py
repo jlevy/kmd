@@ -18,6 +18,7 @@ from kmd.model.file_formats_model import file_format_info, is_full_html_page, re
 from kmd.shell.shell_output import cprint
 from kmd.shell_tools.terminal_images import terminal_show_image
 from kmd.shell_tools.tool_deps import detect_platform, OSPlatform, Tool, tool_check
+from kmd.text_wrap.text_styling import Wrap
 from kmd.util.log_calls import log_calls
 from kmd.util.url import as_file_url, is_file_url, is_url
 
@@ -162,7 +163,7 @@ def tail_file(
             )
         else:
             command = f"tail -f {quoted_filename} | less -R +F"
-        cprint("Following file: `%s`", command)
+        cprint("Following file: `%s`", command, text_wrap=Wrap.NONE)
     else:
         if tool_check().has(Tool.bat, Tool.tail, Tool.less):
             command = (
@@ -172,7 +173,7 @@ def tail_file(
             )
         else:
             command = f"less +G {quoted_filename}"
-        cprint("Tailing file: `%s`", command)
+        cprint("Tailing file: `%s`", command, text_wrap=Wrap.NONE)
 
     subprocess.run(command, shell=True, check=True)
 
@@ -199,7 +200,7 @@ def view_file_console(filename: str | Path, use_pager: bool = True):
     try:
         subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
-        cprint(f"Error displaying file: {e}", color=COLOR_ERROR)
+        cprint(f"Error displaying file: {e}", color=COLOR_ERROR, text_wrap=Wrap.NONE)
 
 
 def edit_files(*filenames: str | Path):

@@ -43,18 +43,24 @@ def self_check() -> None:
 
 
 @kmd_command
-def check_tools(warn_only: bool = False) -> None:
+def check_tools(warn_only: bool = False, brief: bool = False) -> None:
     """
     Check that all tools are installed.
+
+    :param warn_only: Only warn if tools are missing.
+    :param brief: Print summary as a single line.
     """
     if warn_only:
         tool_check().warn_if_missing()
     else:
-        cprint("Checking for required tools:")
-        cprint()
-        cprint(tool_check().formatted())
-        cprint()
-        tool_check().warn_if_missing()
+        if brief:
+            cprint(tool_check().status())
+        else:
+            cprint("Checking for required tools:")
+            cprint()
+            cprint(tool_check().formatted())
+            cprint()
+            tool_check().warn_if_missing()
 
 
 @kmd_command

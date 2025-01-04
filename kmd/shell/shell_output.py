@@ -100,11 +100,15 @@ def format_paragraphs(*paragraphs: str | Text) -> Text:
 
 
 def format_success_or_failure(
-    value: bool, true_str: str | Text = "", false_str: str | Text = ""
+    value: bool, true_str: str | Text = "", false_str: str | Text = "", space: str = ""
 ) -> Text:
+    """
+    Format a success or failure message with an emoji followed by the true or false string.
+    If false_str is not provided, it will be the same as true_str.
+    """
     emoji = Text(emoji_bool(value), style=COLOR_SUCCESS if value else COLOR_FAILURE)
     if true_str or false_str:
-        return Text.assemble(emoji, " ", true_str if value else false_str)
+        return Text.assemble(emoji, space, true_str if value else (false_str or true_str))
     else:
         return emoji
 

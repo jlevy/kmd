@@ -167,7 +167,7 @@ def actions() -> None:
 
 
 @kmd_command
-def action_source(action_name: str) -> None:
+def action_source_code(action_name: str) -> None:
     """
     Show the source code for an action.
     """
