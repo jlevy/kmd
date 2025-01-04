@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, TypeVar
 
 from kmd.config.logger import get_logger, log_file_path
-from kmd.config.text_styles import EMOJI_SAVED
+from kmd.config.text_styles import EMOJI_SAVED, EMOJI_WARN
 
 from kmd.errors import FileExists, FileNotFound, InvalidFilename, SkippableError
 from kmd.file_formats.item_file_format import read_item, write_item
@@ -547,7 +547,7 @@ class FileStore:
             return
         self.info_logged = True
 
-        cprint()
+        # cprint()
         log.message(
             "Using workspace: %s (%s items)",
             path.abspath(self.base_dir),
@@ -560,8 +560,10 @@ class FileStore:
             log.warning("%s", warning)
 
         if self.is_sandbox:
-            log.warning("Note you are using the default sandbox workspace.")
-            log.warning("Create or switch to a workspace with the `workspace` command.")
+            cprint(
+                f"{EMOJI_WARN} Note you are using the default sandbox workspace. "
+                + "Create or switch to another workspace with the `workspace` command."
+            )
 
         log.info("File store startup took %s.", format_duration(self.end_time - self.start_time))
         # TODO: Log more info like number of items by type.

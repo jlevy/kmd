@@ -33,7 +33,7 @@ BEL_CODE = "\x07"  # Bell character
 OSC_HYPERLINK = "8"
 
 
-def osc_code(code: str, data: str) -> str:
+def osc_code(code: int | str, data: str) -> str:
     """
     Return an extended OSC code.
     """

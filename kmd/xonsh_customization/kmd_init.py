@@ -274,8 +274,8 @@ def initialize_kmd():
                 "If your terminal supports it, you may use `start_server` to enable local links."
             )
 
-        current_workspace()  # Validates and logs info for user.
         cprint()
+        current_workspace()  # Validates and logs info for user.
 
         _shell_setup()
 

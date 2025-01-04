@@ -69,7 +69,7 @@ from kmd.shell_tools.osc_tools import osc_code
 KC_VERSION = 0
 """Version of the Kyrm codes format. Update when we make breaking changes."""
 
-KYRM_OSC = "77"
+KYRM_OSC = 77
 """A lucky OSC code not used by other applications."""
 
 KUI_PROTOCOL = "kui:"
