@@ -78,7 +78,7 @@ def install_to_xonshrc():
 # from xonsh.shells.readline_shell import ReadlineShell
 from xonsh.shells.ptk_shell import PromptToolkitShell
 
-from kmd.xontrib.xonsh_ranking_completer import RankingCompleter
+from kmd.xonsh_customization.xonsh_ranking_completer import RankingCompleter
 
 
 class CustomAssistantShell(PromptToolkitShell):

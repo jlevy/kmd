@@ -7,7 +7,11 @@ from xonsh.completers.tools import RichCompletion
 from xonsh.parsers.completion_context import CompletionContext
 
 from kmd.config.logger import get_logger
-from kmd.xontrib.completion_ranking import normalize, sort_by_prefix_display, sort_default
+from kmd.xonsh_customization.completion_ranking import (
+    normalize,
+    sort_by_prefix_display,
+    sort_default,
+)
 
 log = get_logger(__name__)
 

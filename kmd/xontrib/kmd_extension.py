@@ -13,7 +13,7 @@ import kmd.action_defs
 import kmd.commands.command_registry
 import kmd.shell.shell_output
 import kmd.util.format_utils
-import kmd.xontrib.xonsh_customization
+import kmd.xonsh_customization.kmd_init
 
 
 # We add action loading here directly in the xontrib so we expose `load` and
@@ -35,7 +35,7 @@ def load(*paths: str) -> None:
             importlib.import_module(path)
 
     # Now reload all actions into the environment so the new action is visible.
-    kmd.xontrib.xonsh_customization._load_xonsh_actions()
+    kmd.xonsh_customization.kmd_init._load_xonsh_actions()
 
     kmd.shell.shell_output.cprint(
         "Imported extensions and reloaded actions: %s",
@@ -44,6 +44,6 @@ def load(*paths: str) -> None:
     # TODO: Track and expose to the user which extensions are loaded.
 
 
-kmd.xontrib.xonsh_customization.set_alias("load", load)
+kmd.xonsh_customization.kmd_init.set_alias("load", load)
 
-kmd.xontrib.xonsh_customization.customize_xonsh()
+kmd.xonsh_customization.kmd_init.initialize_kmd()

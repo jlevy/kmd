@@ -1,17 +1,24 @@
 import subprocess
 
 from xonsh.built_ins import XSH
+from xonsh.xontribs import xontribs_load
 
 from kmd.shell_tools.tool_deps import Tool, tool_check
 
 
 def modernize_shell() -> None:
     """
-    Add various widely used aliases and tools to improve and modernize the shell
+    Add some basic aliases and tools to improve and modernize the xonsh shell
     experience, if they are installed.
     """
+    add_fnm()
     enable_zoxide()
-    add_modern_aliases()
+    add_aliases()
+
+
+def add_fnm() -> None:
+    # Another convenience xontrib (fnm, since nvm doesn't work in xonsh).
+    xontribs_load(["kmd.xontrib.fnm"], full_module=True)
 
 
 def enable_zoxide() -> None:
@@ -23,7 +30,7 @@ def enable_zoxide() -> None:
         XSH.builtins.execx(zoxide_init, "exec", XSH.ctx, filename="zoxide")
 
 
-def add_modern_aliases() -> None:
+def add_aliases() -> None:
     installed_tools = tool_check()
 
     assert XSH.aliases

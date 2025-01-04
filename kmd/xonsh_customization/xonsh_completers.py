@@ -31,7 +31,7 @@ from kmd.util.format_utils import single_line
 from kmd.util.log_calls import log_calls
 from kmd.util.type_utils import not_none
 from kmd.workspaces.workspaces import current_ignore, current_workspace
-from kmd.xontrib.completion_ranking import (
+from kmd.xonsh_customization.completion_ranking import (
     normalize,
     score_items,
     score_paths,
@@ -86,7 +86,7 @@ def _command_match(query: str, values: Iterable[str | RichCompletion]) -> List[R
 
 @log_calls(level="debug")
 def _command_completions(prefix: str) -> set[RichCompletion]:
-    from kmd.xontrib.xonsh_customization import _actions, _commands
+    from kmd.xonsh_customization.kmd_init import _actions, _commands
 
     prefix = normalize(prefix)
 
@@ -235,7 +235,7 @@ def item_completer(context: CompletionContext) -> CompleterResult:
     If the current command is an action, complete with paths that match the precondition
     for that action.
     """
-    from kmd.xontrib.xonsh_customization import _actions
+    from kmd.xonsh_customization.kmd_init import _actions
 
     try:
         if context.command and context.command.arg_index >= 1:
@@ -313,7 +313,7 @@ def options_completer(context: CompletionContext) -> CompleterResult:
     """
     Suggest options completions after a `-` or `--` on the command line.
     """
-    from kmd.xontrib.xonsh_customization import _actions, _commands
+    from kmd.xonsh_customization.kmd_init import _actions, _commands
 
     if context.command and context.command.arg_index > 0:
         prefix = context.command.prefix

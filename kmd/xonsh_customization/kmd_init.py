@@ -4,10 +4,8 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, TypeVar
 
-
 from xonsh.built_ins import XSH
 from xonsh.prompt.base import PromptFields
-from xonsh.xontribs import xontribs_load
 
 from kmd.action_defs import reload_all_actions
 from kmd.commands import help_commands
@@ -29,8 +27,8 @@ from kmd.shell_tools.native_tools import tool_check
 from kmd.shell_tools.tool_deps import check_terminal_features
 from kmd.version import get_version_name
 from kmd.workspaces.workspaces import current_workspace
-from kmd.xontrib.modernize_shell import modernize_shell
-from kmd.xontrib.xonsh_completers import load_completers
+from kmd.xonsh_customization.modernize_shell import modernize_shell
+from kmd.xonsh_customization.xonsh_completers import load_completers
 
 
 setup()  # Call to config logging before anything else.
@@ -232,7 +230,7 @@ def _kmd_xonsh_prompt():
 
 
 def _shell_setup():
-    from kmd.xontrib.xonsh_completers import add_key_bindings
+    from kmd.xonsh_customization.xonsh_completers import add_key_bindings
 
     # Set up a prompt field for the workspace string.
     fields = PromptFields(XSH)
@@ -245,18 +243,16 @@ def _shell_setup():
 
     add_key_bindings()
 
-    # Another convenience xontrib (fnm, since nvm doesn't work in xonsh).
-    xontribs_load(["kmd.xontrib.fnm"], full_module=True)
-
     modernize_shell()
 
 
 def _status_messages():
     check_terminal_features().print_term_info()
     cprint(tool_check().status())
+    print_api_key_setup(once=False)
 
 
-def customize_xonsh():
+def initialize_kmd():
     """
     Everything to customize xonsh for kmd.
     """
@@ -269,8 +265,6 @@ def customize_xonsh():
     if _is_interactive:
 
         _status_messages()
-
-        print_api_key_setup(once=False)
 
         if os.environ.get("TERM_PROGRAM") == "Kyrm":
             start_server()
