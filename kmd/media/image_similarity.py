@@ -3,7 +3,6 @@ from typing import List
 
 import cv2
 import numpy as np
-from skimage.metrics import structural_similarity
 
 
 def frames_are_similar(frame1: np.ndarray, frame2: np.ndarray, threshold: float = 0.95) -> bool:
@@ -11,6 +10,8 @@ def frames_are_similar(frame1: np.ndarray, frame2: np.ndarray, threshold: float 
     Compare two frames to determine if they are similar based on structural similarity.
     Returns True if frames are similar above the threshold.
     """
+    from skimage.metrics import structural_similarity
+
     # Convert frames to grayscale and compute structural similarity.
     gray1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
