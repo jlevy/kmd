@@ -22,8 +22,19 @@ from marko.renderer import Renderer
 from marko.source import Source
 
 from kmd.lang_tools.sentence_split_regex import split_sentences_regex
-from kmd.text_wrap.text_styling import CONSOLE_WRAP_WIDTH
 from kmd.text_wrap.text_wrapping import wrap_length_fn, wrap_paragraph, wrap_paragraph_lines
+
+
+DEFAULT_WRAP_WIDTH = 88
+"""
+Default wrap width for Markdown content. This is a compromise between traditional
+but sometimes impractically narrow 80-char console width and being too wide to
+read comfortably for text, markup, and code. 88 is the same as Black.
+"""
+
+
+DEFAULT_MIN_LINE_LEN = 20
+"""Default minimum line length for sentence breaking."""
 
 
 class LineWrapper(Protocol):
@@ -274,16 +285,6 @@ class _MarkdownNormalizer(Renderer):
         if text and (text[0] == "`" or text[-1] == "`"):
             return f"`` {text} ``"
         return f"`{element.children}`"
-
-
-DEFAULT_WRAP_WIDTH = CONSOLE_WRAP_WIDTH
-"""
-Default wrap width for Markdown content. Currently same as console width.
-"""
-
-
-DEFAULT_MIN_LINE_LEN = 20
-"""Default minimum line length for sentence breaking."""
 
 
 def split_sentences_no_min_length(text: str) -> List[str]:
