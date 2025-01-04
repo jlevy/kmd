@@ -218,7 +218,7 @@ class KmdHighlighter(RegexHighlighter):
         _combine_regex(
             # Task stack in logs:
             f"(?P<task_stack_header>{re.escape(TASK_STACK_HEADER)})",
-            f"(?P<task_stack>{re.escape(EMOJI_TASK)}.*)",
+            f"(?P<task_stack>{ re.escape(EMOJI_BREADCRUMB_SEP) }.*)",
             f"(?P<task_stack_prefix>{re.escape(EMOJI_MSG_INDENT)})",
             # Emoji colors:
             f"(?P<task>{re.escape(EMOJI_TASK)})",
@@ -319,11 +319,11 @@ RICH_STYLES = {
     "kmd.size_m": Style(color=COLOR_SIZE3),
     "kmd.size_gtp": Style(color=COLOR_SIZE4),
     "kmd.filename": Style(color=COLOR_VALUE),
-    "kmd.task_stack_header": Style(color=COLOR_TASK, italic=True),
-    "kmd.task_stack": Style(color=COLOR_TASK, italic=True),
-    "kmd.task_stack_prefix": Style(color=COLOR_HINT, italic=False),
+    "kmd.task_stack_header": Style(color=COLOR_TASK),
+    "kmd.task_stack": Style(color=COLOR_TASK),
+    "kmd.task_stack_prefix": Style(color=COLOR_HINT),
     # Emoji colors:
-    "kmd.task": Style(color=COLOR_TASK, italic=True),
+    "kmd.task": Style(color=COLOR_TASK),
     "kmd.success": Style(color=COLOR_SUCCESS, bold=True),
     "kmd.skip": Style(color=COLOR_SKIP, bold=True),
     "kmd.failure": Style(color=COLOR_ERROR, bold=True),

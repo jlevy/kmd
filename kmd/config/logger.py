@@ -21,7 +21,6 @@ import kmd.config.suppress_warnings  # noqa: F401
 from kmd.config.settings import global_settings, LogLevel
 from kmd.config.text_styles import (
     EMOJI_ERROR,
-    EMOJI_MSG_INDENT,
     EMOJI_SAVED,
     EMOJI_WARN,
     KmdHighlighter,
@@ -138,9 +137,9 @@ def logging_setup():
     _file_handler.setFormatter(Formatter("%(asctime)s %(levelname).1s %(name)s - %(message)s"))
 
     class PrefixedRichHandler(RichHandler):
-        # Add an extra
         def emit(self, record):
-            record.msg = EMOJI_MSG_INDENT + record.msg
+            # Can add an extra indent to differentiate logs but it's a little messier looking.
+            # record.msg = EMOJI_MSG_INDENT + record.msg
             super().emit(record)
 
     global _console_handler
@@ -190,9 +189,7 @@ def logging_setup():
 def prefix(line, emoji: str = "", warn_emoji: str = ""):
     prefix = task_stack_prefix_str()
     emojis = f"{warn_emoji}{emoji}".strip()
-    if emojis:
-        prefix = f"{prefix} {emojis}"
-    return f"{prefix} {line}"
+    return " ".join(filter(None, [prefix, emojis, line]))
 
 
 def prefix_args(args, emoji: str = "", warn_emoji: str = ""):

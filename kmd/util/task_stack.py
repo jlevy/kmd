@@ -93,8 +93,8 @@ class TaskStack:
         if not self.stack:
             return ""
         else:
-            prefix = f"{EMOJI_TASK} "
-            sep = f" {EMOJI_BREADCRUMB_SEP}\n{EMOJI_TASK} "
+            prefix = f"{self.prefix_str()} {EMOJI_BREADCRUMB_SEP} "
+            sep = f"\n{prefix}"
             return prefix + sep.join(state.full_str() for state in self.stack)
 
     def prefix_str(self) -> str:
@@ -108,7 +108,7 @@ class TaskStack:
 
     def log(self):
         self._output()
-        self._log.message(f"{TASK_STACK_HEADER}\n%s", self.full_str())
+        self._log.message(f"{EMOJI_TASK} {TASK_STACK_HEADER}\n%s", self.full_str())
 
     @contextmanager
     def context(self, name: str, total_parts: int = 1, unit: str = ""):

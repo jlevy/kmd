@@ -237,9 +237,9 @@ def _add_aliases() -> None:
 
     assert XSH.aliases
     if installed_tools.has(Tool.eza):
-        XSH.aliases["ls"] = ["eza", "--group-directories-first"]
-        XSH.aliases["ll"] = ["eza", "--group-directories-first", "-l"]
-        XSH.aliases["lla"] = ["eza", "--group-directories-first", "-la"]
+        XSH.aliases["ls"] = ["eza", "--group-directories-first", "-F"]
+        XSH.aliases["ll"] = ["eza", "--group-directories-first", "-F", "-l"]
+        XSH.aliases["lla"] = ["eza", "--group-directories-first", "-F", "-la"]
 
 
 def _shell_setup():

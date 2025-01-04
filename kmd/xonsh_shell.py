@@ -28,7 +28,7 @@ log = get_logger(__name__)
 
 
 # Turn off for cleaner outputs. Sometimes you want this on for development.
-XONSH_SHOW_TRACEBACK = True
+XONSH_SHOW_TRACEBACK = False
 
 
 ## -- Non-customized xonsh shell setup --
