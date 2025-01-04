@@ -104,6 +104,12 @@ class Tool(Enum):
         apt_pkg="bat",
         winget_pkg="sharkdp.bat",
     )
+    eza = ToolDep(
+        ("eza",),
+        brew_pkg="eza",
+        apt_pkg="eza",
+        winget_pkg="eza-community.eza",
+    )
     libmagic = ToolDep(
         (),
         comment="""
@@ -213,6 +219,9 @@ _tools_cache = TTLCache(maxsize=1, ttl=5.0)
 
 @cached(_tools_cache)
 def tool_check() -> InstalledTools:
+    """
+    Check which third-party tools are installed.
+    """
     tools: dict[Tool, str | bool] = {}
 
     def which_tool(tool: Tool) -> str | None:

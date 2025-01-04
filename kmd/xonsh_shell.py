@@ -160,6 +160,8 @@ def customize_xonsh_settings(is_interactive: bool):
     """
 
     default_settings = {
+        # Auto-cd if a directory name is typed.
+        "AUTO_CD": True,
         # Having this true makes processes hard to interrupt with Ctrl-C.
         # https://xon.sh/envvars.html#thread-subprocs
         "THREAD_SUBPROCS": False,

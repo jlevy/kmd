@@ -360,9 +360,16 @@ def is_unquoted_assistant_request():
 
 _command_regex = re.compile(r"^[a-zA-Z0-9_-]+$")
 
+_python_keyword_regex = re.compile(
+    r"assert|async|await|break|class|continue|def|del|elif|else|except|finally|"
+    r"for|from|global|if|import|lambda|nonlocal|pass|raise|return|try|while|with|yield"
+)
+
 
 def _extract_command_name(text: str) -> str | None:
     text = text.split()[0]
+    if _python_keyword_regex.match(text):
+        return None
     if _command_regex.match(text):
         return text
     return None
@@ -396,6 +403,10 @@ def is_typo_command() -> bool:
     globals = XSH.ctx
     aliases = XSH.aliases or {}
     if command_name in globals or command_name in aliases:
+        return False
+
+    # Directories are allowed since we have auto-cd on.
+    if Path(command_name).is_dir():
         return False
 
     # Finally check if it is a known command.

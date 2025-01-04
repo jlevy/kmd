@@ -25,7 +25,7 @@ from kmd.shell_tools.action_wrapper import ShellCallableAction
 from kmd.shell_tools.exception_printing import wrap_with_exception_printing
 from kmd.shell_tools.function_wrapper import wrap_for_shell_args
 from kmd.shell_tools.native_tools import tool_check
-from kmd.shell_tools.tool_deps import check_terminal_features
+from kmd.shell_tools.tool_deps import check_terminal_features, Tool
 from kmd.version import get_version_name
 from kmd.workspaces.workspaces import current_workspace
 from kmd.xontrib.xonsh_completers import load_completers
@@ -229,6 +229,19 @@ def _kmd_xonsh_prompt():
     return f"\n{colored_workspace_str} {{{PROMPT_COLOR_NORMAL}}}{PROMPT_MAIN}{{RESET}} "
 
 
+def _add_aliases() -> None:
+    """
+    Miscellaneous aliases to improve user experience, if they are installed.
+    """
+    installed_tools = tool_check()
+
+    assert XSH.aliases
+    if installed_tools.has(Tool.eza):
+        XSH.aliases["ls"] = ["eza", "--group-directories-first"]
+        XSH.aliases["ll"] = ["eza", "--group-directories-first", "-l"]
+        XSH.aliases["lla"] = ["eza", "--group-directories-first", "-la"]
+
+
 def _shell_setup():
     from kmd.xontrib.xonsh_completers import add_key_bindings
 
@@ -245,6 +258,8 @@ def _shell_setup():
 
     # Another convenience xontrib (fnm, since nvm doesn't work in xonsh).
     xontribs_load(["kmd.xontrib.fnm"], full_module=True)
+
+    _add_aliases()
 
 
 def customize_xonsh():
