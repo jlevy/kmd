@@ -9,6 +9,7 @@ from kmd.docs import (
     faq,
     getting_started,
     kmd_overview,
+    modern_shell_tool_recommendations,
     philosophy_of_kmd,
     progress,
     tips_for_use_with_other_tools,
@@ -82,6 +83,8 @@ def print_manual(base_actions_only: bool = False) -> None:
     print_markdown(kmd_overview)
 
     print_markdown(workspace_and_file_formats)
+
+    print_markdown(modern_shell_tool_recommendations)
 
     print_markdown(faq)
 

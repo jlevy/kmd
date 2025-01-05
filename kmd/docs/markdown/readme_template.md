@@ -22,8 +22,8 @@ Complex should be possible.*” —Alan Kay
 </div>
 
 *⚠️ Pre-release and experimental!
-[Follow or DM me](https://x.com/ojoshe) for future updates or if you have ideas, feedback,
-or use cases for Kmd.*
+[Follow or DM me](https://x.com/ojoshe) for future updates or if you have ideas,
+feedback, or use cases for Kmd.*
 
 {a1_what_is_kmd}
 
@@ -47,8 +47,8 @@ or use cases for Kmd.*
 
 <p style="max-width: 400px;">
 
-“*Civilization advances by extending the number of important operations which we can perform
-without thinking about them.*” —Alfred North Whitehead
+“*Civilization advances by extending the number of important operations which we can
+perform without thinking about them.*” —Alfred North Whitehead
 
 </p>
 

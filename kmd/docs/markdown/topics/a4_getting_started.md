@@ -3,7 +3,8 @@
 ### Use Tab Completion and Help!
 
 Tab completion is your friend!
-Just press tab to get lists of commands and guidance on help from the LLM-based assistant.
+Just press tab to get lists of commands and guidance on help from the LLM-based
+assistant.
 
 You can also ask any question directly in the shell.
 
@@ -197,26 +198,28 @@ show_as_webpage
 
 ### Creating a New Workspace
 
-Although you don't always need one, a *workspace* is very helpful for any real work in Kmd.
-It's just a directory of files, plus a `.kmd/` directory with various logs and metadata.
+Although you don't always need one, a *workspace* is very helpful for any real work in
+Kmd. It's just a directory of files, plus a `.kmd/` directory with various logs and
+metadata.
 
-Note the `.kmd/cache` directory contains all the downloaded videos and media you download,
-so it can get large.
+Note the `.kmd/cache` directory contains all the downloaded videos and media you
+download, so it can get large.
 You can delete these files if they take up too much space.
 
-Typically, we name them like `health.kb` or `personal.kb`, because that makes it clear they
-are in a certain format and may have other data.
+Typically, we name them like `health.kb` or `personal.kb`, because that makes it clear
+they are in a certain format and may have other data.
 
-Pick a workspace that encompasses a project or topic, and it lets you keep things organized.
+Pick a workspace that encompasses a project or topic, and it lets you keep things
+organized.
 
 Type `workspace` any time to see the current workspace.
 
-By default, when you are not using the shell inside a workspace directory, or when you run
-Kmd the first time, it uses the default *sandbox workspace*.
+By default, when you are not using the shell inside a workspace directory, or when you
+run Kmd the first time, it uses the default *sandbox workspace*.
 
 Once you create a workspace, you can `cd` into that workspace and that will become the
-current workspace. (If you're familiar with how the `git` command-line works in conjunction
-with the `.git/` directory, this behavior is very similar.)
+current workspace. (If you're familiar with how the `git` command-line works in
+conjunction with the `.git/` directory, this behavior is very similar.)
 
 To start a new workspace, run a command like
 
@@ -231,8 +234,8 @@ working.
 ### Essential Kmd Commands
 
 Kmd has quite a few basic commands that are easier to use than usual shell commands.
-You can always run `help` for a full list, or run any command with the `--help` option to
-see more about the command.
+You can always run `help` for a full list, or run any command with the `--help` option
+to see more about the command.
 
 A few of the most important commands for managing files and work are these:
 
@@ -241,21 +244,21 @@ A few of the most important commands for managing files and work are these:
 - `files` lists files in one or more paths, with sorting, filtering, and grouping.
 
 - `workspace` to show or select or create a new workspace.
-  Initially you work in the "sandbox" workspace but for more real work you'll want to create
-  a workspace, which is a directory to hold the files you are working with.
+  Initially you work in the "sandbox" workspace but for more real work you'll want to
+  create a workspace, which is a directory to hold the files you are working with.
 
-- `select` shows or sets selections, which are the set of files the next command will run
-  on, within the current workspace.
+- `select` shows or sets selections, which are the set of files the next command will
+  run on, within the current workspace.
 
-- `edit` runs the currently configured editor (based on the `EDITOR` environment variable)
-  on any file, or the current selection.
+- `edit` runs the currently configured editor (based on the `EDITOR` environment
+  variable) on any file, or the current selection.
 
 - `show` lets you show the first file in the current selection or any file you wish.
-  It auto-detects whether to show the file in the console, the browser, or using a native
-  app (like Excel for a .xls file).
+  It auto-detects whether to show the file in the console, the browser, or using a
+  native app (like Excel for a .xls file).
 
-- `param` lets you set certain common parameters, such as what LLM to use (if you wish to
-  use non-default model or language).
+- `param` lets you set certain common parameters, such as what LLM to use (if you wish
+  to use non-default model or language).
 
 - `logs` to see full logs (typically more detailed than what you see in the console).
 
@@ -263,8 +266,8 @@ A few of the most important commands for managing files and work are these:
 
 - `import_item` to add a resource such as a URL or a file to your local workspace.
 
-The set of actions that do specific useful things is much longer, but a few to be aware of
-include:
+The set of actions that do specific useful things is much longer, but a few to be aware
+of include:
 
 - `chat` chat with any configured LLM, and save the chat as a chat document.
 
@@ -272,8 +275,8 @@ include:
 
 - `crawl_webpage` fetches a webpage and scrapes the content as text, using Firecrawl.
 
-- `download_media` downloads video or audio media from any of several services like YouTube
-  or Apple Podcasts, using yt-dlp.
+- `download_media` downloads video or audio media from any of several services like
+  YouTube or Apple Podcasts, using yt-dlp.
 
 - `transcribe` transcribes video or audio as text document, using Deepgram.
 
@@ -286,8 +289,8 @@ include:
 - `break_into_paragraphs` breaks a long block of text into paragraphs.
 
 - `insert_section_headings` inserts section headings into a document, assuming it is a
-  document (like a transcript after you've run `break_into_paragraphs`) that has paragraphs
-  but no section headers.
+  document (like a transcript after you've run `break_into_paragraphs`) that has
+  paragraphs but no section headers.
 
 - `show_as_webpage` formats Markdown or HTML documents as a nice web page and opens your
   browser to view it.

@@ -43,7 +43,10 @@ development = _lazy_load("markdown/topics/a6_development")
 philosophy_of_kmd = _lazy_load("markdown/topics/b0_philosophy_of_kmd")
 kmd_overview = _lazy_load("markdown/topics/b1_kmd_overview")
 workspace_and_file_formats = _lazy_load("markdown/topics/b2_workspace_and_file_formats")
-faq = _lazy_load("markdown/topics/b3_faq")
+modern_shell_tool_recommendations = _lazy_load(
+    "markdown/topics/b3_modern_shell_tool_recommendations"
+)
+faq = _lazy_load("markdown/topics/b4_faq")
 
 
 @lazyobject
