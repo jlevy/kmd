@@ -31,7 +31,7 @@ For macOS, I recommend using brew:
 ```shell
 # Install pyenv, pipx, and other tools:
 brew update
-brew install pyenv pipx ffmpeg ripgrep bat imagemagick libmagic
+brew install pyenv pipx ffmpeg ripgrep bat eza imagemagick libmagic
 ```
 
 For Ubuntu:
@@ -39,13 +39,13 @@ For Ubuntu:
 ```shell
 # Install pyenv and other tools:
 curl https://pyenv.run | bash
-apt install pipx ffmpeg ripgrep bat imagemagick libmagic
+apt install pipx ffmpeg ripgrep bat eza imagemagick libmagic
 ```
 
 Now install a recent Python and Poetry:
 
 ```shell
-pyenv install 3.12.7  # Or any version 3.11+ should work.
+pyenv install 3.12.8  # Or any version 3.11+ should work.
 pipx install poetry
 poetry self add "poetry-dynamic-versioning[plugin]"  # Helps build versioning.
 ```

@@ -393,6 +393,12 @@ def is_typo_command() -> bool:
     if has_assistant_prefix:
         return False
 
+    # Anything more complex is probably Python.
+    # TODO: Do a better syntax parse of this as Python, or use xonsh's algorithm.
+    for s in ["\n", "(", ")"]:
+        if s in text:
+            return False
+
     # Empty command line allowed.
     if not text:
         return False

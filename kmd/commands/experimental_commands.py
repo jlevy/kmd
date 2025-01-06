@@ -25,3 +25,9 @@ def graph_view(
     else:
         item_filter = None
     open_graph_view(assemble_workspace_graph(item_filter))
+
+
+# TODO:
+# def define_action_sequence(name: str, *action_names: str):
+#     action_registry.define_action_sequence(name, *action_names)
+#     log.message("Registered action sequence: %s of actions: %s", name, action_names)
