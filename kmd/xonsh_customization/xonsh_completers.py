@@ -1,3 +1,4 @@
+import builtins
 import re
 from pathlib import Path
 from typing import cast, Iterable, List, Tuple
@@ -410,9 +411,16 @@ def is_typo_command() -> bool:
         return False
 
     # Built-in values and aliases are allowed.
+    python_builtins = dir(builtins)
+    xonsh_builtins = dir(XSH.builtins)
     globals = XSH.ctx
     aliases = XSH.aliases or {}
-    if command_name in globals or command_name in aliases:
+    if (
+        command_name in python_builtins
+        or command_name in xonsh_builtins
+        or command_name in globals
+        or command_name in aliases
+    ):
         return False
 
     # Directories are allowed since we have auto-cd on.

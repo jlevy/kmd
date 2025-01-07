@@ -144,3 +144,10 @@ But most commands are defined as an *action*. Actions are invoked just like any 
 command but have a standard structure: they are assumed to perform an "action" on a set
 of items (files of known types) and then save those items, all within an existing
 workspace. Actions are defined as a subclass of `Action` in Python.
+
+### Does nvm (Node version manager) work in kmd?
+
+It's hard to get nvm to work well in xonsh, but try [fnm](https://github.com/Schniz/fnm)
+instead! It works just as well and kmd supports `fnm` automatically so it auto-detects
+and uses fnm to switch or install Node versions for directories with Node projects (i.e.
+there is an `.nvmrc`, `.node-version`, or `package.json` file).
