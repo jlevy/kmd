@@ -5,6 +5,7 @@ Platform-specific tools and utilities.
 import os
 import shlex
 import subprocess
+import urllib.parse
 import webbrowser
 from enum import Enum
 from pathlib import Path
@@ -55,6 +56,17 @@ def native_open(filename: str | Path):
         subprocess.run(["start", shlex.quote(filename)], shell=True)
     else:
         raise NotImplementedError("Unsupported platform")
+
+
+def native_open_url(url_or_query: str):
+    """
+    Open a URL or query in the system's default browser.
+    """
+    log.message("Opening in browser: %s", url_or_query)
+    if is_url(url_or_query):
+        webbrowser.open(url_or_query)
+    else:
+        webbrowser.open(f"https://www.google.com/search?q={urllib.parse.quote(url_or_query)}")
 
 
 class ViewMode(Enum):
