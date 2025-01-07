@@ -5,6 +5,10 @@ version = "0.0.0.dev"
 description = "An AI-native command line for modern workflows"
 authors = ["Joshua Levy <joshua@cal.berkeley.edu>"]
 readme = "README.md"
+requires-poetry = ">=2.0"
+
+[tool.poetry.requires-plugins]
+poetry-dynamic-versioning = "^1.5.0"
 
 [tool.poetry.dependencies]
 # TODO: Resolve issues with spacy and 3.13 and update.
