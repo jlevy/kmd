@@ -48,14 +48,23 @@ Additional recommendations:
 A few examples of using modern tools in place of traditional ones:
 
 ```bash
-# Find all node processes except ones with Cursor on the command line:
-procs | rg node | rg -v Cursor
+# Use z in place of cd: switch directories (first time):
+z ~/some/long/path/to/foo
+# Thereafter it's faster:
+z foo
 
-# Print all files in the current directory, recursively:
+# Find files by fuzzy search:
+fzf
+
+# Print all files in the current directory, recursively (and skipping
+# .gitignored files):
 fd 
 
 # Find all Python files:
 fd -g '*.py'
+
+# Find all node processes except ones with Cursor on the command line:
+procs | rg node | rg -v Cursor
 
 # Show mounted disks and usage. A much prettier alternative to `df`:
 duf

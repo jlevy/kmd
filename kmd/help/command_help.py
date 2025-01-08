@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from rich.markdown import Markdown
+
 from kmd.action_defs import look_up_action
 from kmd.commands.command_registry import CommandFunction, look_up_command
 from kmd.errors import InvalidInput, NoMatch

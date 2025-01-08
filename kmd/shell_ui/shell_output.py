@@ -11,7 +11,7 @@ from typing import Callable, List, Optional
 
 import rich
 import rich.style
-from rich.console import Group
+from rich.console import Group, OverflowMethod
 from rich.markdown import Markdown
 from rich.text import Text
 
@@ -185,6 +185,7 @@ def rich_print(
     soft_wrap: Optional[bool] = None,
     indent: str = "",
     raw: bool = False,
+    overflow: Optional[OverflowMethod] = "fold",
     **kwargs,
 ):
     """
@@ -213,7 +214,7 @@ def rich_print(
         if indent:
             renderable = Indent(renderable, indent=indent)
 
-        console.print(renderable, width=width, soft_wrap=soft_wrap, **kwargs)
+        console.print(renderable, width=width, soft_wrap=soft_wrap, overflow=overflow, **kwargs)
 
 
 def cprint(
@@ -240,8 +241,7 @@ def cprint(
     if text_wrap.should_wrap and not width:
         width = CONSOLE_WRAP_WIDTH
 
-    soft_wrap = not text_wrap.should_wrap  # Disable rich's auto-wrap?
-
+    # Handle unexpected types gracefully.
     if not isinstance(message, (Text, Markdown)):
         message = str(message)
 
@@ -261,7 +261,6 @@ def cprint(
                     end=end,
                     raw=raw,
                     width=width,
-                    soft_wrap=soft_wrap,
                 )
             elif extra_indent:
                 rich_print(
@@ -269,7 +268,6 @@ def cprint(
                     end=end,
                     raw=raw,
                     width=width,
-                    soft_wrap=soft_wrap,
                 )
         else:
             rich_print(
@@ -277,7 +275,6 @@ def cprint(
                 end=end,
                 indent=extra_indent,
                 width=width,
-                soft_wrap=soft_wrap,
             )
     else:
         # Blank line.

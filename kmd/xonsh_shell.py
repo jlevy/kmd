@@ -242,10 +242,6 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     """
     import builtins
 
-    # XXX: A hack to get kmd help to replace Python help. We just delete the builtin help so
-    # that kmd's help can be used in its place (otherwise builtins override aliases).
-    del builtins.help
-
     # Make process title "kmd" instead of "xonsh".
     try:
         from setproctitle import setproctitle
@@ -264,6 +260,12 @@ def start_custom_xonsh(single_command: Optional[str] = None):
     )
     XSH.load(ctx=ctx, execer=execer, inherit_env=True)
     XSH.shell = CustomShell(execer=execer, ctx=ctx)  # type: ignore
+
+    # A hack to get kmd help to replace Python help. We just delete the builtin help so
+    # that kmd's help can be used in its place (otherwise builtins override aliases).
+    # Save a copy as "pyhelp".
+    ctx["pyhelp"] = builtins.help
+    del builtins.help
 
     is_interactive = False if single_command else True
 

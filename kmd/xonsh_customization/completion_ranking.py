@@ -69,6 +69,10 @@ def score_phrase(prefix: str, text: str) -> float:
     )
 
 
+def score_subphrase(prefix: str, text: str) -> float:
+    return 0.5 * fuzz.partial_ratio(prefix, text) + 0.5 * fuzz.partial_token_set_ratio(prefix, text)
+
+
 def score_path(prefix: str, path: Path) -> Score:
     path_str = normalize(str(path))
     name_str = normalize(path.name)

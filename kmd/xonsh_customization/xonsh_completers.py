@@ -37,6 +37,7 @@ from kmd.xonsh_customization.completion_ranking import (
     score_items,
     score_paths,
     score_phrase,
+    score_subphrase,
     select_hits_by_score,
 )
 
@@ -58,18 +59,23 @@ def _dir_description(directory: Path) -> str:
     return f"{count} files"
 
 
-def _all_help_completions(include_bare_qm: bool) -> List[RichCompletion]:
-    questions = ["? " + question for question in faq_headings()]
+def _question_completions(include_bare_qm: bool) -> List[RichCompletion]:
+    questions = faq_headings()
     possible_completions = questions + HELP_COMMANDS
+
+    # A completion for a bare `?` to ask a question.
     if include_bare_qm:
         help_completion = RichCompletion("?", description="Ask a question to get help.")
         possible_completions.insert(0, help_completion)
+
     return [
         RichCompletion(question, display=question.lstrip("? ")) for question in possible_completions
     ]
 
 
-def _command_match(query: str, values: Iterable[str | RichCompletion]) -> List[RichCompletion]:
+def _completion_matches(
+    query: str, values: Iterable[str | RichCompletion], match_partial: bool = False
+) -> List[RichCompletion]:
     """
     Tighter match for command completions.
     """
@@ -79,7 +85,15 @@ def _command_match(query: str, values: Iterable[str | RichCompletion]) -> List[R
         completion = value if isinstance(value, RichCompletion) else RichCompletion(value)
         normalized_value = normalize(str(completion.value))
 
-        if normalized_value.startswith(query) or score_phrase(query, normalized_value) > 90:
+        if (
+            normalized_value.startswith(query)
+            or score_phrase(query, normalized_value) > 90
+            or (
+                match_partial
+                and len(normalized_value.split()) > 5
+                and score_subphrase(query, normalized_value) > 90
+            )
+        ):
             matches.append(completion)
 
     return matches
@@ -91,7 +105,7 @@ def _command_completions(prefix: str) -> set[RichCompletion]:
 
     prefix = normalize(prefix)
 
-    command_matches = _command_match(prefix, [c.__name__ for c in _commands.values()])
+    command_matches = _completion_matches(prefix, [c.__name__ for c in _commands.values()])
     command_completions = [
         RichCompletion(
             name,
@@ -103,7 +117,7 @@ def _command_completions(prefix: str) -> set[RichCompletion]:
         for name in command_matches
     ]
 
-    action_matches = _command_match(prefix, [a.name for a in _actions.values()])
+    action_matches = _completion_matches(prefix, [a.name for a in _actions.values()])
     action_completions = [
         RichCompletion(
             name,
@@ -115,10 +129,10 @@ def _command_completions(prefix: str) -> set[RichCompletion]:
         for name in action_matches
     ]
 
-    input_empty = not prefix.strip()
-    help_completions = _command_match(prefix, _all_help_completions(input_empty))
+    # input_empty = not prefix.strip()
+    # help_completions = _completion_matches(prefix, _all_help_completions(input_empty))
 
-    all_completions = command_completions + action_completions + help_completions
+    all_completions = command_completions + action_completions  # + help_completions
     all_completions.sort(key=completion_sort)
 
     return set(all_completions)
@@ -291,7 +305,7 @@ def help_question_completer(context: CompletionContext) -> CompleterResult:
             arg_index == 1 and command.args[0].value == "?"
         ):
             query = prefix.lstrip("? ")
-            return set(_command_match(query, _all_help_completions(False)))
+            return set(_completion_matches(query, _question_completions(False), match_partial=True))
     return None
 
 
