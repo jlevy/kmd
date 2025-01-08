@@ -7,6 +7,7 @@ from xonsh.completers.tools import RichCompletion
 from xonsh.parsers.completion_context import CompletionContext
 
 from kmd.config.logger import get_logger
+from kmd.help.tldr_help import tldr_description
 from kmd.xonsh_customization.completion_ranking import (
     normalize,
     sort_by_prefix_display,
@@ -25,6 +26,13 @@ class RankingCompleter(Completer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def enrich_completions(self, completions: Tuple[RichCompletion, ...]):
+        for completion in completions:
+            if not completion.description:
+                description = tldr_description(completion.value)
+                if description:
+                    completion.description = description
+
     @override
     def complete_from_context(
         self, completion_context: CompletionContext, old_completer_args=None
@@ -38,6 +46,9 @@ class RankingCompleter(Completer):
 
         # Deduplicate.
         unique_completions = self._deduplicate_completions(completions)
+
+        # Add descriptions using tldr.
+        self.enrich_completions(unique_completions)
 
         # Rank.
         ranked_completions = self._rank_completions(unique_completions, completion_context)

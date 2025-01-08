@@ -1,5 +1,6 @@
 import re
 from datetime import datetime, timedelta
+from functools import cache
 from io import BytesIO
 from pathlib import Path
 from typing import cast, Optional
@@ -7,10 +8,12 @@ from urllib.request import Request, urlopen
 from zipfile import ZipFile
 
 from tldr import (
+    CacheNotExist,
     DOWNLOAD_CACHE_LOCATION,
     get_cache_dir,
     get_language_list,
-    get_page,
+    get_page_for_platform,
+    get_platform_list,
     REQUEST_HEADERS,
     store_page_to_cache,
     URLOPEN_CONTEXT,
@@ -82,14 +85,76 @@ def tldr_refresh_cache() -> bool:
 def tldr_help(text: str) -> Optional[str]:
     """
     Get TLDR help for a command. Pre-caches all pages with occasional refresh.
+    This way it's fast and fails instantly for unknown commands.
     """
 
     tldr_refresh_cache()
 
-    page_data = cast(Optional[list[bytes]], get_page(text))
+    page_data = cast(Optional[list[bytes]], get_page_from_cache(text))
     if not page_data:
         return None
     assert isinstance(page_data, list) and all(isinstance(item, bytes) for item in page_data)
     page_str = "\n".join(data.decode("utf-8") for data in page_data)
 
     return page_str
+
+
+def _clean_tldr_text(text: str) -> str:
+    """
+    Clean tldr text: List [a]ll files -> List all files
+    """
+
+    text = text.replace("`", "")
+    text = re.sub(r"\[([A-Za-z0-9])\]", r"\1", text)
+    return text
+
+
+@cache
+def tldr_description(text: str) -> Optional[str]:
+    """
+    Get just the description from tldr.
+    Returns the short command description paragraph, which is always on a markdown block with
+    lines starting with ">".
+    """
+    page_str = tldr_help(text)
+    if not page_str:
+        return None
+
+    # Split into lines and find description paragraph
+    lines = []
+    in_description = False
+    for line in page_str.splitlines():
+        line = line.strip()
+        if line.startswith(">"):
+            # Stop at "More information" line
+            if "More information:" in line:
+                break
+            # Add line without '>' prefix, stripped
+            lines.append(line[1:].strip())
+            in_description = True
+        elif in_description:
+            # Stop when we hit a non-'>' line after being in description
+            break
+
+    return _clean_tldr_text(" ".join(lines)) if lines else None
+
+
+def get_page_from_cache(command: str) -> Optional[list[bytes]]:
+    command = command.strip()
+
+    platforms = get_platform_list()
+    languages = get_language_list()
+
+    for platform in platforms:
+        for language in languages:
+            try:
+                return get_page_for_platform(
+                    command,
+                    platform,
+                    None,  # type: ignore (tldr incorrect type)
+                    language,
+                    only_use_cache=True,
+                )
+            except CacheNotExist:
+                continue
+    return None
