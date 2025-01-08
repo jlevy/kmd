@@ -360,7 +360,9 @@ def print_help(message: str, *args, text_wrap: Wrap = Wrap.WRAP, extra_indent: s
     cprint(message, *args, text_wrap=text_wrap, color=COLOR_HELP, extra_indent=extra_indent)
 
 
-def print_assistance(message: str, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""):
+def print_assistance(
+    message: str | Markdown, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""
+):
     cprint(
         message,
         *args,

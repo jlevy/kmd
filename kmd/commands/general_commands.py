@@ -6,6 +6,7 @@ from kmd.commands.files_commands import trash
 from kmd.config.logger import get_logger, log_file_path, log_objects_dir, reset_logging
 from kmd.config.settings import global_settings, LogLevel, update_global_settings
 from kmd.config.setup import print_api_key_setup
+from kmd.help.tldr_help import tldr_refresh_cache
 from kmd.model.args_model import fmt_loc
 from kmd.server import local_server
 from kmd.server.local_url_formatters import enable_local_urls
@@ -40,6 +41,10 @@ def self_check() -> None:
     cprint()
     check_tools()
     cprint()
+    if tldr_refresh_cache():
+        cprint("Updated tldr cache")
+    else:
+        cprint("tldr cache is up to date")
 
 
 @kmd_command

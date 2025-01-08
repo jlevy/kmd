@@ -75,6 +75,7 @@ firecrawl-py = "^1.8.0"
 exa-py = "^1.7.1"
 numexpr = "^2.10.2"
 pathspec = "^0.12.1"
+tldr = "^3.3.0"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -60,6 +60,7 @@ echo "Checking everything worked (may take a minute to compile bytecode)..."
 echo "Running from: $(which kmd)"
 
 # Use a full command to import/bytecompile more code now.
+# Self check also handles some caching like tldr.
 if kmd self_check; then
   echo
   echo 'Success!'

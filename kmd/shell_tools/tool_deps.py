@@ -166,7 +166,7 @@ class InstalledTools:
     def has(self, *tools: Tool) -> bool:
         return all(self.tools[tool] for tool in tools)
 
-    def require(self, *tools: Tool):
+    def require(self, *tools: Tool) -> None:
         for tool in tools:
             if not self.has(tool):
                 print_missing_tool_help(tool)
@@ -174,18 +174,18 @@ class InstalledTools:
                     f"`{tool.value}` ({tool.value.command_names}) needed but not found"
                 )
 
-    def missing_tools(self, *tools: Tool):
+    def missing_tools(self, *tools: Tool) -> list[Tool]:
         if not tools:
             tools = tuple(Tool)
         return [tool for tool in tools if not self.tools[tool]]
 
-    def warn_if_missing(self, *tools: Tool):
+    def warn_if_missing(self, *tools: Tool) -> None:
         for tool in self.missing_tools(*tools):
             if tool.value.warn_if_missing:
                 print_missing_tool_help(tool)
 
-    def formatted(self):
-        texts = []
+    def formatted(self) -> Text:
+        texts: list[Text] = []
         for tool, path in self.items():
             found_str = "Found" if isinstance(path, bool) else f"Found: `{path}`"
             doc = format_success_or_failure(bool(path), true_str=found_str, false_str="Not found!")
@@ -193,11 +193,11 @@ class InstalledTools:
 
         return format_paragraphs(*texts)
 
-    def items(self):
+    def items(self) -> list[tuple[Tool, str | bool]]:
         return sorted(self.tools.items(), key=lambda item: item[0].name)
 
-    def status(self):
-        texts = []
+    def status(self) -> Text:
+        texts: list[Text] = []
         for tool, path in self.items():
             texts.append(format_success_or_failure(bool(path), tool.name))
 

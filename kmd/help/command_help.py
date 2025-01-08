@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from rich.markdown import Markdown
 from kmd.action_defs import look_up_action
 from kmd.commands.command_registry import CommandFunction, look_up_command
 from kmd.errors import InvalidInput, NoMatch
@@ -7,6 +8,7 @@ from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
 from kmd.help.assistant import assist_preamble, unstructured_assistance
 from kmd.help.docstrings import parse_docstring
 from kmd.help.function_param_info import annotate_param_info
+from kmd.help.tldr_help import tldr_help
 from kmd.model.actions_model import Action
 from kmd.model.messages_model import Message
 from kmd.model.params_model import Param, RUNTIME_ACTION_PARAMS
@@ -124,6 +126,11 @@ def explain_command(text: str, use_assistant: bool = False):
     Explain a command or action or give a brief explanation of something.
     """
     text = text.strip()
+
+    tldr_help_str = tldr_help(text)
+    if tldr_help_str:
+        print_assistance(Markdown(tldr_help_str))
+        return
 
     help_str = None
     try:
