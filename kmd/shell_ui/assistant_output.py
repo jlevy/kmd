@@ -2,18 +2,17 @@ from rich.text import Text
 
 from kmd.config.text_styles import COLOR_HEADING, COLOR_HINT, EMOJI_ASSISTANT
 from kmd.help.help_page import print_see_also
-from kmd.model.assistant_response_model import AssistantResponse, Confidence
+from kmd.model.assistant_response_model import AssistantResponse
 from kmd.model.language_models import LLM
+from kmd.shell_ui.rich_kyrm_markdown import KyrmMarkdown
 from kmd.shell_ui.shell_output import (
     cprint,
     print_assistance,
     print_code_block,
     print_small_heading,
     print_style,
-    print_text_block,
     Style,
 )
-from kmd.text_wrap.markdown_normalization import fill_markdown
 
 
 def print_assistant_heading(model: LLM) -> None:
@@ -28,10 +27,8 @@ def print_assistant_response(response: AssistantResponse, model: LLM) -> None:
         cprint()
 
         if response.response_text:
-            if response.confidence in {Confidence.direct_answer, Confidence.partial_answer}:
-                print_text_block(fill_markdown(response.response_text))
-            else:
-                print_assistance(fill_markdown(response.response_text))
+            # TODO: indicate confidence level
+            print_assistance(KyrmMarkdown(response.response_text))
 
         if response.suggested_commands:
             formatted_commands = "\n\n".join(c.script_str() for c in response.suggested_commands)

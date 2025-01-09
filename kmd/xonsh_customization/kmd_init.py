@@ -1,4 +1,3 @@
-import os
 import threading
 import time
 from pathlib import Path
@@ -11,6 +10,7 @@ from kmd.action_defs import reload_all_actions
 from kmd.commands import help_commands
 from kmd.commands.command_registry import all_commands
 from kmd.config.logger import get_logger
+from kmd.config.settings import check_kyrm_code_support
 from kmd.config.setup import print_api_key_setup, setup
 from kmd.config.text_styles import PROMPT_COLOR_NORMAL, PROMPT_COLOR_WARN, PROMPT_MAIN
 from kmd.exec.history import wrap_with_history
@@ -266,7 +266,9 @@ def initialize_kmd():
 
         _status_messages()
 
-        if os.environ.get("TERM_PROGRAM") == "Kyrm":
+        # Currently only Kyrm supports our advanced UI with Kyrm codes.
+        supports_kyrm_codes = check_kyrm_code_support()
+        if supports_kyrm_codes:
             start_server()
             enable_local_urls(True)
         else:

@@ -64,6 +64,8 @@ COLOR_SELECTION = "bright_yellow"
 
 COLOR_STATUS = "yellow"
 
+COLOR_COMMENT = "bright_black"
+
 COLOR_RESULT = "default"
 
 COLOR_HELP = "bright_blue"
@@ -276,13 +278,14 @@ RICH_STYLES = {
     "markdown.em": Style(italic=True),
     "markdown.emph": Style(italic=True),  # For commonmark backwards compatibility
     "markdown.strong": Style(bold=True),
-    "markdown.code": Style(bold=True, color="cyan", bgcolor="black"),
-    "markdown.code_block": Style(color="cyan", bgcolor="black"),
+    # Add bgcolor="black" or underline=True?
+    "markdown.code": Style(bold=True, color="cyan"),
+    "markdown.code_block": Style(color="cyan"),
     "markdown.block_quote": Style(color="yellow"),
     "markdown.list": Style(color="cyan"),
     "markdown.item": Style(),
-    "markdown.item.bullet": Style(color="yellow"),
-    "markdown.item.number": Style(color="yellow", bold=True),
+    "markdown.item.bullet": Style(color="magenta", bold=True),
+    "markdown.item.number": Style(color="magenta", bold=True),
     "markdown.hr": Style(color="yellow"),
     "markdown.h1.border": Style(),
     "markdown.h1": Style(color=COLOR_EMPH, bold=True),
@@ -321,7 +324,8 @@ RICH_STYLES = {
     "kmd.bool_true": Style(color=COLOR_VALUE, italic=True),
     "kmd.bool_false": Style(color=COLOR_VALUE, italic=True),
     "kmd.none": Style(color=COLOR_VALUE, italic=True),
-    "kmd.url": Style(underline=True, color=COLOR_VALUE, italic=False, bold=False),
+    # Add bgcolor="black" or underline=True?
+    "kmd.url": Style(color=COLOR_VALUE, italic=False, bold=False),
     "kmd.uuid": Style(color=COLOR_LITERAL, bold=False),
     "kmd.call": Style(italic=True),
     "kmd.path": Style(color=COLOR_PATH),

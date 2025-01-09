@@ -132,6 +132,9 @@ class Settings:
     local_server_port: int
     """Actual port number the local server is running on."""
 
+    use_kyrm_codes: bool
+    """If true, use Kyrm codes for enriching terminal output."""
+
 
 # Initial default settings.
 _settings = Settings(
@@ -146,6 +149,7 @@ _settings = Settings(
     local_server_ports_start=LOCAL_SERVER_PORT_START,
     local_server_ports_max=LOCAL_SERVER_PORTS_MAX,
     local_server_port=0,
+    use_kyrm_codes=False,
 )
 
 
@@ -166,3 +170,14 @@ def update_global_settings():
     """
     with _settings_lock:
         yield _settings
+
+
+def check_kyrm_code_support() -> bool:
+    """
+    Check if the terminal supports Kyrm codes.
+    """
+    if os.environ.get("TERM_PROGRAM") == "Kyrm":
+        with update_global_settings() as settings:
+            settings.use_kyrm_codes = True
+
+    return _settings.use_kyrm_codes

@@ -33,14 +33,22 @@ BEL_CODE = "\x07"  # Bell character
 OSC_HYPERLINK = "8"
 
 
-def osc_code(code: int | str, data: str) -> str:
+class OscStr(str):
+    """
+    Marker class for strings that contain OSC codes.
+    """
+
+    pass
+
+
+def osc_code(code: int | str, data: str) -> OscStr:
     """
     Return an extended OSC code.
     """
-    return f"{OSC_START}{code};{data}{ST_CODE}"
+    return OscStr(f"{OSC_START}{code};{data}{ST_CODE}")
 
 
-def osc8_link(uri: str, text: str, metadata_str: str = "") -> str:
+def osc8_link(uri: str, text: str, metadata_str: str = "") -> OscStr:
     r"""
     Return a string with the OSC 8 hyperlink escape sequence.
 
@@ -58,10 +66,10 @@ def osc8_link(uri: str, text: str, metadata_str: str = "") -> str:
     escape_start = f"{OSC_START}{OSC_HYPERLINK};{metadata_str};{safe_uri}{ST_CODE}"
     escape_end = f"{OSC_START}{OSC_HYPERLINK};;{ST_CODE}"
 
-    return f"{escape_start}{text}{escape_end}"
+    return OscStr(f"{escape_start}{text}{escape_end}")
 
 
-def osc8_link_graceful(uri: str, text: str, id: str = "") -> str:
+def osc8_link_graceful(uri: str, text: str, id: str = "") -> OscStr | str:
     """
     Generate clickable text for terminal emulators supporting OSC 8 with a fallback
     for non-supporting terminals to make the link visible.

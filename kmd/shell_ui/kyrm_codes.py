@@ -63,7 +63,7 @@ from pydantic import BaseModel, Field, model_validator, TypeAdapter
 from rich.style import Style
 from rich.text import Text
 
-from kmd.shell_tools.osc_tools import osc_code
+from kmd.shell_tools.osc_tools import osc8_link, osc8_link_rich, osc_code, OscStr
 
 
 KC_VERSION = 0
@@ -114,7 +114,8 @@ class DisplayStyle(str, Enum):
     """
 
     plain = "plain"
-    button = "button"
+    underline = "underline"
+    highlight = "highlight"
 
 
 class Position(BaseModel):
@@ -189,7 +190,7 @@ class UIElement(BaseModel):
         """
         return self.model_dump_json()
 
-    def as_osc(self) -> str:
+    def as_osc(self) -> OscStr:
         """
         Convert to an OSC 77 code.
         """
@@ -256,7 +257,7 @@ class LinkTooltip(TooltipElement):
 
 class IframeTooltip(TooltipElement):
     """
-    A tooltip with an iframe.
+    A tooltip that is an iframe.
     """
 
     element_type: Literal[UIElementType.iframe_tooltip] = UIElementType.iframe_tooltip
@@ -268,7 +269,7 @@ class IframeTooltip(TooltipElement):
 
 class IframePopover(PopoverElement):
     """
-    A popover with an iframe.
+    A popover that is an iframe.
     """
 
     element_type: Literal[UIElementType.iframe_popover] = UIElementType.iframe_popover
@@ -494,14 +495,11 @@ class KriLink(BaseModel):
             link_text=link_text,
         )
 
-    @property
-    def osc8(self) -> str:
-        from kmd.shell_tools.osc_tools import osc8_link
-
+    def as_osc8(self) -> OscStr:
         return osc8_link(self.kri.uri_str, self.link_text)
 
     def as_rich(self, style: str | Style = "") -> Text:
-        return Text.from_ansi(self.osc8, style=style)
+        return osc8_link_rich(self.kri.uri_str, self.link_text, style=style)
 
     def as_html(self) -> str:
         return f'<a href="{escape(self.kri.uri_str, quote=True)}">{escape(self.link_text)}</a>'

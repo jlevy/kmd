@@ -37,6 +37,7 @@ from kmd.config.text_styles import (
     VRULE_CHAR,
 )
 from kmd.shell_ui.rich_indent import Indent
+from kmd.shell_ui.rich_kyrm_markdown import KyrmMarkdown
 from kmd.text_wrap.text_styling import DEFAULT_INDENT, fill_text, Wrap
 
 console = get_console()
@@ -288,7 +289,7 @@ def print_markdown(doc_str: str, extra_indent: str = "", enable_markdown: bool =
     doc_str = str(doc_str)  # Convenience for lazy objects.
 
     if enable_markdown:
-        doc = Markdown(doc_str, justify="left")
+        doc = KyrmMarkdown(doc_str, justify="left")
     else:
         doc = doc_str
 
@@ -358,7 +359,7 @@ def print_help(message: str, *args, text_wrap: Wrap = Wrap.WRAP, extra_indent: s
 
 
 def print_assistance(
-    message: str | Markdown, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""
+    message: str | Text | Markdown, *args, text_wrap: Wrap = Wrap.NONE, extra_indent: str = ""
 ):
     cprint(
         message,
@@ -376,11 +377,11 @@ def print_code_block(
     format: str = "",
     extra_indent: str = "",
 ):
-    markdown = Markdown(f"```{format}\n{message}\n```")
+    markdown = KyrmMarkdown(f"```{format}\n{message}\n```")
     cprint(markdown, *args, text_wrap=Wrap.NONE, extra_indent=extra_indent)
 
 
-def print_text_block(message: str, *args, extra_indent: str = ""):
+def print_text_block(message: str | Text | Markdown, *args, extra_indent: str = ""):
     cprint(message, text_wrap=Wrap.WRAP_FULL, *args, extra_indent=extra_indent)
 
 
