@@ -119,7 +119,9 @@ def item_view(request: Request, store_path: str, ws_name: str, max_lines: int = 
 
         page_self_url = local_url.item_view(store_path=sp, ws_name=ws_name, max_lines=max_lines)
 
-        body_text, footer_note = _text_body_and_footer(item.body_text(), max_lines=max_lines)
+        body_text, footer_note = None, None
+        if item.format and item.format.is_text:
+            body_text, footer_note = _text_body_and_footer(item.body_text(), max_lines=max_lines)
 
         return _serve_item(request, item, page_self_url, body_text, footer_note, brief_header=False)
     except (FileNotFound, InvalidFilename, FileNotFoundError) as e:

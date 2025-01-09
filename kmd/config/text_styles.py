@@ -271,10 +271,27 @@ class KmdHighlighter(RegexHighlighter):
 
 
 RICH_STYLES = {
+    "markdown.paragraph": Style(),
+    "markdown.text": Style(),
+    "markdown.em": Style(italic=True),
+    "markdown.emph": Style(italic=True),  # For commonmark backwards compatibility
+    "markdown.strong": Style(bold=True),
+    "markdown.code": Style(bold=True, color="cyan", bgcolor="black"),
+    "markdown.code_block": Style(color="cyan", bgcolor="black"),
+    "markdown.block_quote": Style(color="yellow"),
+    "markdown.list": Style(color="cyan"),
+    "markdown.item": Style(),
+    "markdown.item.bullet": Style(color="yellow"),
+    "markdown.item.number": Style(color="yellow", bold=True),
+    "markdown.hr": Style(color="yellow"),
+    "markdown.h1.border": Style(),
     "markdown.h1": Style(color=COLOR_EMPH, bold=True),
     "markdown.h2": Style(color=COLOR_EMPH, bold=True),
     "markdown.h3": Style(color=COLOR_EMPH, bold=True, italic=True),
     "markdown.h4": Style(color=COLOR_EMPH_ALT, bold=True),
+    "markdown.h5": Style(color=COLOR_EMPH_ALT, italic=True),
+    "markdown.h6": Style(color=COLOR_EMPH_ALT, italic=True),
+    "markdown.h7": Style(color=COLOR_EMPH_ALT, italic=True, dim=True),
     "kmd.ellipsis": Style(color=COLOR_HINT),
     "kmd.at_mention": Style(color=COLOR_HINT, bold=True),
     "kmd.indent": Style(color=COLOR_KEY, dim=True),

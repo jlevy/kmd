@@ -291,7 +291,7 @@ class Item:
 
     @classmethod
     def from_external_path(
-        cls, path: Path, item_type: Optional[ItemType] = None, title: Optional[str] = None
+        cls, path: Path | str, item_type: Optional[ItemType] = None, title: Optional[str] = None
     ) -> "Item":
         """
         Create a resource Item for a file with a format inferred from the file extension
@@ -321,7 +321,7 @@ class Item:
         )
 
         # Update modified time from the file system.
-        item.set_modified(path.stat().st_mtime)
+        item.set_modified(Path(path).stat().st_mtime)
 
         return item
 
