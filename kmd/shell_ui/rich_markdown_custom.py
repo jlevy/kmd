@@ -196,7 +196,7 @@ class BlockQuote(TextElement):
         lines = console.render_lines(self.elements, render_options, style=self.style)
         style = self.style
         new_line = Segment("\n")
-        padding = Segment("▌ ", style)
+        padding = Segment("│ ", style)
         for line in lines:
             yield padding
             yield from line
@@ -356,25 +356,29 @@ class ListItem(TextElement):
         lines = console.render_lines(self.elements, render_options, style=self.style)
         bullet_style = console.get_style("markdown.item.bullet", default="none")
 
-        bullet = Segment(" • ", bullet_style)
+        bullet = Segment(" - ", bullet_style)
         padding = Segment(" " * 3, bullet_style)
         new_line = Segment("\n")
         for first, line in loop_first(lines):
-            yield bullet if first else padding
+            if first:
+                yield new_line
+                yield bullet
+            else:
+                yield padding
             yield from line
             yield new_line
 
     def render_number(
         self, console: Console, options: ConsoleOptions, number: int, last_number: int
     ) -> RenderResult:
-        number_width = len(str(last_number)) + 2
+        number_width = len(str(last_number)) + 3
         render_options = options.update(width=options.max_width - number_width)
         lines = console.render_lines(self.elements, render_options, style=self.style)
         number_style = console.get_style("markdown.item.number", default="none")
 
         new_line = Segment("\n")
         padding = Segment(" " * number_width, number_style)
-        numeral = Segment(f"{number}".rjust(number_width - 1) + " ", number_style)
+        numeral = Segment(f"{number}".rjust(number_width - 2) + "." + " ", number_style)
         for first, line in loop_first(lines):
             yield numeral if first else padding
             yield from line
