@@ -5,7 +5,6 @@ from typing import Callable
 
 from markdown_it.token import Token
 from rich.console import Console, ConsoleOptions, RenderResult
-from rich.markdown import CodeBlock, Markdown
 from rich.padding import Padding
 from rich.style import Style
 from rich.text import Text
@@ -13,6 +12,8 @@ from rich.text import Text
 from kmd.config.settings import global_settings
 from kmd.config.text_styles import COLOR_COMMENT
 from kmd.shell_ui.kyrm_codes import Kri, KriLink, TextAttrs, TextTooltip, UIAction, UIActionType
+
+from kmd.shell_ui.rich_markdown_custom import CodeBlock, Markdown
 
 
 Transform = Callable[[str], Text]
@@ -136,8 +137,10 @@ def test_custom_markdown():
     expected = [
         "Testing",
         "",
+        "",
         "DEF HELLO():",
         '    PRINT("WORLD")',
+        "",
     ]
 
     print(f"\nresult: {result}")

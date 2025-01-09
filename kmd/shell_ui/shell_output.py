@@ -12,7 +12,6 @@ from typing import Callable, List, Optional
 import rich
 import rich.style
 from rich.console import Group, OverflowMethod
-from rich.markdown import Markdown
 from rich.text import Text
 
 from kmd.config.logger import get_console, get_logger
@@ -37,7 +36,9 @@ from kmd.config.text_styles import (
     VRULE_CHAR,
 )
 from kmd.shell_ui.rich_indent import Indent
-from kmd.shell_ui.rich_kyrm_markdown import KyrmMarkdown
+
+from kmd.shell_ui.rich_markdown_custom import Markdown
+from kmd.shell_ui.rich_markdown_kyrm import KyrmMarkdown
 from kmd.text_wrap.text_styling import DEFAULT_INDENT, fill_text, Wrap
 
 console = get_console()

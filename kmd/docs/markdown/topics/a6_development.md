@@ -6,7 +6,6 @@ Developer setup:
 # Developers should install poetry plugins to help with dev builds and updates:
 poetry self update
 poetry self add "poetry-dynamic-versioning[plugin]"
-poetry self add poetry-plugin-up
 
 # Run pytests:
 poetry run test

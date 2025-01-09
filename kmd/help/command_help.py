@@ -1,7 +1,5 @@
 from typing import List, Optional
 
-from rich.markdown import Markdown
-
 from kmd.action_defs import look_up_action
 from kmd.commands.command_registry import CommandFunction, look_up_command
 from kmd.errors import InvalidInput, NoMatch
@@ -14,6 +12,8 @@ from kmd.model.actions_model import Action
 from kmd.model.messages_model import Message
 from kmd.model.params_model import Param, RUNTIME_ACTION_PARAMS
 from kmd.model.preconditions_model import Precondition
+
+from kmd.shell_ui.rich_markdown_custom import Markdown
 from kmd.shell_ui.shell_output import (
     cprint,
     format_name_and_description,
