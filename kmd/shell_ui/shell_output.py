@@ -19,9 +19,7 @@ from kmd.config.text_styles import (
     BOX_BOTTOM,
     BOX_PREFIX,
     BOX_TOP,
-    COLOR_ASSISTANCE,
     COLOR_FAILURE,
-    COLOR_HEADING,
     COLOR_HELP,
     COLOR_HINT,
     COLOR_KEY,
@@ -33,6 +31,9 @@ from kmd.config.text_styles import (
     emoji_bool,
     HRULE,
     MID_CORNER,
+    STYLE_ASSISTANCE,
+    STYLE_HEADING,
+    STYLE_KEY,
     VRULE_CHAR,
 )
 from kmd.shell_ui.rich_indent import Indent
@@ -79,7 +80,7 @@ def format_name_and_description(
     text_wrap: Wrap = Wrap.WRAP_INDENT,
 ) -> Text:
     if isinstance(name, str):
-        name = Text(name, style=COLOR_KEY)
+        name = Text(name, style=STYLE_KEY)
     doc = fill_rich_text(doc, text_wrap=text_wrap)
 
     return Text.assemble(
@@ -366,7 +367,7 @@ def print_assistance(
         message,
         *args,
         text_wrap=text_wrap,
-        color=COLOR_ASSISTANCE,
+        color=STYLE_ASSISTANCE,
         extra_indent=extra_indent,
         width=CONSOLE_WRAP_WIDTH,
     )
@@ -402,7 +403,7 @@ def print_heading(
     *args,
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
-    color: str = COLOR_HEADING,
+    color: str = STYLE_HEADING,
 ):
     with print_style(Style.PAD):
         cprint(
@@ -420,7 +421,7 @@ def print_small_heading(
     *args,
     text_wrap: Wrap = Wrap.NONE,
     extra_indent: str = "",
-    color: str = COLOR_HEADING,
+    color: str = STYLE_HEADING,
 ):
     with print_style(Style.PAD_TOP):
         cprint(message, *args, text_wrap=text_wrap, color=color, extra_indent=extra_indent)

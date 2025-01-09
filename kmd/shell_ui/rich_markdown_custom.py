@@ -26,6 +26,8 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text, TextType
 
+from kmd.config.text_styles import COLOR_HINT, STYLE_CODE
+
 
 class MarkdownElement:
     new_line: ClassVar[bool] = True
@@ -143,12 +145,13 @@ class Heading(TextElement):
 
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
         text = self.text
-        text.justify = "center"
+        if self.tag in ["h1", "h2"]:
+            text.justify = "center"
         if self.tag == "h1":
             # Draw a border around h1s
             yield Panel(
                 text,
-                box=box.HEAVY,
+                box=box.SQUARE,
                 style="markdown.h1.border",
             )
         else:
@@ -330,13 +333,15 @@ class ListElement(MarkdownElement):
 
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
         if self.list_type == "bullet_list_open":
-            for item in self.items:
-                yield from item.render_bullet(console, options)
+            for i, item in enumerate(self.items):
+                yield from item.render_bullet(console, options, i == len(self.items) - 1)
         else:
             number = 1 if self.list_start is None else self.list_start
             last_number = number + len(self.items)
-            for index, item in enumerate(self.items):
-                yield from item.render_number(console, options, number + index, last_number)
+            for i, item in enumerate(self.items):
+                yield from item.render_number(
+                    console, options, number + i, last_number, i == len(self.items) - 1
+                )
 
 
 class ListItem(TextElement):
@@ -351,7 +356,9 @@ class ListItem(TextElement):
         self.elements.append(child)
         return False
 
-    def render_bullet(self, console: Console, options: ConsoleOptions) -> RenderResult:
+    def render_bullet(
+        self, console: Console, options: ConsoleOptions, is_last: bool
+    ) -> RenderResult:
         render_options = options.update(width=options.max_width - 3)
         lines = console.render_lines(self.elements, render_options, style=self.style)
         bullet_style = console.get_style("markdown.item.bullet", default="none")
@@ -359,17 +366,25 @@ class ListItem(TextElement):
         bullet = Segment(" - ", bullet_style)
         padding = Segment(" " * 3, bullet_style)
         new_line = Segment("\n")
+
         for first, line in loop_first(lines):
             if first:
-                yield new_line
                 yield bullet
             else:
                 yield padding
             yield from line
             yield new_line
 
+        if not is_last:
+            yield new_line
+
     def render_number(
-        self, console: Console, options: ConsoleOptions, number: int, last_number: int
+        self,
+        console: Console,
+        options: ConsoleOptions,
+        number: int,
+        last_number: int,
+        is_last: bool,
     ) -> RenderResult:
         number_width = len(str(last_number)) + 3
         render_options = options.update(width=options.max_width - number_width)
@@ -379,9 +394,13 @@ class ListItem(TextElement):
         new_line = Segment("\n")
         padding = Segment(" " * number_width, number_style)
         numeral = Segment(f"{number}".rjust(number_width - 2) + "." + " ", number_style)
+
         for first, line in loop_first(lines):
             yield numeral if first else padding
             yield from line
+            yield new_line
+
+        if not is_last:
             yield new_line
 
 
@@ -459,9 +478,13 @@ class MarkdownContext:
         """Current style which is the product of all styles on the stack."""
         return self.style_stack.current
 
-    def on_text(self, text: str, node_type: str) -> None:
+    def on_text(self, text: TextType, node_type: str) -> None:
         """Called when the parser visits text."""
-        if node_type in {"fence", "code_inline"} and self._syntax is not None:
+        if (
+            node_type in {"fence", "code_inline"}
+            and self._syntax is not None
+            and isinstance(text, str)
+        ):
             highlight_text = self._syntax.highlight(text)
             highlight_text.rstrip()
             self.stack.top.on_text(
@@ -615,7 +638,18 @@ class Markdown(JupyterMixin):
                     # If it's a self-closing inline style e.g. `code_inline`
                     context.enter_style(f"markdown.{tag}")
                     if token.content:
-                        context.on_text(token.content, node_type)
+                        if tag == "code":
+                            # Add backticks around inline code.
+                            context.on_text(
+                                Text.assemble(
+                                    ("`", COLOR_HINT),
+                                    (token.content, STYLE_CODE),
+                                    ("`", COLOR_HINT),
+                                ),
+                                node_type,
+                            )
+                        else:
+                            context.on_text(token.content, node_type)
                     context.leave_style()
             else:
                 # Map the markdown tag -> MarkdownElement renderable

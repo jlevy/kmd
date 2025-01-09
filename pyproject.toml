@@ -86,6 +86,7 @@ ruff = "^0.4.10"
 usort = "^1.0.8.post1"
 mypy = "^1.14.1"
 codespell = "^2.3.0"
+dunamai = "^1.23.0"
 
 [build-system]
 requires = ["poetry-core"]

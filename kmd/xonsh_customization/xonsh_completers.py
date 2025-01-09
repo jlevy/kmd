@@ -18,7 +18,7 @@ from xonsh.completers.tools import (
 
 from kmd.commands.help_commands import HELP_COMMANDS
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import COLOR_ACTION_TEXT, COLOR_COMMAND_TEXT, EMOJI_COMMAND, EMOJI_TASK
+from kmd.config.text_styles import EMOJI_COMMAND, EMOJI_TASK, STYLE_ACTION_TEXT, STYLE_COMMAND_TEXT
 from kmd.docs.faq_headings import faq_headings
 from kmd.errors import InvalidState
 from kmd.exec.system_actions import assistant_chat
@@ -111,7 +111,7 @@ def _command_completions(prefix: str) -> set[RichCompletion]:
             name,
             display=f"{name} {EMOJI_COMMAND}",
             description=single_line(_commands[name].__doc__ or ""),
-            style=COLOR_COMMAND_TEXT,
+            style=STYLE_COMMAND_TEXT,
             append_space=True,
         )
         for name in command_matches
@@ -123,7 +123,7 @@ def _command_completions(prefix: str) -> set[RichCompletion]:
             name,
             display=f"{name} {EMOJI_TASK}",
             description=single_line(_actions[name].description or ""),
-            style=COLOR_ACTION_TEXT,
+            style=STYLE_ACTION_TEXT,
             append_space=True,
         )
         for name in action_matches

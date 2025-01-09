@@ -1,6 +1,6 @@
 from rich.text import Text
 
-from kmd.config.text_styles import COLOR_HEADING, COLOR_HINT, EMOJI_ASSISTANT
+from kmd.config.text_styles import COLOR_HINT, EMOJI_ASSISTANT, STYLE_HEADING
 from kmd.help.help_page import print_see_also
 from kmd.model.assistant_response_model import AssistantResponse
 from kmd.model.language_models import LLM
@@ -16,7 +16,7 @@ from kmd.shell_ui.shell_output import (
 
 
 def print_assistant_heading(model: LLM) -> None:
-    assistant_name = Text(f"{EMOJI_ASSISTANT} Kmd Assistant", style=COLOR_HEADING)
+    assistant_name = Text(f"{EMOJI_ASSISTANT} Kmd Assistant", style=STYLE_HEADING)
     info = Text(f"({model})", style=COLOR_HINT)
     cprint(assistant_name + " " + info)
 

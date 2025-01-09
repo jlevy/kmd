@@ -38,9 +38,9 @@ PROMPT_COLOR_WARN = "INTENSE_YELLOW"
 PROMPT_INPUT_COLOR = colors.input
 
 
-## Colors
+## Colors and styles
 
-COLOR_LOGO = "bold magenta"
+STYLE_LOGO = "bold magenta"
 
 COLOR_PLAIN = "default"
 
@@ -54,7 +54,7 @@ COLOR_WARN = "bright_red"
 
 COLOR_ERROR = "bright_red"
 
-COLOR_HEADING = "bold bright_green"
+STYLE_HEADING = "bold bright_green"
 
 COLOR_EMPH = "bright_green"
 
@@ -70,7 +70,7 @@ COLOR_RESULT = "default"
 
 COLOR_HELP = "bright_blue"
 
-COLOR_ASSISTANCE = "italic bright_blue"
+STYLE_ASSISTANCE = "italic bright_blue"
 
 COLOR_RESPONSE = "bright_blue"
 
@@ -79,6 +79,10 @@ COLOR_SUGGESTION = "bright_blue"
 COLOR_LITERAL = "bright_blue"
 
 COLOR_KEY = "bright_blue"
+
+STYLE_KEY = "bold bright_blue"
+
+STYLE_CODE = STYLE_KEY
 
 COLOR_VALUE = "cyan"
 
@@ -96,9 +100,9 @@ COLOR_TIMING = "blue"
 
 COLOR_CALL = "bright_yellow"
 
-COLOR_COMMAND_TEXT = "bold black"
+STYLE_COMMAND_TEXT = "bold black"
 
-COLOR_ACTION_TEXT = "bold black"
+STYLE_ACTION_TEXT = "bold black"
 
 COLOR_SIZE1 = "bright_black"
 

@@ -8,10 +8,10 @@ from kmd.config.text_styles import (
     BOX_MID,
     BOX_PREFIX,
     BOX_TOP,
-    COLOR_HEADING,
     COLOR_HINT,
-    COLOR_LOGO,
     LOGO,
+    STYLE_HEADING,
+    STYLE_LOGO,
 )
 from kmd.docs.assemble_source_code import read_source_code
 from kmd.errors import FileNotFound
@@ -42,17 +42,18 @@ def welcome() -> None:
     """
     from kmd.docs import welcome
 
+    # TODO: Use Rich boxes and markdown to make prettier.
     cprint()
     cprint(BOX_TOP)
     version = get_version_name()
     flush_right = " " * (len(BOX_TOP) - len(BOX_PREFIX) - len(LOGO) - len(version))
     cprint(
-        Text(LOGO, style=COLOR_LOGO) + Text(flush_right + version, style=COLOR_HINT),
+        Text(LOGO, style=STYLE_LOGO) + Text(flush_right + version, style=COLOR_HINT),
         extra_indent=BOX_PREFIX,
     )
     cprint(BOX_MID)
     cprint(extra_indent=BOX_PREFIX)
-    cprint(Text("Welcome to Kmd.", style=COLOR_HEADING), extra_indent=BOX_PREFIX)
+    cprint(Text("Welcome to Kmd.", style=STYLE_HEADING), extra_indent=BOX_PREFIX)
     cprint(extra_indent=BOX_PREFIX)
     cprint(welcome, text_wrap=Wrap.WRAP_FULL, extra_indent=BOX_PREFIX)
     cprint(BOX_BOTTOM)
