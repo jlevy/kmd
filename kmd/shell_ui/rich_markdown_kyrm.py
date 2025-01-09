@@ -6,11 +6,10 @@ from typing import Callable
 from markdown_it.token import Token
 from rich.console import Console, ConsoleOptions, RenderResult
 from rich.padding import Padding
-from rich.style import Style
 from rich.text import Text
 
 from kmd.config.settings import global_settings
-from kmd.config.text_styles import COLOR_COMMENT
+from kmd.config.text_styles import COLOR_COMMENT, STYLE_CODE
 from kmd.shell_ui.kyrm_codes import Kri, KriLink, TextAttrs, TextTooltip, UIAction, UIActionType
 
 from kmd.shell_ui.rich_markdown_custom import CodeBlock, Markdown
@@ -69,10 +68,6 @@ def is_comment(line: str) -> bool:
     return _comment_char_regex.match(line) is not None
 
 
-CODE_COMMENT_STYLE = Style(color=COLOR_COMMENT)  # Previously had bgcolor but kind of ugly.
-CODE_STYLE = Style()
-
-
 def clickable_code(code: str) -> Text:
     """
     Insert Kyrm links into the code.
@@ -83,7 +78,7 @@ def clickable_code(code: str) -> Text:
     texts: list[Text] = []
     for i, line in enumerate(lines):
         if is_comment(line):
-            texts.append(Text(line, style=CODE_COMMENT_STYLE))
+            texts.append(Text(line, style=COLOR_COMMENT))
         else:
             if kyrm_codes_enabled:
                 kri = Kri(
@@ -93,9 +88,9 @@ def clickable_code(code: str) -> Text:
                     )
                 )
                 link = KriLink(kri=kri, link_text=line)
-                texts.append(Text.from_ansi(link.as_osc8(), style=CODE_STYLE))
+                texts.append(Text.from_ansi(link.as_osc8(), style=STYLE_CODE))
             else:
-                texts.append(Text(line, style=CODE_STYLE))
+                texts.append(Text(line, style=STYLE_CODE))
 
     return Text("\n").join(texts)
 

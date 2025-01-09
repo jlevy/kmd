@@ -22,7 +22,6 @@ from kmd.config.text_styles import (
     COLOR_FAILURE,
     COLOR_HELP,
     COLOR_HINT,
-    COLOR_KEY,
     COLOR_RESPONSE,
     COLOR_SELECTION,
     COLOR_STATUS,
@@ -67,7 +66,7 @@ def format_name_and_value(
     text_wrap: Wrap = Wrap.WRAP_INDENT,
 ) -> Text:
     if isinstance(name, str):
-        name = Text(name, style=COLOR_KEY)
+        name = Text(name, style=STYLE_KEY)
     doc = fill_rich_text(doc, text_wrap=text_wrap, initial_column=len(name) + 2)
 
     return Text.assemble(name, (": ", COLOR_HINT), doc)

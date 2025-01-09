@@ -96,6 +96,9 @@ def tldr_help(text: str) -> Optional[str]:
     assert isinstance(page_data, list) and all(isinstance(item, bytes) for item in page_data)
     page_str = "\n".join(data.decode("utf-8") for data in page_data)
 
+    # Convert h1 headers to h2 headers so, which looks nicer in the terminal.
+    page_str = re.sub(r"^# (.*)$", r"## \1", page_str, flags=re.MULTILINE)
+
     return page_str
 
 

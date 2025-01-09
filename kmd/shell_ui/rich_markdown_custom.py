@@ -27,6 +27,7 @@ from rich.table import Table
 from rich.text import Text, TextType
 
 from kmd.config.text_styles import COLOR_HINT, STYLE_CODE
+from kmd.shell_ui.rich_char_transform import text_upper
 
 
 class MarkdownElement:
@@ -146,7 +147,9 @@ class Heading(TextElement):
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
         text = self.text
         if self.tag in ["h1", "h2"]:
+            text = text_upper(text)
             text.justify = "center"
+
         if self.tag == "h1":
             # Draw a border around h1s
             yield Panel(

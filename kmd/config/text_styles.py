@@ -82,7 +82,7 @@ COLOR_KEY = "bright_blue"
 
 STYLE_KEY = "bold bright_blue"
 
-STYLE_CODE = STYLE_KEY
+STYLE_CODE = "bold cyan"
 
 COLOR_VALUE = "cyan"
 
