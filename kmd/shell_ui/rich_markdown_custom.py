@@ -359,6 +359,9 @@ class ListItem(TextElement):
         self.elements.append(child)
         return False
 
+    # FIXME: We put newlines between items, which usually is fine, but should also add a newline
+    # before the first item in a list, but only if the list is nested within another list.
+
     def render_bullet(
         self, console: Console, options: ConsoleOptions, is_last: bool
     ) -> RenderResult:

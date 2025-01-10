@@ -8,7 +8,11 @@ from kmd.commands.selection_commands import select
 from kmd.config.logger import get_logger
 from kmd.config.text_styles import PROMPT_ASSIST, SPINNER
 from kmd.form_input.prompt_input import prompt_simple_string
-from kmd.help.assistant import assist_system_message_with_state, shell_context_assistance
+from kmd.help.assistant import (
+    assist_system_message_with_state,
+    AssistanceType,
+    shell_context_assistance,
+)
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
 from kmd.model.shell_model import ShellResult
@@ -19,10 +23,12 @@ log = get_logger(__name__)
 
 
 @kmd_command
-def assist(input: Optional[str] = None) -> None:
+def assist(input: Optional[str] = None, type: AssistanceType = AssistanceType.basic) -> None:
     """
     Invoke the kmd assistant. You don't normally need this command as it is the same as just
     asking a question (a question ending with ?) on the kmd console.
+
+    :param type: The type of assistance, can be `careful`, `structured`, `basic`, or `fast`.
     """
     if not input:
         input = prompt_simple_string(
@@ -33,11 +39,11 @@ def assist(input: Optional[str] = None) -> None:
             help()
             return
     with get_console().status("Thinking…", spinner=SPINNER):
-        shell_context_assistance(input)
+        shell_context_assistance(input, assistance_type=type)
 
 
 @kmd_command
-def assistant_system_message(skip_api: bool = False) -> ShellResult:
+def assistant_system_message(skip_api_docs: bool = False) -> ShellResult:
     """
     Save the assistant system message. Useful for debugging.
     """
@@ -46,7 +52,7 @@ def assistant_system_message(skip_api: bool = False) -> ShellResult:
         type=ItemType.export,
         title="Assistant System Message",
         format=Format.markdown,
-        body=assist_system_message_with_state(skip_api=skip_api),
+        body=assist_system_message_with_state(skip_api_docs=skip_api_docs),
     )
     ws = current_workspace()
     store_path = ws.save(item, as_tmp=True)
@@ -76,4 +82,6 @@ def clear_assistant() -> None:
     moved to the trash.
     """
     ws = current_workspace()
-    trash(ws.base_dir / ws.dirs.assistant_history_yml)
+    path = ws.base_dir / ws.dirs.assistant_history_yml
+    if path.exists():
+        trash(path)

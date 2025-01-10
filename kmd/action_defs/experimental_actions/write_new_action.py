@@ -6,13 +6,12 @@ from kmd.exec.action_exec import run_action
 from kmd.exec.action_registry import kmd_action
 from kmd.exec.system_actions import write_instructions
 from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
-from kmd.help.assistant import assist_preamble, structured_assistance
+from kmd.help.assistant import assist_preamble, assistance_structured
 from kmd.model import (
     Action,
     ActionInput,
     ActionResult,
     ArgCount,
-    DEFAULT_CAREFUL_LLM,
     Format,
     ItemType,
     LLM,
@@ -21,6 +20,7 @@ from kmd.model import (
     Precondition,
     TitleTemplate,
 )
+from kmd.model.model_settings import DEFAULT_STRUCTURED_LLM
 from kmd.preconditions.precondition_defs import is_instructions
 from kmd.shell_ui.assistant_output import print_assistant_response
 from kmd.text_wrap.text_styling import fill_text, Wrap
@@ -110,7 +110,7 @@ class WriteNewAction(Action):
 
         # Give the LLM full context on kmd APIs.
         # But we do this here lazily to prevent circular dependencies.
-        system_message = Message(assist_preamble(skip_api=False, base_actions_only=False))
+        system_message = Message(assist_preamble(skip_api_docs=False, base_actions_only=False))
         chat_history.extend(
             [
                 ChatMessage(ChatRole.system, system_message),
@@ -119,8 +119,8 @@ class WriteNewAction(Action):
             ]
         )
 
-        model = self.model or DEFAULT_CAREFUL_LLM
-        assistant_response = structured_assistance(chat_history.as_chat_completion(), model)
+        model = self.model or DEFAULT_STRUCTURED_LLM
+        assistant_response = assistance_structured(chat_history.as_chat_completion(), model)
 
         print_assistant_response(assistant_response, model)
 

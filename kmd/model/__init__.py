@@ -82,7 +82,12 @@ from kmd.model.messages_model import Message, MessageTemplate
 # flake8: noqa: F401
 
 
-from kmd.model.model_settings import DEFAULT_CAREFUL_LLM, DEFAULT_EMBEDDING_MODEL, DEFAULT_FAST_LLM
+from kmd.model.model_settings import (
+    DEFAULT_BASIC_LLM,
+    DEFAULT_CAREFUL_LLM,
+    DEFAULT_EMBEDDING_MODEL,
+    DEFAULT_FAST_LLM,
+)
 from kmd.model.params_model import (
     ALL_COMMON_PARAMS,
     COMMON_ACTION_PARAMS,

@@ -9,7 +9,12 @@ from kmd.config.logger import get_logger
 from kmd.errors import InvalidParam
 from kmd.model.constants import LANGUAGE_LIST
 from kmd.model.language_models import LLM
-from kmd.model.model_settings import DEFAULT_CAREFUL_LLM, DEFAULT_FAST_LLM
+from kmd.model.model_settings import (
+    DEFAULT_BASIC_LLM,
+    DEFAULT_CAREFUL_LLM,
+    DEFAULT_FAST_LLM,
+    DEFAULT_STRUCTURED_LLM,
+)
 from kmd.text_docs.sizes import TextUnit
 from kmd.util.format_utils import fmt_lines
 from kmd.util.parse_key_vals import format_key_value
@@ -97,10 +102,22 @@ class Param(Generic[T]):
 
 # Parameters set globally such as in the workspace.
 GLOBAL_PARAMS: Dict[str, Param] = {
-    "assistant_model": Param(
-        "assistant_model",
-        "The name of the LLM used by the kmd assistant for regular (complex) requests.",
+    "assistant_model_careful": Param(
+        "assistant_model_careful",
+        "The name of the LLM used by the kmd assistant for complex, unstructured requests.",
         default_value=DEFAULT_CAREFUL_LLM,
+        type=LLM,
+    ),
+    "assistant_model_structured": Param(
+        "assistant_model_structured",
+        "The name of the LLM used by the kmd assistant for complex, structured requests.",
+        default_value=DEFAULT_STRUCTURED_LLM,
+        type=LLM,
+    ),
+    "assistant_model_basic": Param(
+        "assistant_model_basic",
+        "The name of the LLM used by the kmd assistant for basic requests.",
+        default_value=DEFAULT_BASIC_LLM,
         type=LLM,
     ),
     "assistant_model_fast": Param(

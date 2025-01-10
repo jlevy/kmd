@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypeVar
 
 from kmd.config.logger import get_logger
@@ -72,7 +73,15 @@ def _map_keyword(kw_args: Mapping[str, str | bool], kw_params: List[FuncParam]) 
             if not isinstance(value, bool) and issubclass(matching_param_type, bool):
                 raise InvalidCommand(f"Option `--{key}` is boolean and does not take a value")
 
-            kw_values[key] = matching_param_type(value)  # Convert value to type.
+            try:
+                kw_values[key] = matching_param_type(value)  # Convert value to type.
+            except Exception as e:
+                valid_values = ""
+                if isinstance(matching_param.type, type) and issubclass(matching_param.type, Enum):
+                    valid_values = f" (valid values are: {', '.join('`' + v.name + '`' for v in matching_param.type)})"
+                raise InvalidCommand(
+                    f"Invalid value for option `{key}`: {value}{valid_values}"
+                ) from e
         elif var_kw_param:
             var_kw_values[key] = value
         else:

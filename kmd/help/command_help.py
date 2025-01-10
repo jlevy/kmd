@@ -4,11 +4,12 @@ from kmd.action_defs import look_up_action
 from kmd.commands.command_registry import CommandFunction, look_up_command
 from kmd.errors import InvalidInput, NoMatch
 from kmd.file_formats.chat_format import ChatHistory, ChatMessage, ChatRole
-from kmd.help.assistant import assist_preamble, unstructured_assistance
+from kmd.help.assistant import assist_preamble, assistance_unstructured
 from kmd.help.docstrings import parse_docstring
 from kmd.help.function_param_info import annotate_param_info
 from kmd.help.tldr_help import tldr_help
 from kmd.model.actions_model import Action
+from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message
 from kmd.model.params_model import Param, RUNTIME_ACTION_PARAMS
 from kmd.model.preconditions_model import Precondition
@@ -35,7 +36,7 @@ def _print_command_help(
     param_info: Optional[List[Param]] = None,
     precondition: Optional[Precondition] = None,
     verbose: bool = True,
-    source: bool = False,
+    is_action: bool = False,
 ):
     command_str = f"the `{name}` command" if name else "this command"
 
@@ -84,16 +85,15 @@ def _print_command_help(
                 )
                 cprint()
 
-    if source:
-        cprint()
-        print_help(GENERAL_HELP)
-        cprint()
-
     if verbose:
         cprint()
-        print_help(
-            GENERAL_HELP + f" Use `action_source {name}` to see the source code for this action."
-        )
+        if is_action:
+            source_hint = (
+                f" Use `action_source_code {name}` to see the source code for this action."
+            )
+        else:
+            source_hint = ""
+        print_help(GENERAL_HELP + source_hint)
         cprint()
 
 
@@ -105,6 +105,7 @@ def print_command_function_help(command: CommandFunction, verbose: bool = True):
         command.__doc__ if command.__doc__ else "",
         param_info=param_info,
         verbose=verbose,
+        is_action=False,
     )
 
 
@@ -119,12 +120,15 @@ def print_action_help(action: Action, verbose: bool = True):
         param_info=params,
         precondition=action.precondition,
         verbose=verbose,
+        is_action=True,
     )
 
 
-def explain_command(text: str, use_assistant: bool = False):
+def explain_command(text: str, assistant_model: Optional[LLM] = None):
     """
     Explain a command or action or give a brief explanation of something.
+    Checks tldr and help docs first. If `assistant_model` is provided and docs
+    are not available, use the assistant.
     """
     text = text.strip()
 
@@ -149,12 +153,12 @@ def explain_command(text: str, use_assistant: bool = False):
         except InvalidInput:
             pass
 
-    if not help_str and use_assistant:
+    if not help_str and assistant_model:
         chat_history = ChatHistory()
 
         # Give the LLM full context on kmd APIs.
         # But we do this here lazily to prevent circular dependencies.
-        system_message = Message(assist_preamble(skip_api=False, base_actions_only=False))
+        system_message = Message(assist_preamble(skip_api_docs=False, base_actions_only=False))
         chat_history.extend(
             [
                 ChatMessage(ChatRole.system, system_message),
@@ -162,7 +166,7 @@ def explain_command(text: str, use_assistant: bool = False):
             ]
         )
 
-        response = unstructured_assistance(chat_history.as_chat_completion())
+        response = assistance_unstructured(chat_history.as_chat_completion(), model=assistant_model)
         help_str = response.content
 
     if help_str:

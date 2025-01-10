@@ -20,6 +20,7 @@ from kmd.config.lazy_imports import import_start_time
 from kmd.config.logger import get_console, get_logger
 from kmd.config.settings import APP_NAME, find_rcfiles
 from kmd.config.text_styles import PROMPT_INPUT_COLOR, SPINNER
+from kmd.help.assistant import AssistanceType
 from kmd.shell_ui.shell_output import cprint
 from kmd.shell_ui.shell_syntax import is_assist_request_str
 
@@ -150,7 +151,7 @@ def not_found(cmd: List[str]):
                 and how they can get more help with `help` or any question
                 ending with ? in the terminal.
                 """,
-                fast=True,
+                assistance_type=AssistanceType.fast,
             )
 
 

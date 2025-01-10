@@ -381,7 +381,7 @@ show_as_webpage
 show_as_webpage --help
 
 # And you can actually how this works by looking at its source:
-action_source show_as_webpage
+action_source_code show_as_webpage
 
 # What if something isn't working right?
 # Sometimes we may want to browse more detailed system logs:

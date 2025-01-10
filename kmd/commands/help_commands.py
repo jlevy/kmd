@@ -17,6 +17,7 @@ from kmd.docs.assemble_source_code import read_source_code
 from kmd.errors import FileNotFound
 from kmd.help.command_help import explain_command
 from kmd.help.help_page import print_see_also
+from kmd.model.model_settings import DEFAULT_BASIC_LLM
 from kmd.shell_ui.shell_output import console_pager, cprint, print_code_block, print_markdown, Wrap
 from kmd.version import get_version_name
 
@@ -185,7 +186,8 @@ def action_source_code(action_name: str) -> None:
 @kmd_command
 def explain(text: str, no_assistant: bool = False) -> None:
     """
-    Give help on a command or action.  If `no_assistant` is True then will not use the assistant
-    if the command or text is not recognized.
+    Give help on a command or action.  If `no_assistant` is True then will not use the
+    assistant if the command or text is not recognized.
     """
-    explain_command(text, use_assistant=not no_assistant)
+    model = None if no_assistant else DEFAULT_BASIC_LLM
+    explain_command(text, assistant_model=model)

@@ -1,4 +1,5 @@
 import json
+from enum import Enum
 from functools import cache
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
@@ -26,7 +27,8 @@ from kmd.model.language_models import LLM
 from kmd.model.messages_model import Message
 from kmd.model.script_model import Script
 from kmd.shell_ui.assistant_output import print_assistant_response
-from kmd.shell_ui.shell_output import cprint
+from kmd.shell_ui.rich_markdown_kyrm import KyrmMarkdown
+from kmd.shell_ui.shell_output import cprint, print_assistance
 from kmd.text_wrap.markdown_normalization import normalize_markdown
 from kmd.util.log_calls import log_calls
 from kmd.util.parse_shell_args import shell_unquote
@@ -37,14 +39,50 @@ from kmd.workspaces.workspaces import current_workspace, workspace_param_value
 log = get_logger(__name__)
 
 
+class AssistanceType(Enum):
+    """
+    Types of assistance offered, based on the model.
+    """
+
+    careful = "careful"
+    structured = "structured"
+    basic = "basic"
+    fast = "fast"
+
+    @property
+    def param_name(self) -> str:
+        if self == AssistanceType.careful:
+            return "assistant_model_careful"
+        elif self == AssistanceType.structured:
+            return "assistant_model_structured"
+        elif self == AssistanceType.basic:
+            return "assistant_model_basic"
+        elif self == AssistanceType.fast:
+            return "assistant_model_fast"
+        else:
+            raise ValueError(f"Invalid assistance type: {self}")
+
+    @property
+    def workspace_model(self) -> LLM:
+        return not_none(workspace_param_value(self.param_name, type=LLM))
+
+    @property
+    def is_structured(self) -> bool:
+        return self == AssistanceType.structured
+
+    @property
+    def skip_api_docs(self) -> bool:
+        return self == AssistanceType.fast
+
+
 @cache
-def assist_preamble(skip_api: bool = False, base_actions_only: bool = False) -> str:
+def assist_preamble(skip_api_docs: bool = False, base_actions_only: bool = False) -> str:
     from kmd.help.help_page import print_manual  # Avoid circular imports.
 
     with record_console() as console:
         cprint(str(assistant_instructions))
         print_manual(base_actions_only)
-        if not skip_api:
+        if not skip_api_docs:
             cprint(api_docs)
 
     preamble = console.export_text()
@@ -128,10 +166,10 @@ def assist_current_state() -> Message:
 
 
 @log_calls(level="info")
-def assist_system_message_with_state(skip_api: bool = False) -> Message:
+def assist_system_message_with_state(skip_api_docs: bool = False) -> Message:
     return Message(
         f"""
-        {assist_preamble(skip_api=skip_api)}
+        {assist_preamble(skip_api_docs=skip_api_docs)}
 
         {assist_current_state()}
         """
@@ -144,7 +182,9 @@ def assistant_history_file() -> Path:
     return ws.base_dir / ws.dirs.assistant_history_yml
 
 
-def assistant_chat_history(include_system_message: bool, fast: bool = False) -> ChatHistory:
+def assistant_chat_history(
+    include_system_message: bool, skip_api_docs: bool = False
+) -> ChatHistory:
     assistant_history = ChatHistory()
     try:
         assistant_history = tail_chat_history(assistant_history_file(), max_records=20)
@@ -154,46 +194,31 @@ def assistant_chat_history(include_system_message: bool, fast: bool = False) -> 
         log.warning("Couldn't load assistant history, so skipping it: %s", e)
 
     if include_system_message:
-        system_message = assist_system_message_with_state(skip_api=fast)
+        system_message = assist_system_message_with_state(skip_api_docs=skip_api_docs)
         assistant_history.messages.insert(0, ChatMessage(ChatRole.system, system_message))
 
     return assistant_history
 
 
-def assistant_model(fast: bool = False) -> LLM:
-    assistant_model = "assistant_model_fast" if fast else "assistant_model"
-    return not_none(workspace_param_value(assistant_model, type=LLM))
-
-
-def unstructured_assistance(
-    messages: List[Dict[str, str]], model: Optional[LLM] = None, fast: bool = False
-) -> LLMCompletionResult:
+def assistance_unstructured(messages: List[Dict[str, str]], model: LLM) -> LLMCompletionResult:
     """
-    Get general assistance without any pre-loaded help or context.
+    Get general assistance, with unstructured output.
+    Must provide all context within the messages.
     """
-    if not model:
-        model = assistant_model(fast=fast)
-    response = llm_completion(
+    # TODO: Stream response.
+
+    return llm_completion(
         model,
         messages=messages,
         save_objects=global_settings().debug_assistant,
     )
-    return response
 
 
-def structured_assistance(
-    messages: List[Dict[str, str]],
-    model: Optional[LLM] = None,
-    fast: bool = False,
-) -> AssistantResponse:
+def assistance_structured(messages: List[Dict[str, str]], model: LLM) -> AssistantResponse:
     """
-    Get general assistance, with structured output. Must provide all context.
+    Get general assistance, with unstructured or structured output.
+    Must provide all context within the messages.
     """
-
-    # TODO: Stream response.
-
-    if not model:
-        model = assistant_model(fast=fast)
 
     response = llm_completion(
         model,
@@ -214,25 +239,27 @@ def structured_assistance(
 
 
 def shell_context_assistance(
-    input: str, fast: bool = False, silent: bool = False, model: Optional[LLM] = None
+    input: str,
+    silent: bool = False,
+    model: Optional[LLM] = None,
+    assistance_type: AssistanceType = AssistanceType.basic,
 ) -> None:
     """
     Get assistance, using the full context of the shell.
     """
 
     if not model:
-        assistant_model = "assistant_model_fast" if fast else "assistant_model"
-        model = not_none(workspace_param_value(assistant_model, type=LLM))
+        model = assistance_type.workspace_model
 
     if not silent:
-        cprint(f"Getting assistance (model {model})…")
+        cprint(f"Getting assistance ({assistance_type.name}, model {model})…")
 
     # Get shell chat history.
-
-    history = assistant_chat_history(include_system_message=False, fast=fast)
+    skip_api_docs = assistance_type.skip_api_docs
+    history = assistant_chat_history(include_system_message=False, skip_api_docs=skip_api_docs)
 
     # Insert the system message.
-    system_message = assist_system_message_with_state(skip_api=fast)
+    system_message = assist_system_message_with_state(skip_api_docs=skip_api_docs)
     history.messages.insert(0, ChatMessage(ChatRole.system, system_message))
 
     # Record the user's message.
@@ -243,33 +270,39 @@ def shell_context_assistance(
     log.info("Assistant history context (including new message): %s", history.size_summary())
 
     # Get the assistant's response.
-    assistant_response = structured_assistance(history.as_chat_completion(), model)
+    if assistance_type.is_structured:
+        assistant_response = assistance_structured(history.as_chat_completion(), model)
 
-    # Save the user message to the history after a response. That way if the
-    # use changes their mind right away and cancels it's not left in the file.
-    history_file = assistant_history_file()
-    append_chat_message(history_file, user_message)
-    # Record the assistant's response, in structured format.
-    append_chat_message(
-        history_file, ChatMessage(ChatRole.assistant, assistant_response.model_dump())
-    )
-
-    print_assistant_response(assistant_response, model)
-
-    if assistant_response.suggested_commands:
-        response_text = normalize_markdown(assistant_response.response_text)
-
-        script = Script(
-            commands=assistant_response.suggested_commands,
-            description=None,  # Let's put the response text in the item description instead.
-            signature=None,  # TODO Infer from first command.
+        # Save the user message to the history after a response. That way if the
+        # use changes their mind right away and cancels it's not left in the file.
+        history_file = assistant_history_file()
+        append_chat_message(history_file, user_message)
+        # Record the assistant's response, in structured format.
+        append_chat_message(
+            history_file, ChatMessage(ChatRole.assistant, assistant_response.model_dump())
         )
-        item = Item(
-            type=ItemType.script,
-            title=f"Assistant Answer: {capitalize_cms(input)}",
-            description=response_text,
-            format=Format.kmd_script,
-            body=script.script_str(),
-        )
-        ws = current_workspace()
-        ws.save(item, as_tmp=True)
+
+        print_assistant_response(assistant_response, model)
+
+        # If the assistant suggests commands, also save them as a script.
+        if assistant_response.suggested_commands:
+            response_text = normalize_markdown(assistant_response.response_text)
+
+            script = Script(
+                commands=assistant_response.suggested_commands,
+                description=None,  # Let's put the response text in the item description instead.
+                signature=None,  # TODO Infer from first command.
+            )
+            item = Item(
+                type=ItemType.script,
+                title=f"Assistant Answer: {capitalize_cms(input)}",
+                description=response_text,
+                format=Format.kmd_script,
+                body=script.script_str(),
+            )
+            ws = current_workspace()
+            ws.save(item, as_tmp=True)
+
+    else:
+        assistant_response = assistance_unstructured(history.as_chat_completion(), model)
+        print_assistance(KyrmMarkdown(assistant_response.content))
