@@ -158,7 +158,9 @@ def explain_command(text: str, assistant_model: Optional[LLM] = None):
 
         # Give the LLM full context on kmd APIs.
         # But we do this here lazily to prevent circular dependencies.
-        system_message = Message(assist_preamble(skip_api_docs=False, base_actions_only=False))
+        system_message = Message(
+            assist_preamble(is_structured=False, skip_api_docs=False, base_actions_only=False)
+        )
         chat_history.extend(
             [
                 ChatMessage(ChatRole.system, system_message),

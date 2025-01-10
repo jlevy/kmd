@@ -49,7 +49,7 @@ class MissingInput(InvalidInput):
     pass
 
 
-class InvalidParam(SelfExplanatoryError):
+class InvalidParam(InvalidInput):
     """Raised when a parameter is invalid."""
 
     def __init__(self, param_name: str):

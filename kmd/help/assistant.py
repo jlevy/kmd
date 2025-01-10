@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from kmd.config.logger import get_logger, record_console
 from kmd.config.settings import global_settings
+from kmd.config.text_styles import EMOJI_WARN
 from kmd.docs import api_docs, assistant_instructions
 from kmd.errors import InvalidState, KmdRuntimeError
 from kmd.file_formats.chat_format import (
@@ -52,18 +53,18 @@ class AssistanceType(Enum):
     @property
     def param_name(self) -> str:
         if self == AssistanceType.careful:
-            return "assistant_model_careful"
+            return "default_careful_llm"
         elif self == AssistanceType.structured:
-            return "assistant_model_structured"
+            return "default_structured_llm"
         elif self == AssistanceType.basic:
-            return "assistant_model_basic"
+            return "default_basic_llm"
         elif self == AssistanceType.fast:
-            return "assistant_model_fast"
+            return "default_fast_llm"
         else:
             raise ValueError(f"Invalid assistance type: {self}")
 
     @property
-    def workspace_model(self) -> LLM:
+    def default_model(self) -> LLM:
         return not_none(workspace_param_value(self.param_name, type=LLM))
 
     @property
@@ -76,11 +77,13 @@ class AssistanceType(Enum):
 
 
 @cache
-def assist_preamble(skip_api_docs: bool = False, base_actions_only: bool = False) -> str:
+def assist_preamble(
+    is_structured: bool, skip_api_docs: bool = False, base_actions_only: bool = False
+) -> str:
     from kmd.help.help_page import print_manual  # Avoid circular imports.
 
     with record_console() as console:
-        cprint(str(assistant_instructions))
+        cprint(str(assistant_instructions(is_structured)))
         print_manual(base_actions_only)
         if not skip_api_docs:
             cprint(api_docs)
@@ -166,10 +169,10 @@ def assist_current_state() -> Message:
 
 
 @log_calls(level="info")
-def assist_system_message_with_state(skip_api_docs: bool = False) -> Message:
+def assist_system_message_with_state(is_structured: bool, skip_api_docs: bool = False) -> Message:
     return Message(
         f"""
-        {assist_preamble(skip_api_docs=skip_api_docs)}
+        {assist_preamble(is_structured=is_structured, skip_api_docs=skip_api_docs)}
 
         {assist_current_state()}
         """
@@ -183,7 +186,7 @@ def assistant_history_file() -> Path:
 
 
 def assistant_chat_history(
-    include_system_message: bool, skip_api_docs: bool = False
+    include_system_message: bool, is_structured: bool, skip_api_docs: bool = False
 ) -> ChatHistory:
     assistant_history = ChatHistory()
     try:
@@ -194,7 +197,9 @@ def assistant_chat_history(
         log.warning("Couldn't load assistant history, so skipping it: %s", e)
 
     if include_system_message:
-        system_message = assist_system_message_with_state(skip_api_docs=skip_api_docs)
+        system_message = assist_system_message_with_state(
+            is_structured=is_structured, skip_api_docs=skip_api_docs
+        )
         assistant_history.messages.insert(0, ChatMessage(ChatRole.system, system_message))
 
     return assistant_history
@@ -249,17 +254,22 @@ def shell_context_assistance(
     """
 
     if not model:
-        model = assistance_type.workspace_model
+        model = assistance_type.default_model
 
     if not silent:
         cprint(f"Getting assistance ({assistance_type.name}, model {model})…")
 
     # Get shell chat history.
     skip_api_docs = assistance_type.skip_api_docs
-    history = assistant_chat_history(include_system_message=False, skip_api_docs=skip_api_docs)
+    is_structured = assistance_type.is_structured
+    history = assistant_chat_history(
+        include_system_message=False, is_structured=is_structured, skip_api_docs=skip_api_docs
+    )
 
     # Insert the system message.
-    system_message = assist_system_message_with_state(skip_api_docs=skip_api_docs)
+    system_message = assist_system_message_with_state(
+        is_structured=is_structured, skip_api_docs=skip_api_docs
+    )
     history.messages.insert(0, ChatMessage(ChatRole.system, system_message))
 
     # Record the user's message.
@@ -306,3 +316,10 @@ def shell_context_assistance(
     else:
         assistant_response = assistance_unstructured(history.as_chat_completion(), model)
         print_assistance(KyrmMarkdown(assistant_response.content))
+
+    # FIXME: Make these obvious buttons.
+    if assistance_type in (AssistanceType.fast, AssistanceType.basic):
+        cprint()
+        print_assistance(
+            f"{EMOJI_WARN} For more detailed assistance, use `assist --type=careful` or `assist --type=structured`."
+        )

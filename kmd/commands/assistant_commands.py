@@ -15,6 +15,7 @@ from kmd.help.assistant import (
 )
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, ItemType
+from kmd.model.language_models import LLM
 from kmd.model.shell_model import ShellResult
 from kmd.shell_tools.native_tools import tail_file
 from kmd.workspaces.workspaces import current_workspace
@@ -23,12 +24,18 @@ log = get_logger(__name__)
 
 
 @kmd_command
-def assist(input: Optional[str] = None, type: AssistanceType = AssistanceType.basic) -> None:
+def assist(
+    input: Optional[str] = None,
+    model: Optional[LLM] = None,
+    type: AssistanceType = AssistanceType.basic,
+) -> None:
     """
     Invoke the kmd assistant. You don't normally need this command as it is the same as just
     asking a question (a question ending with ?) on the kmd console.
 
-    :param type: The type of assistance, can be `careful`, `structured`, `basic`, or `fast`.
+    :param type: The type of assistance to use.
+    :param model: The model to use for the assistant. If not provided, the default model
+        for the assistant type is used.
     """
     if not input:
         input = prompt_simple_string(
@@ -39,11 +46,11 @@ def assist(input: Optional[str] = None, type: AssistanceType = AssistanceType.ba
             help()
             return
     with get_console().status("Thinking…", spinner=SPINNER):
-        shell_context_assistance(input, assistance_type=type)
+        shell_context_assistance(input, model=model, assistance_type=type)
 
 
 @kmd_command
-def assistant_system_message(skip_api_docs: bool = False) -> ShellResult:
+def assistant_system_message(is_structured: bool, skip_api_docs: bool = False) -> ShellResult:
     """
     Save the assistant system message. Useful for debugging.
     """
@@ -52,7 +59,9 @@ def assistant_system_message(skip_api_docs: bool = False) -> ShellResult:
         type=ItemType.export,
         title="Assistant System Message",
         format=Format.markdown,
-        body=assist_system_message_with_state(skip_api_docs=skip_api_docs),
+        body=assist_system_message_with_state(
+            is_structured=is_structured, skip_api_docs=skip_api_docs
+        ),
     )
     ws = current_workspace()
     store_path = ws.save(item, as_tmp=True)

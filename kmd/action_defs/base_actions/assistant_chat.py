@@ -41,7 +41,9 @@ class AssistantChat(Action):
     model: LLM = DEFAULT_CAREFUL_LLM
 
     def run(self, items: ActionInput) -> ActionResult:
-        chat_history = assistant_chat_history(include_system_message=True, skip_api_docs=False)
+        chat_history = assistant_chat_history(
+            include_system_message=True, is_structured=False, skip_api_docs=False
+        )
         cprint()
         print_assistant_heading(self.model)
         print_response(

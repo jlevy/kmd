@@ -102,27 +102,27 @@ class Param(Generic[T]):
 
 # Parameters set globally such as in the workspace.
 GLOBAL_PARAMS: Dict[str, Param] = {
-    "assistant_model_careful": Param(
-        "assistant_model_careful",
-        "The name of the LLM used by the kmd assistant for complex, unstructured requests.",
+    "default_careful_llm": Param(
+        "default_careful_llm",
+        "Default LLM used for complex, unstructured requests (including for the Kmd assistant).",
         default_value=DEFAULT_CAREFUL_LLM,
         type=LLM,
     ),
-    "assistant_model_structured": Param(
-        "assistant_model_structured",
-        "The name of the LLM used by the kmd assistant for complex, structured requests.",
+    "default_structured_llm": Param(
+        "default_structured_llm",
+        "Default LLM used for complex, structured requests (including for the Kmd assistant).",
         default_value=DEFAULT_STRUCTURED_LLM,
         type=LLM,
     ),
-    "assistant_model_basic": Param(
-        "assistant_model_basic",
-        "The name of the LLM used by the kmd assistant for basic requests.",
+    "default_basic_llm": Param(
+        "default_basic_llm",
+        "Default LLM used for basic requests (including for the Kmd assistant).",
         default_value=DEFAULT_BASIC_LLM,
         type=LLM,
     ),
-    "assistant_model_fast": Param(
-        "assistant_model_fast",
-        "The name of the LLM used by the kmd assistant for fast responses.",
+    "default_fast_llm": Param(
+        "default_fast_llm",
+        "Default LLM used for fast responses (including for the Kmd assistant).",
         default_value=DEFAULT_FAST_LLM,
         type=LLM,
     ),

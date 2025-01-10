@@ -114,7 +114,7 @@ class CustomAssistantShell(PromptToolkitShell):
         if assist_query:
             try:
                 with get_console().status("Thinking…", spinner=SPINNER):
-                    shell_context_assistance(assist_query)
+                    shell_context_assistance(assist_query, assistance_type=AssistanceType.fast)
             except Exception as e:
                 log.error(f"Sorry, could not get assistance: {e}")
                 log.info(e, exc_info=True)

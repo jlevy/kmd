@@ -11,7 +11,7 @@ from kmd.text_wrap.text_wrapping import wrap_plaintext
 from kmd.util.type_utils import not_none
 
 
-def normalize_formatting(text: str, format: Optional[Format], width=DEFAULT_WRAP_WIDTH) -> str:
+def normalize_formatting(text: str, format: Format, width=DEFAULT_WRAP_WIDTH) -> str:
     """
     Normalize text formatting by wrapping lines and normalizing Markdown.
     """

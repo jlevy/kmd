@@ -1,11 +1,11 @@
-KMD ITEM AND ACTION MODEL
+## Kmd Item and Action Model
 
 Here is the Kmd source code representing the data model of Python classes for items and
 actions:
 
 {model_src}
 
-EXAMPLES OF KMD ACTION DEFINITIONS
+## Examples of Kmd Action Definitions
 
 For context and in case you need to write new actions, we also give you some of the Kmd
 source code for actions, to give examples of how actions are written in Python.
@@ -14,7 +14,7 @@ current Kmd actions is insufficient:
 
 {base_action_defs_src}
 
-LIBRARY OF LANGUAGE AND FORMATTING TOOLS
+## Library of Language and Formatting Tools
 
 When writing any Python code, use the following tools whenever possible for formatting
 HTML and Markdown and processing text.
@@ -30,7 +30,7 @@ HTML and Markdown and processing text.
 
 {text_tool_src}
 
-FILE FORMATS
+## File Formats
 
 Kmd uses some standard conventions for file formats for adding YAML metadata to text
 files. And another YAML-based format for chats.
