@@ -1,5 +1,7 @@
 import builtins
+import os
 import re
+import sys
 from pathlib import Path
 from typing import cast, Iterable, List, Tuple
 
@@ -7,6 +9,7 @@ from prompt_toolkit.application import get_app
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings, merge_key_bindings
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
+from xonsh.built_ins import XSH
 
 from xonsh.completers.completer import add_one_completer, RichCompletion
 from xonsh.completers.tools import (
@@ -390,9 +393,21 @@ def _extract_command_name(text: str) -> str | None:
     return None
 
 
+def current_full_path() -> list[str]:
+    """
+    XSH path might contain additional items (e.g. npm). So merge.
+    """
+    xsh_path: list[str] = []
+    if XSH.env:
+        xsh_path = cast(list[str], XSH.env.get("PATH"))
+    env_path = os.environ.get("PATH", "").split(os.pathsep)
+    if sys.platform.startswith("win"):
+        env_path.insert(0, os.curdir)  # implied by Windows shell
+    return xsh_path + [p for p in env_path if p not in xsh_path]
+
+
 @Condition
 def is_typo_command() -> bool:
-    from xonsh.built_ins import XSH
     from xonsh.xoreutils._which import which, WhichError
 
     app = get_app()
@@ -443,7 +458,7 @@ def is_typo_command() -> bool:
 
     # Finally check if it is a known command.
     try:
-        which(command_name)
+        which(command_name, path=current_full_path())
         return False
     except WhichError:
         # Almost certainly a typo.
