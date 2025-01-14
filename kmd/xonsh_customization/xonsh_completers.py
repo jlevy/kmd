@@ -1,4 +1,3 @@
-import builtins
 import os
 import re
 import sys
@@ -30,7 +29,7 @@ from kmd.model.params_model import Param
 from kmd.model.paths_model import fmt_store_path
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_checks import items_matching_precondition
-from kmd.shell_ui.shell_syntax import assist_request_str
+from kmd.shell_ui.shell_syntax import assist_request_str, is_valid_command
 from kmd.util.format_utils import single_line
 from kmd.util.log_calls import log_calls
 from kmd.util.type_utils import not_none
@@ -54,6 +53,29 @@ MAX_DIR_COMPLETIONS = 100
 SLOW_COMPLETION = 0.15
 
 
+def is_assist_request(context: CompletionContext) -> bool:
+    """
+    Check if this is an NL assistant request, based on whether it
+    starts with a space or `?`:
+
+    `<space>some question or request`
+    `?some question or request`
+    `? some question or request`
+    """
+    command = context.command
+    if not command:
+        return False
+
+    arg_index = command.arg_index
+    prefix = command.prefix.lstrip()
+
+    return (
+        (arg_index == 0 and (prefix.startswith(" ")))
+        or (arg_index == 0 and prefix.startswith("?"))
+        or (arg_index >= 1 and command.args[0].value.strip().startswith("?"))
+    )
+
+
 def _dir_description(directory: Path) -> str:
     if not directory.exists():
         return ""
@@ -62,18 +84,47 @@ def _dir_description(directory: Path) -> str:
     return f"{count} files"
 
 
-def _question_completions(include_bare_qm: bool) -> List[RichCompletion]:
-    questions = faq_headings()
-    possible_completions = questions + HELP_COMMANDS
+def _question_completions(
+    context: CompletionContext, include_bare_qm: bool
+) -> List[RichCompletion]:
+    prefix_len = len(context.command and context.command.text_before_cursor or "") + 1
+
+    completions = [
+        RichCompletion(
+            assist_request_str(question),
+            display=question.lstrip("? "),
+            prefix_len=prefix_len,
+        )
+        for question in faq_headings()
+    ]
+
+    completions.extend(
+        [
+            RichCompletion(
+                command.__name__,
+                display=f"{command.__name__} {EMOJI_COMMAND}",
+                description=single_line(command.__doc__ or ""),
+                style=STYLE_COMMAND_TEXT,
+                append_space=True,
+                prefix_len=prefix_len,
+            )
+            for command in HELP_COMMANDS
+        ]
+    )
 
     # A completion for a bare `?` to ask a question.
     if include_bare_qm:
-        help_completion = RichCompletion("?", description="Ask a question to get help.")
-        possible_completions.insert(0, help_completion)
+        completions.insert(
+            0,
+            RichCompletion(
+                "?",
+                display="?",
+                description="Ask for assistance.",
+                prefix_len=prefix_len,
+            ),
+        )
 
-    return [
-        RichCompletion(question, display=question.lstrip("? ")) for question in possible_completions
-    ]
+    return completions
 
 
 def _completion_matches(
@@ -240,7 +291,13 @@ def command_or_action_completer(context: CompletionContext) -> CompleterResult:
 
     if context.command and context.command.arg_index == 0:
         prefix = context.command.prefix
-        return cast(CompleterResult, _command_completions(prefix))
+        completions = _command_completions(prefix)
+        if len(completions) > 0:
+            # If we have command matches, don't overdo it with more help completions too.
+            return cast(CompleterResult, completions)
+        else:
+            # No command results, so fall back to help questions.
+            return help_question_completer(context)
 
     return None
 
@@ -298,17 +355,11 @@ def help_question_completer(context: CompletionContext) -> CompleterResult:
     Suggest help questions after a `?` on the command line.
     """
     if context.command:
-        command = context.command
-        arg_index = context.command.arg_index
-        prefix = context.command.prefix.lstrip()
-
-        # ?some question
-        # ? some question
-        if (arg_index == 0 and prefix.startswith("?")) or (
-            arg_index == 1 and command.args[0].value == "?"
-        ):
-            query = prefix.lstrip("? ")
-            return set(_completion_matches(query, _question_completions(False), match_partial=True))
+        if is_assist_request(context):
+            query = context.command.prefix.lstrip("? ")
+            return set(
+                _completion_matches(query, _question_completions(context, True), match_partial=True)
+            )
     return None
 
 
@@ -367,7 +418,7 @@ def options_completer(context: CompletionContext) -> CompleterResult:
 
 
 @Condition
-def is_unquoted_assistant_request():
+def is_unquoted_assist_request():
     app = get_app()
     buf = app.current_buffer
     text = buf.text.strip()
@@ -407,8 +458,18 @@ def current_full_path() -> list[str]:
 
 
 @Condition
+def whitespace_only() -> bool:
+    app = get_app()
+    buf = app.current_buffer
+    return not buf.text.strip()
+
+
+@Condition
 def is_typo_command() -> bool:
-    from xonsh.xoreutils._which import which, WhichError
+    """
+    Is the command itself invalid? Should be conservative, so we can suppress
+    executing it if it is definitely a typo.
+    """
 
     app = get_app()
     buf = app.current_buffer
@@ -418,7 +479,7 @@ def is_typo_command() -> bool:
     if not is_default_buffer:
         return False
 
-    # Assistant commands always allowed.
+    # Assistant NL requests always allowed.
     has_assistant_prefix = text.startswith("?") or text.rstrip().endswith("?")
     if has_assistant_prefix:
         return False
@@ -433,36 +494,19 @@ def is_typo_command() -> bool:
     if not text:
         return False
 
+    # Now look at the command.
     command_name = _extract_command_name(text)
 
-    # Things that don't look like a command are allowed.
+    # Python or missing command is fine.
     if not command_name:
         return False
 
-    # Built-in values and aliases are allowed.
-    python_builtins = dir(builtins)
-    xonsh_builtins = dir(XSH.builtins)
-    globals = XSH.ctx
-    aliases = XSH.aliases or {}
-    if (
-        command_name in python_builtins
-        or command_name in xonsh_builtins
-        or command_name in globals
-        or command_name in aliases
-    ):
+    # Recognized command.
+    if is_valid_command(command_name, current_full_path()):
         return False
 
-    # Directories are allowed since we have auto-cd on.
-    if Path(command_name).is_dir():
-        return False
-
-    # Finally check if it is a known command.
-    try:
-        which(command_name, path=current_full_path())
-        return False
-    except WhichError:
-        # Almost certainly a typo.
-        return True
+    # Okay it's almost certainly a command typo.
+    return True
 
 
 @Condition
@@ -474,19 +518,35 @@ def is_completion_menu_active() -> bool:
 def add_key_bindings() -> None:
     custom_bindings = KeyBindings()
 
-    @custom_bindings.add(" ")
+    @custom_bindings.add(" ", filter=whitespace_only)
     def _(event: KeyPressEvent):
         """
-        Map two spaces to `? ` to invoke an assistant question.
+        Map space at the start of the line to `? ` to invoke an assistant question.
         """
         buf = event.app.current_buffer
-        if buf.text == " ":
-            buf.delete_before_cursor(2)
+        if buf.text == " " or buf.text == "":
+            buf.delete_before_cursor(len(buf.text))
             buf.insert_text("? ")
         else:
             buf.insert_text(" ")
 
-    @custom_bindings.add("enter", filter=is_unquoted_assistant_request)
+    @custom_bindings.add(" ", filter=is_typo_command)
+    def _(event: KeyPressEvent):
+        """
+        If the user types two words and the first word is likely an invalid
+        command, prefix with `? `.
+        """
+
+        buf = event.app.current_buffer
+        text = buf.text.strip()
+
+        if len(text.split()) >= 2 and not text.startswith("?"):
+            buf.transform_current_line(lambda line: "? " + line)
+            buf.cursor_position += 2
+
+        buf.insert_text(" ")
+
+    @custom_bindings.add("enter", filter=is_unquoted_assist_request)
     def _(event: KeyPressEvent):
         """
         Automatically add quotes around assistant questions, so there are not
@@ -502,7 +562,7 @@ def add_key_bindings() -> None:
             buf.delete_before_cursor(len(buf.text))
             buf.insert_text(assistant_chat.name)
         else:
-            # Wrap everything after '?' in quotes, preserving existing whitespace
+            # Convert it to an assistant question starting with a `?`.
             buf.delete_before_cursor(len(buf.text))
             buf.insert_text(assist_request_str(question_text))
 
@@ -538,6 +598,14 @@ def add_key_bindings() -> None:
         Close the completion menu when escape is pressed.
         """
         event.app.current_buffer.cancel_completion()
+
+    @custom_bindings.add("tab")
+    def _(event: KeyPressEvent):
+        """
+        Bind tab since sometimes it's not called e.g. after space then tab.
+        """
+        buf = event.app.current_buffer
+        buf.start_completion()
 
     existing_bindings = __xonsh__.shell.shell.prompter.app.key_bindings  # type: ignore  # noqa: F821
     merged_bindings = merge_key_bindings([existing_bindings, custom_bindings])

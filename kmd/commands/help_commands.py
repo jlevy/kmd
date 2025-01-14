@@ -24,18 +24,6 @@ from kmd.version import get_version_name
 log = get_logger(__name__)
 
 
-HELP_COMMANDS = [
-    "welcome",
-    "help",
-    "why_kmd",
-    "getting_started",
-    "commands",
-    "faq",
-    "commands",
-    "actions",
-]
-
-
 @kmd_command
 def welcome() -> None:
     """
@@ -191,3 +179,14 @@ def explain(text: str, no_assistant: bool = False) -> None:
     """
     model = None if no_assistant else DEFAULT_BASIC_LLM
     explain_command(text, assistant_model=model)
+
+
+HELP_COMMANDS = [
+    welcome,
+    help,
+    why_kmd,
+    getting_started,
+    faq,
+    commands,
+    actions,
+]

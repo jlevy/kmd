@@ -167,6 +167,9 @@ def sort_by_prefix_display(prefix: str) -> SortKeyFn:
     def sortkey(c: RichCompletion) -> SortKey:
         c_str = normalize(c)
         display_priority = 0 if c.display else 1 if c.description else 2
+        # Special case for bare `?` help.
+        if c.value == "?" or c.value.startswith("--help"):
+            display_priority = -1
         return (c_str.find(normalize(prefix)), display_priority, c_str)
 
     return sortkey
