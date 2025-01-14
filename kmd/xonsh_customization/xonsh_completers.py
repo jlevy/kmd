@@ -599,14 +599,6 @@ def add_key_bindings() -> None:
         """
         event.app.current_buffer.cancel_completion()
 
-    @custom_bindings.add("tab")
-    def _(event: KeyPressEvent):
-        """
-        Bind tab since sometimes it's not called e.g. after space then tab.
-        """
-        buf = event.app.current_buffer
-        buf.start_completion()
-
     existing_bindings = __xonsh__.shell.shell.prompter.app.key_bindings  # type: ignore  # noqa: F821
     merged_bindings = merge_key_bindings([existing_bindings, custom_bindings])
     __xonsh__.shell.shell.prompter.app.key_bindings = merged_bindings  # type: ignore  # noqa: F821

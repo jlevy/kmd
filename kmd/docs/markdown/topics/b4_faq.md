@@ -38,7 +38,23 @@ Type `?` and press tab to see some frequently asked questions.
 
 See also: `What are the most important Kmd commands?`
 
-### Do you need to know bash to use Kmd?
+### How does Kmd accept both shell and assistant requests to the LLM with natural langauge?
+
+By default, if a command is valid shell or Python, Kmd will treat it as a shell command,
+using Xonsh's conventions.
+
+Commands that begin with a `?` are automatically considered assistant requests.
+
+As a convenience, if you begin to type more than one word that is not a valid command,
+it will auto-detect and type the `?` for you.
+You can also press <space> at the beginning of the line, and this will also type the `?`
+for you.
+
+By default the assistant uses a fast LLM (see `param` to check which one is set) but you
+can use `assist` do make an assistant request using a different LLM if you want more
+careful answers or to try a different model.
+
+### Do you need to know Bash to use Kmd?
 
 Right now, it certainly helps, as it is focusing on basic functionality.
 But one goal of Kmd is to make it *far* easier for less technical people to explore and
