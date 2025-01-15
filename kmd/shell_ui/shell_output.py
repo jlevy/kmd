@@ -23,7 +23,6 @@ from kmd.config.text_styles import (
     COLOR_HELP,
     COLOR_HINT,
     COLOR_RESPONSE,
-    COLOR_SELECTION,
     COLOR_STATUS,
     COLOR_SUCCESS,
     CONSOLE_WRAP_WIDTH,
@@ -309,21 +308,6 @@ def print_hrule(color: Optional[str] = None):
         else:
             rule = tl_prefix + rule[len(tl_prefix) :]
     rich_print(rule, style=color)
-
-
-def print_selection(
-    message: str,
-    *args,
-    text_wrap: Wrap = Wrap.NONE,
-    extra_indent: str = "",
-):
-    cprint(
-        message,
-        *args,
-        text_wrap=text_wrap,
-        color=COLOR_SELECTION,
-        extra_indent=extra_indent,
-    )
 
 
 def print_status(

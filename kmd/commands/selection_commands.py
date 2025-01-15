@@ -74,16 +74,20 @@ def select(
         return ShellResult(show_selection=False)
     elif back:
         ws.selections.previous(back)
-        return ShellResult(show_selection=True)
+        shell_print_selection_history(ws.selections, last=last)
+        return ShellResult(show_selection=False)
     elif forward:
         ws.selections.next(forward)
-        return ShellResult(show_selection=True)
+        shell_print_selection_history(ws.selections, last=last)
+        return ShellResult(show_selection=False)
     elif previous:
         ws.selections.previous()
-        return ShellResult(show_selection=True)
+        shell_print_selection_history(ws.selections, last=last or 3)
+        return ShellResult(show_selection=False)
     elif next:
         ws.selections.next()
-        return ShellResult(show_selection=True)
+        shell_print_selection_history(ws.selections, last=last or 3)
+        return ShellResult(show_selection=False)
     elif pop:
         ws.selections.pop()
         return ShellResult(show_selection=True)
