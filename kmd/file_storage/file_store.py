@@ -560,6 +560,7 @@ class FileStore:
             log.warning("%s", warning)
 
         if self.is_sandbox:
+            cprint()
             cprint(
                 f"{EMOJI_WARN} Note you are using the default sandbox workspace. "
                 + "Create or switch to another workspace with the `workspace` command."

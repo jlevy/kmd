@@ -512,7 +512,7 @@ class MarkdownContext:
 
 
 class Markdown(JupyterMixin):
-    """A Markdown renderable.
+    """Customized for Kmd. A Markdown renderable.
 
     Args:
         markup (str): A string containing markdown.

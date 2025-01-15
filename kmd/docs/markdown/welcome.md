@@ -1,12 +1,12 @@
-Use `help` for help and available commands.
+### Welcome to Kmd
+
+Use `help` for the manual and full list of available commands.
 Use `logs` for detailed logs.
 
-Press <Tab> for contextual autocomplete of commands, actions, and items.
-
+Press **tab** for contextual autocomplete of commands, actions, and items.
 You may also simply ask a question and the Kmd assistant will help you.
-Press space twice (or type `?`), then write your question or request.
-Press `?` and <Tab> to get suggested questions.
-Press `@` and <Tab> to get suggested paths in the current workspace.
+Press **space** (or type **?**), then write your question or request,
+or **space** then **tab** to get suggested questions.
 
 Try: `What is Kmd?`, `How can I transcribe a YouTube video?`, `getting_started`, `faq`,
 `check_tools`

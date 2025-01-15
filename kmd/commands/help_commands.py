@@ -1,24 +1,20 @@
+from rich.box import SQUARE
+
+from rich.console import Group
+from rich.panel import Panel
 from rich.text import Text
 
 from kmd.action_defs import look_up_action
 from kmd.commands.command_registry import kmd_command
 from kmd.config.logger import get_logger
-from kmd.config.text_styles import (
-    BOX_BOTTOM,
-    BOX_MID,
-    BOX_PREFIX,
-    BOX_TOP,
-    COLOR_HINT,
-    LOGO,
-    STYLE_HEADING,
-    STYLE_LOGO,
-)
+from kmd.config.text_styles import COLOR_HINT, CONSOLE_WRAP_WIDTH, LOGO, STYLE_LOGO
 from kmd.docs.assemble_source_code import read_source_code
 from kmd.errors import FileNotFound
 from kmd.help.command_help import explain_command
 from kmd.help.help_page import print_see_also
 from kmd.model.language_models import DEFAULT_BASIC_LLM
-from kmd.shell_ui.shell_output import console_pager, cprint, print_code_block, print_markdown, Wrap
+from kmd.shell_ui.rich_markdown_custom import Markdown
+from kmd.shell_ui.shell_output import console_pager, cprint, print_code_block, print_markdown
 from kmd.version import get_version_name
 
 log = get_logger(__name__)
@@ -31,21 +27,30 @@ def welcome() -> None:
     """
     from kmd.docs import welcome
 
-    # TODO: Use Rich boxes and markdown to make prettier.
-    cprint()
-    cprint(BOX_TOP)
     version = get_version_name()
-    flush_right = " " * (len(BOX_TOP) - len(BOX_PREFIX) - len(LOGO) - len(version))
-    cprint(
-        Text(LOGO, style=STYLE_LOGO) + Text(flush_right + version, style=COLOR_HINT),
-        extra_indent=BOX_PREFIX,
+    # Create header with logo and right-justified version
+
+    separator = " " + "─" * (CONSOLE_WRAP_WIDTH - len(LOGO) - len(version) - 2 - 3 - 3) + " "
+    header = Text.assemble(
+        Text(LOGO, style=STYLE_LOGO),
+        Text(separator),
+        Text(version, style=COLOR_HINT, justify="right"),
     )
-    cprint(BOX_MID)
-    cprint(extra_indent=BOX_PREFIX)
-    cprint(Text("Welcome to Kmd.", style=STYLE_HEADING), extra_indent=BOX_PREFIX)
-    cprint(extra_indent=BOX_PREFIX)
-    cprint(welcome, text_wrap=Wrap.WRAP_FULL, extra_indent=BOX_PREFIX)
-    cprint(BOX_BOTTOM)
+    welcome_group = Group(
+        Markdown(str(welcome)),
+    )
+
+    cprint()
+    cprint(
+        Panel(
+            welcome_group,
+            title=header,
+            title_align="left",
+            style="none",
+            padding=(1, 1),
+            box=SQUARE,
+        )
+    )
 
 
 @kmd_command

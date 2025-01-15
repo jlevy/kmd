@@ -11,7 +11,7 @@ from typing import Callable, List, Optional
 
 import rich
 import rich.style
-from rich.console import Group, OverflowMethod
+from rich.console import Group, OverflowMethod, RenderableType
 from rich.text import Text
 
 from kmd.config.logger import get_console, get_logger
@@ -182,7 +182,7 @@ null_style = rich.style.Style.null()
 
 
 def rich_print(
-    *args: str | Text | Markdown,
+    *args: RenderableType,
     width: Optional[int] = None,
     soft_wrap: Optional[bool] = None,
     indent: str = "",
@@ -220,7 +220,7 @@ def rich_print(
 
 
 def cprint(
-    message: str | Text | Markdown = "",
+    message: RenderableType = "",
     *args,
     text_wrap: Wrap = Wrap.WRAP,
     color=None,
@@ -244,7 +244,7 @@ def cprint(
         width = CONSOLE_WRAP_WIDTH
 
     # Handle unexpected types gracefully.
-    if not isinstance(message, (Text, Markdown)):
+    if not isinstance(message, (Text, Markdown, RenderableType)):
         message = str(message)
 
     if message:
