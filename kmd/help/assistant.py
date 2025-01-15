@@ -299,8 +299,7 @@ def shell_context_assistance(
             response_text = normalize_markdown(assistant_response.response_text)
 
             script = Script(
-                commands=assistant_response.suggested_commands,
-                description=None,  # Let's put the response text in the item description instead.
+                commands=list(assistant_response.suggested_commands),
                 signature=None,  # TODO Infer from first command.
             )
             item = Item(

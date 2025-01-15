@@ -17,7 +17,7 @@ from kmd.docs.assemble_source_code import read_source_code
 from kmd.errors import FileNotFound
 from kmd.help.command_help import explain_command
 from kmd.help.help_page import print_see_also
-from kmd.model.model_settings import DEFAULT_BASIC_LLM
+from kmd.model.language_models import DEFAULT_BASIC_LLM
 from kmd.shell_ui.shell_output import console_pager, cprint, print_code_block, print_markdown, Wrap
 from kmd.version import get_version_name
 

@@ -38,86 +38,53 @@ PROMPT_COLOR_WARN = "INTENSE_YELLOW"
 PROMPT_INPUT_COLOR = colors.input
 
 
-## Colors and styles
-
-STYLE_LOGO = "bold magenta"
+## Colors
 
 COLOR_PLAIN = "default"
-
 COLOR_LINK = "cyan"
-
 COLOR_SUCCESS = "green"
-
 COLOR_FAILURE = "bright_red"
-
 COLOR_WARN = "bright_red"
-
 COLOR_ERROR = "bright_red"
-
-STYLE_HEADING = "bold bright_green"
-
 COLOR_EMPH = "bright_green"
-
 COLOR_EMPH_ALT = "bright_blue"
-
 COLOR_SELECTION = "bright_yellow"
-
 COLOR_STATUS = "yellow"
-
 COLOR_COMMENT = "bright_black"
-
 COLOR_RESULT = "default"
-
 COLOR_HELP = "bright_blue"
-
-STYLE_ASSISTANCE = "italic bright_blue"
-
 COLOR_RESPONSE = "bright_blue"
-
 COLOR_SUGGESTION = "bright_blue"
-
 COLOR_LITERAL = "bright_blue"
-
 COLOR_KEY = "bright_blue"
-
-STYLE_KEY = "bold bright_blue"
-
-STYLE_CODE = "bold cyan"
-
 COLOR_VALUE = "cyan"
-
 COLOR_PATH = "cyan"
-
 COLOR_HINT = "bright_black"
-
 COLOR_SKIP = "green"
-
 COLOR_TASK = "magenta"
-
 COLOR_SAVED = "blue"
-
 COLOR_TIMING = "blue"
-
 COLOR_CALL = "bright_yellow"
-
-STYLE_COMMAND_TEXT = "bold black"
-
-STYLE_ACTION_TEXT = "bold black"
-
 COLOR_SIZE1 = "bright_black"
-
 COLOR_SIZE2 = "blue"
-
 COLOR_SIZE3 = "cyan"
-
 COLOR_SIZE4 = "bright_green"
-
 COLOR_SIZE5 = "yellow"
-
 COLOR_SIZE6 = "bright_red"
 
 
-# Boxes
+## Styles
+
+STYLE_LOGO = "bold magenta"
+STYLE_HEADING = "bold bright_green"
+STYLE_ASSISTANCE = "italic bright_blue"
+STYLE_COMMAND_TEXT = "bold black"
+STYLE_ACTION_TEXT = "bold black"
+STYLE_KEY = "bold bright_blue"
+STYLE_CODE = "bold cyan"
+
+
+## Boxes
 
 HRULE_CHAR = "─"
 VRULE_CHAR = "│"
@@ -140,6 +107,7 @@ NBSP = "\u00a0"
 HRULE = HRULE_CHAR * CONSOLE_WRAP_WIDTH
 
 HRULE_SHORT = ("⋯ " * 20).strip()
+
 
 ## Symbols
 

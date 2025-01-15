@@ -9,8 +9,7 @@ from kmd.model.actions_model import ActionInput, ActionResult, PerItemAction
 from kmd.model.doc_elements import CHUNK, ORIGINAL, RESULT
 from kmd.model.file_formats_model import Format
 from kmd.model.items_model import Item, UNTITLED
-from kmd.model.language_models import LLM
-from kmd.model.model_settings import DEFAULT_CAREFUL_LLM
+from kmd.model.language_models import DEFAULT_CAREFUL_LLM, LLM
 from kmd.model.params_model import common_params, ParamList
 from kmd.model.preconditions_model import Precondition
 from kmd.preconditions.precondition_defs import is_text_doc

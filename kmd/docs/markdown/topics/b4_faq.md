@@ -38,7 +38,7 @@ Type `?` and press tab to see some frequently asked questions.
 
 See also: `What are the most important Kmd commands?`
 
-### How does Kmd accept both shell and assistant requests to the LLM with natural langauge?
+### How does Kmd accept both shell and assistant requests to the LLM with natural language?
 
 By default, if a command is valid shell or Python, Kmd will treat it as a shell command,
 using Xonsh's conventions.

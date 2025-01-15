@@ -118,6 +118,10 @@ class Command(BaseModel):
         return f"Command(`{self.command_str()}`)"
 
 
+def as_comment(text: str) -> str:
+    return "\n".join(f"# {line}" for line in text.splitlines())
+
+
 class CommentedCommand(BaseModel):
     """
     A command with an optional comment explaining what it does.
@@ -126,7 +130,7 @@ class CommentedCommand(BaseModel):
     comment: Optional[str]
     """
     Any additional notes about what this command does and why it may be useful.
-    Should be a single line of text.
+    Does not include the # characters.
     """
 
     command: Command
@@ -142,9 +146,10 @@ class CommentedCommand(BaseModel):
 
     def script_str(self) -> str:
         if self.comment:
+            comment_str = as_comment(self.comment)
             return "\n".join(
                 [
-                    f"# {self.comment}",
+                    comment_str,
                     self.command.command_str(),
                 ]
             )

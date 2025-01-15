@@ -20,7 +20,7 @@ from kmd.model import (
     Precondition,
     TitleTemplate,
 )
-from kmd.model.model_settings import DEFAULT_STRUCTURED_LLM
+from kmd.model.language_models import DEFAULT_STRUCTURED_LLM
 from kmd.preconditions.precondition_defs import is_instructions
 from kmd.shell_ui.assistant_output import print_assistant_response
 from kmd.text_wrap.text_styling import fill_text, Wrap

@@ -8,12 +8,12 @@ from pydantic.dataclasses import dataclass
 from kmd.config.logger import get_logger
 from kmd.errors import InvalidParam
 from kmd.model.constants import LANGUAGE_LIST
-from kmd.model.language_models import LLM
-from kmd.model.model_settings import (
+from kmd.model.language_models import (
     DEFAULT_BASIC_LLM,
     DEFAULT_CAREFUL_LLM,
     DEFAULT_FAST_LLM,
     DEFAULT_STRUCTURED_LLM,
+    LLM,
 )
 from kmd.text_docs.sizes import TextUnit
 from kmd.util.format_utils import fmt_lines

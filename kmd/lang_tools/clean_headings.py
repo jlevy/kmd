@@ -1,8 +1,8 @@
 from typing import List
 
 from kmd.llms.llm_completion import llm_template_completion
+from kmd.model.language_models import DEFAULT_FAST_LLM
 from kmd.model.messages_model import Message, MessageTemplate
-from kmd.model.model_settings import DEFAULT_FAST_LLM
 from kmd.text_formatting.markdown_util import as_bullet_points
 
 # TODO: Enforce that the edits below doesn't contain anything extraneous.

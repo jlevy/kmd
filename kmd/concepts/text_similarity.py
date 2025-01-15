@@ -7,7 +7,7 @@ from scipy import spatial
 from kmd.concepts.embeddings import Embeddings
 from kmd.config.logger import get_logger
 from kmd.lang_tools.inflection import sort_by_length
-from kmd.model.model_settings import DEFAULT_EMBEDDING_MODEL
+from kmd.model.language_models import DEFAULT_EMBEDDING_MODEL
 from kmd.util.log_calls import tally_calls
 
 log = get_logger(__name__)

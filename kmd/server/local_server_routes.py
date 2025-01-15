@@ -13,6 +13,7 @@ from kmd.errors import FileNotFound, InvalidFilename
 from kmd.file_storage.file_store import FileStore
 from kmd.help.command_help import explain_command
 from kmd.model.items_model import Item
+from kmd.model.language_models import DEFAULT_FAST_LLM
 from kmd.model.paths_model import StorePath
 from kmd.shell_ui.rich_html import RICH_HTML_TEMPLATE
 from kmd.shell_ui.shell_file_info import print_file_info
@@ -131,7 +132,7 @@ def item_view(request: Request, store_path: str, ws_name: str, max_lines: int = 
 @router.api_route(Route.explain, methods=["GET"])
 def explain(text: str):
     with record_console() as console:
-        explain_command(text, use_assistant=True)
+        explain_command(text, assistant_model=DEFAULT_FAST_LLM)
     help_html = console.export_html(code_format=RICH_HTML_TEMPLATE, theme=colors.rich_terminal)
 
     page_url = local_url.explain(text)

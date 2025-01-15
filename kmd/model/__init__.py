@@ -4,6 +4,8 @@ The core classes for modeling kmd's framework.
 We include essential logic here but try to keep logic and dependencies minimal.
 """
 
+# flake8: noqa: F401
+
 from kmd.model.actions_model import (
     Action,
     ActionInput,
@@ -65,7 +67,14 @@ from kmd.model.items_model import (
     State,
     UNTITLED,
 )
-from kmd.model.language_models import EmbeddingModel, LLM
+from kmd.model.language_models import (
+    DEFAULT_BASIC_LLM,
+    DEFAULT_CAREFUL_LLM,
+    DEFAULT_EMBEDDING_MODEL,
+    DEFAULT_FAST_LLM,
+    EmbeddingModel,
+    LLM,
+)
 from kmd.model.llm_actions_model import ChunkedLLMAction, LLMAction
 from kmd.model.media_model import (
     HeatmapValue,
@@ -78,16 +87,6 @@ from kmd.model.media_model import (
     SERVICE_YOUTUBE,
 )
 from kmd.model.messages_model import Message, MessageTemplate
-
-# flake8: noqa: F401
-
-
-from kmd.model.model_settings import (
-    DEFAULT_BASIC_LLM,
-    DEFAULT_CAREFUL_LLM,
-    DEFAULT_EMBEDDING_MODEL,
-    DEFAULT_FAST_LLM,
-)
 from kmd.model.params_model import (
     ALL_COMMON_PARAMS,
     COMMON_ACTION_PARAMS,

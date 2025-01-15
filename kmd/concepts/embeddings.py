@@ -7,7 +7,7 @@ from litellm import embedding
 from pydantic.dataclasses import dataclass
 
 from kmd.config.logger import get_logger
-from kmd.model.model_settings import DEFAULT_EMBEDDING_MODEL
+from kmd.model.language_models import DEFAULT_EMBEDDING_MODEL
 from kmd.util.strif import abbreviate_list
 
 log = get_logger(__name__)
