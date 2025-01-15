@@ -1422,15 +1422,15 @@ typing-inspect = ">=0.4.0,<1"
 
 [[package]]
 name = "deepgram-sdk"
-version = "3.7.7"
+version = "3.8.0"
 description = "The official Python SDK for the Deepgram automated speech recognition platform."
 optional = false
 python-versions = "*"
 groups = ["main"]
 markers = "python_version >= \"3.12\" or python_version == \"3.11\""
 files = [
-    {file = "deepgram_sdk-3.7.7-py3-none-any.whl", hash = "sha256:2e55406023d3e60e89162e1e9d1d92fc41734a415b36fdd990e541ebfa1a1c50"},
-    {file = "deepgram_sdk-3.7.7.tar.gz", hash = "sha256:3b7398d51eb2289fce8f1013cfa7c09f3e9392efb854b9598732c29c97177fd6"},
+    {file = "deepgram_sdk-3.8.0-py3-none-any.whl", hash = "sha256:5e25c233e74104e2a398994cfef110d11d3a1a2bf8435b9b96293b10a78532dc"},
+    {file = "deepgram_sdk-3.8.0.tar.gz", hash = "sha256:e71e7abe9ce5c9b8c8ae8b752371b7af573945ea47a4dd273622a96baa94a59d"},
 ]
 
 [package.dependencies]
@@ -1611,15 +1611,15 @@ files = [
 
 [[package]]
 name = "exa-py"
-version = "1.7.1"
+version = "1.7.2"
 description = "Python SDK for Exa API."
 optional = false
 python-versions = "*"
 groups = ["main"]
 markers = "python_version >= \"3.12\" or python_version == \"3.11\""
 files = [
-    {file = "exa_py-1.7.1-py3-none-any.whl", hash = "sha256:a7c6ebdd85c4114a3763644b99eeef80971082ebcd62f7713a20c31fd2ab0663"},
-    {file = "exa_py-1.7.1.tar.gz", hash = "sha256:d4912b66eed3f49bdc216d6dccfa93c745409d3cdb0bd6fd32f85ce5fd3ed54d"},
+    {file = "exa_py-1.7.2-py3-none-any.whl", hash = "sha256:6fd6db235f6a84c9ddfe5b6108a6f897ea80fdf98b16021222e2b3712627af26"},
+    {file = "exa_py-1.7.2.tar.gz", hash = "sha256:a8efaf2fa063be6c8c4576e098dc55d586e1827a5ec5ea14e9dec1e78cb8f0da"},
 ]
 
 [package.dependencies]
@@ -1734,15 +1734,15 @@ files = [
 
 [[package]]
 name = "firecrawl-py"
-version = "1.8.0"
+version = "1.9.0"
 description = "Python SDK for Firecrawl API"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "python_version >= \"3.12\" or python_version == \"3.11\""
 files = [
-    {file = "firecrawl_py-1.8.0-py3-none-any.whl", hash = "sha256:fd1757ecd022931d9f757c4a633b76a5ee5d9bd973ade2577c17ed8047372ae9"},
-    {file = "firecrawl_py-1.8.0.tar.gz", hash = "sha256:77f1f8ef3e8962d5accc4cd463cfd2d07092040161f171600f74867980fa25fa"},
+    {file = "firecrawl_py-1.9.0-py3-none-any.whl", hash = "sha256:cfe88bd676c66f928c162d380d5c2f4b558fbd24877102eb54beef930e5f11cd"},
+    {file = "firecrawl_py-1.9.0.tar.gz", hash = "sha256:64d5467a440e3d656ae90a34e33113fec782c078ce84a1f42d07ca20abd3c42d"},
 ]
 
 [package.dependencies]
@@ -3047,15 +3047,15 @@ dev = ["Sphinx (>=5.1.1)", "black (==24.8.0)", "build (>=0.10.0)", "coverage[tom
 
 [[package]]
 name = "litellm"
-version = "1.56.9"
+version = "1.58.2"
 description = "Library to easily interface with LLM API providers"
 optional = false
 python-versions = "!=2.7.*,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,>=3.8"
 groups = ["main"]
 markers = "python_version >= \"3.12\" or python_version == \"3.11\""
 files = [
-    {file = "litellm-1.56.9-py3-none-any.whl", hash = "sha256:db61a1e34a8d06ce98dd68c4384afa83f3ba1bddc867bada002d032e4f281039"},
-    {file = "litellm-1.56.9.tar.gz", hash = "sha256:b3af2710eb42353d40c858370a17c56e3499a040d262ea30ebc8722d7976a565"},
+    {file = "litellm-1.58.2-py3-none-any.whl", hash = "sha256:51b14b2f5e30d2d41a76fbf926d7d882f1fddbbfda8812358cb4bb27d0d27692"},
+    {file = "litellm-1.58.2.tar.gz", hash = "sha256:4e1b7191a86970bbacd30e5315d3b6a0f5fc75a99763c9164116de60c6ac0bf3"},
 ]
 
 [package.dependencies]
@@ -3073,19 +3073,19 @@ tokenizers = "*"
 
 [package.extras]
 extra-proxy = ["azure-identity (>=1.15.0,<2.0.0)", "azure-keyvault-secrets (>=4.8.0,<5.0.0)", "google-cloud-kms (>=2.21.3,<3.0.0)", "prisma (==0.11.0)", "resend (>=0.8.0,<0.9.0)"]
-proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "backoff", "cryptography (>=43.0.1,<44.0.0)", "fastapi (>=0.115.5,<0.116.0)", "fastapi-sso (>=0.16.0,<0.17.0)", "gunicorn (>=22.0.0,<23.0.0)", "orjson (>=3.9.7,<4.0.0)", "pynacl (>=1.5.0,<2.0.0)", "python-multipart (>=0.0.18,<0.0.19)", "pyyaml (>=6.0.1,<7.0.0)", "rq", "uvicorn (>=0.22.0,<0.23.0)"]
+proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "backoff", "cryptography (>=43.0.1,<44.0.0)", "fastapi (>=0.115.5,<0.116.0)", "fastapi-sso (>=0.16.0,<0.17.0)", "gunicorn (>=22.0.0,<23.0.0)", "orjson (>=3.9.7,<4.0.0)", "pynacl (>=1.5.0,<2.0.0)", "python-multipart (>=0.0.18,<0.0.19)", "pyyaml (>=6.0.1,<7.0.0)", "rq", "uvicorn (>=0.22.0,<0.23.0)", "uvloop (>=0.21.0,<0.22.0)"]
 
 [[package]]
 name = "llama-index-core"
-version = "0.12.9"
+version = "0.12.11"
 description = "Interface between LLMs and your data"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 markers = "python_version >= \"3.12\" or python_version == \"3.11\""
 files = [
-    {file = "llama_index_core-0.12.9-py3-none-any.whl", hash = "sha256:75bfdece8e1eb37faba43345cfbd9a8004859c177c1b5b358fc77620908c0f3f"},
-    {file = "llama_index_core-0.12.9.tar.gz", hash = "sha256:a6a702af13f8a840ff2a459024d21280e5b04d37f22c73efdc52def60e047af6"},
+    {file = "llama_index_core-0.12.11-py3-none-any.whl", hash = "sha256:3b1e019c899e9e011dfa01c96b7e3f666e0c161035fbca6cb787b4c61e0c94db"},
+    {file = "llama_index_core-0.12.11.tar.gz", hash = "sha256:9a41ca91167ea5eec9ebaac7f5e958b7feddbd8af3bfbf7c393a5edfb994d566"},
 ]
 
 [package.dependencies]
@@ -3131,15 +3131,15 @@ openai = ">=1.1.0"
 
 [[package]]
 name = "llama-index-llms-openai"
-version = "0.3.12"
+version = "0.3.13"
 description = "llama-index llms openai integration"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 markers = "python_version >= \"3.12\" or python_version == \"3.11\""
 files = [
-    {file = "llama_index_llms_openai-0.3.12-py3-none-any.whl", hash = "sha256:08be76b9e649f6085e93292504074728a6531eb7f8930eaf40a2fce70a9f59df"},
-    {file = "llama_index_llms_openai-0.3.12.tar.gz", hash = "sha256:1880273a7e409c05f1dbccdbac5ce3c214771901cd3696aeb556a29dfed8477a"},
+    {file = "llama_index_llms_openai-0.3.13-py3-none-any.whl", hash = "sha256:caea1d6cb5bdd34518fcefe28b784698c92120ed133e6cd4591f777cd15180b0"},
+    {file = "llama_index_llms_openai-0.3.13.tar.gz", hash = "sha256:51dda240dae7671c37e84bb50fe77fe6bb58a9b2a7e33dccd84473c9998afcea"},
 ]
 
 [package.dependencies]
@@ -4301,15 +4301,15 @@ sympy = "*"
 
 [[package]]
 name = "openai"
-version = "1.59.3"
+version = "1.59.7"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "python_version >= \"3.12\" or python_version == \"3.11\""
 files = [
-    {file = "openai-1.59.3-py3-none-any.whl", hash = "sha256:b041887a0d8f3e70d1fc6ffbb2bf7661c3b9a2f3e806c04bf42f572b9ac7bc37"},
-    {file = "openai-1.59.3.tar.gz", hash = "sha256:7f7fff9d8729968588edf1524e73266e8593bb6cab09298340efb755755bb66f"},
+    {file = "openai-1.59.7-py3-none-any.whl", hash = "sha256:cfa806556226fa96df7380ab2e29814181d56fea44738c2b0e581b462c268692"},
+    {file = "openai-1.59.7.tar.gz", hash = "sha256:043603def78c00befb857df9f0a16ee76a3af5984ba40cb7ee5e2f40db4646bf"},
 ]
 
 [package.dependencies]
@@ -7917,19 +7917,19 @@ test = ["pytest"]
 
 [[package]]
 name = "xonsh"
-version = "0.19.0"
+version = "0.19.1"
 description = "Python-powered shell. Full-featured and cross-platform."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 markers = "python_version >= \"3.12\" or python_version == \"3.11\""
 files = [
-    {file = "xonsh-0.19.0-py310-none-any.whl", hash = "sha256:5dbfd992bafc7a6c7d058d3eb5d659c18654ac587c0cec1c2ce70d9b479d11ec"},
-    {file = "xonsh-0.19.0-py311-none-any.whl", hash = "sha256:53304e2b29fef5792280292f064377cf978d1479ffb119d9cfe0cd908714c437"},
-    {file = "xonsh-0.19.0-py312-none-any.whl", hash = "sha256:8d56613e08d1bba04c2f3079a47772c003f3bc933c977ab9f4d96f0ee09083f0"},
-    {file = "xonsh-0.19.0-py313-none-any.whl", hash = "sha256:7ba38ad9e662ce12099718a8a7cd5f3a352629e3cc4aa553e90b6501509270bc"},
-    {file = "xonsh-0.19.0-py39-none-any.whl", hash = "sha256:f0a628316006198809bdd5f5923398a06b8c040addf32bbe8de75f03bbb5162d"},
-    {file = "xonsh-0.19.0.tar.gz", hash = "sha256:e90cd1a5d7f3ad576c9572b161cb37a1c27872fbb1f5707566bb4a38c6c897af"},
+    {file = "xonsh-0.19.1-py310-none-any.whl", hash = "sha256:83eb6610ed3535f8542abd80af9554fb7e2805b0b3f96e445f98d4b5cf1f7046"},
+    {file = "xonsh-0.19.1-py311-none-any.whl", hash = "sha256:c176e515b0260ab803963d1f0924f1e32f1064aa6fd5d791aa0cf6cda3a924ae"},
+    {file = "xonsh-0.19.1-py312-none-any.whl", hash = "sha256:fe1266c86b117aced3bdc4d5972420bda715864435d0bd3722d63451e8001036"},
+    {file = "xonsh-0.19.1-py313-none-any.whl", hash = "sha256:3f158b6fc0bba954e0b989004d4261bafc4bd94c68c2abd75b825da23e5a869c"},
+    {file = "xonsh-0.19.1-py39-none-any.whl", hash = "sha256:a900a6eb87d881a7ef90b1ac8522ba3699582f0bcb1e9abd863d32f6d63faf04"},
+    {file = "xonsh-0.19.1.tar.gz", hash = "sha256:5d3de649c909f6d14bc69232219bcbdb8152c830e91ddf17ad169c672397fb97"},
 ]
 
 [package.extras]
@@ -8174,4 +8174,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.13"
-content-hash = "7d8b0730c5ee99589370a6749793a360fabc0b63a0c2580434dddb4db9e7b6b8"
+content-hash = "bc4380fa12b566c74c14d68f9fb1555b88df9fd34ae6675ee52fdec671d58f16"

@@ -70,7 +70,7 @@ TWO_ARGS = ArgCount(2, 2)
 @dataclass(frozen=True)
 class Signature:
     """
-    The signature of a command or action.
+    The signature (list of argument types) of a command or action.
     """
 
     arg_type: ArgType | List[ArgType]

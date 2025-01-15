@@ -18,7 +18,7 @@ See more motivation in the philosophy section below.
 - Tab auto-completion and help on almost everything
 
 - A [generalized frontmatter format](https://github.com/jlevy/frontmatter-format), that
-  for YAML metadata on Markdown, HTML, Python, and other text files
+  allows YAML metadata on Markdown, HTML, Python, and other text files
 
 - A [data model](https://github.com/jlevy/kmd/tree/main/kmd/model) that includes items
   such as documents, resources, concepts, etc., all stored as files within a workspace

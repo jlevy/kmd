@@ -19,8 +19,8 @@ poetry build
 # Before committing, be sure to check formatting/linting issues:
 poetry run lint
 
-# Upgrade packages:
-poetry up
+# Udate key packages:
+source devtools/update_common_deps.xs
 
 # Update this README:
 source devtools/generate_readme.xsh
