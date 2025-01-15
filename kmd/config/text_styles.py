@@ -272,7 +272,7 @@ RICH_STYLES = {
     "kmd.indent": Style(color=COLOR_KEY, dim=True),
     "kmd.error": Style(color=COLOR_ERROR, bold=True),
     "kmd.str": Style(color=COLOR_LITERAL, italic=False, bold=False),
-    "kmd.brace": Style(bold=True),
+    # "kmd.brace": Style(bold=True),  # Not required if the font is clear enough.
     "kmd.comma": Style(bold=True),
     "kmd.ipv4": Style(color=COLOR_KEY),
     "kmd.ipv6": Style(color=COLOR_KEY),

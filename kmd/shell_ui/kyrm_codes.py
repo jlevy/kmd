@@ -53,6 +53,8 @@ https://www.ethanheilman.com/x/28/index.html
 # TODO:
 # - Registering behaviors on regexes. Example: Local web server with info about files.
 # - Multiple command confirmation (or line-by-line script execution).
+# - Notifications.
+# - Status (e.g. progress bars or network usage or progress stats).
 
 from enum import Enum
 from html import escape
